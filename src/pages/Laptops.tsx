@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { useProduct } from "@/hooks/useProduct";
+import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,8 @@ import {
 const LaptopsPage = () => {
   const [asin, setAsin] = useState("");
   const [searchAsin, setSearchAsin] = useState("");
-  const { data: product, isLoading, error } = useProduct(searchAsin);
+  const { data: product, isLoading: isProductLoading, error: productError } = useProduct(searchAsin);
+  const { data: laptops, isLoading: isLaptopsLoading, error: laptopsError } = useLaptops();
   const { toast } = useToast();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -56,14 +58,14 @@ const LaptopsPage = () => {
                   onChange={(e) => setAsin(e.target.value)}
                   className="flex-1"
                 />
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Searching..." : "Search"}
+                <Button type="submit" disabled={isProductLoading}>
+                  {isProductLoading ? "Searching..." : "Search"}
                 </Button>
               </form>
             </CardContent>
           </Card>
 
-          {error && (
+          {productError && (
             <Card className="mb-8 border-red-200 bg-red-50">
               <CardHeader>
                 <CardTitle className="text-red-800">Error</CardTitle>
@@ -75,7 +77,7 @@ const LaptopsPage = () => {
           )}
 
           {product && (
-            <Card className="overflow-hidden">
+            <Card className="mb-8 overflow-hidden">
               <CardHeader>
                 <CardTitle>{product.title}</CardTitle>
               </CardHeader>
@@ -119,6 +121,66 @@ const LaptopsPage = () => {
               </CardContent>
             </Card>
           )}
+
+          <section className="mt-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Laptops</h2>
+            {isLaptopsLoading ? (
+              <p className="text-center text-gray-600">Loading laptops...</p>
+            ) : laptopsError ? (
+              <Card className="border-red-200 bg-red-50">
+                <CardHeader>
+                  <CardTitle className="text-red-800">Error</CardTitle>
+                  <CardDescription className="text-red-600">
+                    Failed to fetch laptops. Please try again later.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {laptops?.map((laptop) => (
+                  <Card key={laptop.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                    <div className="aspect-w-16 aspect-h-9">
+                      {laptop.image_url && (
+                        <img
+                          src={laptop.image_url}
+                          alt={laptop.title}
+                          className="w-full h-48 object-cover"
+                        />
+                      )}
+                    </div>
+                    <CardHeader>
+                      <CardTitle className="text-lg line-clamp-2">{laptop.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div>
+                          <p className="text-2xl font-bold text-green-600">
+                            ${laptop.current_price?.toFixed(2)}
+                          </p>
+                          {laptop.original_price > laptop.current_price && (
+                            <p className="text-sm text-gray-500 line-through">
+                              ${laptop.original_price?.toFixed(2)}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center text-sm text-gray-600">
+                          <span>{laptop.rating} / 5</span>
+                          <span className="mx-1">•</span>
+                          <span>{laptop.rating_count} reviews</span>
+                        </div>
+                        <Button
+                          className="w-full mt-4"
+                          onClick={() => window.open(laptop.product_url, '_blank')}
+                        >
+                          View on Amazon
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </main>
     </div>

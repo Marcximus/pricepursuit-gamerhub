@@ -44,10 +44,12 @@ export type Database = {
       products: {
         Row: {
           asin: string
+          category: string | null
           created_at: string | null
           current_price: number | null
           id: string
           image_url: string | null
+          is_laptop: boolean | null
           last_checked: string | null
           original_price: number | null
           product_url: string | null
@@ -57,10 +59,12 @@ export type Database = {
         }
         Insert: {
           asin: string
+          category?: string | null
           created_at?: string | null
           current_price?: number | null
           id?: string
           image_url?: string | null
+          is_laptop?: boolean | null
           last_checked?: string | null
           original_price?: number | null
           product_url?: string | null
@@ -70,10 +74,12 @@ export type Database = {
         }
         Update: {
           asin?: string
+          category?: string | null
           created_at?: string | null
           current_price?: number | null
           id?: string
           image_url?: string | null
+          is_laptop?: boolean | null
           last_checked?: string | null
           original_price?: number | null
           product_url?: string | null
