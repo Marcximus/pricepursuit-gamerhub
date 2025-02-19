@@ -36,9 +36,13 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         source: 'amazon_search',
-        query: 'laptops',
+        query: 'laptop computers',
+        domain: 'com',
         geo_location: 'United States',
-        pages: 1,
+        locale: 'en_US',
+        start_page: '1',
+        pages: 2,
+        render: true,
         parse: true
       })
     })
@@ -50,13 +54,18 @@ serve(async (req) => {
       throw new Error('No laptop data found in Oxylabs response')
     }
 
-    const laptops = data.results[0].content.results.map((item: any) => ({
+    // Combine results from all pages
+    const allResults = data.results.flatMap((page: any) => 
+      page.content.results.filter((item: any) => item.asin)
+    )
+
+    const laptops = allResults.map((item: any) => ({
       asin: item.asin,
       title: item.title,
-      current_price: item.price?.current || 0,
-      original_price: item.price?.previous || item.price?.current || 0,
-      rating: item.rating || 0,
-      rating_count: item.ratings_total || 0,
+      current_price: parseFloat(item.price?.current) || 0,
+      original_price: parseFloat(item.price?.previous) || parseFloat(item.price?.current) || 0,
+      rating: parseFloat(item.rating) || 0,
+      rating_count: parseInt(item.ratings_total) || 0,
       image_url: item.image,
       product_url: item.url,
       category: 'laptop',
