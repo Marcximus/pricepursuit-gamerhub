@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { Monitor, Laptop, Desktop, Gamepad, Keyboard, Mouse, Headphones, Newspaper } from "lucide-react";
+import { Monitor, Laptop, Computer, Gamepad, Keyboard, Mouse, Headphones } from "lucide-react";
 
 const Navigation = () => {
   return (
@@ -32,7 +32,7 @@ const Navigation = () => {
               <span>Laptops</span>
             </Link>
             <Link to="/ComparePrice/Desktops" className="nav-link flex items-center space-x-1">
-              <Desktop className="w-4 h-4" />
+              <Computer className="w-4 h-4" />
               <span>Desktops</span>
             </Link>
             <Link to="/ComparePrice/Monitors" className="nav-link flex items-center space-x-1">
