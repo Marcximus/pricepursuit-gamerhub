@@ -13,16 +13,21 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client
-    const supabaseClient = createClient(
+    // Initialize Supabase client with admin privileges
+    const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
     // Fetch laptop data from Oxylabs
     const oxyUsername = Deno.env.get('OXYLABS_USERNAME')
     const oxyPassword = Deno.env.get('OXYLABS_PASSWORD')
 
+    if (!oxyUsername || !oxyPassword) {
+      throw new Error('Oxylabs credentials not configured')
+    }
+
+    console.log('Fetching laptops from Oxylabs...')
     const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
       method: 'POST',
       headers: {
@@ -39,18 +44,19 @@ serve(async (req) => {
     })
 
     const data = await response.json()
+    console.log('Oxylabs response received')
     
     if (!data.results?.[0]?.content?.results) {
-      throw new Error('No laptop data found')
+      throw new Error('No laptop data found in Oxylabs response')
     }
 
     const laptops = data.results[0].content.results.map((item: any) => ({
       asin: item.asin,
       title: item.title,
-      current_price: item.price?.current,
-      original_price: item.price?.previous || item.price?.current,
-      rating: item.rating,
-      rating_count: item.ratings_total,
+      current_price: item.price?.current || 0,
+      original_price: item.price?.previous || item.price?.current || 0,
+      rating: item.rating || 0,
+      rating_count: item.ratings_total || 0,
       image_url: item.image,
       product_url: item.url,
       category: 'laptop',
@@ -58,23 +64,53 @@ serve(async (req) => {
       last_checked: new Date().toISOString()
     }))
 
+    console.log(`Processing ${laptops.length} laptops...`)
+
     // Upsert laptop data
-    const { data: upsertedLaptops, error: upsertError } = await supabaseClient
+    const { error: upsertError } = await supabaseAdmin
       .from('products')
       .upsert(laptops)
-      .select()
 
-    if (upsertError) throw upsertError
+    if (upsertError) {
+      console.error('Error upserting laptops:', upsertError)
+      throw upsertError
+    }
+
+    // Fetch the updated laptops
+    const { data: dbLaptops, error: fetchError } = await supabaseAdmin
+      .from('products')
+      .select('*')
+      .eq('is_laptop', true)
+      .order('current_price', { ascending: true })
+
+    if (fetchError) {
+      console.error('Error fetching laptops after upsert:', fetchError)
+      throw fetchError
+    }
+
+    console.log(`Successfully processed ${dbLaptops.length} laptops`)
 
     return new Response(
-      JSON.stringify(upsertedLaptops),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify(dbLaptops),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json'
+        } 
+      }
     )
 
   } catch (error) {
+    console.error('Error in fetch-laptops function:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json'
+        }, 
+        status: 500 
+      }
     )
   }
 })
