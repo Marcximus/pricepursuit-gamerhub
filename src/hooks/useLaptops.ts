@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/types/product";
@@ -6,7 +5,7 @@ import type { Product } from "@/types/product";
 export const useLaptops = () => {
   const fetchLaptops = async (): Promise<Product[]> => {
     try {
-      // First try to get laptops from the database
+      // Try to get laptops from the database first
       const { data: dbLaptops, error: dbError } = await supabase
         .from('products')
         .select('*')
@@ -15,27 +14,30 @@ export const useLaptops = () => {
 
       if (dbError) throw dbError;
       
-      // If we have laptops in the database and they're not stale, return them
+      // If we have recent laptop data, return it
       if (dbLaptops && dbLaptops.length > 0) {
         const mostRecentCheck = new Date(Math.max(...dbLaptops.map(l => new Date(l.last_checked).getTime())));
         const isStale = new Date().getTime() - mostRecentCheck.getTime() > 24 * 60 * 60 * 1000; // 24 hours
         
         if (!isStale) {
-          console.log('Returning cached laptops from database');
           return dbLaptops;
         }
       }
 
-      // If no laptops or data is stale, fetch new data
-      console.log('Fetching fresh laptop data...');
-      const { data: functionData, error: functionError } = await supabase.functions.invoke('fetch-laptops');
+      // Otherwise fetch fresh data
+      const { data, error } = await supabase.functions.invoke('fetch-laptops');
       
-      if (functionError) {
-        console.error('Error fetching laptops:', functionError);
-        throw functionError;
+      if (error) {
+        console.error('Error invoking fetch-laptops function:', error);
+        throw new Error('Failed to fetch laptop data');
       }
 
-      return functionData || [];
+      if (!Array.isArray(data)) {
+        console.error('Unexpected response format:', data);
+        throw new Error('Invalid response from server');
+      }
+
+      return data;
     } catch (error) {
       console.error('Error in useLaptops hook:', error);
       throw error;
@@ -45,7 +47,7 @@ export const useLaptops = () => {
   return useQuery({
     queryKey: ['laptops'],
     queryFn: fetchLaptops,
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-    retry: 2
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 1
   });
 };
