@@ -7,96 +7,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const SEARCH_QUERIES = [
-  'laptop',
-  'gaming laptop',
-  'business laptop',
-  'ultrabook',
-  'notebook computer'
-];
-
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-);
-
-async function searchLaptops(query: string, page: number, username: string, password: string) {
-  const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Basic ' + btoa(`${username}:${password}`)
-    },
-    body: JSON.stringify({
-      source: 'amazon_search',
-      query: query,
-      geo_location: '90210',
-      start_page: page.toString(),
-      pages: '1',
-      parse: true,
-      context: [
-        {
-          key: 'department',
-          value: 'computers-laptops'
-        }
-      ]
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`Search failed: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return data.results[0]?.content?.results?.organic || [];
-}
-
-async function processLaptopResults(results: any[]) {
-  for (const result of results) {
-    if (!result.asin) continue;
-
-    // Check if laptop already exists
-    const { data: existing } = await supabase
-      .from('products')
-      .select('id')
-      .eq('asin', result.asin)
-      .single();
-
-    if (existing) {
-      console.log(`Laptop ${result.asin} already exists, skipping...`);
-      continue;
-    }
-
-    // Insert new laptop
-    const { error } = await supabase
-      .from('products')
-      .insert({
-        asin: result.asin,
-        title: result.title,
-        current_price: result.price?.current || 0,
-        original_price: result.price?.previous || result.price?.current || 0,
-        rating: result.rating || 0,
-        rating_count: result.ratings_total || 0,
-        image_url: result.image,
-        product_url: result.url,
-        is_laptop: true,
-        last_checked: new Date().toISOString()
-      });
-
-    if (error) {
-      console.error(`Error inserting laptop ${result.asin}:`, error);
-    } else {
-      console.log(`Successfully added laptop ${result.asin}`);
-    }
-  }
-}
-
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    console.log('Starting laptop collection...');
+
     const username = Deno.env.get('OXYLABS_USERNAME');
     const password = Deno.env.get('OXYLABS_PASSWORD');
 
@@ -104,50 +23,85 @@ serve(async (req) => {
       throw new Error('Oxylabs credentials not configured');
     }
 
-    let totalProcessed = 0;
-    const errors: string[] = [];
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-    // Process each search query
-    for (const query of SEARCH_QUERIES) {
-      try {
-        console.log(`Processing search query: ${query}`);
-        
-        // Search first 100 pages for each query
-        for (let page = 1; page <= 100; page++) {
-          console.log(`Processing page ${page} for query "${query}"`);
-          
-          const results = await searchLaptops(query, page, username, password);
-          
-          // Break if no more results (end of pagination)
-          if (results.length === 0) {
-            console.log(`No more results for query "${query}" after page ${page}`);
-            break;
-          }
-          
-          await processLaptopResults(results);
-          
-          totalProcessed += results.length;
-          
-          // Add delay to avoid rate limiting (3 seconds between requests)
-          await new Promise(resolve => setTimeout(resolve, 3000));
-        }
-      } catch (error) {
-        console.error(`Error processing query "${query}":`, error);
-        errors.push(`${query}: ${error.message}`);
+    // Fetch data from Oxylabs
+    const body = {
+      'source': 'amazon_search',
+      'query': 'laptop',
+      'parse': true,
+      'context': [
+        {'key': 'category', 'value': 'Electronics'},
+        {'key': 'department', 'value': 'Computers & Tablets'}
+      ]
+    };
+
+    console.log('Fetching data from Oxylabs...');
+    
+    const oxyResponse = await fetch('https://realtime.oxylabs.io/v1/queries', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + btoa(`${username}:${password}`)
       }
+    });
+
+    if (!oxyResponse.ok) {
+      throw new Error(`Oxylabs API error: ${oxyResponse.statusText}`);
     }
 
+    const oxyData = await oxyResponse.json();
+    console.log(`Received ${oxyData.results?.length || 0} results from Oxylabs`);
+
+    // Process and store each product
+    const products = oxyData.results?.[0]?.content?.results?.map(item => ({
+      asin: item.asin,
+      title: item.title,
+      current_price: parseFloat(item.price?.current) || null,
+      original_price: parseFloat(item.price?.previous) || null,
+      rating: parseFloat(item.rating) || null,
+      rating_count: parseInt(item.rating_count) || null,
+      image_url: item.image_url,
+      product_url: item.url,
+      is_laptop: true,
+      // Extract specifications if available
+      processor: item.specifications?.find(s => s.toLowerCase().includes('processor'))?.split(':')[1]?.trim(),
+      ram: item.specifications?.find(s => s.toLowerCase().includes('ram'))?.split(':')[1]?.trim(),
+      storage: item.specifications?.find(s => s.toLowerCase().includes('storage'))?.split(':')[1]?.trim(),
+      screen_size: item.specifications?.find(s => s.toLowerCase().includes('screen'))?.split(':')[1]?.trim(),
+      graphics: item.specifications?.find(s => s.toLowerCase().includes('graphics'))?.split(':')[1]?.trim(),
+    })) || [];
+
+    console.log(`Processed ${products.length} products, inserting into database...`);
+
+    // Insert products into database
+    const { data, error } = await supabase
+      .from('products')
+      .upsert(
+        products,
+        { 
+          onConflict: 'asin',
+          ignoreDuplicates: false
+        }
+      );
+
+    if (error) {
+      throw error;
+    }
+
+    console.log('Successfully collected and stored laptop data');
+
     return new Response(
-      JSON.stringify({
-        success: true,
-        totalProcessed,
-        errors: errors.length > 0 ? errors : undefined
-      }),
+      JSON.stringify({ success: true, count: products.length }),
       { 
         headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
       }
     );
 
@@ -158,10 +112,10 @@ serve(async (req) => {
       JSON.stringify({ error: error.message }),
       { 
         headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json'
+          ...corsHeaders,
+          'Content-Type': 'application/json',
         },
-        status: 500
+        status: 500,
       }
     );
   }
