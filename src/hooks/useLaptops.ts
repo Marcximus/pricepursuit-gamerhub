@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -24,6 +25,8 @@ const staticLaptops: Product[] = [
     last_checked: new Date().toISOString(),
     processor_score: 65,
     benchmark_score: 75,
+    weight: "3.75 lbs",
+    battery_life: "Up to 8 hours"
   },
   {
     id: "2",
@@ -44,6 +47,8 @@ const staticLaptops: Product[] = [
     last_checked: new Date().toISOString(),
     processor_score: 85,
     benchmark_score: 90,
+    weight: "4.96 lbs",
+    battery_life: "Up to 6 hours"
   },
   {
     id: "3",
@@ -64,6 +69,8 @@ const staticLaptops: Product[] = [
     last_checked: new Date().toISOString(),
     processor_score: 95,
     benchmark_score: 98,
+    weight: "3.5 lbs",
+    battery_life: "Up to 22 hours"
   }
 ];
 
@@ -111,8 +118,27 @@ export const useLaptops = () => {
           return staticLaptops;
         }
 
-        console.log(`Found ${data.length} laptops from Supabase`);
-        return data;
+        // Merge static and dynamic data, prioritizing dynamic data
+        const mergedData = [...staticLaptops];
+        data.forEach(dynamicLaptop => {
+          const index = mergedData.findIndex(
+            staticLaptop => staticLaptop.asin === dynamicLaptop.asin
+          );
+          if (index !== -1) {
+            // Update existing laptop with new data
+            mergedData[index] = {
+              ...mergedData[index],
+              ...dynamicLaptop,
+              last_checked: new Date().toISOString()
+            };
+          } else {
+            // Add new laptop
+            mergedData.push(dynamicLaptop);
+          }
+        });
+
+        console.log(`Found ${mergedData.length} laptops (${staticLaptops.length} static, ${data.length} dynamic)`);
+        return mergedData;
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
         console.log('Returning static data due to error');
