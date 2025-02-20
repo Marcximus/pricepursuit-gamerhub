@@ -1,6 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 import type { Product } from "@/types/product";
 
 export const useLaptops = () => {
@@ -10,19 +11,29 @@ export const useLaptops = () => {
       
       if (error) {
         console.error('Error invoking fetch-laptops function:', error);
-        throw new Error('Failed to fetch laptop data');
+        throw new Error('Failed to fetch laptop data: ' + error.message);
+      }
+
+      if (!data) {
+        throw new Error('No data received from fetch-laptops function');
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
       }
 
       if (!Array.isArray(data)) {
-        if (data?.error) {
-          throw new Error(data.error);
-        }
-        throw new Error('Invalid response format');
+        throw new Error('Invalid response format: expected an array');
       }
 
       return data;
     } catch (error) {
       console.error('Error in useLaptops hook:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || 'Failed to fetch laptops. Please try again later.'
+      });
       throw error;
     }
   };

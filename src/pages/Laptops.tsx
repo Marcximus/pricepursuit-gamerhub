@@ -6,6 +6,7 @@ import Navigation from "@/components/Navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { ReloadIcon } from "@radix-ui/react-icons";
 import { 
   Card,
   CardContent,
@@ -18,7 +19,13 @@ const LaptopsPage = () => {
   const [asin, setAsin] = useState("");
   const [searchAsin, setSearchAsin] = useState("");
   const { data: product, isLoading: isProductLoading, error: productError } = useProduct(searchAsin);
-  const { data: laptops, isLoading: isLaptopsLoading, error: laptopsError } = useLaptops();
+  const { 
+    data: laptops, 
+    isLoading: isLaptopsLoading, 
+    error: laptopsError,
+    refetch: refetchLaptops,
+    isRefetching
+  } = useLaptops();
   const { toast } = useToast();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -32,6 +39,10 @@ const LaptopsPage = () => {
       return;
     }
     setSearchAsin(asin);
+  };
+
+  const handleRetry = () => {
+    refetchLaptops();
   };
 
   return (
@@ -123,17 +134,45 @@ const LaptopsPage = () => {
           )}
 
           <section className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Laptops</h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Available Laptops</h2>
+              {(laptopsError || !isLaptopsLoading) && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleRetry}
+                  disabled={isRefetching}
+                >
+                  {isRefetching && (
+                    <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Refresh
+                </Button>
+              )}
+            </div>
+            
             {isLaptopsLoading ? (
-              <p className="text-center text-gray-600">Loading laptops...</p>
+              <div className="text-center py-12">
+                <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
+                <p className="mt-4 text-gray-600">Loading laptops...</p>
+              </div>
             ) : laptopsError ? (
               <Card className="border-red-200 bg-red-50">
                 <CardHeader>
                   <CardTitle className="text-red-800">Error</CardTitle>
                   <CardDescription className="text-red-600">
-                    Failed to fetch laptops. Please try again later.
+                    {laptopsError instanceof Error ? laptopsError.message : "Failed to fetch laptops. Please try again later."}
                   </CardDescription>
                 </CardHeader>
+                <CardContent>
+                  <Button 
+                    variant="secondary" 
+                    onClick={handleRetry}
+                    disabled={isRefetching}
+                    className="mt-2"
+                  >
+                    {isRefetching ? "Retrying..." : "Try Again"}
+                  </Button>
+                </CardContent>
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
