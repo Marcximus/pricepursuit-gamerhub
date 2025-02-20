@@ -44,47 +44,71 @@ export type Database = {
       products: {
         Row: {
           asin: string
+          benchmark_score: number | null
           category: string | null
           created_at: string | null
           current_price: number | null
+          graphics: string | null
           id: string
           image_url: string | null
           is_laptop: boolean | null
           last_checked: string | null
           original_price: number | null
+          processor: string | null
+          processor_score: number | null
           product_url: string | null
+          ram: string | null
           rating: number | null
           rating_count: number | null
+          screen_resolution: string | null
+          screen_size: string | null
+          storage: string | null
           title: string | null
         }
         Insert: {
           asin: string
+          benchmark_score?: number | null
           category?: string | null
           created_at?: string | null
           current_price?: number | null
+          graphics?: string | null
           id?: string
           image_url?: string | null
           is_laptop?: boolean | null
           last_checked?: string | null
           original_price?: number | null
+          processor?: string | null
+          processor_score?: number | null
           product_url?: string | null
+          ram?: string | null
           rating?: number | null
           rating_count?: number | null
+          screen_resolution?: string | null
+          screen_size?: string | null
+          storage?: string | null
           title?: string | null
         }
         Update: {
           asin?: string
+          benchmark_score?: number | null
           category?: string | null
           created_at?: string | null
           current_price?: number | null
+          graphics?: string | null
           id?: string
           image_url?: string | null
           is_laptop?: boolean | null
           last_checked?: string | null
           original_price?: number | null
+          processor?: string | null
+          processor_score?: number | null
           product_url?: string | null
+          ram?: string | null
           rating?: number | null
           rating_count?: number | null
+          screen_resolution?: string | null
+          screen_size?: string | null
+          storage?: string | null
           title?: string | null
         }
         Relationships: []

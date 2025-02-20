@@ -7,11 +7,75 @@ const corsHeaders = {
 }
 
 const LAPTOP_ASINS = [
-  "B07FZ8S74R", // Your requested ASIN
   "B0BSHF7WHH", // Dell XPS
   "B09PTVP3RT", // MacBook Pro
   "B09RBGCX3D", // Lenovo ThinkPad
 ];
+
+function extractSpecs(title: string, description: string, features: string[]) {
+  const specs = {
+    processor: '',
+    ram: '',
+    storage: '',
+    screen_size: '',
+    screen_resolution: '',
+    graphics: ''
+  };
+
+  const allText = [title, description, ...(features || [])].join(' ').toLowerCase();
+
+  // Extract processor
+  const processorMatches = allText.match(/(?:intel|amd|apple)\s+(?:core\s+)?(?:i[3579]|ryzen|m[12345])\s*(?:-|\s)?(?:\d{4,5}[a-z]{0,2})?/i);
+  if (processorMatches) specs.processor = processorMatches[0].trim();
+
+  // Extract RAM
+  const ramMatches = allText.match(/(\d{1,3})(?:\s*gb|\s*gigabytes?)\s+(?:of\s+)?(?:ddr[45])?(?:\s+)?ram/i);
+  if (ramMatches) specs.ram = ramMatches[0].trim();
+
+  // Extract storage
+  const storageMatches = allText.match(/(\d{1,4})(?:\s*gb|\s*tb)(?:\s+)?(?:ssd|hdd|nvme|storage)/i);
+  if (storageMatches) specs.storage = storageMatches[0].trim();
+
+  // Extract screen size
+  const screenMatches = allText.match(/(\d{2}(?:\.\d)?)[- ]?inch(?:es)?/i);
+  if (screenMatches) specs.screen_size = screenMatches[0].trim();
+
+  // Extract resolution
+  const resolutionMatches = allText.match(/(\d{3,4}x\d{3,4})|(\d{1,2}k\s+resolution)|(?:full\s+hd|qhd|uhd|wqhd)/i);
+  if (resolutionMatches) specs.resolution = resolutionMatches[0].trim();
+
+  // Extract graphics
+  const graphicsMatches = allText.match(/(?:nvidia|rtx|gtx|radeon|intel\s+iris|m[12345]\s+pro)/i);
+  if (graphicsMatches) specs.graphics = graphicsMatches[0].trim();
+
+  return specs;
+}
+
+function estimateProcessorScore(processor: string): number {
+  const scoreMap: { [key: string]: number } = {
+    'm1': 18000,
+    'm2': 20000,
+    'm3': 22000,
+    'm4': 25000,
+    'i9': 30000,
+    'i7': 25000,
+    'i5': 20000,
+    'i3': 15000,
+    'ryzen 9': 30000,
+    'ryzen 7': 25000,
+    'ryzen 5': 20000,
+    'ryzen 3': 15000,
+  };
+
+  const processorLower = processor.toLowerCase();
+  for (const [key, score] of Object.entries(scoreMap)) {
+    if (processorLower.includes(key)) {
+      return score;
+    }
+  }
+  
+  return 0;
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -26,7 +90,6 @@ serve(async (req) => {
       throw new Error('Oxylabs credentials not configured');
     }
 
-    // Fetch data for each ASIN in parallel
     const laptopPromises = LAPTOP_ASINS.map(async (asin) => {
       const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
         method: 'POST',
@@ -55,11 +118,17 @@ serve(async (req) => {
       }
 
       const product = data.results[0].content;
+      const specs = extractSpecs(
+        product.title,
+        product.description,
+        product.feature_bullets
+      );
+
+      const processorScore = estimateProcessorScore(specs.processor);
       
       return {
         id: asin,
         title: product.title,
-        description: product.description,
         current_price: product.price?.current_price || product.price?.current,
         original_price: product.price?.previous_price || product.price?.previous || product.price?.current,
         rating: product.rating,
@@ -67,9 +136,14 @@ serve(async (req) => {
         image_url: product.images?.[0],
         product_url: product.url,
         asin: asin,
-        features: product.feature_bullets,
-        brand: product.brand,
-        availability: product.available ? "In Stock" : "Out of Stock"
+        processor: specs.processor,
+        processor_score: processorScore,
+        ram: specs.ram,
+        storage: specs.storage,
+        screen_size: specs.screen_size,
+        screen_resolution: specs.screen_resolution,
+        graphics: specs.graphics,
+        last_checked: new Date().toISOString()
       };
     });
 

@@ -11,6 +11,14 @@ export interface Product {
   product_url: string;
   last_checked: string;
   created_at: string;
+  processor?: string;
+  processor_score?: number;
+  ram?: string;
+  storage?: string;
+  screen_size?: string;
+  screen_resolution?: string;
+  graphics?: string;
+  benchmark_score?: number;
 }
 
 export interface PriceHistory {
