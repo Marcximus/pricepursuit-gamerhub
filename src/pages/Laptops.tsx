@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useProduct } from "@/hooks/useProduct";
 import { useLaptops } from "@/hooks/useLaptops";
@@ -19,7 +18,7 @@ import type { Product } from "@/types/product";
 
 type SortOption = "price-asc" | "price-desc" | "rating-desc" | "performance-desc";
 
-const LaptopsPage = () => {
+const ComparePriceLaptops = () => {
   const [asin, setAsin] = useState("");
   const [searchAsin, setSearchAsin] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("price-asc");
@@ -315,4 +314,4 @@ const LaptopsPage = () => {
   );
 };
 
-export default LaptopsPage;
+export default ComparePriceLaptops;
