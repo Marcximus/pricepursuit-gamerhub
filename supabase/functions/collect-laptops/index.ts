@@ -30,6 +30,18 @@ serve(async (req) => {
       parse: true
     };
 
+    // Log the complete request details (excluding sensitive info)
+    console.log('Oxylabs request details:', {
+      url: 'https://realtime.oxylabs.io/v1/queries',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Don't log the actual Authorization header
+        'Authorization': 'Basic ***' 
+      },
+      body: JSON.stringify(testQuery, null, 2)
+    });
+
     console.log('Testing authentication...');
     
     const testResponse = await fetch('https://realtime.oxylabs.io/v1/queries', {
@@ -41,15 +53,26 @@ serve(async (req) => {
       }
     });
 
+    // Log response status and headers
+    console.log('Oxylabs response details:', {
+      status: testResponse.status,
+      statusText: testResponse.statusText,
+      headers: Object.fromEntries(testResponse.headers.entries())
+    });
+
     if (!testResponse.ok) {
       const errorText = await testResponse.text();
       console.error('Auth test failed:', {
         status: testResponse.status,
         statusText: testResponse.statusText,
-        error: errorText
+        error: errorText,
+        headers: Object.fromEntries(testResponse.headers.entries())
       });
       throw new Error(`Authentication failed: ${testResponse.status} - ${errorText}`);
     }
+
+    const responseData = await testResponse.json();
+    console.log('Oxylabs response data:', JSON.stringify(responseData, null, 2));
 
     console.log('Authentication successful, proceeding with collection...');
 
