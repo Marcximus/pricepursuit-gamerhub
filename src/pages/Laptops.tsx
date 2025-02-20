@@ -5,7 +5,7 @@ import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { ReloadIcon } from "@radix-ui/react-icons";
+import { ReloadIcon, RefreshCcwIcon } from "@radix-ui/react-icons";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LaptopFilters, type FilterOptions } from "@/components/laptops/LaptopFilters";
 import { LaptopSort, type SortOption } from "@/components/laptops/LaptopSort";
@@ -47,6 +47,38 @@ const ComparePriceLaptops = () => {
       return;
     }
     setSearchAsin(asin);
+  };
+
+  const handleCollectLaptops = async () => {
+    try {
+      await collectLaptops();
+      toast({
+        title: "Collection Started",
+        description: "Started collecting laptops from Amazon. This may take a few minutes...",
+      });
+      // Set up a polling mechanism to check for new laptops
+      const pollInterval = setInterval(async () => {
+        const { data: newData } = await refetchLaptops();
+        if (newData && newData.length > 0) {
+          clearInterval(pollInterval);
+          toast({
+            title: "Collection Complete",
+            description: `Found ${newData.length} laptops`,
+          });
+        }
+      }, 10000); // Check every 10 seconds
+
+      // Clear interval after 5 minutes to prevent infinite polling
+      setTimeout(() => {
+        clearInterval(pollInterval);
+      }, 300000);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to start laptop collection. Please try again.",
+      });
+    }
   };
 
   const handleRetry = async () => {
@@ -134,6 +166,27 @@ const ComparePriceLaptops = () => {
       
       <main className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
+          {/* Add Collect Laptops Button */}
+          <div className="mb-8 flex justify-end">
+            <Button
+              onClick={handleCollectLaptops}
+              disabled={isLaptopsLoading || isRefetching}
+              className="flex items-center gap-2"
+            >
+              {(isLaptopsLoading || isRefetching) ? (
+                <>
+                  <ReloadIcon className="h-4 w-4 animate-spin" />
+                  Collecting...
+                </>
+              ) : (
+                <>
+                  <RefreshCcwIcon className="h-4 w-4" />
+                  Collect Laptops
+                </>
+              )}
+            </Button>
+          </div>
+
           <LaptopFilters
             filters={filters}
             onFiltersChange={setFilters}
