@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useProduct } from "@/hooks/useProduct";
 import { useLaptops } from "@/hooks/useLaptops";
@@ -220,25 +219,7 @@ const ComparePriceLaptops = () => {
                 </div>
               </div>
 
-              <Card className="mb-8">
-                <CardContent className="pt-6">
-                  <form onSubmit={handleSearch} className="flex gap-4">
-                    <input
-                      type="text"
-                      placeholder="Enter Amazon ASIN"
-                      value={asin}
-                      onChange={(e) => setAsin(e.target.value)}
-                      className="flex-1 px-3 py-2 border rounded-md"
-                    />
-                    <Button type="submit" disabled={isProductLoading}>
-                      {isProductLoading ? "Searching..." : "Search"}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-
-              {product && <LaptopCard laptop={product} />}
-
+              {/* Main Content Area */}
               {isLaptopsLoading ? (
                 <div className="text-center py-12">
                   <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
@@ -262,7 +243,7 @@ const ComparePriceLaptops = () => {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-4">
                   {filteredAndSortedLaptops.map((laptop) => (
                     <LaptopCard key={laptop.id} laptop={laptop} />
                   ))}
@@ -277,4 +258,3 @@ const ComparePriceLaptops = () => {
 };
 
 export default ComparePriceLaptops;
-
