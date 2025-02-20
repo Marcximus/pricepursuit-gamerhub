@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useProduct } from "@/hooks/useProduct";
 import { useLaptops } from "@/hooks/useLaptops";
@@ -161,97 +162,114 @@ const ComparePriceLaptops = () => {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       
-      <main className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-8 flex justify-end">
-            <Button
-              onClick={handleCollectLaptops}
-              disabled={isLaptopsLoading || isRefetching}
-              className="flex items-center gap-2"
-            >
-              {(isLaptopsLoading || isRefetching) ? (
-                <>
-                  <ReloadIcon className="h-4 w-4 animate-spin" />
-                  Collecting...
-                </>
+      <main className="pt-32 pb-16">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row gap-8">
+            {/* Left Sidebar with Filters */}
+            <div className="md:w-64 flex-shrink-0">
+              <div className="sticky top-32">
+                <Card className="shadow-sm">
+                  <CardHeader className="py-4">
+                    <CardTitle className="text-lg">Filters</CardTitle>
+                  </CardHeader>
+                  <CardContent className="py-2">
+                    <LaptopFilters
+                      filters={filters}
+                      onFiltersChange={setFilters}
+                      processors={processors}
+                      ramSizes={ramSizes}
+                      storageOptions={storageOptions}
+                      graphicsCards={graphicsCards}
+                      screenSizes={screenSizes}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1">
+              <div className="mb-8 flex justify-between items-center">
+                <div className="text-sm text-gray-600">
+                  {!isLaptopsLoading && !laptopsError && (
+                    `Found ${filteredAndSortedLaptops.length} laptops`
+                  )}
+                </div>
+                <div className="flex gap-4 items-center">
+                  <LaptopSort
+                    sortBy={sortBy}
+                    onSortChange={setSortBy}
+                  />
+                  <Button
+                    onClick={handleCollectLaptops}
+                    disabled={isLaptopsLoading || isRefetching}
+                    className="flex items-center gap-2"
+                  >
+                    {(isLaptopsLoading || isRefetching) ? (
+                      <>
+                        <ReloadIcon className="h-4 w-4 animate-spin" />
+                        Collecting...
+                      </>
+                    ) : (
+                      <>
+                        <UpdateIcon className="h-4 w-4" />
+                        Collect Laptops
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <Card className="mb-8">
+                <CardContent className="pt-6">
+                  <form onSubmit={handleSearch} className="flex gap-4">
+                    <input
+                      type="text"
+                      placeholder="Enter Amazon ASIN"
+                      value={asin}
+                      onChange={(e) => setAsin(e.target.value)}
+                      className="flex-1 px-3 py-2 border rounded-md"
+                    />
+                    <Button type="submit" disabled={isProductLoading}>
+                      {isProductLoading ? "Searching..." : "Search"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {product && <LaptopCard laptop={product} />}
+
+              {isLaptopsLoading ? (
+                <div className="text-center py-12">
+                  <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : laptopsError ? (
+                <Card className="border-red-200 bg-red-50">
+                  <CardHeader>
+                    <CardTitle className="text-red-800">Error</CardTitle>
+                    <CardDescription className="text-red-600">
+                      {laptopsError instanceof Error ? laptopsError.message : "Failed to fetch laptops. Please try again later."}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button 
+                      variant="secondary" 
+                      onClick={handleRetry}
+                      disabled={isRefetching}
+                    >
+                      {isRefetching ? "Retrying..." : "Try Again"}
+                    </Button>
+                  </CardContent>
+                </Card>
               ) : (
-                <>
-                  <UpdateIcon className="h-4 w-4" />
-                  Collect Laptops
-                </>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredAndSortedLaptops.map((laptop) => (
+                    <LaptopCard key={laptop.id} laptop={laptop} />
+                  ))}
+                </div>
               )}
-            </Button>
+            </div>
           </div>
-
-          <LaptopFilters
-            filters={filters}
-            onFiltersChange={setFilters}
-            processors={processors}
-            ramSizes={ramSizes}
-            storageOptions={storageOptions}
-            graphicsCards={graphicsCards}
-            screenSizes={screenSizes}
-          />
-
-          <LaptopSort
-            sortBy={sortBy}
-            onSortChange={setSortBy}
-          />
-          
-          <Card className="mb-8">
-            <CardContent className="pt-6">
-              <form onSubmit={handleSearch} className="flex gap-4">
-                <input
-                  type="text"
-                  placeholder="Enter Amazon ASIN"
-                  value={asin}
-                  onChange={(e) => setAsin(e.target.value)}
-                  className="flex-1 px-3 py-2 border rounded-md"
-                />
-                <Button type="submit" disabled={isProductLoading}>
-                  {isProductLoading ? "Searching..." : "Search"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          {product && <LaptopCard laptop={product} />}
-
-          {!isLaptopsLoading && !laptopsError && (
-            <div className="mb-4 text-gray-600">
-              Found {filteredAndSortedLaptops.length} laptops
-            </div>
-          )}
-
-          {isLaptopsLoading ? (
-            <div className="text-center py-12">
-              <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
-            </div>
-          ) : laptopsError ? (
-            <Card className="border-red-200 bg-red-50">
-              <CardHeader>
-                <CardTitle className="text-red-800">Error</CardTitle>
-                <CardDescription className="text-red-600">
-                  {laptopsError instanceof Error ? laptopsError.message : "Failed to fetch laptops. Please try again later."}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  variant="secondary" 
-                  onClick={handleRetry}
-                  disabled={isRefetching}
-                >
-                  {isRefetching ? "Retrying..." : "Try Again"}
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredAndSortedLaptops.map((laptop) => (
-                <LaptopCard key={laptop.id} laptop={laptop} />
-              ))}
-            </div>
-          )}
         </div>
       </main>
     </div>
@@ -259,3 +277,4 @@ const ComparePriceLaptops = () => {
 };
 
 export default ComparePriceLaptops;
+
