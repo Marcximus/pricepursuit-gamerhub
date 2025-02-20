@@ -7,12 +7,34 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const LAPTOP_QUERIES = [
-  'gaming laptops',
-  'business laptops',
-  'ultrabook laptops',
-  'student laptops'
-]
+// Define more specific laptop categories
+const LAPTOP_CATEGORIES = [
+  {
+    query: 'traditional laptops',
+    pages: 3,
+    source: 'amazon_search'
+  },
+  {
+    query: '2-in-1 laptops',
+    pages: 2,
+    source: 'amazon_search'
+  },
+  {
+    query: 'gaming laptops',
+    pages: 3,
+    source: 'amazon_search'
+  },
+  {
+    query: 'ultrabook laptops',
+    pages: 2,
+    source: 'amazon_search'
+  },
+  {
+    query: 'business laptops',
+    pages: 2,
+    source: 'amazon_search'
+  }
+];
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -25,16 +47,16 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Check for Oxylabs credentials before proceeding
+    // Check credentials
     const oxyUsername = Deno.env.get('OXYLABS_USERNAME')
     const oxyPassword = Deno.env.get('OXYLABS_PASSWORD')
 
     if (!oxyUsername || !oxyPassword) {
       console.error('Oxylabs credentials missing');
-      throw new Error('Oxylabs credentials not configured. Please set OXYLABS_USERNAME and OXYLABS_PASSWORD in Supabase secrets.')
+      throw new Error('Oxylabs credentials not configured')
     }
 
-    // First try to get existing data
+    // Check existing data first
     const { data: existingLaptops, error: dbError } = await supabaseAdmin
       .from('products')
       .select('*')
@@ -61,107 +83,89 @@ serve(async (req) => {
       )
     }
 
-    console.log('Fetching fresh laptop data...')
+    console.log('Starting fresh laptop catalog build...')
     
     let allLaptops: any[] = [];
+    const processedAsins = new Set<string>();
 
-    // Test Oxylabs authentication first
-    const testResponse = await fetch('https://realtime.oxylabs.io/v1/queries', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa(`${oxyUsername}:${oxyPassword}`)
-      },
-      body: JSON.stringify({
-        source: 'amazon_search',
-        query: LAPTOP_QUERIES[0],
-        domain: 'com',
-        geo_location: 'United States',
-        locale: 'en_US',
-        start_page: '1',
-        pages: 1,
-        parse: true
-      })
-    })
-
-    if (!testResponse.ok) {
-      console.error('Oxylabs authentication failed:', testResponse.status);
-      if (existingLaptops && existingLaptops.length > 0) {
-        console.log('Falling back to existing data due to Oxylabs auth failure');
-        return new Response(
-          JSON.stringify(existingLaptops),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-      throw new Error(`Oxylabs API error: ${testResponse.status}. Please verify your credentials.`)
-    }
-
-    // If authentication successful, proceed with full data fetch
-    for (const query of LAPTOP_QUERIES) {
+    // Process each category
+    for (const category of LAPTOP_CATEGORIES) {
       try {
-        console.log(`Fetching ${query}...`);
+        console.log(`Processing category: ${category.query}`);
         
-        const searchResponse = await fetch('https://realtime.oxylabs.io/v1/queries', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic ' + btoa(`${oxyUsername}:${oxyPassword}`)
-          },
-          body: JSON.stringify({
-            source: 'amazon_search',
-            query,
-            domain: 'com',
-            geo_location: 'United States',
-            locale: 'en_US',
-            start_page: '1',
-            pages: 2,
-            parse: true
+        for (let page = 1; page <= category.pages; page++) {
+          console.log(`Fetching page ${page} of ${category.query}...`);
+          
+          const searchResponse = await fetch('https://realtime.oxylabs.io/v1/queries', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Basic ' + btoa(`${oxyUsername}:${oxyPassword}`)
+            },
+            body: JSON.stringify({
+              source: category.source,
+              query: category.query,
+              domain: 'com',
+              geo_location: 'United States',
+              locale: 'en_US',
+              start_page: page.toString(),
+              pages: 1,
+              parse: true
+            })
           })
-        })
 
-        if (!searchResponse.ok) {
-          console.error(`Error fetching ${query}:`, searchResponse.status);
-          continue;
+          if (!searchResponse.ok) {
+            console.error(`Error fetching ${category.query} page ${page}:`, searchResponse.status);
+            continue;
+          }
+
+          const searchData = await searchResponse.json();
+          
+          if (!searchData?.results?.[0]?.content?.results) {
+            console.error(`No results found for ${category.query} page ${page}`);
+            break; // Exit pagination if no results found
+          }
+
+          const pageResults = searchData.results[0].content.results;
+          console.log(`Found ${pageResults.length} results on page ${page}`);
+
+          // Process each product
+          const categoryLaptops = pageResults
+            .filter((item: any) => {
+              if (!item.asin || !item.price?.current || processedAsins.has(item.asin)) {
+                return false;
+              }
+              processedAsins.add(item.asin);
+              return true;
+            })
+            .map((item: any) => ({
+              asin: item.asin,
+              title: item.title || '',
+              current_price: parseFloat(item.price.current.replace(/[^0-9.]/g, '')) || 0,
+              original_price: parseFloat((item.price.previous || item.price.current).replace(/[^0-9.]/g, '')) || 0,
+              rating: parseFloat(item.rating) || 0,
+              rating_count: parseInt(item.ratings_total) || 0,
+              image_url: item.image || '',
+              product_url: item.url || '',
+              category: category.query.split(' ')[0],
+              is_laptop: true,
+              last_checked: new Date().toISOString()
+            }));
+
+          allLaptops = [...allLaptops, ...categoryLaptops];
+          console.log(`Added ${categoryLaptops.length} new laptops from ${category.query} page ${page}`);
+          
+          // Implement a small delay between requests
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
-
-        const searchData = await searchResponse.json();
-        
-        if (!searchData?.results?.[0]?.content?.results) {
-          console.error(`No results found for ${query}`);
-          continue;
-        }
-
-        const categoryLaptops = searchData.results[0].content.results
-          .filter((item: any) => (
-            item.asin && 
-            item.price?.current &&
-            !allLaptops.some(l => l.asin === item.asin)
-          ))
-          .map((item: any) => ({
-            asin: item.asin,
-            title: item.title || '',
-            current_price: parseFloat(item.price.current.replace(/[^0-9.]/g, '')) || 0,
-            original_price: parseFloat((item.price.previous || item.price.current).replace(/[^0-9.]/g, '')) || 0,
-            rating: parseFloat(item.rating) || 0,
-            rating_count: parseInt(item.ratings_total) || 0,
-            image_url: item.image || '',
-            product_url: item.url || '',
-            category: query.split(' ')[0],
-            is_laptop: true,
-            last_checked: new Date().toISOString()
-          }));
-
-        allLaptops = [...allLaptops, ...categoryLaptops];
-        console.log(`Added ${categoryLaptops.length} laptops from ${query}`);
       } catch (error) {
-        console.error(`Error processing ${query}:`, error);
+        console.error(`Error processing category ${category.query}:`, error);
         continue;
       }
     }
 
     if (allLaptops.length === 0) {
       if (existingLaptops && existingLaptops.length > 0) {
-        console.log('No new data found, returning existing data');
         return new Response(
           JSON.stringify(existingLaptops),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -170,7 +174,7 @@ serve(async (req) => {
       throw new Error('No laptop data found')
     }
 
-    console.log(`Found ${allLaptops.length} total laptops`);
+    console.log(`Found ${allLaptops.length} total unique laptops`);
 
     // Update database
     const { error: upsertError } = await supabaseAdmin
