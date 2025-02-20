@@ -7,25 +7,24 @@ import type { Product } from "@/types/product";
 export const useLaptops = () => {
   const fetchLaptops = async (): Promise<Product[]> => {
     try {
-      const { data, error } = await supabase.functions.invoke('fetch-laptops');
+      console.log('Fetching laptops...');
       
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_laptop', true)
+        .order('created_at', { ascending: false });
+
       if (error) {
-        console.error('Error invoking fetch-laptops function:', error);
-        throw new Error('Failed to fetch laptop data: ' + error.message);
+        console.error('Error fetching laptops:', error);
+        throw new Error('Failed to fetch laptops: ' + error.message);
       }
 
       if (!data) {
-        throw new Error('No data received from fetch-laptops function');
+        throw new Error('No data received from database');
       }
 
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      if (!Array.isArray(data)) {
-        throw new Error('Invalid response format: expected an array');
-      }
-
+      console.log(`Found ${data.length} laptops`);
       return data;
     } catch (error) {
       console.error('Error in useLaptops hook:', error);
