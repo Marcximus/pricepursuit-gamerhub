@@ -7,21 +7,34 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle 
-} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Product } from "@/types/product";
 
 type SortOption = "price-asc" | "price-desc" | "rating-desc" | "performance-desc";
+type FilterOptions = {
+  priceRange: { min: number; max: number };
+  processor: string;
+  ram: string;
+  storage: string;
+  graphics: string;
+  screenSize: string;
+};
 
 const ComparePriceLaptops = () => {
   const [asin, setAsin] = useState("");
   const [searchAsin, setSearchAsin] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("price-asc");
+  const [filters, setFilters] = useState<FilterOptions>({
+    priceRange: { min: 0, max: 10000 },
+    processor: "",
+    ram: "",
+    storage: "",
+    graphics: "",
+    screenSize: "",
+  });
+
   const { data: product, isLoading: isProductLoading } = useProduct(searchAsin);
   const { 
     data: laptops, 
@@ -63,6 +76,37 @@ const ComparePriceLaptops = () => {
     }
   };
 
+  const getUniqueValues = (key: keyof Product) => {
+    if (!laptops) return new Set<string>();
+    return new Set(laptops.map(laptop => laptop[key]).filter(Boolean));
+  };
+
+  const filterLaptops = (laptops: Product[] | undefined) => {
+    if (!laptops) return [];
+    
+    return laptops.filter(laptop => {
+      const price = laptop.current_price || 0;
+      if (price < filters.priceRange.min || price > filters.priceRange.max) return false;
+      
+      if (filters.processor && laptop.processor && 
+          !laptop.processor.toLowerCase().includes(filters.processor.toLowerCase())) return false;
+      
+      if (filters.ram && laptop.ram && 
+          !laptop.ram.toLowerCase().includes(filters.ram.toLowerCase())) return false;
+      
+      if (filters.storage && laptop.storage && 
+          !laptop.storage.toLowerCase().includes(filters.storage.toLowerCase())) return false;
+      
+      if (filters.graphics && laptop.graphics && 
+          !laptop.graphics.toLowerCase().includes(filters.graphics.toLowerCase())) return false;
+      
+      if (filters.screenSize && laptop.screen_size && 
+          !laptop.screen_size.toLowerCase().includes(filters.screenSize.toLowerCase())) return false;
+      
+      return true;
+    });
+  };
+
   const sortLaptops = (laptops: Product[] | undefined) => {
     if (!laptops) return [];
     
@@ -83,7 +127,13 @@ const ComparePriceLaptops = () => {
     });
   };
 
-  const sortedLaptops = sortLaptops(laptops);
+  const filteredAndSortedLaptops = sortLaptops(filterLaptops(laptops));
+
+  const processors = getUniqueValues('processor');
+  const ramSizes = getUniqueValues('ram');
+  const storageOptions = getUniqueValues('storage');
+  const graphicsCards = getUniqueValues('graphics');
+  const screenSizes = getUniqueValues('screen_size');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -91,7 +141,138 @@ const ComparePriceLaptops = () => {
       
       <main className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {/* Sort options only */}
+          {/* Filters section */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Filters</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Price Range */}
+                <div className="space-y-2">
+                  <Label>Price Range</Label>
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      type="number"
+                      placeholder="Min"
+                      value={filters.priceRange.min}
+                      onChange={(e) => setFilters({
+                        ...filters,
+                        priceRange: { ...filters.priceRange, min: Number(e.target.value) }
+                      })}
+                    />
+                    <span>to</span>
+                    <Input
+                      type="number"
+                      placeholder="Max"
+                      value={filters.priceRange.max}
+                      onChange={(e) => setFilters({
+                        ...filters,
+                        priceRange: { ...filters.priceRange, max: Number(e.target.value) }
+                      })}
+                    />
+                  </div>
+                </div>
+
+                {/* Processor Filter */}
+                <div className="space-y-2">
+                  <Label>Processor</Label>
+                  <Select
+                    value={filters.processor}
+                    onValueChange={(value) => setFilters({ ...filters, processor: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select processor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Processors</SelectItem>
+                      {Array.from(processors).map((processor) => (
+                        processor && <SelectItem key={processor} value={processor}>{processor}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* RAM Filter */}
+                <div className="space-y-2">
+                  <Label>RAM</Label>
+                  <Select
+                    value={filters.ram}
+                    onValueChange={(value) => setFilters({ ...filters, ram: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select RAM" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All RAM sizes</SelectItem>
+                      {Array.from(ramSizes).map((ram) => (
+                        ram && <SelectItem key={ram} value={ram}>{ram}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Storage Filter */}
+                <div className="space-y-2">
+                  <Label>Storage</Label>
+                  <Select
+                    value={filters.storage}
+                    onValueChange={(value) => setFilters({ ...filters, storage: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select storage" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All storage options</SelectItem>
+                      {Array.from(storageOptions).map((storage) => (
+                        storage && <SelectItem key={storage} value={storage}>{storage}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Graphics Filter */}
+                <div className="space-y-2">
+                  <Label>Graphics</Label>
+                  <Select
+                    value={filters.graphics}
+                    onValueChange={(value) => setFilters({ ...filters, graphics: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select graphics" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All graphics cards</SelectItem>
+                      {Array.from(graphicsCards).map((graphics) => (
+                        graphics && <SelectItem key={graphics} value={graphics}>{graphics}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Screen Size Filter */}
+                <div className="space-y-2">
+                  <Label>Screen Size</Label>
+                  <Select
+                    value={filters.screenSize}
+                    onValueChange={(value) => setFilters({ ...filters, screenSize: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select screen size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All screen sizes</SelectItem>
+                      {Array.from(screenSizes).map((size) => (
+                        size && <SelectItem key={size} value={size}>{size}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sort options */}
           <div className="flex justify-end mb-8">
             <Select
               value={sortBy}
@@ -205,6 +386,13 @@ const ComparePriceLaptops = () => {
             </Card>
           )}
 
+          {/* Results count */}
+          {!isLaptopsLoading && !laptopsError && (
+            <div className="mb-4 text-gray-600">
+              Found {filteredAndSortedLaptops.length} laptops
+            </div>
+          )}
+
           {/* Laptops grid */}
           <section>
             {isLaptopsLoading ? (
@@ -231,7 +419,7 @@ const ComparePriceLaptops = () => {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sortedLaptops.map((laptop) => (
+                {filteredAndSortedLaptops.map((laptop) => (
                   <Card key={laptop.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                     <div className="aspect-w-16 aspect-h-9">
                       {laptop.image_url && (
@@ -261,6 +449,16 @@ const ComparePriceLaptops = () => {
                           {laptop.storage && (
                             <p className="text-sm text-gray-600">
                               <span className="font-medium">Storage:</span> {laptop.storage}
+                            </p>
+                          )}
+                          {laptop.graphics && (
+                            <p className="text-sm text-gray-600">
+                              <span className="font-medium">Graphics:</span> {laptop.graphics}
+                            </p>
+                          )}
+                          {laptop.screen_size && (
+                            <p className="text-sm text-gray-600">
+                              <span className="font-medium">Screen:</span> {laptop.screen_size}
                             </p>
                           )}
                         </div>
