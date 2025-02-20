@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,50 +7,32 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { asin } = await req.json()
+    const { asin } = await req.json();
     
     if (!asin) {
-      return new Response(
-        JSON.stringify({ error: 'ASIN is required' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
+      throw new Error('ASIN is required');
     }
 
-    // Initialize Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    )
+    const username = Deno.env.get('OXYLABS_USERNAME');
+    const password = Deno.env.get('OXYLABS_PASSWORD');
 
-    // Check if we have recent data (less than 1 hour old)
-    const { data: existingProduct } = await supabaseClient
-      .from('products')
-      .select('*')
-      .eq('asin', asin)
-      .gte('last_checked', new Date(Date.now() - 3600000).toISOString())
-      .maybeSingle()
-
-    if (existingProduct) {
-      return new Response(
-        JSON.stringify(existingProduct),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    if (!username || !password) {
+      throw new Error('Oxylabs credentials not configured');
     }
 
-    // Fetch new data from Oxylabs
-    const oxyUsername = Deno.env.get('OXYLABS_USERNAME')
-    const oxyPassword = Deno.env.get('OXYLABS_PASSWORD')
+    console.log(`Fetching product data for ASIN: ${asin}`);
 
     const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa(`${oxyUsername}:${oxyPassword}`)
+        'Authorization': 'Basic ' + btoa(`${username}:${password}`)
       },
       body: JSON.stringify({
         source: 'amazon_product',
@@ -59,55 +40,60 @@ serve(async (req) => {
         geo_location: '90210',
         parse: true
       })
-    })
+    });
 
-    const data = await response.json()
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Oxylabs API error:', errorText);
+      throw new Error(`Failed to fetch from Oxylabs: ${response.statusText}`);
+    }
+
+    const data = await response.json();
     
     if (!data.results?.[0]?.content) {
-      throw new Error('No product data found')
+      console.error('No content in Oxylabs response:', data);
+      throw new Error('No product data found');
     }
 
-    const productData = data.results[0].content
-
-    // Prepare product data
-    const product = {
+    const product = data.results[0].content;
+    
+    const formattedProduct = {
+      id: asin,
       asin: asin,
-      title: productData.title,
-      current_price: productData.price?.current,
-      original_price: productData.price?.previous || productData.price?.current,
-      rating: productData.rating,
-      rating_count: productData.ratings_total,
-      image_url: productData.images?.[0],
-      product_url: productData.url,
+      title: product.title,
+      current_price: product.price?.current_price || product.price?.current,
+      original_price: product.price?.previous_price || product.price?.previous || product.price?.current,
+      rating: product.rating,
+      rating_count: product.ratings_total,
+      image_url: product.images?.[0],
+      product_url: product.url,
       last_checked: new Date().toISOString()
-    }
+    };
 
-    // Update or insert product data
-    const { data: upsertedProduct, error: upsertError } = await supabaseClient
-      .from('products')
-      .upsert(product)
-      .select()
-      .single()
-
-    if (upsertError) throw upsertError
-
-    // Add price history entry
-    await supabaseClient
-      .from('price_history')
-      .insert({
-        product_id: upsertedProduct.id,
-        price: product.current_price
-      })
+    console.log('Successfully fetched product data:', formattedProduct);
 
     return new Response(
-      JSON.stringify(upsertedProduct),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+      JSON.stringify(formattedProduct),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
+    );
 
   } catch (error) {
+    console.error('Error in fetch-product function:', error);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+      JSON.stringify({ error: error.message || 'Failed to fetch product data' }),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json'
+        },
+        status: 500
+      }
+    );
   }
-})
+});
