@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useProduct } from "@/hooks/useProduct";
 import { useLaptops } from "@/hooks/useLaptops";
@@ -78,7 +77,10 @@ const ComparePriceLaptops = () => {
 
   const getUniqueValues = (key: keyof Product) => {
     if (!laptops) return new Set<string>();
-    return new Set(laptops.map(laptop => laptop[key]).filter(Boolean));
+    return new Set(laptops.map(laptop => {
+      const value = laptop[key];
+      return value ? String(value) : null;
+    }).filter(Boolean));
   };
 
   const filterLaptops = (laptops: Product[] | undefined) => {
@@ -187,7 +189,7 @@ const ComparePriceLaptops = () => {
                     <SelectContent>
                       <SelectItem value="">All Processors</SelectItem>
                       {Array.from(processors).map((processor) => (
-                        processor && <SelectItem key={processor} value={processor}>{processor}</SelectItem>
+                        processor && <SelectItem key={String(processor)} value={String(processor)}>{String(processor)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -206,7 +208,7 @@ const ComparePriceLaptops = () => {
                     <SelectContent>
                       <SelectItem value="">All RAM sizes</SelectItem>
                       {Array.from(ramSizes).map((ram) => (
-                        ram && <SelectItem key={ram} value={ram}>{ram}</SelectItem>
+                        ram && <SelectItem key={String(ram)} value={String(ram)}>{String(ram)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -225,7 +227,7 @@ const ComparePriceLaptops = () => {
                     <SelectContent>
                       <SelectItem value="">All storage options</SelectItem>
                       {Array.from(storageOptions).map((storage) => (
-                        storage && <SelectItem key={storage} value={storage}>{storage}</SelectItem>
+                        storage && <SelectItem key={String(storage)} value={String(storage)}>{String(storage)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -244,7 +246,7 @@ const ComparePriceLaptops = () => {
                     <SelectContent>
                       <SelectItem value="">All graphics cards</SelectItem>
                       {Array.from(graphicsCards).map((graphics) => (
-                        graphics && <SelectItem key={graphics} value={graphics}>{graphics}</SelectItem>
+                        graphics && <SelectItem key={String(graphics)} value={String(graphics)}>{String(graphics)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -263,7 +265,7 @@ const ComparePriceLaptops = () => {
                     <SelectContent>
                       <SelectItem value="">All screen sizes</SelectItem>
                       {Array.from(screenSizes).map((size) => (
-                        size && <SelectItem key={size} value={size}>{size}</SelectItem>
+                        size && <SelectItem key={String(size)} value={String(size)}>{String(size)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
