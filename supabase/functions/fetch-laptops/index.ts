@@ -1,46 +1,90 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const LAPTOP_ASINS = [
+  "B0BSHF7WHH", // Example ASIN - Dell XPS
+  "B09PTVP3RT", // Example ASIN - MacBook Pro
+  "B09RBGCX3D", // Example ASIN - Lenovo ThinkPad
+  // Add more ASINs as needed
+];
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const username = Deno.env.get('OXYLABS_USERNAME');
+    const password = Deno.env.get('OXYLABS_PASSWORD');
 
-    // Fetch laptops from the database
-    const { data: laptops, error: dbError } = await supabaseClient
-      .from('products')
-      .select('*')
-      .eq('is_laptop', true)
-      .order('current_price', { ascending: true });
-
-    if (dbError) {
-      console.error('Database error:', dbError);
-      throw new Error('Failed to fetch laptops from database');
+    if (!username || !password) {
+      throw new Error('Oxylabs credentials not configured');
     }
 
-    // Return the laptops with CORS headers
+    // Fetch data for each ASIN in parallel
+    const laptopPromises = LAPTOP_ASINS.map(async (asin) => {
+      const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic ' + btoa(`${username}:${password}`)
+        },
+        body: JSON.stringify({
+          source: 'amazon_product',
+          query: asin,
+          geo_location: '90210',
+          parse: true
+        })
+      });
+
+      if (!response.ok) {
+        console.error(`Failed to fetch data for ASIN ${asin}:`, await response.text());
+        return null;
+      }
+
+      const data = await response.json();
+      
+      if (!data.results?.[0]?.content) {
+        console.error(`No content found for ASIN ${asin}`);
+        return null;
+      }
+
+      const product = data.results[0].content;
+      
+      return {
+        id: asin,
+        title: product.title,
+        description: product.description,
+        current_price: product.price?.current_price || product.price?.current,
+        original_price: product.price?.previous_price || product.price?.previous || product.price?.current,
+        rating: product.rating,
+        rating_count: product.ratings_total,
+        image_url: product.images?.[0],
+        product_url: product.url,
+        asin: asin,
+        features: product.feature_bullets,
+        brand: product.brand,
+        availability: product.available ? "In Stock" : "Out of Stock"
+      };
+    });
+
+    const results = await Promise.all(laptopPromises);
+    const validResults = results.filter(result => result !== null);
+
     return new Response(
-      JSON.stringify(laptops),
+      JSON.stringify(validResults),
       { 
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json' 
         } 
       }
-    )
+    );
 
   } catch (error) {
     console.error('Error in fetch-laptops function:', error);
@@ -54,6 +98,6 @@ serve(async (req) => {
         },
         status: 500
       }
-    )
+    );
   }
-})
+});
