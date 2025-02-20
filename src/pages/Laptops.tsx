@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { ReloadIcon } from "@radix-ui/react-icons";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Card,
   CardContent,
@@ -14,11 +15,15 @@ import {
   CardHeader,
   CardTitle 
 } from "@/components/ui/card";
+import type { Product } from "@/types/product";
+
+type SortOption = "price-asc" | "price-desc" | "rating-desc" | "performance-desc";
 
 const LaptopsPage = () => {
   const [asin, setAsin] = useState("");
   const [searchAsin, setSearchAsin] = useState("");
-  const { data: product, isLoading: isProductLoading, error: productError } = useProduct(searchAsin);
+  const [sortBy, setSortBy] = useState<SortOption>("price-asc");
+  const { data: product, isLoading: isProductLoading } = useProduct(searchAsin);
   const { 
     data: laptops, 
     isLoading: isLaptopsLoading, 
@@ -45,13 +50,65 @@ const LaptopsPage = () => {
     refetchLaptops();
   };
 
+  const sortLaptops = (laptops: Product[] | undefined) => {
+    if (!laptops) return [];
+    
+    return [...laptops].sort((a, b) => {
+      switch (sortBy) {
+        case "price-asc":
+          return (a.current_price || 0) - (b.current_price || 0);
+        case "price-desc":
+          return (b.current_price || 0) - (a.current_price || 0);
+        case "rating-desc":
+          return ((b.rating || 0) * (b.rating_count || 0)) - 
+                 ((a.rating || 0) * (a.rating_count || 0));
+        case "performance-desc":
+          return (b.processor_score || 0) - (a.processor_score || 0);
+        default:
+          return 0;
+      }
+    });
+  };
+
+  const sortedLaptops = sortLaptops(laptops);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       
       <main className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-bold text-gray-900 mb-8">Laptop Price Comparison</h1>
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900">Laptop Price Comparison</h1>
+            <div className="flex items-center gap-4">
+              <Select
+                value={sortBy}
+                onValueChange={(value) => setSortBy(value as SortOption)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sort by..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                  <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                  <SelectItem value="rating-desc">Best Rated</SelectItem>
+                  <SelectItem value="performance-desc">Best Performance</SelectItem>
+                </SelectContent>
+              </Select>
+              {(laptopsError || !isLaptopsLoading) && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleRetry}
+                  disabled={isRefetching}
+                >
+                  {isRefetching && (
+                    <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Refresh
+                </Button>
+              )}
+            </div>
+          </div>
           
           <Card className="mb-8">
             <CardHeader>
@@ -76,17 +133,6 @@ const LaptopsPage = () => {
             </CardContent>
           </Card>
 
-          {productError && (
-            <Card className="mb-8 border-red-200 bg-red-50">
-              <CardHeader>
-                <CardTitle className="text-red-800">Error</CardTitle>
-                <CardDescription className="text-red-600">
-                  Failed to fetch product data. Please try again.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          )}
-
           {product && (
             <Card className="mb-8 overflow-hidden">
               <CardHeader>
@@ -104,6 +150,41 @@ const LaptopsPage = () => {
                     )}
                   </div>
                   <div className="space-y-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Specifications</h3>
+                      <dl className="mt-2 space-y-2">
+                        {product.processor && (
+                          <div>
+                            <dt className="text-sm font-medium text-gray-500">Processor</dt>
+                            <dd className="text-sm text-gray-900">{product.processor}</dd>
+                          </div>
+                        )}
+                        {product.ram && (
+                          <div>
+                            <dt className="text-sm font-medium text-gray-500">RAM</dt>
+                            <dd className="text-sm text-gray-900">{product.ram}</dd>
+                          </div>
+                        )}
+                        {product.storage && (
+                          <div>
+                            <dt className="text-sm font-medium text-gray-500">Storage</dt>
+                            <dd className="text-sm text-gray-900">{product.storage}</dd>
+                          </div>
+                        )}
+                        {product.screen_size && (
+                          <div>
+                            <dt className="text-sm font-medium text-gray-500">Screen Size</dt>
+                            <dd className="text-sm text-gray-900">{product.screen_size}</dd>
+                          </div>
+                        )}
+                        {product.graphics && (
+                          <div>
+                            <dt className="text-sm font-medium text-gray-500">Graphics</dt>
+                            <dd className="text-sm text-gray-900">{product.graphics}</dd>
+                          </div>
+                        )}
+                      </dl>
+                    </div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">Current Price</h3>
                       <p className="text-3xl font-bold text-green-600">
@@ -136,18 +217,9 @@ const LaptopsPage = () => {
           <section className="mt-12">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Available Laptops</h2>
-              {(laptopsError || !isLaptopsLoading) && (
-                <Button 
-                  variant="outline" 
-                  onClick={handleRetry}
-                  disabled={isRefetching}
-                >
-                  {isRefetching && (
-                    <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Refresh
-                </Button>
-              )}
+              <p className="text-gray-500">
+                {sortedLaptops.length} laptops found
+              </p>
             </div>
             
             {isLaptopsLoading ? (
@@ -176,7 +248,7 @@ const LaptopsPage = () => {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {laptops?.map((laptop) => (
+                {sortedLaptops.map((laptop) => (
                   <Card key={laptop.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                     <div className="aspect-w-16 aspect-h-9">
                       {laptop.image_url && (
@@ -191,7 +263,24 @@ const LaptopsPage = () => {
                       <CardTitle className="text-lg line-clamp-2">{laptop.title}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-2">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          {laptop.processor && (
+                            <p className="text-sm text-gray-600">
+                              <span className="font-medium">Processor:</span> {laptop.processor}
+                            </p>
+                          )}
+                          {laptop.ram && (
+                            <p className="text-sm text-gray-600">
+                              <span className="font-medium">RAM:</span> {laptop.ram}
+                            </p>
+                          )}
+                          {laptop.storage && (
+                            <p className="text-sm text-gray-600">
+                              <span className="font-medium">Storage:</span> {laptop.storage}
+                            </p>
+                          )}
+                        </div>
                         <div>
                           <p className="text-2xl font-bold text-green-600">
                             ${laptop.current_price?.toFixed(2)}
