@@ -32,17 +32,32 @@ Deno.serve(async (req) => {
       throw new Error('Oxylabs credentials not configured')
     }
 
-    // List of search queries for laptops
+    // Expanded list of search queries for laptops
     const searchQueries = [
-      "laptop", "notebook computer", "gaming laptop",
-      "Dell laptop", "HP laptop", "Lenovo laptop", 
-      "Apple MacBook", "ASUS laptop", "Acer laptop",
-      "MSI gaming laptop", "Razer laptop", "Chromebook"
+      "laptop",
+      "notebook",
+      "gaming laptop",
+      "2 in 1 laptop",
+      "chromebook",
+      "business laptop",
+      "ultrabook",
+      "student laptop",
+      "Dell laptop",
+      "HP laptop",
+      "Lenovo laptop",
+      "Apple MacBook",
+      "ASUS laptop",
+      "Acer laptop",
+      "MSI gaming laptop",
+      "Razer laptop",
+      "Microsoft Surface laptop",
+      "convertible laptop",
+      "budget laptop",
+      "premium laptop"
     ]
 
     console.log('Starting laptop collection process...')
     const foundAsins = new Set<string>()
-    const maxPagesPerQuery = 2 // Limit to 2 pages per query
 
     for (const query of searchQueries) {
       console.log(`Searching for: ${query}`)
@@ -53,7 +68,7 @@ Deno.serve(async (req) => {
         domain: 'com',
         geo_location: '90210',
         start_page: '1',
-        pages: '2',
+        pages: '100',
         parse: true
       }
 
@@ -105,7 +120,10 @@ Deno.serve(async (req) => {
           // Check if it's actually a laptop based on title and category
           const isLaptop = (item.title || '').toLowerCase().includes('laptop') ||
                           (item.title || '').toLowerCase().includes('notebook') ||
-                          (item.title || '').toLowerCase().includes('macbook')
+                          (item.title || '').toLowerCase().includes('macbook') ||
+                          (item.title || '').toLowerCase().includes('chromebook') ||
+                          (item.title || '').toLowerCase().includes('2 in 1') ||
+                          (item.title || '').toLowerCase().includes('2-in-1')
 
           if (!isLaptop) {
             console.log(`Skipping non-laptop item: ${item.title}`)
