@@ -1,8 +1,8 @@
+
 import { useState } from "react";
 import { useProduct } from "@/hooks/useProduct";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { ReloadIcon } from "@radix-ui/react-icons";
@@ -53,7 +53,7 @@ const ComparePriceLaptops = () => {
         title: "Success",
         description: "Started collecting laptops from Amazon...",
       });
-      setTimeout(() => refetchLaptops(), 5000); // Refetch after 5 seconds
+      setTimeout(() => refetchLaptops(), 5000);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -91,53 +91,34 @@ const ComparePriceLaptops = () => {
       
       <main className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900">Laptop Price Comparison</h1>
-            <div className="flex items-center gap-4">
-              <Select
-                value={sortBy}
-                onValueChange={(value) => setSortBy(value as SortOption)}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Sort by..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                  <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                  <SelectItem value="rating-desc">Best Rated</SelectItem>
-                  <SelectItem value="performance-desc">Best Performance</SelectItem>
-                </SelectContent>
-              </Select>
-              {(laptopsError || !isLaptopsLoading) && (
-                <Button 
-                  variant="outline" 
-                  onClick={handleRetry}
-                  disabled={isRefetching}
-                >
-                  {isRefetching && (
-                    <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Refresh
-                </Button>
-              )}
-            </div>
+          {/* Sort options only */}
+          <div className="flex justify-end mb-8">
+            <Select
+              value={sortBy}
+              onValueChange={(value) => setSortBy(value as SortOption)}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Sort by..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                <SelectItem value="rating-desc">Best Rated</SelectItem>
+                <SelectItem value="performance-desc">Best Performance</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
+          {/* Product search card */}
           <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Search Laptop</CardTitle>
-              <CardDescription>
-                Enter an Amazon ASIN to track prices for a specific laptop model
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <form onSubmit={handleSearch} className="flex gap-4">
-                <Input
+                <input
                   type="text"
-                  placeholder="Enter Amazon ASIN (e.g., B01NAKTA5M)"
+                  placeholder="Enter Amazon ASIN"
                   value={asin}
                   onChange={(e) => setAsin(e.target.value)}
-                  className="flex-1"
+                  className="flex-1 px-3 py-2 border rounded-md"
                 />
                 <Button type="submit" disabled={isProductLoading}>
                   {isProductLoading ? "Searching..." : "Search"}
@@ -146,12 +127,10 @@ const ComparePriceLaptops = () => {
             </CardContent>
           </Card>
 
+          {/* Product details if found */}
           {product && (
             <Card className="mb-8 overflow-hidden">
-              <CardHeader>
-                <CardTitle>{product.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <div className="grid md:grid-cols-2 gap-8">
                   <div>
                     {product.image_url && (
@@ -163,8 +142,9 @@ const ComparePriceLaptops = () => {
                     )}
                   </div>
                   <div className="space-y-4">
+                    <h3 className="text-2xl font-bold">{product.title}</h3>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Specifications</h3>
+                      <h4 className="text-lg font-semibold text-gray-900">Specifications</h4>
                       <dl className="mt-2 space-y-2">
                         {product.processor && (
                           <div>
@@ -199,7 +179,6 @@ const ComparePriceLaptops = () => {
                       </dl>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Current Price</h3>
                       <p className="text-3xl font-bold text-green-600">
                         ${product.current_price?.toFixed(2)}
                       </p>
@@ -210,7 +189,6 @@ const ComparePriceLaptops = () => {
                       )}
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Rating</h3>
                       <p className="text-lg">
                         {product.rating} / 5 ({product.rating_count} reviews)
                       </p>
@@ -227,18 +205,11 @@ const ComparePriceLaptops = () => {
             </Card>
           )}
 
-          <section className="mt-12">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Available Laptops</h2>
-              <p className="text-gray-500">
-                {sortedLaptops.length} laptops found
-              </p>
-            </div>
-            
+          {/* Laptops grid */}
+          <section>
             {isLaptopsLoading ? (
               <div className="text-center py-12">
                 <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
-                <p className="mt-4 text-gray-600">Loading laptops...</p>
               </div>
             ) : laptopsError ? (
               <Card className="border-red-200 bg-red-50">
@@ -253,7 +224,6 @@ const ComparePriceLaptops = () => {
                     variant="secondary" 
                     onClick={handleRetry}
                     disabled={isRefetching}
-                    className="mt-2"
                   >
                     {isRefetching ? "Retrying..." : "Try Again"}
                   </Button>
