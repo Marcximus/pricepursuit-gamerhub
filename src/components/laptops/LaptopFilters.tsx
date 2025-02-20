@@ -77,7 +77,7 @@ export function LaptopFilters({
                 <SelectValue placeholder="Select processor" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Processors</SelectItem>
+                <SelectItem value="all-processors">All Processors</SelectItem>
                 {Array.from(processors).map((processor) => (
                   processor && <SelectItem key={String(processor)} value={String(processor)}>{String(processor)}</SelectItem>
                 ))}
@@ -96,7 +96,7 @@ export function LaptopFilters({
                 <SelectValue placeholder="Select RAM" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All RAM sizes</SelectItem>
+                <SelectItem value="all-ram">All RAM sizes</SelectItem>
                 {Array.from(ramSizes).map((ram) => (
                   ram && <SelectItem key={String(ram)} value={String(ram)}>{String(ram)}</SelectItem>
                 ))}
@@ -115,7 +115,7 @@ export function LaptopFilters({
                 <SelectValue placeholder="Select storage" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All storage options</SelectItem>
+                <SelectItem value="all-storage">All storage options</SelectItem>
                 {Array.from(storageOptions).map((storage) => (
                   storage && <SelectItem key={String(storage)} value={String(storage)}>{String(storage)}</SelectItem>
                 ))}
@@ -134,7 +134,7 @@ export function LaptopFilters({
                 <SelectValue placeholder="Select graphics" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All graphics cards</SelectItem>
+                <SelectItem value="all-graphics">All graphics cards</SelectItem>
                 {Array.from(graphicsCards).map((graphics) => (
                   graphics && <SelectItem key={String(graphics)} value={String(graphics)}>{String(graphics)}</SelectItem>
                 ))}
@@ -153,7 +153,7 @@ export function LaptopFilters({
                 <SelectValue placeholder="Select screen size" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All screen sizes</SelectItem>
+                <SelectItem value="all-screens">All screen sizes</SelectItem>
                 {Array.from(screenSizes).map((size) => (
                   size && <SelectItem key={String(size)} value={String(size)}>{String(size)}</SelectItem>
                 ))}

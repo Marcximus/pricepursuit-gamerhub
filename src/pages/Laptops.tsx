@@ -18,11 +18,11 @@ const ComparePriceLaptops = () => {
   const [sortBy, setSortBy] = useState<SortOption>("price-asc");
   const [filters, setFilters] = useState<FilterOptions>({
     priceRange: { min: 0, max: 10000 },
-    processor: "",
-    ram: "",
-    storage: "",
-    graphics: "",
-    screenSize: "",
+    processor: "all-processors",
+    ram: "all-ram",
+    storage: "all-storage",
+    graphics: "all-graphics",
+    screenSize: "all-screens",
   });
 
   const { data: product, isLoading: isProductLoading } = useProduct(searchAsin);
@@ -81,19 +81,19 @@ const ComparePriceLaptops = () => {
       const price = laptop.current_price || 0;
       if (price < filters.priceRange.min || price > filters.priceRange.max) return false;
       
-      if (filters.processor && laptop.processor && 
+      if (filters.processor !== "all-processors" && laptop.processor && 
           !laptop.processor.toLowerCase().includes(filters.processor.toLowerCase())) return false;
       
-      if (filters.ram && laptop.ram && 
+      if (filters.ram !== "all-ram" && laptop.ram && 
           !laptop.ram.toLowerCase().includes(filters.ram.toLowerCase())) return false;
       
-      if (filters.storage && laptop.storage && 
+      if (filters.storage !== "all-storage" && laptop.storage && 
           !laptop.storage.toLowerCase().includes(filters.storage.toLowerCase())) return false;
       
-      if (filters.graphics && laptop.graphics && 
+      if (filters.graphics !== "all-graphics" && laptop.graphics && 
           !laptop.graphics.toLowerCase().includes(filters.graphics.toLowerCase())) return false;
       
-      if (filters.screenSize && laptop.screen_size && 
+      if (filters.screenSize !== "all-screens" && laptop.screen_size && 
           !laptop.screen_size.toLowerCase().includes(filters.screenSize.toLowerCase())) return false;
       
       return true;
