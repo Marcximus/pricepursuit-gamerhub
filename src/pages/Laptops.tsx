@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { useProduct } from "@/hooks/useProduct";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { ReloadIcon, RefreshCcwIcon } from "@radix-ui/react-icons";
+import { ReloadIcon, UpdateIcon } from "@radix-ui/react-icons";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LaptopFilters, type FilterOptions } from "@/components/laptops/LaptopFilters";
 import { LaptopSort, type SortOption } from "@/components/laptops/LaptopSort";
@@ -56,7 +55,6 @@ const ComparePriceLaptops = () => {
         title: "Collection Started",
         description: "Started collecting laptops from Amazon. This may take a few minutes...",
       });
-      // Set up a polling mechanism to check for new laptops
       const pollInterval = setInterval(async () => {
         const { data: newData } = await refetchLaptops();
         if (newData && newData.length > 0) {
@@ -66,9 +64,8 @@ const ComparePriceLaptops = () => {
             description: `Found ${newData.length} laptops`,
           });
         }
-      }, 10000); // Check every 10 seconds
+      }, 10000);
 
-      // Clear interval after 5 minutes to prevent infinite polling
       setTimeout(() => {
         clearInterval(pollInterval);
       }, 300000);
@@ -166,7 +163,6 @@ const ComparePriceLaptops = () => {
       
       <main className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {/* Add Collect Laptops Button */}
           <div className="mb-8 flex justify-end">
             <Button
               onClick={handleCollectLaptops}
@@ -180,7 +176,7 @@ const ComparePriceLaptops = () => {
                 </>
               ) : (
                 <>
-                  <RefreshCcwIcon className="h-4 w-4" />
+                  <UpdateIcon className="h-4 w-4" />
                   Collect Laptops
                 </>
               )}
@@ -202,7 +198,6 @@ const ComparePriceLaptops = () => {
             onSortChange={setSortBy}
           />
           
-          {/* Product search card */}
           <Card className="mb-8">
             <CardContent className="pt-6">
               <form onSubmit={handleSearch} className="flex gap-4">
@@ -220,48 +215,43 @@ const ComparePriceLaptops = () => {
             </CardContent>
           </Card>
 
-          {/* Product details if found */}
           {product && <LaptopCard laptop={product} />}
 
-          {/* Results count */}
           {!isLaptopsLoading && !laptopsError && (
             <div className="mb-4 text-gray-600">
               Found {filteredAndSortedLaptops.length} laptops
             </div>
           )}
 
-          {/* Laptops grid */}
-          <section>
-            {isLaptopsLoading ? (
-              <div className="text-center py-12">
-                <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
-              </div>
-            ) : laptopsError ? (
-              <Card className="border-red-200 bg-red-50">
-                <CardHeader>
-                  <CardTitle className="text-red-800">Error</CardTitle>
-                  <CardDescription className="text-red-600">
-                    {laptopsError instanceof Error ? laptopsError.message : "Failed to fetch laptops. Please try again later."}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button 
-                    variant="secondary" 
-                    onClick={handleRetry}
-                    disabled={isRefetching}
-                  >
-                    {isRefetching ? "Retrying..." : "Try Again"}
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredAndSortedLaptops.map((laptop) => (
-                  <LaptopCard key={laptop.id} laptop={laptop} />
-                ))}
-              </div>
-            )}
-          </section>
+          {isLaptopsLoading ? (
+            <div className="text-center py-12">
+              <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
+            </div>
+          ) : laptopsError ? (
+            <Card className="border-red-200 bg-red-50">
+              <CardHeader>
+                <CardTitle className="text-red-800">Error</CardTitle>
+                <CardDescription className="text-red-600">
+                  {laptopsError instanceof Error ? laptopsError.message : "Failed to fetch laptops. Please try again later."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  variant="secondary" 
+                  onClick={handleRetry}
+                  disabled={isRefetching}
+                >
+                  {isRefetching ? "Retrying..." : "Try Again"}
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredAndSortedLaptops.map((laptop) => (
+                <LaptopCard key={laptop.id} laptop={laptop} />
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>
