@@ -19,6 +19,8 @@ export interface Product {
   screen_resolution?: string;
   graphics?: string;
   benchmark_score?: number;
+  weight?: string;
+  battery_life?: string;
 }
 
 export interface PriceHistory {
