@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 
 const corsHeaders = {
@@ -38,102 +37,124 @@ Deno.serve(async (req) => {
       "laptop", "notebook computer", "gaming laptop",
       "Dell laptop", "HP laptop", "Lenovo laptop", 
       "Apple MacBook", "ASUS laptop", "Acer laptop",
-      "MSI gaming laptop", "Razer laptop", "Chromebook",
-      "Surface laptop", "2 in 1 laptop", "ultrabook"
+      "MSI gaming laptop", "Razer laptop", "Chromebook"
     ]
 
     console.log('Starting laptop collection process...')
     const foundAsins = new Set<string>()
-    const maxPagesPerQuery = 3 // Limit to 3 pages per query to avoid rate limits
+    const maxPagesPerQuery = 2 // Limit to 2 pages per query
 
     for (const query of searchQueries) {
       console.log(`Searching for: ${query}`)
       
-      for (let page = 1; page <= maxPagesPerQuery; page++) {
-        const payload = {
-          source: 'amazon_search',
-          query: query,
-          domain: 'com',
-          geo_location: '90210',
-          start_page: String(page),
-          pages: '1',
-          parse: true
-        }
+      const payload = {
+        source: 'amazon_search',
+        query: query,
+        domain: 'com',
+        geo_location: '90210',
+        start_page: '1',
+        pages: '2',
+        parse: true
+      }
 
-        console.log(`Fetching page ${page} for query: ${query}`)
-        
-        try {
-          const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Basic ' + btoa(`${oxyUsername}:${oxyPassword}`)
-            },
-            body: JSON.stringify(payload)
-          })
+      console.log('Making request to Oxylabs with payload:', JSON.stringify(payload))
+      
+      try {
+        const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Basic ' + btoa(`${oxyUsername}:${oxyPassword}`)
+          },
+          body: JSON.stringify(payload)
+        })
 
-          if (!response.ok) {
-            console.error(`Error fetching page ${page} for ${query}: ${response.status}`)
-            continue
-          }
-
-          const data = await response.json()
-          const results = data.content?.results?.organic || []
-
-          if (results.length === 0) {
-            console.log(`No more results for query: ${query}`)
-            break
-          }
-
-          // Process and store each product
-          for (const item of results) {
-            if (!item.asin || foundAsins.has(item.asin)) continue
-
-            foundAsins.add(item.asin)
-
-            // Extract processor details and score
-            const processorScore = calculateProcessorScore(item.title || '')
-            
-            // Prepare product data
-            const productData = {
-              asin: item.asin,
-              title: item.title,
-              current_price: parseFloat(item.price?.value || 0),
-              original_price: parseFloat(item.price?.before_price || item.price?.value || 0),
-              rating: parseFloat(item.rating || 0),
-              rating_count: parseInt(item.rating_count || '0', 10),
-              image_url: item.image,
-              product_url: `https://www.amazon.com/dp/${item.asin}`,
-              processor: extractProcessor(item.title || ''),
-              ram: extractRAM(item.title || ''),
-              storage: extractStorage(item.title || ''),
-              screen_size: extractScreenSize(item.title || ''),
-              graphics: extractGraphics(item.title || ''),
-              is_laptop: true,
-              processor_score: processorScore,
-              benchmark_score: calculateBenchmarkScore(processorScore, item.title || ''),
-              last_checked: new Date().toISOString()
-            }
-
-            // Upsert the product into the database
-            const { error } = await supabaseClient
-              .from('products')
-              .upsert(
-                productData,
-                { onConflict: 'asin', ignoreDuplicates: false }
-              )
-
-            if (error) {
-              console.error(`Error upserting product ${item.asin}:`, error)
-            }
-          }
-        } catch (error) {
-          console.error(`Error processing query "${query}" page ${page}:`, error)
+        if (!response.ok) {
+          console.error(`Error fetching results for ${query}: ${response.status}`)
           continue
         }
 
-        // Add a small delay between requests to respect rate limits
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        const data = await response.json()
+        console.log('Oxylabs response:', JSON.stringify(data))
+
+        // Extract results from the response
+        const results = data.results?.[0]?.content?.results?.organic || []
+        
+        if (results.length === 0) {
+          console.log(`No results found for query: ${query}`)
+          continue
+        }
+
+        console.log(`Found ${results.length} results for query: ${query}`)
+
+        // Process and store each product
+        for (const item of results) {
+          if (!item.asin || foundAsins.has(item.asin)) continue
+
+          foundAsins.add(item.asin)
+          
+          // Parse price values carefully
+          const currentPrice = typeof item.price?.value === 'string' 
+            ? parseFloat(item.price.value.replace(/[^0-9.]/g, '')) 
+            : (typeof item.price?.value === 'number' ? item.price.value : 0)
+          
+          const originalPrice = typeof item.price?.before_price === 'string'
+            ? parseFloat(item.price.before_price.replace(/[^0-9.]/g, ''))
+            : (currentPrice || 0)
+
+          // Check if it's actually a laptop based on title and category
+          const isLaptop = (item.title || '').toLowerCase().includes('laptop') ||
+                          (item.title || '').toLowerCase().includes('notebook') ||
+                          (item.title || '').toLowerCase().includes('macbook')
+
+          if (!isLaptop) {
+            console.log(`Skipping non-laptop item: ${item.title}`)
+            continue
+          }
+
+          // Prepare product data
+          const productData = {
+            asin: item.asin,
+            title: item.title,
+            current_price: currentPrice,
+            original_price: originalPrice,
+            rating: parseFloat(item.rating || '0'),
+            rating_count: parseInt(item.rating_count?.replace(/,/g, '') || '0', 10),
+            image_url: item.image,
+            product_url: `https://www.amazon.com/dp/${item.asin}`,
+            processor: extractProcessor(item.title || ''),
+            ram: extractRAM(item.title || ''),
+            storage: extractStorage(item.title || ''),
+            screen_size: extractScreenSize(item.title || ''),
+            graphics: extractGraphics(item.title || ''),
+            is_laptop: true,
+            processor_score: calculateProcessorScore(item.title || ''),
+            benchmark_score: calculateBenchmarkScore(calculateProcessorScore(item.title || ''), item.title || ''),
+            last_checked: new Date().toISOString()
+          }
+
+          console.log(`Processing laptop: ${productData.title}`)
+
+          // Upsert the product into the database
+          const { error } = await supabaseClient
+            .from('products')
+            .upsert(productData, { 
+              onConflict: 'asin',
+              ignoreDuplicates: false 
+            })
+
+          if (error) {
+            console.error(`Error upserting product ${item.asin}:`, error)
+          } else {
+            console.log(`Successfully saved laptop: ${item.asin}`)
+          }
+        }
+
+        // Add a delay between queries to respect rate limits
+        await new Promise(resolve => setTimeout(resolve, 2000))
+      } catch (error) {
+        console.error(`Error processing query "${query}":`, error)
+        continue
       }
     }
 
