@@ -28,7 +28,8 @@ const ComparePriceLaptops = () => {
     isLoading: isLaptopsLoading, 
     error: laptopsError,
     refetch: refetchLaptops,
-    isRefetching
+    isRefetching,
+    collectLaptops
   } = useLaptops();
   const { toast } = useToast();
 
@@ -45,8 +46,21 @@ const ComparePriceLaptops = () => {
     setSearchAsin(asin);
   };
 
-  const handleRetry = () => {
-    refetchLaptops();
+  const handleRetry = async () => {
+    try {
+      await collectLaptops();
+      toast({
+        title: "Success",
+        description: "Started collecting laptops from Amazon...",
+      });
+      setTimeout(() => refetchLaptops(), 5000); // Refetch after 5 seconds
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to collect laptops. Please try again.",
+      });
+    }
   };
 
   const sortLaptops = (laptops: Product[] | undefined) => {

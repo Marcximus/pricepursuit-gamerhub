@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -68,8 +67,26 @@ const staticLaptops: Product[] = [
   }
 ];
 
+export const collectLaptops = async () => {
+  try {
+    console.log('Triggering laptop collection...');
+    const { data, error } = await supabase.functions.invoke('collect-laptops');
+    
+    if (error) {
+      console.error('Error collecting laptops:', error);
+      throw error;
+    }
+    
+    console.log('Laptop collection response:', data);
+    return data;
+  } catch (error) {
+    console.error('Failed to collect laptops:', error);
+    throw error;
+  }
+};
+
 export const useLaptops = () => {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['laptops'],
     queryFn: async () => {
       try {
@@ -83,13 +100,14 @@ export const useLaptops = () => {
 
         if (error) {
           console.error('Error fetching laptops:', error);
-          // If there's an error, return static data instead of throwing
           console.log('Returning static data due to error');
           return staticLaptops;
         }
 
         if (!data || data.length === 0) {
           console.log('No data from Supabase, returning static data');
+          // Try to collect laptops if we don't have any
+          collectLaptops().catch(console.error);
           return staticLaptops;
         }
 
@@ -102,6 +120,11 @@ export const useLaptops = () => {
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
-    initialData: staticLaptops, // Provide static data immediately
+    initialData: staticLaptops,
   });
+
+  return {
+    ...query,
+    collectLaptops,
+  };
 };
