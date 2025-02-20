@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -22,57 +21,77 @@ serve(async (req) => {
     }
 
     console.log('Starting laptop collection with credentials check...');
+    console.log('Credentials found:', { 
+      username: username ? 'present' : 'missing',
+      password: password ? 'present' : 'missing'
+    });
 
     // Simple test request first
     const testQuery = {
       source: "amazon_product",
       query: "B0BS3RMPGD", // Using a known laptop ASIN for test
-      parse: true
+      parse: true,
+      domain: "com"
     };
 
-    // Log the complete request details (excluding sensitive info)
-    console.log('Oxylabs request details:', {
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Basic ' + btoa(`${username}:${password}`)
+    };
+
+    // Log EVERYTHING about the request
+    console.log('Full Oxylabs request:', {
       url: 'https://realtime.oxylabs.io/v1/queries',
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Don't log the actual Authorization header
-        'Authorization': 'Basic ***' 
-      },
-      body: JSON.stringify(testQuery, null, 2)
+      headers: headers,
+      body: testQuery,
+      encodedAuth: btoa(`${username}:${password}`),
+      fullRequest: {
+        method: 'POST',
+        url: 'https://realtime.oxylabs.io/v1/queries',
+        headers: headers,
+        body: JSON.stringify(testQuery, null, 2)
+      }
     });
+
+    console.log('Raw request body being sent:', JSON.stringify(testQuery, null, 2));
 
     console.log('Testing authentication...');
     
     const testResponse = await fetch('https://realtime.oxylabs.io/v1/queries', {
       method: 'POST',
       body: JSON.stringify(testQuery),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa(`${username}:${password}`)
-      }
+      headers: headers
     });
 
-    // Log response status and headers
-    console.log('Oxylabs response details:', {
+    // Log complete response
+    const responseText = await testResponse.text();
+    console.log('Complete Oxylabs response:', {
       status: testResponse.status,
       statusText: testResponse.statusText,
-      headers: Object.fromEntries(testResponse.headers.entries())
+      headers: Object.fromEntries(testResponse.headers.entries()),
+      body: responseText
     });
 
     if (!testResponse.ok) {
-      const errorText = await testResponse.text();
       console.error('Auth test failed:', {
         status: testResponse.status,
         statusText: testResponse.statusText,
-        error: errorText,
-        headers: Object.fromEntries(testResponse.headers.entries())
+        headers: Object.fromEntries(testResponse.headers.entries()),
+        response: responseText
       });
-      throw new Error(`Authentication failed: ${testResponse.status} - ${errorText}`);
+      throw new Error(`Authentication failed: ${testResponse.status} - ${responseText}`);
     }
 
-    const responseData = await testResponse.json();
-    console.log('Oxylabs response data:', JSON.stringify(responseData, null, 2));
+    // Parse response if it's JSON
+    let responseData;
+    try {
+      responseData = JSON.parse(responseText);
+      console.log('Parsed response data:', JSON.stringify(responseData, null, 2));
+    } catch (e) {
+      console.error('Failed to parse response as JSON:', e);
+      console.log('Raw response:', responseText);
+    }
 
     console.log('Authentication successful, proceeding with collection...');
 
