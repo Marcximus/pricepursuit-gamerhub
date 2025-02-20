@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -55,7 +56,7 @@ export const useLaptops = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes to cache the data
     retryDelay: 1000, // Wait 1 second between retries
     retry: 3, // Retry failed requests 3 times
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData, // This replaces keepPreviousData
   });
 
   return {
