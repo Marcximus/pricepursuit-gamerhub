@@ -44,10 +44,12 @@ export type Database = {
       products: {
         Row: {
           asin: string
+          battery_life: string | null
           benchmark_score: number | null
           category: string | null
           created_at: string | null
           current_price: number | null
+          description: string | null
           graphics: string | null
           id: string
           image_url: string | null
@@ -64,13 +66,16 @@ export type Database = {
           screen_size: string | null
           storage: string | null
           title: string | null
+          weight: string | null
         }
         Insert: {
           asin: string
+          battery_life?: string | null
           benchmark_score?: number | null
           category?: string | null
           created_at?: string | null
           current_price?: number | null
+          description?: string | null
           graphics?: string | null
           id?: string
           image_url?: string | null
@@ -87,13 +92,16 @@ export type Database = {
           screen_size?: string | null
           storage?: string | null
           title?: string | null
+          weight?: string | null
         }
         Update: {
           asin?: string
+          battery_life?: string | null
           benchmark_score?: number | null
           category?: string | null
           created_at?: string | null
           current_price?: number | null
+          description?: string | null
           graphics?: string | null
           id?: string
           image_url?: string | null
@@ -110,6 +118,7 @@ export type Database = {
           screen_size?: string | null
           storage?: string | null
           title?: string | null
+          weight?: string | null
         }
         Relationships: []
       }
