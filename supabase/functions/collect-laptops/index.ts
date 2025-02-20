@@ -1,238 +1,231 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const LAPTOP_SEARCH_QUERIES = [
-  'laptop',
-  'gaming laptop',
-  'business laptop',
-  'ultrabook'
-];
+// Response helper
+const respond = (body: any, status = 200) => {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
+}
 
-serve(async (req) => {
+// Handle CORS preflight requests
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const username = Deno.env.get('OXYLABS_USERNAME');
-    const password = Deno.env.get('OXYLABS_PASSWORD');
-
-    if (!username || !password) {
-      console.error('Missing Oxylabs credentials');
-      throw new Error('Oxylabs credentials not configured');
-    }
-
-    console.log('Starting laptop collection process...');
-    const collectedAsins = new Set<string>();
-    const laptops = [];
-
-    for (const searchQuery of LAPTOP_SEARCH_QUERIES) {
-      console.log(`Searching for: ${searchQuery}`);
-      
-      const searchBody = {
-        'source': 'amazon_search',
-        'query': searchQuery,
-        'parse': true,
-        'domain': 'com',
-        'pages': 2, // Collect from first 2 pages
-        'context': [
-          { 'key': 'category_id', 'value': '565108' } // Amazon's Laptop category ID
-        ]
-      };
-
-      const searchResponse = await fetch('https://realtime.oxylabs.io/v1/queries', {
-        method: 'POST',
-        body: JSON.stringify(searchBody),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Basic ' + btoa(`${username}:${password}`)
-        }
-      });
-
-      const searchData = await searchResponse.json();
-      
-      if (!searchResponse.ok) {
-        console.error('Search failed:', searchData);
-        continue;
-      }
-
-      const results = searchData.results?.[0]?.content?.results || [];
-      
-      // Collect ASINs from search results
-      for (const result of results) {
-        if (result.asin && !collectedAsins.has(result.asin)) {
-          collectedAsins.add(result.asin);
-          
-          // Get detailed product information
-          const productBody = {
-            'source': 'amazon_product',
-            'query': result.asin,
-            'parse': true,
-            'domain': 'com'
-          };
-
-          console.log(`Fetching details for ASIN: ${result.asin}`);
-          
-          const productResponse = await fetch('https://realtime.oxylabs.io/v1/queries', {
-            method: 'POST',
-            body: JSON.stringify(productBody),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Basic ' + btoa(`${username}:${password}`)
-            }
-          });
-
-          const productData = await productResponse.json();
-          
-          if (!productResponse.ok) {
-            console.error(`Failed to fetch product ${result.asin}:`, productData);
-            continue;
-          }
-
-          const product = productData.results?.[0]?.content;
-          
-          if (product) {
-            // Extract specifications from product description and features
-            const specs = extractSpecs(product.description || '', product.features || []);
-            
-            laptops.push({
-              asin: result.asin,
-              title: product.title,
-              current_price: parseFloat(product.price?.current_price) || null,
-              original_price: parseFloat(product.price?.previous_price) || parseFloat(product.price?.current_price) || null,
-              rating: parseFloat(product.rating) || null,
-              rating_count: parseInt(product.rating_count) || null,
-              image_url: product.images?.[0] || null,
-              product_url: `https://www.amazon.com/dp/${result.asin}`,
-              description: product.description || null,
-              processor: specs.processor,
-              ram: specs.ram,
-              storage: specs.storage,
-              graphics: specs.graphics,
-              screen_size: specs.screenSize,
-              weight: specs.weight,
-              battery_life: specs.batteryLife,
-              is_laptop: true,
-              last_checked: new Date().toISOString()
-            });
-          }
-        }
-      }
-    }
-
-    // Save to database
-    const supabase = createClient(
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    )
 
-    console.log(`Saving ${laptops.length} laptops to database...`);
+    const oxyUsername = Deno.env.get('OXYLABS_USERNAME')
+    const oxyPassword = Deno.env.get('OXYLABS_PASSWORD')
 
-    for (const laptop of laptops) {
-      const { error: upsertError } = await supabase
-        .from('products')
-        .upsert(
-          [laptop],
-          { 
-            onConflict: 'asin',
-            ignoreDuplicates: false
+    if (!oxyUsername || !oxyPassword) {
+      throw new Error('Oxylabs credentials not configured')
+    }
+
+    // List of search queries for laptops
+    const searchQueries = [
+      "laptop", "notebook computer", "gaming laptop",
+      "Dell laptop", "HP laptop", "Lenovo laptop", 
+      "Apple MacBook", "ASUS laptop", "Acer laptop",
+      "MSI gaming laptop", "Razer laptop", "Chromebook",
+      "Surface laptop", "2 in 1 laptop", "ultrabook"
+    ]
+
+    console.log('Starting laptop collection process...')
+    const foundAsins = new Set<string>()
+    const maxPagesPerQuery = 3 // Limit to 3 pages per query to avoid rate limits
+
+    for (const query of searchQueries) {
+      console.log(`Searching for: ${query}`)
+      
+      for (let page = 1; page <= maxPagesPerQuery; page++) {
+        const payload = {
+          source: 'amazon_search',
+          query: query,
+          domain: 'com',
+          geo_location: '90210',
+          start_page: String(page),
+          pages: '1',
+          parse: true
+        }
+
+        console.log(`Fetching page ${page} for query: ${query}`)
+        
+        try {
+          const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Basic ' + btoa(`${oxyUsername}:${oxyPassword}`)
+            },
+            body: JSON.stringify(payload)
+          })
+
+          if (!response.ok) {
+            console.error(`Error fetching page ${page} for ${query}: ${response.status}`)
+            continue
           }
-        );
 
-      if (upsertError) {
-        console.error('Database error:', upsertError);
-        throw upsertError;
+          const data = await response.json()
+          const results = data.content?.results?.organic || []
+
+          if (results.length === 0) {
+            console.log(`No more results for query: ${query}`)
+            break
+          }
+
+          // Process and store each product
+          for (const item of results) {
+            if (!item.asin || foundAsins.has(item.asin)) continue
+
+            foundAsins.add(item.asin)
+
+            // Extract processor details and score
+            const processorScore = calculateProcessorScore(item.title || '')
+            
+            // Prepare product data
+            const productData = {
+              asin: item.asin,
+              title: item.title,
+              current_price: parseFloat(item.price?.value || 0),
+              original_price: parseFloat(item.price?.before_price || item.price?.value || 0),
+              rating: parseFloat(item.rating || 0),
+              rating_count: parseInt(item.rating_count || '0', 10),
+              image_url: item.image,
+              product_url: `https://www.amazon.com/dp/${item.asin}`,
+              processor: extractProcessor(item.title || ''),
+              ram: extractRAM(item.title || ''),
+              storage: extractStorage(item.title || ''),
+              screen_size: extractScreenSize(item.title || ''),
+              graphics: extractGraphics(item.title || ''),
+              is_laptop: true,
+              processor_score: processorScore,
+              benchmark_score: calculateBenchmarkScore(processorScore, item.title || ''),
+              last_checked: new Date().toISOString()
+            }
+
+            // Upsert the product into the database
+            const { error } = await supabaseClient
+              .from('products')
+              .upsert(
+                productData,
+                { onConflict: 'asin', ignoreDuplicates: false }
+              )
+
+            if (error) {
+              console.error(`Error upserting product ${item.asin}:`, error)
+            }
+          }
+        } catch (error) {
+          console.error(`Error processing query "${query}" page ${page}:`, error)
+          continue
+        }
+
+        // Add a small delay between requests to respect rate limits
+        await new Promise(resolve => setTimeout(resolve, 1000))
       }
     }
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: `Successfully collected ${laptops.length} laptops`,
-        laptops_collected: laptops.length
-      }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return respond({
+      success: true,
+      message: `Collection complete. Found ${foundAsins.size} unique laptops.`
+    })
 
   } catch (error) {
-    console.error('Error in collect-laptops function:', error);
-    
-    return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        details: error instanceof Error ? error.stack : undefined
-      }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-        status: 500,
-      }
-    );
+    console.error('Error in collect-laptops function:', error)
+    return respond({ error: error.message }, 500)
   }
-});
+})
 
-// Helper function to extract specifications from product description and features
-function extractSpecs(description: string, features: string[]): {
-  processor?: string;
-  ram?: string;
-  storage?: string;
-  graphics?: string;
-  screenSize?: string;
-  weight?: string;
-  batteryLife?: string;
-} {
-  const specs = {
-    processor: undefined,
-    ram: undefined,
-    storage: undefined,
-    graphics: undefined,
-    screenSize: undefined,
-    weight: undefined,
-    batteryLife: undefined
-  };
+// Helper functions to extract and score laptop specifications
+function extractProcessor(title: string): string {
+  const processors = [
+    'Intel Core i9', 'Intel Core i7', 'Intel Core i5', 'Intel Core i3',
+    'AMD Ryzen 9', 'AMD Ryzen 7', 'AMD Ryzen 5', 'AMD Ryzen 3',
+    'Apple M3', 'Apple M2', 'Apple M1'
+  ]
+  
+  for (const processor of processors) {
+    if (title.toLowerCase().includes(processor.toLowerCase())) {
+      return processor
+    }
+  }
+  return ''
+}
 
-  const allText = [description, ...features].join(' ');
+function calculateProcessorScore(title: string): number {
+  const processorScores: { [key: string]: number } = {
+    'Intel Core i9': 95, 'Intel Core i7': 85, 'Intel Core i5': 75, 'Intel Core i3': 65,
+    'AMD Ryzen 9': 95, 'AMD Ryzen 7': 85, 'AMD Ryzen 5': 75, 'AMD Ryzen 3': 65,
+    'Apple M3': 98, 'Apple M2': 95, 'Apple M1': 90
+  }
 
-  // Processor
-  const processorMatch = allText.match(/(?:Intel|AMD|Apple M[\d]|Ryzen|Core i[3579]|Snapdragon)[\w\s-]+(processor|CPU)/i);
-  if (processorMatch) specs.processor = processorMatch[0].trim();
+  const processor = extractProcessor(title)
+  return processorScores[processor] || 50
+}
 
-  // RAM
-  const ramMatch = allText.match(/(\d+)\s*GB\s*(DDR[34]|LPDDR[345]|Unified)?\s*(RAM|Memory)/i);
-  if (ramMatch) specs.ram = ramMatch[0].trim();
+function calculateBenchmarkScore(processorScore: number, title: string): number {
+  // Start with processor score as base
+  let score = processorScore
 
-  // Storage
-  const storageMatch = allText.match(/(\d+)\s*(GB|TB)\s*(SSD|HDD|PCIe|NVMe)/i);
-  if (storageMatch) specs.storage = storageMatch[0].trim();
+  // Adjust based on RAM
+  const ram = extractRAM(title)
+  const ramGB = parseInt(ram?.replace(/[^0-9]/g, '') || '0', 10)
+  if (ramGB >= 32) score += 10
+  else if (ramGB >= 16) score += 5
+  else if (ramGB >= 8) score += 2
 
-  // Graphics
-  const graphicsMatch = allText.match(/(?:NVIDIA|AMD|Intel|Radeon|GeForce|RTX|GTX|Iris)[\w\s-]+(Graphics|GPU)/i);
-  if (graphicsMatch) specs.graphics = graphicsMatch[0].trim();
+  // Adjust based on storage type
+  const storage = extractStorage(title)
+  if (storage?.toLowerCase().includes('ssd')) score += 5
+  if (storage?.toLowerCase().includes('nvme')) score += 3
 
-  // Screen Size
-  const screenMatch = allText.match(/(\d+(\.\d+)?)\s*-?inch/i);
-  if (screenMatch) specs.screenSize = screenMatch[0].trim();
+  // Adjust based on graphics
+  const graphics = extractGraphics(title)
+  if (graphics?.toLowerCase().includes('rtx')) score += 8
+  else if (graphics?.toLowerCase().includes('gtx')) score += 5
+  else if (graphics?.toLowerCase().includes('radeon')) score += 4
 
-  // Weight
-  const weightMatch = allText.match(/(\d+(\.\d+)?)\s*(pounds|lbs|kg)/i);
-  if (weightMatch) specs.weight = weightMatch[0].trim();
+  // Normalize score to 0-100 range
+  return Math.min(Math.max(score, 0), 100)
+}
 
-  // Battery Life
-  const batteryMatch = allText.match(/(?:up to\s)?(\d+)\s*(?:hours?|hrs?)\s*(?:of\s*)?(?:battery|charge)/i);
-  if (batteryMatch) specs.batteryLife = batteryMatch[0].trim();
+function extractRAM(title: string): string {
+  const ramMatch = title.match(/(\d+)\s*GB RAM/i)
+  return ramMatch ? `${ramMatch[1]}GB RAM` : ''
+}
 
-  return specs;
+function extractStorage(title: string): string {
+  const storageMatch = title.match(/(\d+)\s*(TB|GB)\s*(SSD|HDD|NVME)/i)
+  return storageMatch ? `${storageMatch[1]}${storageMatch[2]} ${storageMatch[3]}` : ''
+}
+
+function extractScreenSize(title: string): string {
+  const sizeMatch = title.match(/(\d+\.?\d*)"/)
+  return sizeMatch ? `${sizeMatch[1]} inches` : ''
+}
+
+function extractGraphics(title: string): string {
+  const graphics = [
+    'NVIDIA RTX', 'NVIDIA GTX', 'AMD Radeon',
+    'Intel Iris', 'Intel UHD', 'Apple GPU'
+  ]
+  
+  for (const gpu of graphics) {
+    if (title.toLowerCase().includes(gpu.toLowerCase())) {
+      return gpu
+    }
+  }
+  return ''
 }
