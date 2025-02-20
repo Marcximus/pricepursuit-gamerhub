@@ -9,9 +9,9 @@ export const useLaptops = () => {
     try {
       console.log('Fetching laptops...');
       
-      const { data, error } = await supabase
+      const { data, error, count } = await supabase
         .from('products')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('is_laptop', true)
         .order('created_at', { ascending: false });
 
@@ -21,10 +21,11 @@ export const useLaptops = () => {
       }
 
       if (!data) {
-        throw new Error('No data received from database');
+        console.log('No data received from database');
+        return [];
       }
 
-      console.log(`Found ${data.length} laptops`);
+      console.log(`Found ${data.length} laptops:`, data);
       return data;
     } catch (error) {
       console.error('Error in useLaptops hook:', error);
@@ -33,7 +34,7 @@ export const useLaptops = () => {
         title: "Error",
         description: error.message || 'Failed to fetch laptops. Please try again later.'
       });
-      throw error;
+      return []; // Return empty array instead of throwing to prevent UI from crashing
     }
   };
 
@@ -42,6 +43,7 @@ export const useLaptops = () => {
     queryFn: fetchLaptops,
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 2,
+    initialData: [], // Provide initial data to prevent undefined issues
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000)
   });
 };
