@@ -4,76 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import type { Product } from "@/types/product";
 
-// Fallback static data to ensure we always show something
-const staticLaptops: Product[] = [
-  {
-    id: "1",
-    asin: "B0BS3RMPGD",
-    title: "HP 2023 15.6\" HD Laptop",
-    current_price: 399.99,
-    original_price: 499.99,
-    rating: 4.5,
-    rating_count: 1250,
-    image_url: "https://m.media-amazon.com/images/I/71RD3vsjIYL._AC_SL1500_.jpg",
-    product_url: "https://www.amazon.com/dp/B0BS3RMPGD",
-    processor: "Intel Core i3-1115G4",
-    ram: "8GB DDR4",
-    storage: "256GB SSD",
-    screen_size: "15.6 inches",
-    graphics: "Intel UHD Graphics",
-    created_at: new Date().toISOString(),
-    last_checked: new Date().toISOString(),
-    processor_score: 65,
-    benchmark_score: 75,
-    weight: "3.75 lbs",
-    battery_life: "Up to 8 hours"
-  },
-  {
-    id: "2",
-    asin: "B0BSR384MK",
-    title: "Lenovo IdeaPad Gaming 3",
-    current_price: 699.99,
-    original_price: 899.99,
-    rating: 4.7,
-    rating_count: 856,
-    image_url: "https://m.media-amazon.com/images/I/81zcUFpthDL._AC_SL1500_.jpg",
-    product_url: "https://www.amazon.com/dp/B0BSR384MK",
-    processor: "AMD Ryzen 5 6600H",
-    ram: "16GB DDR5",
-    storage: "512GB SSD",
-    screen_size: "15.6 inches",
-    graphics: "NVIDIA RTX 3050",
-    created_at: new Date().toISOString(),
-    last_checked: new Date().toISOString(),
-    processor_score: 85,
-    benchmark_score: 90,
-    weight: "4.96 lbs",
-    battery_life: "Up to 6 hours"
-  },
-  {
-    id: "3",
-    asin: "B09RMW1L7Y",
-    title: "MacBook Pro 2023",
-    current_price: 1299.99,
-    original_price: 1499.99,
-    rating: 4.9,
-    rating_count: 2345,
-    image_url: "https://m.media-amazon.com/images/I/61PhD5VsrPL._AC_SL1500_.jpg",
-    product_url: "https://www.amazon.com/dp/B09RMW1L7Y",
-    processor: "Apple M2 Pro",
-    ram: "16GB Unified",
-    storage: "512GB SSD",
-    screen_size: "14.2 inches",
-    graphics: "16-core GPU",
-    created_at: new Date().toISOString(),
-    last_checked: new Date().toISOString(),
-    processor_score: 95,
-    benchmark_score: 98,
-    weight: "3.5 lbs",
-    battery_life: "Up to 22 hours"
-  }
-];
-
 export const collectLaptops = async () => {
   try {
     console.log('Triggering laptop collection...');
@@ -107,46 +37,22 @@ export const useLaptops = () => {
 
         if (error) {
           console.error('Error fetching laptops:', error);
-          console.log('Returning static data due to error');
-          return staticLaptops;
+          throw error;
         }
 
         if (!data || data.length === 0) {
-          console.log('No data from Supabase, returning static data');
-          // Try to collect laptops if we don't have any
-          collectLaptops().catch(console.error);
-          return staticLaptops;
+          console.log('No laptops found in database');
+          return [];
         }
 
-        // Merge static and dynamic data, prioritizing dynamic data
-        const mergedData = [...staticLaptops];
-        data.forEach(dynamicLaptop => {
-          const index = mergedData.findIndex(
-            staticLaptop => staticLaptop.asin === dynamicLaptop.asin
-          );
-          if (index !== -1) {
-            // Update existing laptop with new data
-            mergedData[index] = {
-              ...mergedData[index],
-              ...dynamicLaptop,
-              last_checked: new Date().toISOString()
-            };
-          } else {
-            // Add new laptop
-            mergedData.push(dynamicLaptop);
-          }
-        });
-
-        console.log(`Found ${mergedData.length} laptops (${staticLaptops.length} static, ${data.length} dynamic)`);
-        return mergedData;
+        console.log(`Found ${data.length} laptops from database`);
+        return data;
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
-        console.log('Returning static data due to error');
-        return staticLaptops;
+        throw error;
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    initialData: staticLaptops,
+    staleTime: 1000 * 60 * 5, // 5 minutes to cache the data
   });
 
   return {
