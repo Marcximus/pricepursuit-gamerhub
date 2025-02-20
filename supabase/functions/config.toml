@@ -1,5 +1,4 @@
 
 project_id = "kkebyebrhdpcwqnxhjcx"
-
-[global]
-[global.env]
+[collect_laptops]
+scheduler = "0 0 * * *"  # Run at midnight every day
