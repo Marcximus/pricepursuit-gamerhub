@@ -112,17 +112,24 @@ serve(async (req) => {
       try {
         console.log(`Processing search query: ${query}`);
         
-        // Search first 5 pages for each query
-        for (let page = 1; page <= 5; page++) {
+        // Search first 100 pages for each query
+        for (let page = 1; page <= 100; page++) {
           console.log(`Processing page ${page} for query "${query}"`);
           
           const results = await searchLaptops(query, page, username, password);
+          
+          // Break if no more results (end of pagination)
+          if (results.length === 0) {
+            console.log(`No more results for query "${query}" after page ${page}`);
+            break;
+          }
+          
           await processLaptopResults(results);
           
           totalProcessed += results.length;
           
-          // Add delay to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          // Add delay to avoid rate limiting (3 seconds between requests)
+          await new Promise(resolve => setTimeout(resolve, 3000));
         }
       } catch (error) {
         console.error(`Error processing query "${query}":`, error);
