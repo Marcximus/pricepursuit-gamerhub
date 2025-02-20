@@ -7,10 +7,10 @@ const corsHeaders = {
 }
 
 const LAPTOP_ASINS = [
-  "B0BSHF7WHH", // Example ASIN - Dell XPS
-  "B09PTVP3RT", // Example ASIN - MacBook Pro
-  "B09RBGCX3D", // Example ASIN - Lenovo ThinkPad
-  // Add more ASINs as needed
+  "B07FZ8S74R", // Your requested ASIN
+  "B0BSHF7WHH", // Dell XPS
+  "B09PTVP3RT", // MacBook Pro
+  "B09RBGCX3D", // Lenovo ThinkPad
 ];
 
 serve(async (req) => {
