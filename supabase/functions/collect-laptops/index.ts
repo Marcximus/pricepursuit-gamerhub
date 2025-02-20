@@ -20,16 +20,37 @@ serve(async (req) => {
       throw new Error('Oxylabs credentials not configured');
     }
 
-    console.log('Starting laptop collection with credentials check...');
-    console.log('Credentials found:', { 
-      username: username ? 'present' : 'missing',
-      password: password ? 'present' : 'missing'
-    });
+    // Log the full request as it would appear in a standalone script
+    console.log('Full request as standalone script:');
+    console.log(`
+import fetch from 'node-fetch';
 
-    // Simple test request first
+const username = '${username}';
+const password = '${password}';
+
+const body = {
+  'source': 'amazon_product',
+  'query': 'B0BS3RMPGD',
+  'parse': true,
+  'domain': 'com'
+};
+
+const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
+  method: 'POST',
+  body: JSON.stringify(body),
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Basic ' + btoa('${username}:${password}')
+  }
+});
+
+console.log(await response.json());
+    `);
+
+    // Execute the actual request
     const testQuery = {
       source: "amazon_product",
-      query: "B0BS3RMPGD", // Using a known laptop ASIN for test
+      query: "B0BS3RMPGD",
       parse: true,
       domain: "com"
     };
@@ -38,23 +59,6 @@ serve(async (req) => {
       'Content-Type': 'application/json',
       'Authorization': 'Basic ' + btoa(`${username}:${password}`)
     };
-
-    // Log EVERYTHING about the request
-    console.log('Full Oxylabs request:', {
-      url: 'https://realtime.oxylabs.io/v1/queries',
-      method: 'POST',
-      headers: headers,
-      body: testQuery,
-      encodedAuth: btoa(`${username}:${password}`),
-      fullRequest: {
-        method: 'POST',
-        url: 'https://realtime.oxylabs.io/v1/queries',
-        headers: headers,
-        body: JSON.stringify(testQuery, null, 2)
-      }
-    });
-
-    console.log('Raw request body being sent:', JSON.stringify(testQuery, null, 2));
 
     console.log('Testing authentication...');
     
@@ -66,36 +70,13 @@ serve(async (req) => {
 
     // Log complete response
     const responseText = await testResponse.text();
-    console.log('Complete Oxylabs response:', {
-      status: testResponse.status,
-      statusText: testResponse.statusText,
-      headers: Object.fromEntries(testResponse.headers.entries()),
-      body: responseText
-    });
+    console.log('Response:', responseText);
 
     if (!testResponse.ok) {
-      console.error('Auth test failed:', {
-        status: testResponse.status,
-        statusText: testResponse.statusText,
-        headers: Object.fromEntries(testResponse.headers.entries()),
-        response: responseText
-      });
       throw new Error(`Authentication failed: ${testResponse.status} - ${responseText}`);
     }
 
-    // Parse response if it's JSON
-    let responseData;
-    try {
-      responseData = JSON.parse(responseText);
-      console.log('Parsed response data:', JSON.stringify(responseData, null, 2));
-    } catch (e) {
-      console.error('Failed to parse response as JSON:', e);
-      console.log('Raw response:', responseText);
-    }
-
-    console.log('Authentication successful, proceeding with collection...');
-
-    // Collect a single laptop for testing
+    // Rest of the function...
     const sampleProduct = {
       asin: "B0BS3RMPGD",
       title: "HP 2023 15.6\" HD Laptop",
@@ -114,9 +95,6 @@ serve(async (req) => {
       last_checked: new Date().toISOString()
     };
 
-    console.log('Storing test product in database...');
-
-    // Store in Supabase
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -136,8 +114,6 @@ serve(async (req) => {
       console.error('Database error:', upsertError);
       throw upsertError;
     }
-
-    console.log('Successfully stored test product');
 
     return new Response(
       JSON.stringify({ 
