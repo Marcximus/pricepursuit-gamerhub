@@ -24,7 +24,7 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
   const getProductUrl = () => {
     if (!laptop.product_url) return '#';
     const url = new URL(laptop.product_url);
-    url.searchParams.set('tag', 'laptops-us-20'); // Updated Amazon Associates tag
+    url.searchParams.set('tag', 'with-laptop-discount-20'); // Updated Amazon Associates tag
     return url.toString();
   };
 
