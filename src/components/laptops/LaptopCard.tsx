@@ -12,17 +12,22 @@ type LaptopCardProps = {
 };
 
 export function LaptopCard({ laptop }: LaptopCardProps) {
-  // Add more detailed console log for debugging price issues
-  console.log('Rendering laptop:', {
+  // Add more detailed console log
+  console.log('Rendering laptop with full details:', {
     id: laptop.id,
     title: laptop.title,
+    asin: laptop.asin,
     price: {
       current: laptop.current_price,
       original: laptop.original_price,
-      type: typeof laptop.current_price,
-      isValid: typeof laptop.current_price === 'number' && !isNaN(laptop.current_price)
-    }
+    },
+    reviewData: laptop.review_data
   });
+
+  if (!laptop.asin) {
+    console.error('Missing ASIN for laptop:', laptop.title);
+    return null;
+  }
 
   // Base product URL with affiliate tag
   const baseProductUrl = `https://amazon.co.uk/dp/${laptop.asin}?tag=with-laptop-discount-20`;
@@ -72,7 +77,7 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
           }}
         />
 
-        {laptop.review_data && (
+        {laptop.review_data && laptop.review_data.recent_reviews && laptop.review_data.recent_reviews.length > 0 && (
           <LaptopReviews 
             reviewData={laptop.review_data}
             productUrl={reviewsUrl}
