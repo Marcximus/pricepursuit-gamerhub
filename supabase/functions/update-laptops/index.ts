@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.170.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { fetchLaptopData } from './oxylabsService.ts';
+import { getLaptopsToUpdate, updateLaptopStatus, updateLaptopData } from './databaseService.ts';
 import { delay } from './utils.ts';
 
 const corsHeaders = {
@@ -25,19 +26,8 @@ serve(async (req) => {
       throw new Error('Missing required environment variables');
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Get laptops that need updating
-    const { data: laptops, error: fetchError } = await supabase
-      .from('products')
-      .select('id, asin')
-      .eq('is_laptop', true)
-      .or('current_price.is.null,last_checked.lt.now()-interval\'1 day\'')
-      .eq('update_status', 'pending');
-
-    if (fetchError) {
-      throw fetchError;
-    }
+    // Get laptops that need updating (max 10 at a time)
+    const laptops = await getLaptopsToUpdate(supabaseUrl, supabaseKey, 10);
 
     if (!laptops || laptops.length === 0) {
       return new Response(
@@ -54,10 +44,7 @@ serve(async (req) => {
         console.log(`Starting update for ASIN: ${laptop.asin}`);
         
         // Mark laptop as being updated
-        await supabase
-          .from('products')
-          .update({ update_status: 'in_progress' })
-          .eq('id', laptop.id);
+        await updateLaptopStatus(supabaseUrl, supabaseKey, [laptop.id], 'in_progress');
 
         const data = await fetchLaptopData(laptop.asin, username, password);
         const content = data.results[0].content;
@@ -84,14 +71,7 @@ serve(async (req) => {
         };
 
         // Update the database
-        const { error: updateError } = await supabase
-          .from('products')
-          .update(updateData)
-          .eq('id', laptop.id);
-
-        if (updateError) {
-          throw updateError;
-        }
+        await updateLaptopData(supabaseUrl, supabaseKey, laptop.id, updateData, 'completed');
 
         updates.push({ success: true, asin: laptop.asin });
         console.log(`Successfully updated laptop ${laptop.asin}`);
@@ -103,10 +83,7 @@ serve(async (req) => {
         console.error(`Error updating laptop ${laptop.asin}:`, error);
         
         // Mark laptop as failed
-        await supabase
-          .from('products')
-          .update({ update_status: 'error' })
-          .eq('id', laptop.id);
+        await updateLaptopStatus(supabaseUrl, supabaseKey, [laptop.id], 'error');
 
         updates.push({ 
           success: false, 

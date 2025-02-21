@@ -54,4 +54,3 @@ export async function updateLaptopData(
     throw new Error(`Failed to update laptop data: ${error.message}`);
   }
 }
-
