@@ -11,12 +11,24 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!)
 
 serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { brands, pages_per_brand = 3 } = await req.json()
+    // Parse request body and validate parameters
+    const requestData = await req.json()
+    const { brands, pages_per_brand = 3 } = requestData
+
+    if (!brands || !Array.isArray(brands) || brands.length === 0) {
+      console.error('Invalid or missing brands array in request')
+      return new Response(
+        JSON.stringify({ error: 'Invalid or missing brands parameter' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
     console.log(`Starting collection for ${brands.length} brands, ${pages_per_brand} pages each`)
 
     // Background task to collect laptops
