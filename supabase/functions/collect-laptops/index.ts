@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from '@supabase/supabase-js';
 import { corsHeaders } from './cors.ts';
 import { CollectLaptopsRequest } from './types.ts';
 import { fetchBrandData } from './oxylabsService.ts';
@@ -120,4 +121,3 @@ serve(async (req) => {
     );
   }
 });
-
