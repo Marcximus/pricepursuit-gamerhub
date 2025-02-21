@@ -38,23 +38,31 @@ const ComparePriceLaptops = () => {
   const filterOptions = useLaptopFilters(laptops);
 
   const handleCollectLaptops = async () => {
+    console.log('handleCollectLaptops called'); // Debug log
     try {
-      await collectLaptops();
-      const pollInterval = setInterval(async () => {
-        const { data: newData } = await refetchLaptops();
-        if (newData && newData.length > 0) {
-          clearInterval(pollInterval);
-          toast({
-            title: "Collection Complete",
-            description: `Found ${newData.length} laptops`,
-          });
-        }
-      }, 10000);
+      const result = await collectLaptops();
+      console.log('collectLaptops result:', result); // Debug log
 
-      setTimeout(() => {
-        clearInterval(pollInterval);
-      }, 300000);
+      if (result) {
+        // Set up polling for new data
+        const pollInterval = setInterval(async () => {
+          const { data: newData } = await refetchLaptops();
+          if (newData && newData.length > 0) {
+            clearInterval(pollInterval);
+            toast({
+              title: "Collection Complete",
+              description: `Found ${newData.length} laptops`,
+            });
+          }
+        }, 10000);
+
+        // Clear interval after 5 minutes to prevent infinite polling
+        setTimeout(() => {
+          clearInterval(pollInterval);
+        }, 300000);
+      }
     } catch (error) {
+      console.error('Error in handleCollectLaptops:', error); // Debug log
       toast({
         variant: "destructive",
         title: "Error",
