@@ -61,76 +61,72 @@ async function collectLaptopsTask() {
     throw new Error('Oxylabs credentials not configured')
   }
 
+  // Broader search queries to capture more laptops
   const searchQueries = [
-    // Gaming laptops
-    "gaming laptop 2024",
-    "RTX gaming laptop",
-    "MSI gaming laptop",
-    "Razer gaming laptop",
-    "ASUS ROG gaming laptop",
-    "Alienware gaming laptop",
-    "Acer Predator gaming laptop",
-    "Lenovo Legion gaming laptop",
+    // General laptop searches
+    "laptop computer",
+    "notebooks computers",
+    "laptop",
+    "portable computer",
     
-    // Business laptops
-    "business laptop 2024",
-    "ThinkPad laptop",
-    "Dell Latitude laptop",
-    "HP EliteBook laptop",
-    "Lenovo business laptop",
+    // Price ranges
+    "laptops under 500",
+    "laptops 500-1000",
+    "laptops over 1000",
+    "premium laptops",
+    "budget laptops",
     
-    // Apple laptops
-    "MacBook Pro",
-    "MacBook Air M2",
-    "MacBook M3",
+    // Popular brands
+    "Dell laptop",
+    "HP laptop",
+    "Lenovo laptop",
+    "ASUS laptop",
+    "Acer laptop",
+    "Apple MacBook",
+    "MSI laptop",
+    "Microsoft Surface laptop",
+    "Razer laptop",
+    "Samsung laptop",
     
-    // Ultrabooks
-    "ultrabook 2024",
-    "Dell XPS laptop",
-    "HP Spectre laptop",
-    "ASUS ZenBook",
-    "Lenovo Yoga laptop",
+    // Use cases
+    "gaming laptop",
+    "business laptop",
+    "student laptop",
+    "workstation laptop",
+    "ultrabook",
     
-    // Budget laptops
-    "budget laptop 2024",
-    "laptop under 500",
-    "Chromebook 2024",
-    "student laptop 2024",
-    
-    // Premium laptops
-    "premium laptop 2024",
-    "high performance laptop",
-    
-    // Brand-specific searches
-    "Dell laptop 2024",
-    "HP laptop 2024",
-    "Lenovo laptop 2024",
-    "ASUS laptop 2024",
-    "Acer laptop 2024",
-    "Microsoft Surface laptop"
+    // Specifications
+    "4K laptop",
+    "touchscreen laptop",
+    "16GB RAM laptop",
+    "32GB RAM laptop",
+    "1TB SSD laptop",
+    "RTX laptop"
   ]
 
   console.log('Starting laptop collection process...')
   const foundAsins = new Set<string>()
   const errors: { query: string; error: string }[] = []
+  let totalProcessed = 0
+  let newLaptops = 0
 
-  // Update collection status to indicate start
+  // Initial collection status update
   await supabaseClient
     .from('products')
-    .update({ collection_status: 'collecting', last_collection_attempt: new Date().toISOString() })
+    .update({ collection_status: 'in_progress', last_collection_attempt: new Date().toISOString() })
     .eq('is_laptop', true)
 
   for (const query of searchQueries) {
     console.log(`Processing search query: ${query}`)
     
-    // Collect 5 pages of results per query to get more laptops
-    for (let page = 1; page <= 5; page++) {
+    // Collect 10 pages of results per query for better coverage
+    for (let page = 1; page <= 10; page++) {
       try {
         const payload = {
           source: 'amazon_search',
           query: query,
           domain: 'com',
-          geo_location: '90210',
+          geo_location: 'United States',
           start_page: page.toString(),
           pages: '1',
           parse: true
@@ -164,6 +160,7 @@ async function collectLaptopsTask() {
         }
 
         console.log(`Found ${results.length} results for query: ${query} page ${page}`)
+        totalProcessed += results.length
 
         // Process results in smaller batches
         const BATCH_SIZE = 10
@@ -171,7 +168,34 @@ async function collectLaptopsTask() {
           const batch = results.slice(i, i + BATCH_SIZE)
           
           for (const item of batch) {
-            if (!item.asin || foundAsins.has(item.asin)) continue
+            if (!item.asin) continue
+
+            // Skip if we've already processed this ASIN
+            if (foundAsins.has(item.asin)) {
+              console.log(`Skipping duplicate ASIN: ${item.asin}`)
+              continue
+            }
+
+            // Check if it's a laptop based on multiple criteria
+            const titleLower = (item.title || '').toLowerCase()
+            const isLaptop = (
+              titleLower.includes('laptop') ||
+              titleLower.includes('notebook') ||
+              titleLower.includes('macbook') ||
+              titleLower.includes('chromebook') ||
+              titleLower.includes('thinkpad') ||
+              titleLower.includes('pavilion') ||
+              titleLower.includes('inspiron') ||
+              titleLower.includes('envy') ||
+              titleLower.includes('zenbook') ||
+              titleLower.includes('vivobook') ||
+              titleLower.includes('ideapad')
+            )
+            
+            if (!isLaptop) {
+              console.log(`Skipping non-laptop item: ${item.title}`)
+              continue
+            }
 
             foundAsins.add(item.asin)
             
@@ -184,14 +208,7 @@ async function collectLaptopsTask() {
               ? parseFloat(item.price.before_price.replace(/[^0-9.]/g, ''))
               : currentPrice
 
-            // Only process items that look like laptops
-            const isLaptop = (item.title || '').toLowerCase().match(/\b(laptop|notebook|macbook|chromebook)\b/)
-            if (!isLaptop) {
-              console.log(`Skipping non-laptop item: ${item.title}`)
-              continue
-            }
-
-            // Prepare product data with collection status
+            // Prepare product data
             const productData = {
               asin: item.asin,
               title: item.title,
@@ -206,20 +223,25 @@ async function collectLaptopsTask() {
               collection_status: 'collected'
             }
 
-            console.log(`Saving laptop: ${productData.title}`)
-
-            const { error } = await supabaseClient
+            // Try to insert first (this will fail if ASIN exists)
+            const { error: insertError } = await supabaseClient
               .from('products')
-              .upsert(productData, { 
-                onConflict: 'asin',
-                ignoreDuplicates: false 
-              })
+              .insert([productData])
 
-            if (error) {
-              console.error(`Error upserting product ${item.asin}:`, error)
-              errors.push({ query, error: error.message })
+            if (insertError) {
+              // If insert failed, update existing record
+              const { error: updateError } = await supabaseClient
+                .from('products')
+                .update(productData)
+                .eq('asin', item.asin)
+
+              if (updateError) {
+                console.error(`Error updating product ${item.asin}:`, updateError)
+                errors.push({ query, error: updateError.message })
+              }
             } else {
-              console.log(`Successfully saved laptop: ${item.asin}`)
+              newLaptops++
+              console.log(`Successfully saved new laptop: ${item.asin}`)
             }
           }
 
@@ -227,13 +249,14 @@ async function collectLaptopsTask() {
           await new Promise(resolve => setTimeout(resolve, 500))
         }
 
-        // Add a delay between pages to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 1000))
       } catch (error) {
         console.error(`Error processing query "${query}" page ${page}:`, error)
         errors.push({ query, error: error.message })
         continue
       }
+
+      // Add a delay between pages to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 1000))
     }
   }
 
@@ -245,11 +268,10 @@ async function collectLaptopsTask() {
       last_collection_attempt: new Date().toISOString()
     })
     .eq('is_laptop', true)
-    .eq('collection_status', 'collecting')
+    .eq('collection_status', 'in_progress')
 
-  console.log(`Collection complete. Found ${foundAsins.size} unique laptops. ${errors.length} queries failed.`)
+  console.log(`Collection complete. Processed ${totalProcessed} items, found ${foundAsins.size} unique laptops (${newLaptops} new). ${errors.length} errors occurred.`)
   if (errors.length > 0) {
     console.error('Errors during collection:', errors)
   }
 }
-
