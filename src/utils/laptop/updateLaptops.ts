@@ -6,11 +6,13 @@ export const updateLaptops = async () => {
   try {
     console.log('Starting update for ALL laptops...');
     
-    // Get ALL laptops with is_laptop=true, no other filters
+    // Get ALL laptops with is_laptop=true that aren't already being processed
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
       .select('id, asin, update_status')
-      .eq('is_laptop', true);
+      .eq('is_laptop', true)
+      .not('update_status', 'eq', 'in_progress')
+      .not('update_status', 'eq', 'pending_update');
 
     if (fetchError) {
       console.error('Error fetching laptops:', fetchError);
@@ -18,30 +20,15 @@ export const updateLaptops = async () => {
     }
 
     if (!laptops || laptops.length === 0) {
-      console.log('No laptops found in database');
+      console.log('No laptops available for update');
       toast({
-        title: "No laptops found",
-        description: "No laptops found in the database to update",
+        title: "No updates needed",
+        description: "All laptops are either up to date or currently being processed",
       });
       return null;
     }
 
-    // Filter out laptops that are already being processed
-    const laptopsToUpdate = laptops.filter(l => 
-      l.update_status !== 'in_progress' && l.update_status !== 'pending_update'
-    );
-
-    if (laptopsToUpdate.length === 0) {
-      console.log('All laptops are already being processed');
-      toast({
-        title: "Update in progress",
-        description: "All laptops are currently being updated. Please wait for the current update to complete.",
-      });
-      return null;
-    }
-
-    const updateCount = laptopsToUpdate.length;
-    console.log(`Found ${updateCount} laptops to update`);
+    console.log(`Found ${laptops.length} laptops to update`);
     
     // Mark laptops as pending update
     const { error: statusError } = await supabase
@@ -50,7 +37,7 @@ export const updateLaptops = async () => {
         update_status: 'pending_update',
         last_checked: new Date().toISOString()
       })
-      .in('id', laptopsToUpdate.map(l => l.id));
+      .in('id', laptops.map(l => l.id));
 
     if (statusError) {
       console.error('Error marking laptops for update:', statusError);
@@ -60,7 +47,7 @@ export const updateLaptops = async () => {
     // Call edge function to update laptops
     const { data, error } = await supabase.functions.invoke('update-laptops', {
       body: { 
-        laptops: laptopsToUpdate.map(l => ({ id: l.id, asin: l.asin })),
+        laptops: laptops.map(l => ({ id: l.id, asin: l.asin })),
       }
     });
     
@@ -70,7 +57,7 @@ export const updateLaptops = async () => {
       await supabase
         .from('products')
         .update({ update_status: null })
-        .in('id', laptopsToUpdate.map(l => l.id))
+        .in('id', laptops.map(l => l.id))
         .eq('update_status', 'pending_update');
         
       toast({
@@ -84,8 +71,9 @@ export const updateLaptops = async () => {
     console.log('Update response:', data);
     toast({
       title: "Update started",
-      description: `Starting updates for ${updateCount} laptops. This may take several minutes to complete.`,
+      description: `Starting updates for ${laptops.length} laptops. This may take several minutes to complete.`,
     });
+
     return data;
 
   } catch (error: any) {

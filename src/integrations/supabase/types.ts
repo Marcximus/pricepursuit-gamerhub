@@ -201,7 +201,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_product_with_price_history: {
+        Args: {
+          p_product_id: string
+          p_price: number
+          p_update_data: Json
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

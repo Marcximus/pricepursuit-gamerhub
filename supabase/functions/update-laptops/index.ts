@@ -87,16 +87,15 @@ async function processAllLaptops(laptops: Laptop[], supabase: any) {
           }
 
           const data = await response.json();
-          console.log(`Got Oxylabs response for ${laptop.asin}`);
-
-          if (!data.results?.[0]?.content) {
+          const content = data.results?.[0]?.content;
+          
+          if (!content) {
             throw new Error('Invalid response format from Oxylabs');
           }
 
-          const content = data.results[0].content;
-          const currentPrice = content.price?.current;
+          console.log(`Got Oxylabs response for ${laptop.asin}`);
 
-          // Prepare update data
+          const currentPrice = content.price?.current;
           const updateData = {
             title: content.title,
             description: content.description,
@@ -106,25 +105,28 @@ async function processAllLaptops(laptops: Laptop[], supabase: any) {
             rating_count: content.rating_breakdown?.total_count,
             image_url: content.images?.[0],
             review_data: content.reviews,
-            processor: content.specifications?.processor,
-            ram: content.specifications?.ram,
-            storage: content.specifications?.storage,
-            graphics: content.specifications?.graphics,
-            screen_size: content.specifications?.screen_size,
-            screen_resolution: content.specifications?.screen_resolution,
-            weight: content.specifications?.weight,
-            battery_life: content.specifications?.battery_life,
+            processor: content.product_details?.processor,
+            ram: content.product_details?.ram,
+            storage: content.product_details?.hard_drive,
+            graphics: content.product_details?.graphics_coprocessor,
+            screen_size: content.product_details?.standing_screen_display_size,
+            screen_resolution: content.product_details?.screen_resolution,
+            weight: content.product_details?.item_weight,
+            battery_life: content.product_details?.batteries,
             update_status: 'completed',
             last_checked: new Date().toISOString(),
             last_updated: new Date().toISOString()
           };
 
-          // Start a transaction for both updates
-          const { error: updateError } = await supabase.rpc('update_product_with_price_history', {
-            p_product_id: laptop.id,
-            p_price: currentPrice,
-            p_update_data: updateData
-          });
+          // Call the stored procedure to update product and price history
+          const { error: updateError } = await supabase.rpc(
+            'update_product_with_price_history',
+            {
+              p_product_id: laptop.id,
+              p_price: currentPrice,
+              p_update_data: updateData
+            }
+          );
 
           if (updateError) {
             throw updateError;
@@ -194,9 +196,4 @@ Deno.serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-});
-
-addEventListener('beforeunload', (ev) => {
-  console.log('Function shutdown initiated:', ev.detail?.reason);
-  console.log(`Progress: ${processedCount}/${totalLaptops} laptops processed`);
 });
