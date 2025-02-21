@@ -14,7 +14,7 @@ export async function collectLaptops() {
   console.log('collectLaptops function called');
   
   try {
-    // Check if collection is already running
+    console.log('Checking collection status...');
     const { data: statusData, error: statusError } = await supabase
       .from('products')
       .select('collection_status')

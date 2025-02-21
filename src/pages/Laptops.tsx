@@ -38,9 +38,10 @@ const ComparePriceLaptops = () => {
   const filterOptions = useLaptopFilters(laptops);
 
   const handleCollectLaptops = async () => {
+    console.log('handleCollectLaptops called in Laptops.tsx');
     try {
-      console.log('handleCollectLaptops called');
       const result = await collectLaptops();
+      console.log('Collection result:', result);
       
       if (result) {
         toast({

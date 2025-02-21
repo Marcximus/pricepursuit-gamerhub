@@ -22,16 +22,6 @@ export function LaptopToolbar({
   isLoading,
   isRefetching
 }: LaptopToolbarProps) {
-  const handleCollectClick = () => {
-    console.log('Collect button clicked');
-    console.log('Button states:', { isLoading, isRefetching });
-    if (isLoading || isRefetching) {
-      console.log('Button is disabled due to loading states');
-      return;
-    }
-    onCollectLaptops();
-  };
-
   console.log('LaptopToolbar render:', { isLoading, isRefetching, totalLaptops });
 
   return (
@@ -55,7 +45,13 @@ export function LaptopToolbar({
             Update Laptops
           </Button>
           <Button
-            onClick={handleCollectClick}
+            onClick={() => {
+              console.log('Direct button click handler');
+              if (!isLoading && !isRefetching) {
+                console.log('Calling onCollectLaptops');
+                onCollectLaptops();
+              }
+            }}
             disabled={isLoading || isRefetching}
             className="flex items-center gap-2"
           >
