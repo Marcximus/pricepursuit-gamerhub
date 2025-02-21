@@ -68,35 +68,20 @@ serve(async (req) => {
 
             const data = await response.json()
             
-            // Detailed logging of the response structure
-            console.log(`Response structure for ${brand} page ${page}:`, {
-              hasResults: !!data.results,
-              resultsLength: data.results?.length,
-              hasContent: !!data.results?.[0]?.content,
-              contentResults: !!data.results?.[0]?.content?.results,
-              isArray: Array.isArray(data.results?.[0]?.content?.results)
-            })
-            
-            // Validate response structure
-            if (!data.results?.[0]?.content?.results) {
-              console.log(`No results found for ${brand} on page ${page}`)
+            // Validate response structure and results
+            if (!data.results?.[0]?.content?.results || !Array.isArray(data.results[0].content.results)) {
+              console.log(`No valid results found for ${brand} on page ${page}`)
               continue
             }
 
             const results = data.results[0].content.results
-            
-            // Validate results is an array
-            if (!Array.isArray(results)) {
-              console.log(`Invalid results format for ${brand} on page ${page}. Expected array, got:`, typeof results)
-              continue
-            }
-
             console.log(`Processing ${results.length} results for ${brand} page ${page}`)
 
             // Process and save each result
             for (const result of results) {
+              // Skip invalid results
               if (!result?.asin) {
-                console.log('Skipping result without ASIN')
+                console.log('Skipping result without ASIN:', result)
                 continue
               }
 
@@ -107,33 +92,42 @@ serve(async (req) => {
                 const currentPrice = parseFloat(String(priceValue).replace(/[^0-9.]/g, ''))
                 const originalPrice = parseFloat(String(originalPriceValue).replace(/[^0-9.]/g, ''))
 
-                // Save to Supabase
+                // Prepare product data with validation
+                const productData = {
+                  asin: result.asin,
+                  title: result.title || '',
+                  current_price: isNaN(currentPrice) ? null : currentPrice,
+                  original_price: isNaN(originalPrice) ? null : originalPrice,
+                  rating: parseFloat(result.rating || '0'),
+                  rating_count: parseInt(result.reviews?.rating_count?.replace(/[^0-9]/g, '') || '0'),
+                  image_url: result.image?.url || '',
+                  product_url: result.url || '',
+                  is_laptop: true,
+                  brand: brand,
+                  collection_status: 'completed',
+                  last_checked: new Date().toISOString(),
+                  last_collection_attempt: new Date().toISOString()
+                }
+
+                // Log the data being saved
+                console.log(`Saving product data for ASIN ${result.asin}:`, productData)
+
+                // Upsert to Supabase with conflict handling on ASIN
                 const { error: upsertError } = await supabase
                   .from('products')
-                  .upsert({
-                    asin: result.asin,
-                    title: result.title || '',
-                    current_price: currentPrice,
-                    original_price: originalPrice,
-                    rating: parseFloat(result.rating || '0'),
-                    rating_count: parseInt(result.reviews?.rating_count?.replace(/[^0-9]/g, '') || '0'),
-                    image_url: result.image?.url || '',
-                    product_url: result.url || '',
-                    is_laptop: true,
-                    brand: brand,
-                    collection_status: 'completed',
-                    last_checked: new Date().toISOString(),
-                    last_collection_attempt: new Date().toISOString()
-                  }, {
-                    onConflict: 'asin'
+                  .upsert(productData, {
+                    onConflict: 'asin',
+                    ignoreDuplicates: false
                   })
 
                 if (upsertError) {
                   console.error(`Error saving product ${result.asin}:`, upsertError)
+                } else {
+                  console.log(`Successfully saved/updated product ${result.asin}`)
                 }
               } catch (productError) {
                 console.error(`Error processing product from ${brand} page ${page}:`, productError)
-                continue // Continue with next product even if one fails
+                continue
               }
             }
 
@@ -142,7 +136,7 @@ serve(async (req) => {
 
           } catch (pageError) {
             console.error(`Error processing ${brand} page ${page}:`, pageError)
-            continue // Continue with next page even if one fails
+            continue
           }
         }
       }
