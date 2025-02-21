@@ -25,12 +25,14 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get laptops marked as in_progress
+    // Get laptops that need updating
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
       .select('id, asin')
       .eq('is_laptop', true)
-      .eq('update_status', 'in_progress');
+      .eq('update_status', 'pending_update')
+      .order('last_checked', { ascending: true })
+      .limit(50); // Process in batches of 50
 
     if (fetchError) {
       throw new Error(`Failed to fetch laptops: ${fetchError.message}`);
@@ -49,6 +51,12 @@ serve(async (req) => {
     for (const laptop of laptops) {
       try {
         console.log(`Starting update for ASIN: ${laptop.asin}`);
+        
+        // Mark laptop as in progress
+        await supabase
+          .from('products')
+          .update({ update_status: 'in_progress' })
+          .eq('id', laptop.id);
         
         const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
           method: 'POST',
@@ -124,10 +132,22 @@ serve(async (req) => {
       }
     }
 
+    // Check if there are more laptops to process
+    const { count } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_laptop', true)
+      .eq('update_status', 'pending_update');
+
+    const message = count && count > 0 
+      ? `Processed batch of laptops, ${count} remaining`
+      : 'All laptops processed';
+
     return new Response(
       JSON.stringify({
-        message: 'Update process completed',
-        results: updates
+        message,
+        results: updates,
+        remainingCount: count
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -142,7 +162,7 @@ serve(async (req) => {
       const supabase = createClient(supabaseUrl, supabaseKey);
       await supabase
         .from('products')
-        .update({ update_status: 'pending' })
+        .update({ update_status: 'pending_update' })
         .eq('update_status', 'in_progress');
     }
 
@@ -155,3 +175,4 @@ serve(async (req) => {
     );
   }
 });
+
