@@ -25,7 +25,7 @@ export const useFilteredLaptops = (
         }
 
         // Brand filter
-        if (filters.brand !== "all-brands" && laptop.brand) {
+        if (filters.brand !== "all-brands" && laptop.brand !== undefined) {
           const brandMatches = laptop.brand.toLowerCase() === filters.brand.toLowerCase();
           if (!brandMatches) {
             console.log(`Laptop ${laptop.title} filtered out due to brand ${laptop.brand}`);
@@ -34,7 +34,7 @@ export const useFilteredLaptops = (
         }
         
         // Processor filter
-        if (filters.processor !== "all-processors" && laptop.processor) {
+        if (filters.processor !== "all-processors" && laptop.processor !== undefined) {
           const processorMatches = laptop.processor.toLowerCase() === filters.processor.toLowerCase();
           if (!processorMatches) {
             console.log(`Laptop ${laptop.title} filtered out due to processor ${laptop.processor}`);
@@ -43,7 +43,7 @@ export const useFilteredLaptops = (
         }
         
         // RAM filter
-        if (filters.ram !== "all-ram" && laptop.ram) {
+        if (filters.ram !== "all-ram" && laptop.ram !== undefined) {
           const ramMatches = laptop.ram.toLowerCase() === filters.ram.toLowerCase();
           if (!ramMatches) {
             console.log(`Laptop ${laptop.title} filtered out due to RAM ${laptop.ram}`);
@@ -52,7 +52,7 @@ export const useFilteredLaptops = (
         }
         
         // Storage filter
-        if (filters.storage !== "all-storage" && laptop.storage) {
+        if (filters.storage !== "all-storage" && laptop.storage !== undefined) {
           const storageMatches = laptop.storage.toLowerCase() === filters.storage.toLowerCase();
           if (!storageMatches) {
             console.log(`Laptop ${laptop.title} filtered out due to storage ${laptop.storage}`);
@@ -61,7 +61,7 @@ export const useFilteredLaptops = (
         }
         
         // Graphics filter
-        if (filters.graphics !== "all-graphics" && laptop.graphics) {
+        if (filters.graphics !== "all-graphics" && laptop.graphics !== undefined) {
           const graphicsMatches = laptop.graphics.toLowerCase() === filters.graphics.toLowerCase();
           if (!graphicsMatches) {
             console.log(`Laptop ${laptop.title} filtered out due to graphics ${laptop.graphics}`);
@@ -70,7 +70,7 @@ export const useFilteredLaptops = (
         }
         
         // Screen size filter
-        if (filters.screenSize !== "all-screens" && laptop.screen_size) {
+        if (filters.screenSize !== "all-screens" && laptop.screen_size !== undefined) {
           const screenSizeMatches = laptop.screen_size.toLowerCase() === filters.screenSize.toLowerCase();
           if (!screenSizeMatches) {
             console.log(`Laptop ${laptop.title} filtered out due to screen size ${laptop.screen_size}`);
@@ -114,3 +114,4 @@ export const useFilteredLaptops = (
     return sortLaptops(filterLaptops(laptops));
   }, [laptops, filters, sortBy]);
 };
+

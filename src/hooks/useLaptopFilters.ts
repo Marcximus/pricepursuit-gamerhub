@@ -2,9 +2,11 @@
 import { useMemo } from "react";
 import type { Product } from "@/types/product";
 
+type FilterableProductKeys = 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size' | 'brand';
+
 export const useLaptopFilters = (laptops: Product[] | undefined) => {
   return useMemo(() => {
-    const getUniqueValues = (key: keyof Pick<Product, 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size' | 'brand'>) => {
+    const getUniqueValues = (key: FilterableProductKeys) => {
       if (!laptops) return new Set<string>();
       return new Set(laptops.map(laptop => {
         const value = laptop[key];
@@ -22,3 +24,4 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
     };
   }, [laptops]);
 };
+
