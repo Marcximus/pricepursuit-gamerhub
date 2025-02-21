@@ -10,6 +10,7 @@ import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useFilteredLaptops } from "@/hooks/useFilteredLaptops";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
+import { collectLaptops } from "@/utils/laptop/collectLaptops";
 
 const ComparePriceLaptops = () => {
   const [sortBy, setSortBy] = useState<SortOption>("price-asc");
@@ -29,7 +30,6 @@ const ComparePriceLaptops = () => {
     error: laptopsError,
     refetch: refetchLaptops,
     isRefetching,
-    collectLaptops,
     updateLaptops
   } = useLaptops();
   const { toast } = useToast();
@@ -38,30 +38,19 @@ const ComparePriceLaptops = () => {
   const filterOptions = useLaptopFilters(laptops);
 
   const handleCollectLaptops = async () => {
-    console.log('handleCollectLaptops called'); // Debug log
-    
-    toast({
-      title: "Starting Collection",
-      description: "Initiating laptop data collection...",
-    });
-
     try {
-      console.log('Calling collectLaptops function...'); // Debug log
+      console.log('Triggering laptop collection...');
       const result = await collectLaptops();
-      console.log('collectLaptops result:', result); // Debug log
-
+      
       if (result) {
         toast({
           title: "Collection Started",
           description: `Started collection process in ${result.batches} batches`,
         });
 
-        // Set up polling for new data
+        // Poll for updates
         const pollInterval = setInterval(async () => {
-          console.log('Polling for new data...'); // Debug log
           const { data: newData } = await refetchLaptops();
-          console.log('Poll result:', newData?.length || 0, 'laptops'); // Debug log
-          
           if (newData && newData.length > 0) {
             clearInterval(pollInterval);
             toast({
@@ -71,13 +60,11 @@ const ComparePriceLaptops = () => {
           }
         }, 10000);
 
-        // Clear interval after 5 minutes to prevent infinite polling
-        setTimeout(() => {
-          clearInterval(pollInterval);
-        }, 300000);
+        // Clear interval after 5 minutes
+        setTimeout(() => clearInterval(pollInterval), 300000);
       }
     } catch (error) {
-      console.error('Error in handleCollectLaptops:', error); // Debug log
+      console.error('Error in handleCollectLaptops:', error);
       toast({
         variant: "destructive",
         title: "Error",
