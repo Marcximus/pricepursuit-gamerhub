@@ -40,3 +40,4 @@ export interface ProductData {
   last_checked: string;
   last_collection_attempt: string;
 }
+

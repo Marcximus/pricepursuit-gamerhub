@@ -32,3 +32,4 @@ export function processProduct(result: OxylabsResult['content']['results'][0], b
     last_collection_attempt: new Date().toISOString()
   };
 }
+

@@ -37,3 +37,4 @@ export async function fetchBrandData(brand: string, pages: number): Promise<Oxyl
   const data = await response.json();
   return data.results || [];
 }
+

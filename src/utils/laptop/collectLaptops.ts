@@ -16,7 +16,7 @@ export const collectLaptops = async () => {
     const { data, error } = await supabase.functions.invoke('collect-laptops', {
       body: { 
         brands: LAPTOP_BRANDS,
-        pages_per_brand: 5 // Increased to collect first 5 pages for each brand
+        pages_per_brand: 5 // Collect first 5 pages for each brand
       }
     });
 
@@ -47,3 +47,4 @@ export const collectLaptops = async () => {
     throw error;
   }
 };
+
