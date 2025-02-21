@@ -6,32 +6,30 @@ export const updateLaptops = async () => {
   try {
     console.log('Triggering laptop updates...');
     
-    // Find laptops needing updates with explicit status check
-    const { data: laptopsToUpdate, error: countError } = await supabase
+    // Get ALL laptops, regardless of status
+    const { data: laptopsToUpdate, error: fetchError } = await supabase
       .from('products')
       .select('id')
-      .eq('is_laptop', true)
-      .or('current_price.is.null,last_checked.lt.now()-interval\'1 day\'')
-      .is('update_status', null); // Only select laptops not currently being updated
+      .eq('is_laptop', true);
 
-    if (countError) {
-      console.error('Error finding laptops to update:', countError);
-      throw countError;
+    if (fetchError) {
+      console.error('Error finding laptops to update:', fetchError);
+      throw fetchError;
     }
 
     if (!laptopsToUpdate || laptopsToUpdate.length === 0) {
-      console.log('No laptops need updating');
+      console.log('No laptops found in database');
       toast({
-        title: "No updates needed",
-        description: "All laptops are up to date",
+        title: "No laptops found",
+        description: "No laptops found in the database to update",
       });
       return null;
     }
 
     const updateCount = laptopsToUpdate.length;
-    console.log(`Found ${updateCount} laptops that need updating`);
+    console.log(`Found ${updateCount} laptops to update`);
     
-    // Mark laptops for update with correct status
+    // Mark ALL laptops for update
     const { error: statusError } = await supabase
       .from('products')
       .update({ 
@@ -45,10 +43,10 @@ export const updateLaptops = async () => {
       throw statusError;
     }
     
-    // Call edge function to update prices
+    // Call edge function to update ALL laptops
     const { data, error } = await supabase.functions.invoke('update-laptops', {
       body: { 
-        count: updateCount
+        updateAll: true // New flag to indicate we want to update all laptops
       }
     });
     
@@ -71,7 +69,7 @@ export const updateLaptops = async () => {
     console.log('Laptop update response:', data);
     toast({
       title: "Update started",
-      description: `Starting updates for ${updateCount} laptops. This may take a few minutes to complete.`,
+      description: `Starting updates for ${updateCount} laptops. This will take approximately ${Math.ceil(updateCount/60)} minutes to complete.`,
     });
     return data;
 
@@ -85,3 +83,4 @@ export const updateLaptops = async () => {
     throw error;
   }
 };
+

@@ -7,6 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -25,20 +27,16 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get laptops that need updating
+    // Get all laptops marked for update
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
       .select('id, asin')
-      .eq('is_laptop', true)
       .eq('update_status', 'pending_update')
-      .order('last_checked', { ascending: true })
-      .limit(50); // Process in batches of 50
+      .order('last_checked', { ascending: true });
 
     if (fetchError) {
       throw new Error(`Failed to fetch laptops: ${fetchError.message}`);
     }
-
-    console.log(`Processing ${laptops?.length || 0} laptops...`);
 
     if (!laptops || laptops.length === 0) {
       return new Response(
@@ -47,10 +45,12 @@ serve(async (req) => {
       );
     }
 
-    const updates = [];
+    console.log(`Starting sequential updates for ${laptops.length} laptops...`);
+
+    // Process laptops one at a time with a delay
     for (const laptop of laptops) {
       try {
-        console.log(`Starting update for ASIN: ${laptop.asin}`);
+        console.log(`Processing ASIN: ${laptop.asin}`);
         
         // Mark laptop as in progress
         await supabase
@@ -58,6 +58,7 @@ serve(async (req) => {
           .update({ update_status: 'in_progress' })
           .eq('id', laptop.id);
         
+        // Make Oxylabs API request
         const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
           method: 'POST',
           headers: {
@@ -86,8 +87,8 @@ serve(async (req) => {
 
         const content = data.results[0].content;
 
-        // Update the database with new information
-        const { error: updateError } = await supabase
+        // Update all laptop information
+        await supabase
           .from('products')
           .update({
             title: content.title,
@@ -101,34 +102,30 @@ serve(async (req) => {
             review_data: content.reviews ? {
               rating_breakdown: content.reviews.rating_breakdown,
               recent_reviews: content.reviews.recent_reviews
-            } : null
+            } : null,
+            description: content.description || null,
+            total_reviews: content.reviews?.total_reviews || content.rating_count || 0,
+            average_rating: content.rating || null,
+            last_updated: new Date().toISOString()
           })
           .eq('id', laptop.id);
 
-        if (updateError) {
-          throw updateError;
-        }
-
-        updates.push({ success: true, asin: laptop.asin });
         console.log(`Successfully updated laptop ${laptop.asin}`);
-
+        
         // Wait 1 second before processing next laptop
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await delay(1000);
 
       } catch (error) {
         console.error(`Error updating laptop ${laptop.asin}:`, error);
         
-        // Mark laptop as failed
+        // Mark individual laptop as failed
         await supabase
           .from('products')
-          .update({ update_status: 'error' })
+          .update({ 
+            update_status: 'error',
+            last_checked: new Date().toISOString()
+          })
           .eq('id', laptop.id);
-
-        updates.push({ 
-          success: false, 
-          asin: laptop.asin, 
-          error: error.message 
-        });
       }
     }
 
@@ -136,7 +133,6 @@ serve(async (req) => {
     const { count } = await supabase
       .from('products')
       .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true)
       .eq('update_status', 'pending_update');
 
     const message = count && count > 0 
@@ -144,28 +140,12 @@ serve(async (req) => {
       : 'All laptops processed';
 
     return new Response(
-      JSON.stringify({
-        message,
-        results: updates,
-        remainingCount: count
-      }),
+      JSON.stringify({ message, processedCount: laptops.length }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('Error in update-laptops function:', error);
-
-    // Reset all in_progress laptops to pending state in case of overall function failure
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    if (supabaseUrl && supabaseKey) {
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      await supabase
-        .from('products')
-        .update({ update_status: 'pending_update' })
-        .eq('update_status', 'in_progress');
-    }
-
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
