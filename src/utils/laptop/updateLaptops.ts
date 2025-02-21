@@ -46,8 +46,7 @@ export const updateLaptops = async () => {
     // Call edge function to update ALL laptops
     const { data, error } = await supabase.functions.invoke('update-laptops', {
       body: { 
-        laptops: laptops.map(l => ({ id: l.id, asin: l.asin })),
-        updateAll: true // Flag to indicate we want ALL laptops updated
+        laptops: laptops.map(l => ({ id: l.id, asin: l.asin }))
       }
     });
     
@@ -70,7 +69,7 @@ export const updateLaptops = async () => {
     console.log('Update response:', data);
     toast({
       title: "Update started",
-      description: `Starting updates for ${updateCount} laptops. This may take several minutes to complete.`,
+      description: `Starting batch updates for ${updateCount} laptops. This may take several minutes to complete.`,
     });
     return data;
 
