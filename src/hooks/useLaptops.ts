@@ -72,15 +72,15 @@ export const useLaptops = () => {
 
         // Only proceed with updates if nothing is currently in progress
         if (!updatesInProgress) {
-          // Check for laptops needing updates - more conservative timeout (2 days)
+          // Check for laptops needing updates - include those with zero prices
           const outdatedLaptops = laptopsWithReviews.filter(laptop => {
             const lastChecked = laptop.last_checked ? new Date(laptop.last_checked) : null;
             const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
-            return !laptop.current_price || !lastChecked || lastChecked < twoDaysAgo;
+            return !laptop.current_price || laptop.current_price === 0 || !lastChecked || lastChecked < twoDaysAgo;
           });
 
           if (outdatedLaptops.length > 0) {
-            console.log(`Found ${outdatedLaptops.length} laptops needing updates`);
+            console.log(`Found ${outdatedLaptops.length} laptops needing updates (including zero prices)`);
             try {
               await updateLaptops();
             } catch (error) {

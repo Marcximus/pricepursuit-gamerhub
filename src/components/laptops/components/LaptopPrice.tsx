@@ -9,12 +9,28 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
   console.log('Rendering LaptopPrice:', { currentPrice, originalPrice });
 
   const formatPrice = (price: number | null) => {
-    if (typeof price !== 'number' || isNaN(price)) {
+    if (price === null || (typeof price === 'number' && isNaN(price))) {
       console.log('Invalid price value:', price);
       return 'Price not available';
     }
     return `$${price.toFixed(2)}`;
   };
+
+  // If both prices are zero, it likely means they haven't been fetched yet
+  if (currentPrice === 0 && originalPrice === 0) {
+    return (
+      <a 
+        href={productUrl}
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="block text-center"
+      >
+        <div className="text-sm text-gray-500">
+          Checking price...
+        </div>
+      </a>
+    );
+  }
 
   return (
     <a 
