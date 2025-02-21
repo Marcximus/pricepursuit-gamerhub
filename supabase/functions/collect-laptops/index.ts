@@ -6,16 +6,19 @@ import { fetchBrandData } from './oxylabsService.ts';
 import { saveProduct } from './databaseService.ts';
 import { processProducts } from './productProcessor.ts';
 
+const PAGES_BATCH_SIZE = 2; // Process pages in smaller batches
+const PRODUCTS_BATCH_SIZE = 5; // Process products in smaller batches
+const DELAY_BETWEEN_BRANDS = 3000; // 3 seconds delay between brands
+const DELAY_BETWEEN_PAGES = 1000; // 1 second delay between pages
+
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Parse and validate request
     const requestData = await req.json();
-    const { brands, pages_per_brand = 5 } = requestData as CollectLaptopsRequest;
+    const { brands, pages_per_brand = 3 } = requestData as CollectLaptopsRequest;
 
     if (!brands || !Array.isArray(brands) || brands.length === 0) {
       console.error('Invalid or missing brands array in request:', requestData);
@@ -28,49 +31,57 @@ serve(async (req) => {
     console.log(`Starting collection for ${brands.length} brands, ${pages_per_brand} pages each`);
 
     // Background task to collect laptops
-    EdgeRuntime.waitUntil((async () => {
+    const backgroundTask = async () => {
       let totalProcessed = 0;
       let totalSaved = 0;
 
       for (const brand of brands) {
-        console.log(`\n=== Starting collection for brand: ${brand} ===`);
+        console.log(`\n=== Processing brand: ${brand} ===`);
         
         try {
-          const results = await fetchBrandData(brand, pages_per_brand);
-          
-          console.log('Received Oxylabs response for brand:', brand, {
-            resultsLength: results.length,
-            firstResultContent: results[0]?.content ? 'present' : 'missing'
-          });
+          // Process pages in batches
+          for (let pageStart = 1; pageStart <= pages_per_brand; pageStart += PAGES_BATCH_SIZE) {
+            const pagesInBatch = Math.min(PAGES_BATCH_SIZE, pages_per_brand - pageStart + 1);
+            console.log(`Processing pages ${pageStart} to ${pageStart + pagesInBatch - 1} for ${brand}`);
 
-          for (const pageResult of results) {
-            const products = processProducts(pageResult, brand);
-            console.log(`Processing page results for ${brand}:`, {
-              pageNumber: pageResult.content.page,
-              productsFound: products.length
-            });
+            const results = await fetchBrandData(brand, pagesInBatch, pageStart);
+            
+            for (const pageResult of results) {
+              const products = processProducts(pageResult, brand);
+              console.log(`Processing ${products.length} products from page ${pageResult.content.page}`);
 
-            for (const product of products) {
-              try {
-                await saveProduct(product);
-                totalSaved++;
-              } catch (error) {
-                console.error(`Failed to save product ${product.asin}:`, error);
-                continue;
+              // Process products in smaller batches
+              for (let i = 0; i < products.length; i += PRODUCTS_BATCH_SIZE) {
+                const productsBatch = products.slice(i, i + PRODUCTS_BATCH_SIZE);
+                
+                for (const product of productsBatch) {
+                  try {
+                    await saveProduct(product);
+                    totalSaved++;
+                  } catch (error) {
+                    console.error(`Failed to save product ${product.asin}:`, error);
+                    continue;
+                  }
+                  totalProcessed++;
+                }
+
+                // Add delay between product batches
+                if (i + PRODUCTS_BATCH_SIZE < products.length) {
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                }
               }
-              totalProcessed++;
+
+              // Add delay between pages
+              await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_PAGES));
             }
           }
 
-          // Add delay between brands to avoid rate limits
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          // Add delay between brands
+          await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BRANDS));
 
         } catch (brandError) {
-          console.error(`Error processing brand ${brand}:`, {
-            error: brandError.message,
-            stack: brandError.stack
-          });
-          continue;
+          console.error(`Error processing brand ${brand}:`, brandError);
+          continue; // Continue with next brand even if current one fails
         }
       }
 
@@ -82,7 +93,10 @@ serve(async (req) => {
         brandsProcessed: brands.length,
         pagesPerBrand: pages_per_brand
       });
-    })());
+    };
+
+    // Start the background task
+    EdgeRuntime.waitUntil(backgroundTask());
 
     return new Response(
       JSON.stringify({ 
@@ -96,10 +110,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Critical error in collect-laptops:', {
-      error: error.message,
-      stack: error.stack
-    });
+    console.error('Critical error in collect-laptops:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
