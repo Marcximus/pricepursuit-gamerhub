@@ -6,19 +6,20 @@ export const updateLaptops = async () => {
   try {
     console.log('Triggering laptop updates...');
     
-    // Find laptops needing updates
-    const { count: updateCount, error: countError } = await supabase
+    // Find laptops needing updates with explicit status check
+    const { data: laptopsToUpdate, error: countError } = await supabase
       .from('products')
-      .select('*', { count: 'exact', head: true })
+      .select('id')
       .eq('is_laptop', true)
-      .or('current_price.is.null,last_checked.lt.now()-interval\'1 day\'');
+      .or('current_price.is.null,last_checked.lt.now()-interval\'1 day\'')
+      .is('update_status', null); // Only select laptops not currently being updated
 
     if (countError) {
-      console.error('Error counting laptops to update:', countError);
+      console.error('Error finding laptops to update:', countError);
       throw countError;
     }
 
-    if (!updateCount || updateCount === 0) {
+    if (!laptopsToUpdate || laptopsToUpdate.length === 0) {
       console.log('No laptops need updating');
       toast({
         title: "No updates needed",
@@ -27,14 +28,17 @@ export const updateLaptops = async () => {
       return null;
     }
 
+    const updateCount = laptopsToUpdate.length;
     console.log(`Found ${updateCount} laptops that need updating`);
     
-    // Mark laptops for update with explicit status
+    // Mark laptops for update with correct status
     const { error: statusError } = await supabase
       .from('products')
-      .update({ update_status: 'pending_update' })
-      .eq('is_laptop', true)
-      .or('current_price.is.null,last_checked.lt.now()-interval\'1 day\'');
+      .update({ 
+        update_status: 'pending_update',
+        last_checked: new Date().toISOString()
+      })
+      .in('id', laptopsToUpdate.map(l => l.id));
 
     if (statusError) {
       console.error('Error updating status:', statusError);
@@ -44,18 +48,17 @@ export const updateLaptops = async () => {
     // Call edge function to update prices
     const { data, error } = await supabase.functions.invoke('update-laptops', {
       body: { 
-        count: updateCount,
-        force_refresh: true
+        count: updateCount
       }
     });
     
     if (error) {
       console.error('Error updating laptops:', error);
-      // Reset status on error
+      // Reset status on error for affected laptops
       await supabase
         .from('products')
         .update({ update_status: null })
-        .eq('update_status', 'pending_update');
+        .in('id', laptopsToUpdate.map(l => l.id));
         
       toast({
         title: "Update failed",
@@ -71,17 +74,9 @@ export const updateLaptops = async () => {
       description: `Starting updates for ${updateCount} laptops. This may take a few minutes to complete.`,
     });
     return data;
+
   } catch (error: any) {
     console.error('Failed to update laptops:', error);
-    try {
-      // Reset status on error
-      await supabase
-        .from('products')
-        .update({ update_status: null })
-        .eq('update_status', 'pending_update');
-    } catch (resetError) {
-      console.error('Error resetting update status:', resetError);
-    }
     toast({
       title: "Update failed",
       description: error.message || "An unexpected error occurred",
