@@ -22,6 +22,7 @@ export interface Product {
   benchmark_score?: number;
   weight?: string;
   battery_life?: string;
+  brand?: string;
   total_reviews?: number;
   average_rating?: number;
   review_data?: {
