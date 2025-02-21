@@ -10,127 +10,87 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!)
 
-const LAPTOP_BRANDS = [
-  'Lenovo', 'HP', 'Dell', 'Apple', 'Acer', 'ASUS', 'Microsoft',
-  'Samsung', 'MSI', 'Razer', 'LG', 'Huawei', 'Toshiba', 'Gigabyte'
-]
-
-const DELAY_BETWEEN_REQUESTS = 2000 // 2 seconds between requests to avoid rate limits
-
-async function searchLaptopsByBrand(brand: string, pageNum: number = 1) {
-  console.log(`Searching for ${brand} laptops on page ${pageNum}...`)
-  
-  const payload = {
-    source: 'amazon_search',
-    query: `${brand} laptop`,
-    domain: 'com',
-    geo_location: '90210',
-    start_page: pageNum.toString(),
-    pages: '1',
-    parse: true
-  }
-
-  try {
-    const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa(`${OXYLABS_USERNAME}:${OXYLABS_PASSWORD}`)
-      },
-      body: JSON.stringify(payload)
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const data = await response.json()
-    return data.results[0].content.results
-  } catch (error) {
-    console.error(`Error searching for ${brand} laptops:`, error)
-    return []
-  }
-}
-
-async function updateDatabase(laptops: any[]) {
-  for (const laptop of laptops) {
-    try {
-      // Check if laptop already exists
-      const { data: existing } = await supabase
-        .from('products')
-        .select('id, asin, current_price, image_url')
-        .eq('asin', laptop.asin)
-        .maybeSingle()
-
-      const laptopData = {
-        asin: laptop.asin,
-        title: laptop.title,
-        current_price: parseFloat(laptop.price?.value || '0'),
-        original_price: parseFloat(laptop.price?.original_price || '0') || null,
-        rating: parseFloat(laptop.rating || '0'),
-        rating_count: parseInt(laptop.reviews?.rating_count || '0'),
-        image_url: laptop.image?.url,
-        product_url: laptop.url,
-        is_laptop: true,
-        collection_status: 'completed',
-        last_checked: new Date().toISOString(),
-        last_collection_attempt: new Date().toISOString()
-      }
-
-      if (existing) {
-        // Update only if we have new information
-        const updates: any = {}
-        if (!existing.current_price && laptopData.current_price) {
-          updates.current_price = laptopData.current_price
-        }
-        if (!existing.image_url && laptopData.image_url) {
-          updates.image_url = laptopData.image_url
-        }
-        
-        if (Object.keys(updates).length > 0) {
-          await supabase
-            .from('products')
-            .update(updates)
-            .eq('id', existing.id)
-        }
-      } else {
-        // Insert new laptop
-        await supabase
-          .from('products')
-          .insert([laptopData])
-      }
-    } catch (error) {
-      console.error('Error updating database:', error)
-    }
-  }
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { force_refresh = false } = await req.json()
+    const { brands, pages_per_brand = 3 } = await req.json()
+    console.log(`Starting collection for ${brands.length} brands, ${pages_per_brand} pages each`)
 
-    // Start the collection process in the background
+    // Background task to collect laptops
     EdgeRuntime.waitUntil((async () => {
-      console.log('Starting laptop collection...')
-
-      for (const brand of LAPTOP_BRANDS) {
-        try {
-          // Search first 3 pages for each brand
-          for (let page = 1; page <= 3; page++) {
-            const laptops = await searchLaptopsByBrand(brand, page)
-            if (laptops && laptops.length > 0) {
-              await updateDatabase(laptops)
+      for (const brand of brands) {
+        console.log(`Searching for ${brand} laptops...`)
+        
+        for (let page = 1; page <= pages_per_brand; page++) {
+          try {
+            // Structure payload for Oxylabs API
+            const payload = {
+              source: 'amazon_search',
+              query: `${brand} laptop`,
+              domain: 'com',
+              geo_location: '90210',
+              start_page: page.toString(),
+              pages: '1',
+              parse: true
             }
+
+            // Call Oxylabs API
+            const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Basic ' + btoa(`${OXYLABS_USERNAME}:${OXYLABS_PASSWORD}`)
+              },
+              body: JSON.stringify(payload)
+            })
+
+            if (!response.ok) {
+              throw new Error(`Oxylabs API error: ${response.statusText}`)
+            }
+
+            const data = await response.json()
+            const results = data.results[0].content.results
+
+            // Process and save each result
+            for (const result of results) {
+              if (!result.asin) continue
+
+              // Save to Supabase
+              const { error: upsertError } = await supabase
+                .from('products')
+                .upsert({
+                  asin: result.asin,
+                  title: result.title,
+                  current_price: parseFloat(result.price?.value || '0'),
+                  original_price: parseFloat(result.price?.original_price || '0'),
+                  rating: parseFloat(result.rating || '0'),
+                  rating_count: parseInt(result.reviews?.rating_count || '0'),
+                  image_url: result.image?.url,
+                  product_url: result.url,
+                  is_laptop: true,
+                  brand: brand,
+                  collection_status: 'completed',
+                  last_checked: new Date().toISOString(),
+                  last_collection_attempt: new Date().toISOString()
+                }, {
+                  onConflict: 'asin'
+                })
+
+              if (upsertError) {
+                console.error(`Error saving product ${result.asin}:`, upsertError)
+              }
+            }
+
             // Delay between requests to avoid rate limits
-            await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_REQUESTS))
+            await new Promise(resolve => setTimeout(resolve, 2000))
+
+          } catch (error) {
+            console.error(`Error processing ${brand} page ${page}:`, error)
+            continue // Continue with next page even if one fails
           }
-        } catch (error) {
-          console.error(`Error processing ${brand}:`, error)
-          continue // Continue with next brand even if one fails
         }
       }
 
@@ -141,6 +101,7 @@ serve(async (req) => {
       JSON.stringify({ message: 'Laptop collection started' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
+
   } catch (error) {
     console.error('Error:', error)
     return new Response(
