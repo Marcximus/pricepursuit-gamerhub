@@ -24,8 +24,15 @@ export function LaptopToolbar({
 }: LaptopToolbarProps) {
   const handleCollectClick = () => {
     console.log('Collect button clicked');
+    console.log('Button states:', { isLoading, isRefetching });
+    if (isLoading || isRefetching) {
+      console.log('Button is disabled due to loading states');
+      return;
+    }
     onCollectLaptops();
   };
+
+  console.log('LaptopToolbar render:', { isLoading, isRefetching, totalLaptops });
 
   return (
     <div className="mb-8 flex justify-between items-center">
