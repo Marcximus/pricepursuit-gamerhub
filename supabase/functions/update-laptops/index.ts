@@ -25,6 +25,9 @@ interface OxylabsResponse {
   }>;
 }
 
+// Helper function to delay execution
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
@@ -72,8 +75,9 @@ serve(async (req) => {
       throw new Error('Oxylabs credentials not configured');
     }
 
-    // Process each laptop
-    const updates = await Promise.all(laptops.map(async (laptop) => {
+    // Process each laptop with a delay between requests
+    const updates = [];
+    for (const laptop of laptops) {
       try {
         console.log(`Fetching data for ASIN: ${laptop.asin}`);
 
@@ -169,7 +173,10 @@ serve(async (req) => {
         }
 
         console.log(`Successfully updated laptop ${laptop.asin}`);
-        return { success: true, asin: laptop.asin };
+        updates.push({ success: true, asin: laptop.asin });
+
+        // Add 1 second delay between processing each laptop
+        await delay(1000);
 
       } catch (error) {
         console.error(`Error updating laptop ${laptop.asin}:`, error);
@@ -183,9 +190,9 @@ serve(async (req) => {
           })
           .eq('id', laptop.id);
 
-        return { success: false, asin: laptop.asin, error: error.message };
+        updates.push({ success: false, asin: laptop.asin, error: error.message });
       }
-    }));
+    }
 
     return new Response(
       JSON.stringify({ 
@@ -206,3 +213,4 @@ serve(async (req) => {
     );
   }
 });
+
