@@ -15,92 +15,31 @@ export const useLaptops = () => {
       try {
         console.log('Fetching laptops from Supabase...');
         
-        const startTime = Date.now();
-        const { data: laptopsWithReviews, error } = await supabase
+        const { data: laptopsData, error } = await supabase
           .from('products')
           .select(`
             *,
-            product_reviews (
-              id,
-              rating,
-              title,
-              content,
-              reviewer_name,
-              review_date,
-              verified_purchase,
-              helpful_votes
-            )
+            product_reviews (*)
           `)
           .eq('is_laptop', true)
-          .order('last_checked', { ascending: false })
-          .order('created_at', { ascending: false });
-
-        console.log(`Query completed in ${Date.now() - startTime}ms`);
+          .order('last_checked', { ascending: false });
 
         if (error) {
           console.error('Error fetching laptops:', error);
           throw error;
         }
 
-        if (!laptopsWithReviews || laptopsWithReviews.length === 0) {
+        if (!laptopsData || laptopsData.length === 0) {
           console.log('No laptops found in database');
-          toast({
-            title: "No laptops found",
-            description: "Starting initial laptop collection...",
-          });
-          try {
-            await collectLaptops();
-          } catch (error) {
-            console.error('Failed to start initial collection:', error);
-            throw error;
-          }
           return [];
         }
 
-        // Check for laptops needing updates
-        const outdatedLaptops = laptopsWithReviews.filter(laptop => {
-          const lastChecked = laptop.last_checked ? new Date(laptop.last_checked) : null;
-          const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000); // Change to 24 hours instead of 48
-          return !lastChecked || lastChecked < oneDayAgo || !laptop.current_price;
-        });
+        console.log(`Found ${laptopsData.length} laptops in database`);
 
-        if (outdatedLaptops.length > 0) {
-          console.log(`Found ${outdatedLaptops.length} laptops needing price updates`);
-          try {
-            await updateLaptops();
-            toast({
-              title: "Updating prices",
-              description: `Updating prices for ${outdatedLaptops.length} laptops`,
-            });
-          } catch (error) {
-            console.error('Failed to trigger updates:', error);
-          }
-        }
-
-        // Check for laptops missing brand/model
-        const incompleteLaptops = laptopsWithReviews.filter(laptop => 
-          !laptop.brand || !laptop.model
-        );
-
-        if (incompleteLaptops.length > 0) {
-          console.log(`Found ${incompleteLaptops.length} laptops missing brand/model info`);
-          try {
-            await refreshBrandModels();
-          } catch (error) {
-            console.error('Failed to trigger brand/model refresh:', error);
-          }
-        }
-
-        // Process reviews and ratings for each laptop
-        const processedLaptops = laptopsWithReviews.map((laptop) => {
+        // Process and return the laptops
+        const processedLaptops = laptopsData.map(laptop => {
           const reviews = laptop.product_reviews || [];
           
-          let avgRating = laptop.rating;
-          if (!avgRating && reviews.length > 0) {
-            const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-            avgRating = totalRating / reviews.length;
-          }
-
           const reviewData = {
             rating_breakdown: {},
             recent_reviews: reviews.map(review => ({
@@ -114,31 +53,29 @@ export const useLaptops = () => {
             }))
           };
 
-          if (reviews.length > 0) {
-            reviewData.rating_breakdown = reviews.reduce((acc: any, review) => {
-              acc[review.rating] = (acc[review.rating] || 0) + 1;
-              return acc;
-            }, {});
+          // Calculate average rating if needed
+          let avgRating = laptop.rating;
+          if (!avgRating && reviews.length > 0) {
+            const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+            avgRating = totalRating / reviews.length;
           }
 
           return {
             ...laptop,
             average_rating: avgRating,
-            total_reviews: reviews.length || laptop.rating_count || 0,
+            total_reviews: reviews.length,
             review_data: reviewData
           };
         });
 
-        console.log(`Processing ${processedLaptops.length} laptops...`);
         return processedLaptops.map(laptop => processLaptopData(laptop as Product));
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
         throw error;
       }
     },
-    staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
-    refetchInterval: 1000 * 60 * 5, // Check for updates every 5 minutes
-    retryDelay: 1000,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchInterval: 1000 * 60 * 5, // 5 minutes
     retry: 3,
   });
 
