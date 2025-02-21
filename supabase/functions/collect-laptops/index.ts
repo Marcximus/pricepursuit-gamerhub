@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 
 const corsHeaders = {
@@ -237,7 +238,7 @@ Deno.serve(async (req) => {
         domain: 'com',
         geo_location: '90210',
         start_page: '1',
-        pages: '100',
+        pages: '2', // Changed from 100 to 2 to avoid rate limits
         parse: true
       }
 
@@ -355,3 +356,4 @@ Deno.serve(async (req) => {
     return respond({ error: error.message }, 500)
   }
 })
+
