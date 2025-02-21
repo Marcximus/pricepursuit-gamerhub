@@ -15,6 +15,11 @@ type LaptopSpecsProps = {
 };
 
 export function LaptopSpecs({ title, productUrl, specs }: LaptopSpecsProps) {
+  // Extract brand using regex pattern
+  const brandPattern = /\b(HP|Dell|Lenovo|ASUS|Acer|Apple|Microsoft|MSI|Razer|Samsung|LG|Toshiba|Alienware|Gateway|Gigabyte|Huawei)\b/i;
+  const brandMatch = title.match(brandPattern);
+  const brand = brandMatch ? brandMatch[1] : 'Unknown Brand';
+
   return (
     <div>
       <a 
@@ -26,6 +31,10 @@ export function LaptopSpecs({ title, productUrl, specs }: LaptopSpecsProps) {
         <h3 className="font-bold mb-2">{title || 'Untitled Laptop'}</h3>
       </a>
       <ul className="space-y-1 text-sm">
+        <li>
+          <span className="font-bold">Brand:</span>{" "}
+          {brand}
+        </li>
         <li>
           <span className="font-bold">Screen:</span>{" "}
           {specs.screenSize 
