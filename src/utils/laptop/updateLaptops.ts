@@ -4,20 +4,20 @@ import { toast } from "@/components/ui/use-toast";
 
 export const updateLaptops = async () => {
   try {
-    console.log('Triggering laptop updates...');
+    console.log('Starting update for ALL laptops...');
     
-    // Get ALL laptops, regardless of status
-    const { data: laptopsToUpdate, error: fetchError } = await supabase
+    // Get ALL laptops with is_laptop=true, no other filters
+    const { data: laptops, error: fetchError } = await supabase
       .from('products')
       .select('id, asin')
       .eq('is_laptop', true);
 
     if (fetchError) {
-      console.error('Error finding laptops to update:', fetchError);
+      console.error('Error fetching laptops:', fetchError);
       throw fetchError;
     }
 
-    if (!laptopsToUpdate || laptopsToUpdate.length === 0) {
+    if (!laptops || laptops.length === 0) {
       console.log('No laptops found in database');
       toast({
         title: "No laptops found",
@@ -26,50 +26,51 @@ export const updateLaptops = async () => {
       return null;
     }
 
-    const updateCount = laptopsToUpdate.length;
+    const updateCount = laptops.length;
     console.log(`Found ${updateCount} laptops to update`);
     
-    // Mark ALL laptops for update
+    // Mark ALL laptops as pending update
     const { error: statusError } = await supabase
       .from('products')
       .update({ 
         update_status: 'pending_update',
         last_checked: new Date().toISOString()
       })
-      .in('id', laptopsToUpdate.map(l => l.id));
+      .in('id', laptops.map(l => l.id));
 
     if (statusError) {
-      console.error('Error updating status:', statusError);
+      console.error('Error marking laptops for update:', statusError);
       throw statusError;
     }
     
     // Call edge function to update ALL laptops
     const { data, error } = await supabase.functions.invoke('update-laptops', {
       body: { 
-        updateAll: true // New flag to indicate we want to update all laptops
+        laptops: laptops.map(l => ({ id: l.id, asin: l.asin })),
+        updateAll: true // Flag to indicate we want ALL laptops updated
       }
     });
     
     if (error) {
-      console.error('Error updating laptops:', error);
-      // Reset status on error for affected laptops
+      console.error('Error calling update-laptops function:', error);
+      // Reset status on error
       await supabase
         .from('products')
         .update({ update_status: null })
-        .in('id', laptopsToUpdate.map(l => l.id));
+        .in('id', laptops.map(l => l.id));
         
       toast({
         title: "Update failed",
         description: error.message || "Failed to start laptop updates",
         variant: "destructive"
       });
-      throw new Error(error.message || 'Failed to update laptops');
+      throw error;
     }
     
-    console.log('Laptop update response:', data);
+    console.log('Update response:', data);
     toast({
       title: "Update started",
-      description: `Starting updates for ${updateCount} laptops. This will take approximately ${Math.ceil(updateCount/60)} minutes to complete.`,
+      description: `Starting updates for ${updateCount} laptops. This may take several minutes to complete.`,
     });
     return data;
 
@@ -83,4 +84,3 @@ export const updateLaptops = async () => {
     throw error;
   }
 };
-
