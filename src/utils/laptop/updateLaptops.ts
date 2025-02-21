@@ -6,12 +6,14 @@ export const updateLaptops = async () => {
   try {
     console.log('Starting update for ALL laptops...');
     
-    // Get ALL laptops with is_laptop=true that aren't already being processed
+    // Get laptops with priority for those without prices
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
-      .select('id, asin')
+      .select('id, asin, current_price')
       .eq('is_laptop', true)
-      .not('update_status', 'eq', 'in_progress');
+      .not('update_status', 'eq', 'in_progress')
+      .or('current_price.is.null,eq.0')  // Prioritize laptops with null or 0 prices
+      .order('current_price', { nullsFirst: true }); // Put null prices first
 
     if (fetchError) {
       console.error('Error fetching laptops:', fetchError);
@@ -28,7 +30,7 @@ export const updateLaptops = async () => {
     }
 
     const updateCount = laptops.length;
-    console.log(`Found ${updateCount} laptops to update`);
+    console.log(`Found ${updateCount} laptops to update, prioritizing those without prices`);
 
     // Split laptops into chunks of 10
     const chunkSize = 10;
@@ -44,6 +46,11 @@ export const updateLaptops = async () => {
       const chunk = chunks[i];
       const chunkIds = chunk.map(l => l.id);
       
+      // Log which laptops are being processed in this chunk
+      console.log(`Processing chunk ${i + 1}/${chunks.length}:`, 
+        chunk.map(l => ({ id: l.id, asin: l.asin, current_price: l.current_price }))
+      );
+
       // Mark chunk laptops as pending update
       const { error: statusError } = await supabase
         .from('products')
@@ -59,7 +66,6 @@ export const updateLaptops = async () => {
       }
 
       // Call edge function for this chunk
-      console.log(`Processing chunk ${i + 1}/${chunks.length} (${chunk.length} laptops)`);
       try {
         const { error } = await supabase.functions.invoke('update-laptops', {
           body: { 
@@ -87,7 +93,7 @@ export const updateLaptops = async () => {
     
     toast({
       title: "Update started",
-      description: `Started batch updates for ${updateCount} laptops in ${chunks.length} chunks.`,
+      description: `Started batch updates for ${updateCount} laptops in ${chunks.length} chunks, prioritizing those without prices.`,
     });
     return { totalLaptops: updateCount, chunks: chunks.length };
 
@@ -101,3 +107,4 @@ export const updateLaptops = async () => {
     throw error;
   }
 };
+
