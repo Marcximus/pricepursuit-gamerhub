@@ -84,6 +84,7 @@ serve(async (req) => {
           .update({
             title: content.title,
             current_price: content.price,
+            original_price: content.original_price || content.price,
             rating: content.rating,
             rating_count: content.rating_count,
             image_url: content.images?.[0],
@@ -133,6 +134,18 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in update-laptops function:', error);
+
+    // Reset all in_progress laptops to pending state in case of overall function failure
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (supabaseUrl && supabaseKey) {
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      await supabase
+        .from('products')
+        .update({ update_status: 'pending' })
+        .eq('update_status', 'in_progress');
+    }
+
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
