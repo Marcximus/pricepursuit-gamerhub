@@ -11,7 +11,7 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
     originalPrice,
     hasCurrentPrice: currentPrice !== null && currentPrice !== undefined,
     currentPriceType: typeof currentPrice,
-    processedPrice: currentPrice ? `$${currentPrice.toFixed(2)}` : 'N/A'
+    processedPrice: currentPrice ? `$${Math.round(currentPrice).toLocaleString()}` : 'N/A'
   });
 
   const formatPrice = (price: number | null) => {
@@ -19,7 +19,7 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
       console.log('Invalid price value:', price);
       return 'Price not available';
     }
-    return `$${price.toFixed(2)}`;
+    return `$${Math.round(price).toLocaleString()}`;
   };
 
   // Handle case where price is null/undefined
