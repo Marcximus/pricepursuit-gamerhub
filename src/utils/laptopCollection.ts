@@ -5,6 +5,13 @@ import { toast } from "@/components/ui/use-toast";
 export const collectLaptops = async () => {
   try {
     console.log('Triggering laptop collection...');
+    
+    // First update all existing laptops to pending status
+    await supabase
+      .from('products')
+      .update({ collection_status: 'pending' })
+      .eq('is_laptop', true);
+    
     const { data, error } = await supabase.functions.invoke('collect-laptops', {
       body: { action: 'collect' }
     });
@@ -25,3 +32,4 @@ export const collectLaptops = async () => {
     throw error;
   }
 };
+

@@ -95,6 +95,7 @@ export type Database = {
           battery_life: string | null
           benchmark_score: number | null
           category: string | null
+          collection_status: string | null
           created_at: string | null
           current_price: number | null
           description: string | null
@@ -103,6 +104,7 @@ export type Database = {
           image_url: string | null
           is_laptop: boolean | null
           last_checked: string | null
+          last_collection_attempt: string | null
           original_price: number | null
           processor: string | null
           processor_score: number | null
@@ -124,6 +126,7 @@ export type Database = {
           battery_life?: string | null
           benchmark_score?: number | null
           category?: string | null
+          collection_status?: string | null
           created_at?: string | null
           current_price?: number | null
           description?: string | null
@@ -132,6 +135,7 @@ export type Database = {
           image_url?: string | null
           is_laptop?: boolean | null
           last_checked?: string | null
+          last_collection_attempt?: string | null
           original_price?: number | null
           processor?: string | null
           processor_score?: number | null
@@ -153,6 +157,7 @@ export type Database = {
           battery_life?: string | null
           benchmark_score?: number | null
           category?: string | null
+          collection_status?: string | null
           created_at?: string | null
           current_price?: number | null
           description?: string | null
@@ -161,6 +166,7 @@ export type Database = {
           image_url?: string | null
           is_laptop?: boolean | null
           last_checked?: string | null
+          last_collection_attempt?: string | null
           original_price?: number | null
           processor?: string | null
           processor_score?: number | null

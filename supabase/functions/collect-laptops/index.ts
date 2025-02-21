@@ -6,14 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Response helper
-const respond = (body: any, status = 200) => {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  })
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -30,80 +22,121 @@ Deno.serve(async (req) => {
     // Start the background task without waiting for it to complete
     EdgeRuntime.waitUntil(collectLaptopsTask())
 
-    return respond({
-      success: true,
-      message: "Laptop collection started in background. This may take several minutes to complete.",
-    })
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Laptop collection started in background. This may take several minutes to complete.",
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
+      }
+    )
 
   } catch (error) {
     console.error('Error initiating laptop collection:', error)
-    return respond({ 
-      success: false,
-      error: error.message
-    }, 500)
+    return new Response(
+      JSON.stringify({ 
+        success: false,
+        error: error.message
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
+      }
+    )
   }
 })
 
 async function collectLaptopsTask() {
-  try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+  const supabaseClient = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  )
 
-    const oxyUsername = Deno.env.get('OXYLABS_USERNAME')
-    const oxyPassword = Deno.env.get('OXYLABS_PASSWORD')
+  const oxyUsername = Deno.env.get('OXYLABS_USERNAME')
+  const oxyPassword = Deno.env.get('OXYLABS_PASSWORD')
 
-    if (!oxyUsername || !oxyPassword) {
-      throw new Error('Oxylabs credentials not configured')
-    }
+  if (!oxyUsername || !oxyPassword) {
+    throw new Error('Oxylabs credentials not configured')
+  }
 
-    const searchQueries = [
-      // Generic laptop searches
-      "laptop",
-      "notebook computer",
-      
-      // Major brands with specific models
-      "MacBook Pro",
-      "MacBook Air",
-      "Dell XPS laptop",
-      "Lenovo ThinkPad",
-      "HP Envy laptop",
-      "ASUS ROG laptop",
-      "Acer Predator laptop",
-      "MSI Gaming laptop",
-      "Razer Blade laptop",
-      
-      // Use cases and categories
-      "gaming laptop 2024",
-      "business laptop 2024",
-      "student laptop 2024",
-      "ultrabook 2024",
-      
-      // Price ranges
-      "premium laptop 2024",
-      "budget laptop under 500"
-    ]
+  const searchQueries = [
+    // Gaming laptops
+    "gaming laptop 2024",
+    "RTX gaming laptop",
+    "MSI gaming laptop",
+    "Razer gaming laptop",
+    "ASUS ROG gaming laptop",
+    "Alienware gaming laptop",
+    "Acer Predator gaming laptop",
+    "Lenovo Legion gaming laptop",
+    
+    // Business laptops
+    "business laptop 2024",
+    "ThinkPad laptop",
+    "Dell Latitude laptop",
+    "HP EliteBook laptop",
+    "Lenovo business laptop",
+    
+    // Apple laptops
+    "MacBook Pro",
+    "MacBook Air M2",
+    "MacBook M3",
+    
+    // Ultrabooks
+    "ultrabook 2024",
+    "Dell XPS laptop",
+    "HP Spectre laptop",
+    "ASUS ZenBook",
+    "Lenovo Yoga laptop",
+    
+    // Budget laptops
+    "budget laptop 2024",
+    "laptop under 500",
+    "Chromebook 2024",
+    "student laptop 2024",
+    
+    // Premium laptops
+    "premium laptop 2024",
+    "high performance laptop",
+    
+    // Brand-specific searches
+    "Dell laptop 2024",
+    "HP laptop 2024",
+    "Lenovo laptop 2024",
+    "ASUS laptop 2024",
+    "Acer laptop 2024",
+    "Microsoft Surface laptop"
+  ]
 
-    console.log('Starting laptop collection process...')
-    const foundAsins = new Set<string>()
-    const errors: { query: string; error: string }[] = []
+  console.log('Starting laptop collection process...')
+  const foundAsins = new Set<string>()
+  const errors: { query: string; error: string }[] = []
 
-    for (const query of searchQueries) {
-      console.log(`Searching for: ${query}`)
-      
-      const payload = {
-        source: 'amazon_search',
-        query: query,
-        domain: 'com',
-        geo_location: '90210',
-        start_page: '1',
-        pages: '3',
-        parse: true
-      }
+  // Update collection status to indicate start
+  await supabaseClient
+    .from('products')
+    .update({ collection_status: 'collecting', last_collection_attempt: new Date().toISOString() })
+    .eq('is_laptop', true)
 
+  for (const query of searchQueries) {
+    console.log(`Processing search query: ${query}`)
+    
+    // Collect 5 pages of results per query to get more laptops
+    for (let page = 1; page <= 5; page++) {
       try {
-        console.log('Making request to Oxylabs with payload:', JSON.stringify(payload))
+        const payload = {
+          source: 'amazon_search',
+          query: query,
+          domain: 'com',
+          geo_location: '90210',
+          start_page: page.toString(),
+          pages: '1',
+          parse: true
+        }
+
+        console.log(`Making request to Oxylabs for query "${query}" page ${page}`)
         
         const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
           method: 'POST',
@@ -120,20 +153,17 @@ async function collectLaptopsTask() {
         }
 
         const data = await response.json()
-        console.log(`Received response for query "${query}"`)
-
-        // Extract both organic and paid results
         const results = [
           ...(data.results?.[0]?.content?.results?.organic || []),
           ...(data.results?.[0]?.content?.results?.paid || [])
         ]
         
         if (results.length === 0) {
-          console.log(`No results found for query: ${query}`)
+          console.log(`No results found for query: ${query} page ${page}`)
           continue
         }
 
-        console.log(`Found ${results.length} results for query: ${query}`)
+        console.log(`Found ${results.length} results for query: ${query} page ${page}`)
 
         // Process results in smaller batches
         const BATCH_SIZE = 10
@@ -145,10 +175,7 @@ async function collectLaptopsTask() {
 
             foundAsins.add(item.asin)
             
-            // Extract and validate the image URL
             const imageUrl = item.url_image || item.image
-            console.log(`Processing item with ASIN ${item.asin}, image URL: ${imageUrl}`)
-
             const currentPrice = typeof item.price?.value === 'string' 
               ? parseFloat(item.price.value.replace(/[^0-9.]/g, '')) 
               : (typeof item.price?.value === 'number' ? item.price.value : null)
@@ -164,7 +191,7 @@ async function collectLaptopsTask() {
               continue
             }
 
-            // Prepare product data
+            // Prepare product data with collection status
             const productData = {
               asin: item.asin,
               title: item.title,
@@ -175,12 +202,12 @@ async function collectLaptopsTask() {
               image_url: imageUrl,
               product_url: `https://www.amazon.com/dp/${item.asin}`,
               is_laptop: true,
-              last_checked: new Date().toISOString()
+              last_checked: new Date().toISOString(),
+              collection_status: 'collected'
             }
 
-            console.log(`Saving laptop: ${productData.title} with image: ${productData.image_url}`)
+            console.log(`Saving laptop: ${productData.title}`)
 
-            // Upsert the product into the database
             const { error } = await supabaseClient
               .from('products')
               .upsert(productData, { 
@@ -196,24 +223,33 @@ async function collectLaptopsTask() {
             }
           }
 
-          // Add a small delay between batches
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          // Add a small delay between batches to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 500))
         }
 
-        // Add a delay between queries
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        // Add a delay between pages to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 1000))
       } catch (error) {
-        console.error(`Error processing query "${query}":`, error)
+        console.error(`Error processing query "${query}" page ${page}:`, error)
         errors.push({ query, error: error.message })
         continue
       }
     }
+  }
 
-    console.log(`Collection complete. Found ${foundAsins.size} unique laptops. ${errors.length} queries failed.`)
-    if (errors.length > 0) {
-      console.error('Errors during collection:', errors)
-    }
-  } catch (error) {
-    console.error('Error in collection task:', error)
+  // Update final status
+  await supabaseClient
+    .from('products')
+    .update({ 
+      collection_status: 'completed',
+      last_collection_attempt: new Date().toISOString()
+    })
+    .eq('is_laptop', true)
+    .eq('collection_status', 'collecting')
+
+  console.log(`Collection complete. Found ${foundAsins.size} unique laptops. ${errors.length} queries failed.`)
+  if (errors.length > 0) {
+    console.error('Errors during collection:', errors)
   }
 }
+

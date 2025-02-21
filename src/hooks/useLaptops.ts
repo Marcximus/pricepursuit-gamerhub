@@ -19,6 +19,7 @@ export const useLaptops = () => {
           .from('products')
           .select('*')
           .eq('is_laptop', true)
+          .not('collection_status', 'eq', 'pending')
           .order('created_at', { ascending: false });
 
         if (error) {
@@ -41,18 +42,16 @@ export const useLaptops = () => {
         }
 
         console.log(`Found ${data.length} laptops from database`);
-        // Process each laptop's data before returning
         return data.map(laptop => processLaptopData(laptop as any));
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
         return [];
       }
     },
-    staleTime: 1000 * 60 * 60 * 24, // 24 hours to cache the data
-    refetchInterval: 1000 * 60 * 60 * 24, // Refetch every 24 hours to check for updates
+    staleTime: 1000 * 60, // 1 minute to cache the data
+    refetchInterval: 1000 * 30, // Refetch every 30 seconds to check for updates
     retryDelay: 1000, // Wait 1 second between retries
     retry: 3, // Retry failed requests 3 times
-    placeholderData: (previousData) => previousData?.map(laptop => processLaptopData(laptop as any)), // Process previous data as well
   });
 
   return {
@@ -60,3 +59,4 @@ export const useLaptops = () => {
     collectLaptops,
   };
 };
+
