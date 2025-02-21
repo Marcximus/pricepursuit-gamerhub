@@ -20,60 +20,54 @@ export const useFilteredLaptops = (
         // Price filter
         const price = laptop.current_price || 0;
         if (price < filters.priceRange.min || price > filters.priceRange.max) {
-          console.log(`Laptop ${laptop.title} filtered out due to price ${price}`);
           return false;
         }
 
         // Brand filter
-        if (filters.brand !== "all-brands" && laptop.brand !== undefined) {
+        if (filters.brand !== "all-brands" && laptop.brand) {
           const brandMatches = laptop.brand.toLowerCase() === filters.brand.toLowerCase();
           if (!brandMatches) {
-            console.log(`Laptop ${laptop.title} filtered out due to brand ${laptop.brand}`);
+            console.log(`Brand filter mismatch - Laptop brand: ${laptop.brand}, Filter: ${filters.brand}`);
             return false;
           }
         }
         
         // Processor filter
-        if (filters.processor !== "all-processors" && laptop.processor !== undefined) {
+        if (filters.processor !== "all-processors" && laptop.processor) {
           const processorMatches = laptop.processor.toLowerCase() === filters.processor.toLowerCase();
           if (!processorMatches) {
-            console.log(`Laptop ${laptop.title} filtered out due to processor ${laptop.processor}`);
             return false;
           }
         }
         
         // RAM filter
-        if (filters.ram !== "all-ram" && laptop.ram !== undefined) {
+        if (filters.ram !== "all-ram" && laptop.ram) {
           const ramMatches = laptop.ram.toLowerCase() === filters.ram.toLowerCase();
           if (!ramMatches) {
-            console.log(`Laptop ${laptop.title} filtered out due to RAM ${laptop.ram}`);
             return false;
           }
         }
         
         // Storage filter
-        if (filters.storage !== "all-storage" && laptop.storage !== undefined) {
+        if (filters.storage !== "all-storage" && laptop.storage) {
           const storageMatches = laptop.storage.toLowerCase() === filters.storage.toLowerCase();
           if (!storageMatches) {
-            console.log(`Laptop ${laptop.title} filtered out due to storage ${laptop.storage}`);
             return false;
           }
         }
         
         // Graphics filter
-        if (filters.graphics !== "all-graphics" && laptop.graphics !== undefined) {
+        if (filters.graphics !== "all-graphics" && laptop.graphics) {
           const graphicsMatches = laptop.graphics.toLowerCase() === filters.graphics.toLowerCase();
           if (!graphicsMatches) {
-            console.log(`Laptop ${laptop.title} filtered out due to graphics ${laptop.graphics}`);
             return false;
           }
         }
         
         // Screen size filter
-        if (filters.screenSize !== "all-screens" && laptop.screen_size !== undefined) {
+        if (filters.screenSize !== "all-screens" && laptop.screen_size) {
           const screenSizeMatches = laptop.screen_size.toLowerCase() === filters.screenSize.toLowerCase();
           if (!screenSizeMatches) {
-            console.log(`Laptop ${laptop.title} filtered out due to screen size ${laptop.screen_size}`);
             return false;
           }
         }
@@ -114,4 +108,3 @@ export const useFilteredLaptops = (
     return sortLaptops(filterLaptops(laptops));
   }, [laptops, filters, sortBy]);
 };
-

@@ -8,11 +8,26 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
   return useMemo(() => {
     const getUniqueValues = (key: FilterableProductKeys) => {
       if (!laptops) return new Set<string>();
-      return new Set(laptops.map(laptop => {
-        const value = laptop[key];
-        return value ? String(value) : null;
-      }).filter(Boolean));
+      
+      // Filter out null/undefined values and normalize strings
+      const validValues = laptops
+        .map(laptop => laptop[key])
+        .filter((value): value is string => value != null && value !== '')
+        .map(value => value.trim());
+      
+      // Create a Set of unique values
+      return new Set(validValues);
     };
+
+    console.log('Generating filter options from laptops:', {
+      totalLaptops: laptops?.length,
+      brands: getUniqueValues('brand'),
+      processors: getUniqueValues('processor'),
+      ram: getUniqueValues('ram'),
+      storage: getUniqueValues('storage'),
+      graphics: getUniqueValues('graphics'),
+      screenSizes: getUniqueValues('screen_size')
+    });
 
     return {
       processors: getUniqueValues('processor'),
@@ -24,4 +39,3 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
     };
   }, [laptops]);
 };
-
