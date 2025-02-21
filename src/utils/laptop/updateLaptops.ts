@@ -28,52 +28,28 @@ export const updateLaptops = async () => {
 
     console.log(`Found ${laptops.length} laptops to update`);
 
-    // Call Oxylabs API for each laptop
-    const results = [];
-    for (const laptop of laptops) {
-      try {
-        console.log(`Fetching data for ASIN: ${laptop.asin}`);
-        
-        const payload = {
-          source: 'amazon_product',
-          query: laptop.asin,
-          domain: 'com',
-          geo_location: '90210',
-          parse: true
-        };
-
-        const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic ' + btoa(`${process.env.OXYLABS_USERNAME}:${process.env.OXYLABS_PASSWORD}`)
-          },
-          body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('Oxylabs response:', data);
-        results.push(data);
-
-        // Add a 1-second delay between requests
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-      } catch (error) {
-        console.error(`Error updating laptop ${laptop.asin}:`, error);
-      }
-    }
-
-    console.log('Update complete');
-    toast({
-      title: "Update complete",
-      description: `Processed ${laptops.length} laptops`,
+    // Call edge function to update laptops
+    const { data, error } = await supabase.functions.invoke('update-laptops', {
+      body: { laptops }
     });
 
-    return results;
+    if (error) {
+      console.error('Error calling update-laptops function:', error);
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to start laptop updates",
+        variant: "destructive"
+      });
+      throw error;
+    }
+
+    console.log('Update started:', data);
+    toast({
+      title: "Update started",
+      description: `Processing ${laptops.length} laptops. This may take several minutes.`,
+    });
+
+    return data;
 
   } catch (error: any) {
     console.error('Failed to update laptops:', error);
@@ -85,3 +61,4 @@ export const updateLaptops = async () => {
     throw error;
   }
 };
+

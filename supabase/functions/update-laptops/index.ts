@@ -17,7 +17,7 @@ let isProcessing = false;
 let processedCount = 0;
 let totalLaptops = 0;
 let lastProcessedTimestamp = Date.now();
-const PROCESSING_TIMEOUT = 60000; // 1 minute timeout
+const PROCESSING_TIMEOUT = 300000; // 5 minute timeout
 
 // Function to update processing status
 async function updateProcessingStatus() {
@@ -29,11 +29,11 @@ async function updateProcessingStatus() {
   lastProcessedTimestamp = now;
 }
 
-// Process laptops in smaller batches
+// Process all laptops with proper batching and delays
 async function processAllLaptops(laptops: Laptop[], supabase: any) {
   if (isProcessing) {
     console.log('Already processing laptops, skipping...');
-    return;
+    return { message: 'Update already in progress' };
   }
 
   isProcessing = true;
@@ -44,29 +44,23 @@ async function processAllLaptops(laptops: Laptop[], supabase: any) {
   console.log(`Starting processing of ${totalLaptops} laptops...`);
 
   try {
-    const BATCH_SIZE = 10;
+    const BATCH_SIZE = 5;
     for (let i = 0; i < laptops.length; i += BATCH_SIZE) {
       const batch = laptops.slice(i, i + BATCH_SIZE);
-      console.log(`Processing batch ${i/BATCH_SIZE + 1}/${Math.ceil(laptops.length/BATCH_SIZE)}`);
+      console.log(`Processing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(laptops.length/BATCH_SIZE)}`);
       
       for (const laptop of batch) {
         await updateProcessingStatus();
         
         if (!isProcessing) {
           console.log('Processing stopped due to timeout');
-          return;
+          return { message: 'Processing stopped due to timeout' };
         }
 
         try {
           console.log(`Processing laptop ${processedCount + 1}/${totalLaptops}: ${laptop.asin}`);
-
-          // Update status to in_progress
-          await supabase
-            .from('products')
-            .update({ update_status: 'in_progress' })
-            .eq('id', laptop.id);
-
-          // Make request to Oxylabs API
+          
+          // Call Oxylabs API
           const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
             method: 'POST',
             headers: {
@@ -83,7 +77,7 @@ async function processAllLaptops(laptops: Laptop[], supabase: any) {
           });
 
           if (!response.ok) {
-            throw new Error(`Oxylabs API error: ${response.statusText}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
 
           const data = await response.json();
@@ -118,13 +112,13 @@ async function processAllLaptops(laptops: Laptop[], supabase: any) {
             last_updated: new Date().toISOString()
           };
 
-          // Call the stored procedure with the correct parameter order (p_price, p_product_id, p_update_data)
+          // Call the stored procedure with the exact parameter order
           console.log(`Updating laptop ${laptop.id} with current price ${currentPrice}`);
           const { error: updateError } = await supabase.rpc(
             'update_product_with_price_history',
             {
-              p_price: currentPrice,
               p_product_id: laptop.id,
+              p_price: currentPrice,
               p_update_data: updateData
             }
           );
@@ -135,6 +129,9 @@ async function processAllLaptops(laptops: Laptop[], supabase: any) {
 
           processedCount++;
           console.log(`Successfully updated laptop ${laptop.asin} (${processedCount}/${totalLaptops})`);
+
+          // Add a delay between requests to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 1000));
 
         } catch (error) {
           console.error(`Error processing laptop ${laptop.asin}:`, error);
@@ -148,53 +145,78 @@ async function processAllLaptops(laptops: Laptop[], supabase: any) {
             })
             .eq('id', laptop.id);
         }
-
-        // Wait between requests to avoid overwhelming the API
-        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
 
+    return { 
+      message: `Completed processing ${processedCount}/${totalLaptops} laptops`,
+      success: true
+    };
+
   } catch (error) {
     console.error('Error in background processing:', error);
+    return { 
+      message: `Error processing laptops: ${error.message}`,
+      success: false
+    };
   } finally {
     isProcessing = false;
-    console.log(`Completed processing ${processedCount}/${totalLaptops} laptops`);
+    console.log(`Processing complete. Updated ${processedCount}/${totalLaptops} laptops`);
   }
 }
 
 // Main request handler
 Deno.serve(async (req) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Validate request
+    if (req.method !== 'POST') {
+      throw new Error('Method not allowed');
+    }
+
     const { laptops } = await req.json();
     
     if (!laptops || !Array.isArray(laptops) || laptops.length === 0) {
       throw new Error('Invalid request: laptops array is required');
     }
 
-    console.log(`Received update request for ${laptops.length} laptops...`);
+    console.log(`Received update request for ${laptops.length} laptops`);
+    
+    // Initialize Supabase client
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
     // Start background processing
-    const backgroundProcessing = processAllLaptops(laptops, supabase);
-    EdgeRuntime.waitUntil(backgroundProcessing);
+    const processingPromise = processAllLaptops(laptops, supabase);
+    EdgeRuntime.waitUntil(processingPromise);
 
     return new Response(
       JSON.stringify({ 
-        message: `Started background processing of ${laptops.length} laptops`,
+        message: `Started processing ${laptops.length} laptops`,
         status: 'processing'
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json'
+        }
+      }
     );
 
   } catch (error) {
     console.error('Error in update-laptops function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        status: 500, 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json'
+        }
+      }
     );
   }
 });
