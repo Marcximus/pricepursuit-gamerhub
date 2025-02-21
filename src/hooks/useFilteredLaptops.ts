@@ -22,6 +22,12 @@ export const useFilteredLaptops = (
           console.log(`Laptop ${laptop.title} filtered out due to price ${price}`);
           return false;
         }
+
+        if (filters.brand !== "all-brands" && laptop.brand && 
+            !laptop.brand.toLowerCase().includes(filters.brand.toLowerCase())) {
+          console.log(`Laptop ${laptop.title} filtered out due to brand ${laptop.brand}`);
+          return false;
+        }
         
         if (filters.processor !== "all-processors" && laptop.processor && 
             !laptop.processor.toLowerCase().includes(filters.processor.toLowerCase())) {
@@ -89,4 +95,3 @@ export const useFilteredLaptops = (
     return sortLaptops(filterLaptops(laptops));
   }, [laptops, filters, sortBy]);
 };
-

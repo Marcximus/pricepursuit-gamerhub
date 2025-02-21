@@ -11,6 +11,7 @@ export type FilterOptions = {
   storage: string;
   graphics: string;
   screenSize: string;
+  brand: string;
 };
 
 type LaptopFiltersProps = {
@@ -21,6 +22,7 @@ type LaptopFiltersProps = {
   storageOptions: Set<string>;
   graphicsCards: Set<string>;
   screenSizes: Set<string>;
+  brands: Set<string>;
 };
 
 export function LaptopFilters({
@@ -31,9 +33,29 @@ export function LaptopFilters({
   storageOptions,
   graphicsCards,
   screenSizes,
+  brands,
 }: LaptopFiltersProps) {
   return (
     <div className="space-y-4">
+      {/* Brand Filter */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Brand</Label>
+        <Select
+          value={filters.brand}
+          onValueChange={(value) => onFiltersChange({ ...filters, brand: value })}
+        >
+          <SelectTrigger className="h-8 text-sm">
+            <SelectValue placeholder="Select brand" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all-brands">All Brands</SelectItem>
+            {Array.from(brands).map((brand) => (
+              brand && <SelectItem key={String(brand)} value={String(brand)}>{String(brand)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Price Range */}
       <div className="space-y-2">
         <Label className="text-sm font-medium">Price Range</Label>

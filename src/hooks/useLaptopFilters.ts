@@ -18,7 +18,7 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       storageOptions: getUniqueValues('storage'),
       graphicsCards: getUniqueValues('graphics'),
       screenSizes: getUniqueValues('screen_size'),
+      brands: getUniqueValues('brand'),
     };
   }, [laptops]);
 };
-

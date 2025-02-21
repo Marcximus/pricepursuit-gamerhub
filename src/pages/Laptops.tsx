@@ -20,6 +20,7 @@ const ComparePriceLaptops = () => {
     storage: "all-storage",
     graphics: "all-graphics",
     screenSize: "all-screens",
+    brand: "all-brands",
   });
 
   const { 
@@ -94,6 +95,7 @@ const ComparePriceLaptops = () => {
                 storageOptions={filterOptions.storageOptions}
                 graphicsCards={filterOptions.graphicsCards}
                 screenSizes={filterOptions.screenSizes}
+                brands={filterOptions.brands}
               />
             }
             toolbar={
