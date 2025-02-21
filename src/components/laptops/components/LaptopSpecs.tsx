@@ -10,7 +10,6 @@ type LaptopSpecsProps = {
     ram?: string;
     storage?: string;
     weight?: string;
-    batteryLife?: string;
   };
 };
 
@@ -107,12 +106,6 @@ export function LaptopSpecs({ title, productUrl, specs }: LaptopSpecsProps) {
           <li>
             <span className="font-bold">Weight:</span>{" "}
             {specs.weight}
-          </li>
-        )}
-        {specs.batteryLife && (
-          <li>
-            <span className="font-bold">Battery Life:</span>{" "}
-            {specs.batteryLife}
           </li>
         )}
       </ul>
