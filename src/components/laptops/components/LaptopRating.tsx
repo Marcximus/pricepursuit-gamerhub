@@ -4,9 +4,10 @@ import { StarIcon } from "lucide-react";
 type LaptopRatingProps = {
   rating: number;
   totalReviews?: number;
+  reviewsUrl?: string;
 };
 
-export function LaptopRating({ rating, totalReviews }: LaptopRatingProps) {
+export function LaptopRating({ rating, totalReviews, reviewsUrl }: LaptopRatingProps) {
   if (!rating) {
     return null;
   }
@@ -47,8 +48,8 @@ export function LaptopRating({ rating, totalReviews }: LaptopRatingProps) {
     return stars;
   };
 
-  return (
-    <div className="flex flex-col items-center gap-1">
+  const content = (
+    <>
       <div className="flex">
         {renderStarRating(rating)}
       </div>
@@ -57,6 +58,25 @@ export function LaptopRating({ rating, totalReviews }: LaptopRatingProps) {
           {totalReviews.toLocaleString()} reviews
         </span>
       )}
+    </>
+  );
+
+  if (reviewsUrl) {
+    return (
+      <a 
+        href={reviewsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex flex-col items-center gap-1 hover:opacity-80 transition-opacity"
+      >
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      {content}
     </div>
   );
 }

@@ -56,6 +56,7 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
           <LaptopRating 
             rating={laptop.average_rating}
             totalReviews={laptop.total_reviews}
+            reviewsUrl={reviewsUrl}
           />
         )}
       </div>
