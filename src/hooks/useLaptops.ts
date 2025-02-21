@@ -3,10 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { processLaptopData } from "@/utils/laptopUtils";
-import { collectLaptops, updateLaptops } from "@/utils/laptopCollection";
+import { collectLaptops, updateLaptops, refreshBrandModels } from "@/utils/laptopCollection";
 import type { Product } from "@/types/product";
 
-export { collectLaptops, updateLaptops };
+export { collectLaptops, updateLaptops, refreshBrandModels };
 
 export const useLaptops = () => {
   const query = useQuery({
@@ -89,13 +89,6 @@ export const useLaptops = () => {
             }, {});
           }
 
-          // Log review processing for debugging
-          console.log(`Processing laptop ${laptop.id}:`, {
-            rating: avgRating,
-            totalReviews: reviews.length,
-            hasReviewData: !!reviewData.recent_reviews.length
-          });
-
           return {
             ...laptop,
             average_rating: avgRating,
@@ -122,5 +115,6 @@ export const useLaptops = () => {
     ...query,
     collectLaptops,
     updateLaptops,
+    refreshBrandModels,
   };
 };

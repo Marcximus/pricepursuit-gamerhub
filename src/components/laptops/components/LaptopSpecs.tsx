@@ -27,6 +27,39 @@ export function LaptopSpecs({ title, productUrl, specs }: LaptopSpecsProps) {
     brand = 'MSI';
   }
 
+  // Process model name patterns based on brand
+  let modelName = '';
+  if (brand !== 'Unknown Brand') {
+    // Remove brand name and common prefixes from title
+    let tempTitle = title.replace(new RegExp(`\\b${brand}\\b`, 'i'), '').trim();
+    
+    // Brand-specific model patterns
+    const modelPatterns = {
+      'HP': /\b(Pavilion|ProBook|EliteBook|Envy|Omen|Spectre|Stream)\b.*?(?=\s\d{4}|\s\(|$)/i,
+      'Dell': /\b(Latitude|Inspiron|XPS|Precision|Vostro)\b.*?(?=\s\d{4}|\s\(|$)/i,
+      'Lenovo': /\b(ThinkPad|IdeaPad|Legion|Yoga|Flex)\b.*?(?=\s\d{4}|\s\(|$)/i,
+      'ASUS': /\b(ROG|TUF|ZenBook|VivoBook|ExpertBook|ProArt)\b.*?(?=\s\d{4}|\s\(|$)/i,
+      'Acer': /\b(Aspire|Predator|Swift|Spin|Nitro|ConceptD)\b.*?(?=\s\d{4}|\s\(|$)/i,
+      'MSI': /\b(Raider|Titan|Katana|Stealth|Creator|Modern|Prestige|Vector|Sword|Pulse|Alpha|Bravo|Delta)\b.*?(?=\s\d{4}|\s\(|$)/i,
+    };
+
+    // Try to match model pattern for the brand
+    if (modelPatterns[brand]) {
+      const modelMatch = tempTitle.match(modelPatterns[brand]);
+      if (modelMatch) {
+        modelName = modelMatch[0].trim();
+      }
+    }
+
+    // If no specific model pattern matched, try to get next word after brand
+    if (!modelName) {
+      const generalModelMatch = tempTitle.match(/^\s*(\w+(?:\s+\w+)?)/);
+      if (generalModelMatch) {
+        modelName = generalModelMatch[1].trim();
+      }
+    }
+  }
+
   return (
     <div>
       <a 
@@ -42,6 +75,12 @@ export function LaptopSpecs({ title, productUrl, specs }: LaptopSpecsProps) {
           <span className="font-bold">Brand:</span>{" "}
           {brand}
         </li>
+        {modelName && (
+          <li>
+            <span className="font-bold">Model:</span>{" "}
+            {modelName}
+          </li>
+        )}
         <li>
           <span className="font-bold">Screen:</span>{" "}
           {specs.screenSize 
@@ -80,4 +119,3 @@ export function LaptopSpecs({ title, productUrl, specs }: LaptopSpecsProps) {
     </div>
   );
 }
-

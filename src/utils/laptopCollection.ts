@@ -99,3 +99,55 @@ export const updateLaptops = async () => {
     throw error;
   }
 };
+
+export const refreshBrandModels = async () => {
+  try {
+    console.log('Initiating brand and model refresh...');
+    
+    // First get count of laptops that need brand/model refresh
+    const { count, error: countError } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_laptop', true)
+      .or('brand.is.null,model.is.null');
+
+    if (countError) {
+      console.error('Error counting laptops to refresh:', countError);
+      throw countError;
+    }
+    console.log(`Found ${count} laptops that need brand/model refresh`);
+    
+    // Call edge function to handle the refresh
+    const { data, error } = await supabase.functions.invoke('collect-laptops', {
+      body: { 
+        action: 'refresh-brands',
+        mode: 'brand_model_refresh'
+      }
+    });
+    
+    if (error) {
+      console.error('Error refreshing brands/models:', error);
+      toast({
+        title: "Refresh failed",
+        description: error.message || "Failed to start brand/model refresh",
+        variant: "destructive"
+      });
+      throw new Error(error.message || 'Failed to refresh brands/models');
+    }
+    
+    console.log('Brand/model refresh response:', data);
+    toast({
+      title: "Refresh started",
+      description: `Starting brand/model refresh for ${count} laptops. This will take a few minutes to complete.`,
+    });
+    return data;
+  } catch (error) {
+    console.error('Failed to refresh brands/models:', error);
+    toast({
+      title: "Refresh failed",
+      description: error.message || "An unexpected error occurred",
+      variant: "destructive"
+    });
+    throw error;
+  }
+};
