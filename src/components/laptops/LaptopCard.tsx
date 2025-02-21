@@ -8,24 +8,33 @@ type LaptopCardProps = {
 };
 
 export function LaptopCard({ laptop }: LaptopCardProps) {
-  // Add console log to debug the data
-  console.log('Laptop data:', laptop);
+  // Add more detailed console log to debug the data
+  console.log('Laptop data for rendering:', {
+    id: laptop.id,
+    title: laptop.title,
+    price: laptop.current_price,
+    image: laptop.image_url
+  });
+  
+  // Default image URL if none is provided
+  const defaultImageUrl = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300";
   
   return (
     <Card className="flex p-4 gap-4 hover:shadow-lg transition-shadow">
       {/* Left side - Image and Price */}
       <div className="flex flex-col items-center gap-2 w-40">
         <img
-          src={laptop.image_url || '/placeholder.svg'}
+          src={laptop.image_url || defaultImageUrl}
           alt={laptop.title || 'Laptop image'}
-          className="w-32 h-32 object-contain"
+          className="w-32 h-32 object-contain bg-gray-50"
           onError={(e) => {
+            console.log('Image failed to load, using default image');
             const target = e.target as HTMLImageElement;
-            target.src = '/placeholder.svg';
+            target.src = defaultImageUrl;
           }}
         />
         <div className="text-xl font-bold">
-          {laptop.current_price 
+          {typeof laptop.current_price === 'number' && !isNaN(laptop.current_price)
             ? `£${laptop.current_price.toFixed(2)}` 
             : 'Price not available'}
         </div>
@@ -37,7 +46,9 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
         <ul className="space-y-1 text-sm">
           <li>
             <span className="font-bold">Screen:</span>{" "}
-            {laptop.screen_size && `${laptop.screen_size} ${laptop.screen_resolution ? `(${laptop.screen_resolution})` : ''}`}
+            {laptop.screen_size 
+              ? `${laptop.screen_size} ${laptop.screen_resolution ? `(${laptop.screen_resolution})` : ''}`
+              : 'Not specified'}
           </li>
           <li>
             <span className="font-bold">Processor:</span>{" "}
