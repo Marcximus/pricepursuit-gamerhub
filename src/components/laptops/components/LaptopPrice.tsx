@@ -6,9 +6,14 @@ type LaptopPriceProps = {
 };
 
 export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopPriceProps) {
+  console.log('Rendering LaptopPrice:', { currentPrice, originalPrice });
+
   const formatPrice = (price: number | null) => {
-    if (typeof price !== 'number' || isNaN(price)) return 'Price not available';
-    return `£${price.toFixed(2)}`;
+    if (typeof price !== 'number' || isNaN(price)) {
+      console.log('Invalid price value:', price);
+      return 'Price not available';
+    }
+    return `$${price.toFixed(2)}`;
   };
 
   return (

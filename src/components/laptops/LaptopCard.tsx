@@ -12,16 +12,14 @@ type LaptopCardProps = {
 };
 
 export function LaptopCard({ laptop }: LaptopCardProps) {
-  // Add more detailed console log
-  console.log('Rendering laptop with full details:', {
+  // Add more detailed price logging
+  console.log('Rendering laptop prices:', {
     id: laptop.id,
-    title: laptop.title,
     asin: laptop.asin,
-    price: {
-      current: laptop.current_price,
-      original: laptop.original_price,
-    },
-    reviewData: laptop.review_data
+    currentPrice: laptop.current_price,
+    originalPrice: laptop.original_price,
+    lastChecked: laptop.last_checked,
+    updateStatus: laptop.update_status,
   });
 
   if (!laptop.asin) {
@@ -29,7 +27,7 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
     return null;
   }
 
-  // Base product URL with affiliate tag - now using amazon.com
+  // Base product URL with affiliate tag
   const baseProductUrl = `https://amazon.com/dp/${laptop.asin}?tag=with-laptop-discount-20`;
   
   // URLs for different purposes

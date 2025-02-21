@@ -26,6 +26,7 @@ export const updateLaptops = async () => {
       return null;
     }
     
+    // Find laptops needing updates
     const { count: updateCount, error: countError } = await supabase
       .from('products')
       .select('*', { count: 'exact', head: true })
@@ -48,6 +49,7 @@ export const updateLaptops = async () => {
 
     console.log(`Found ${updateCount} laptops that need updating`);
     
+    // Mark laptops as being updated
     const { error: statusError } = await supabase
       .from('products')
       .update({ update_status: 'in_progress' })
@@ -59,6 +61,7 @@ export const updateLaptops = async () => {
       throw statusError;
     }
     
+    // Call edge function to update prices
     const { data, error } = await supabase.functions.invoke('update-laptops', {
       body: { 
         count: updateCount,
@@ -79,12 +82,13 @@ export const updateLaptops = async () => {
     console.log('Laptop update response:', data);
     toast({
       title: "Update started",
-      description: `Starting updates for ${data.updated_count} laptops. This will take a few minutes to complete.`,
+      description: `Starting updates for ${updateCount} laptops. This may take a few minutes to complete.`,
     });
     return data;
   } catch (error) {
     console.error('Failed to update laptops:', error);
     try {
+      // Reset status on error
       await supabase
         .from('products')
         .update({ update_status: 'pending' })
