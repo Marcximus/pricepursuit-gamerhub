@@ -1,5 +1,6 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
+import { serve } from "https://deno.fresh.dev/server/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,93 +8,108 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { asin } = await req.json();
-    
+    const { asin } = await req.json()
+
     if (!asin) {
-      throw new Error('ASIN is required');
+      return new Response(
+        JSON.stringify({ error: 'ASIN is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    const username = Deno.env.get('OXYLABS_USERNAME');
-    const password = Deno.env.get('OXYLABS_PASSWORD');
+    const OXYLABS_USERNAME = Deno.env.get('OXYLABS_USERNAME')
+    const OXYLABS_PASSWORD = Deno.env.get('OXYLABS_PASSWORD')
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
+    const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')
 
-    if (!username || !password) {
-      throw new Error('Oxylabs credentials not configured');
+    if (!OXYLABS_USERNAME || !OXYLABS_PASSWORD) {
+      return new Response(
+        JSON.stringify({ error: 'Oxylabs credentials not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    console.log(`Fetching product data for ASIN: ${asin}`);
+    // Create Supabase client
+    const supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!)
 
+    // Structure payload for Oxylabs
+    const payload = {
+      source: 'amazon_product',
+      query: asin,
+      domain: 'com',
+      geo_location: '90210',
+      parse: true
+    }
+
+    console.log('Fetching product data from Oxylabs for ASIN:', asin)
+
+    // Make request to Oxylabs
     const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa(`${username}:${password}`)
+        'Authorization': 'Basic ' + btoa(`${OXYLABS_USERNAME}:${OXYLABS_PASSWORD}`)
       },
-      body: JSON.stringify({
-        source: 'amazon_product',
-        query: asin,
-        geo_location: '90210',
-        parse: true
-      })
-    });
+      body: JSON.stringify(payload)
+    })
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Oxylabs API error:', errorText);
-      throw new Error(`Failed to fetch from Oxylabs: ${response.statusText}`);
+      throw new Error(`Oxylabs API error: ${response.statusText}`)
     }
 
-    const data = await response.json();
-    
-    if (!data.results?.[0]?.content) {
-      console.error('No content in Oxylabs response:', data);
-      throw new Error('No product data found');
+    const data = await response.json()
+    console.log('Received response from Oxylabs:', data)
+
+    if (!data.results || !data.results[0] || !data.results[0].content) {
+      throw new Error('Invalid response from Oxylabs')
     }
 
-    const product = data.results[0].content;
-    
-    const formattedProduct = {
-      id: asin,
-      asin: asin,
-      title: product.title,
-      current_price: product.price?.current_price || product.price?.current,
-      original_price: product.price?.previous_price || product.price?.previous || product.price?.current,
-      rating: product.rating,
-      rating_count: product.ratings_total,
-      image_url: product.images?.[0],
-      product_url: product.url,
-      last_checked: new Date().toISOString()
-    };
+    const productData = data.results[0].content
+    console.log('Processed product data:', productData)
 
-    console.log('Successfully fetched product data:', formattedProduct);
+    // Update product in database
+    const { data: updatedProduct, error: updateError } = await supabase
+      .from('products')
+      .update({
+        title: productData.title,
+        current_price: productData.price?.current,
+        original_price: productData.price?.before_price || productData.price?.current,
+        rating: productData.rating?.rating || null,
+        rating_count: productData.rating?.rating_count || null,
+        image_url: productData.images?.[0] || null,
+        product_url: productData.url,
+        last_checked: new Date().toISOString(),
+        processor: productData.specifications?.processor,
+        ram: productData.specifications?.ram,
+        storage: productData.specifications?.storage,
+        screen_size: productData.specifications?.screen_size,
+        graphics: productData.specifications?.graphics,
+        weight: productData.specifications?.weight,
+        battery_life: productData.specifications?.battery_life
+      })
+      .eq('asin', asin)
+      .select()
+      .single()
+
+    if (updateError) {
+      throw updateError
+    }
 
     return new Response(
-      JSON.stringify(formattedProduct),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    );
+      JSON.stringify(updatedProduct),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
 
   } catch (error) {
-    console.error('Error in fetch-product function:', error);
-    
+    console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: error.message || 'Failed to fetch product data' }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json'
-        },
-        status: 500
-      }
-    );
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
-});
+})
