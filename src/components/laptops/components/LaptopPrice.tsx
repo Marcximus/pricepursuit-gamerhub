@@ -6,17 +6,38 @@ type LaptopPriceProps = {
 };
 
 export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopPriceProps) {
-  console.log('Rendering LaptopPrice:', { currentPrice, originalPrice });
+  console.log('Rendering LaptopPrice:', { 
+    currentPrice, 
+    originalPrice,
+    hasCurrentPrice: currentPrice !== null && currentPrice !== undefined,
+    currentPriceType: typeof currentPrice
+  });
 
   const formatPrice = (price: number | null) => {
-    if (price === null || (typeof price === 'number' && isNaN(price))) {
+    if (price === null || price === undefined || (typeof price === 'number' && isNaN(price))) {
       console.log('Invalid price value:', price);
       return 'Price not available';
     }
     return `$${Math.floor(price)}`;
   };
 
-  // If both prices are zero, it likely means they haven't been fetched yet
+  // Handle case where both prices are null/undefined
+  if (!currentPrice && !originalPrice) {
+    return (
+      <a 
+        href={productUrl}
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="block text-center"
+      >
+        <div className="text-sm text-gray-500">
+          Price not available
+        </div>
+      </a>
+    );
+  }
+
+  // Handle case where prices are 0
   if (currentPrice === 0 && originalPrice === 0) {
     return (
       <a 
@@ -42,6 +63,11 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
       <div className="text-xl font-bold text-blue-600 hover:text-blue-800">
         {formatPrice(currentPrice)}
       </div>
+      {originalPrice && originalPrice > currentPrice && (
+        <div className="text-sm text-gray-500 line-through">
+          {formatPrice(originalPrice)}
+        </div>
+      )}
     </a>
   );
 }

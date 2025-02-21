@@ -8,26 +8,42 @@ const LAPTOP_BRANDS = [
   'Alienware', 'Vaio', 'Fsjun', 'Jumper', 'Xiaomi', 'ACEMAGIC'
 ];
 
-const BRANDS_PER_BATCH = 2; // Process even smaller batches for better reliability
+const BRANDS_PER_BATCH = 2;
 
 export const collectLaptops = async () => {
   try {
     console.log('Starting laptop collection...');
     
-    // Check if collection is already in progress
-    const { data: inProgressData } = await supabase
+    // Check collection status first
+    const { data: statusData, error: statusError } = await supabase
       .from('products')
-      .select('collection_status')
+      .select('asin, current_price, collection_status')
       .eq('collection_status', 'in_progress')
       .limit(1);
 
-    if (inProgressData && inProgressData.length > 0) {
+    if (statusError) {
+      console.error('Error checking collection status:', statusError);
+      throw statusError;
+    }
+
+    if (statusData && statusData.length > 0) {
       console.log('Collection already in progress');
       toast({
         title: "Collection in progress",
         description: "Please wait for the current collection to complete",
       });
       return null;
+    }
+
+    // Log current price data for debugging
+    const { data: priceCheck, error: priceError } = await supabase
+      .from('products')
+      .select('asin, current_price')
+      .is('current_price', null)
+      .limit(5);
+
+    if (priceCheck) {
+      console.log('Sample of products missing prices:', priceCheck);
     }
 
     // Split brands into smaller batches
@@ -41,13 +57,19 @@ export const collectLaptops = async () => {
     // Process each batch sequentially
     for (let i = 0; i < brandBatches.length; i++) {
       const batch = brandBatches[i];
-      console.log(`Starting batch ${i + 1}/${brandBatches.length}: ${batch.join(', ')}`);
+      console.log(`Processing batch ${i + 1}/${brandBatches.length}: ${batch.join(', ')}`);
 
       try {
-        const { error } = await supabase.functions.invoke('collect-laptops', {
+        // Update status for this batch
+        await supabase
+          .from('products')
+          .update({ collection_status: 'in_progress' })
+          .in('brand', batch);
+
+        const { data, error } = await supabase.functions.invoke('collect-laptops', {
           body: { 
             brands: batch,
-            pages_per_brand: 2, // Reduced pages for reliability
+            pages_per_brand: 2,
             batch_number: i + 1,
             total_batches: brandBatches.length
           }
@@ -60,8 +82,8 @@ export const collectLaptops = async () => {
             description: error.message,
             variant: "destructive"
           });
-          // Continue with next batch despite errors
         } else {
+          console.log(`Batch ${i + 1} completed:`, data);
           toast({
             title: "Batch progress",
             description: `Completed batch ${i + 1} of ${brandBatches.length}`,
@@ -70,20 +92,30 @@ export const collectLaptops = async () => {
 
       } catch (error) {
         console.error(`Failed to process batch ${i + 1}:`, error);
-        // Continue with next batch despite errors
       }
 
-      // Add a longer delay between batches
+      // Add delay between batches
       if (i < brandBatches.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 10000)); // 10 second delay
+        await new Promise(resolve => setTimeout(resolve, 10000));
       }
     }
 
-    console.log('All collection batches initiated');
+    console.log('Collection batches completed');
     toast({
       title: "Collection completed",
-      description: `Initiated all ${brandBatches.length} collection batches`,
+      description: `Processed all ${brandBatches.length} collection batches`,
     });
+
+    // Final status check
+    const { data: finalCheck } = await supabase
+      .from('products')
+      .select('asin, current_price')
+      .is('current_price', null)
+      .limit(5);
+
+    if (finalCheck && finalCheck.length > 0) {
+      console.log('Products still missing prices after collection:', finalCheck);
+    }
 
     return { batches: brandBatches.length };
 
@@ -97,4 +129,3 @@ export const collectLaptops = async () => {
     throw error;
   }
 };
-
