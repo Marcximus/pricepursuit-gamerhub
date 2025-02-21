@@ -73,3 +73,4 @@ export function LaptopSpecs({ title, productUrl, specs }: LaptopSpecsProps) {
     </div>
   );
 }
+
