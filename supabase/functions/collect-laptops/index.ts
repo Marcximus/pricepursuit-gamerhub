@@ -111,58 +111,30 @@ serve(async (req) => {
   }
 
   try {
-    // Mark collection as started
-    const timestamp = new Date().toISOString()
-    await supabase
-      .from('collection_status')
-      .upsert({
-        id: 'laptop_collection',
-        status: 'in_progress',
-        last_started: timestamp
-      })
+    const { force_refresh = false } = await req.json()
 
-    console.log('Starting laptop collection...')
-
+    // Start the collection process in the background
     EdgeRuntime.waitUntil((async () => {
-      try {
-        for (const brand of LAPTOP_BRANDS) {
-          try {
-            // Search first 3 pages for each brand
-            for (let page = 1; page <= 3; page++) {
-              const laptops = await searchLaptopsByBrand(brand, page)
-              if (laptops && laptops.length > 0) {
-                await updateDatabase(laptops)
-              }
-              // Delay between requests to avoid rate limits
-              await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_REQUESTS))
+      console.log('Starting laptop collection...')
+
+      for (const brand of LAPTOP_BRANDS) {
+        try {
+          // Search first 3 pages for each brand
+          for (let page = 1; page <= 3; page++) {
+            const laptops = await searchLaptopsByBrand(brand, page)
+            if (laptops && laptops.length > 0) {
+              await updateDatabase(laptops)
             }
-          } catch (error) {
-            console.error(`Error processing ${brand}:`, error)
-            continue // Continue with next brand even if one fails
+            // Delay between requests to avoid rate limits
+            await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_REQUESTS))
           }
+        } catch (error) {
+          console.error(`Error processing ${brand}:`, error)
+          continue // Continue with next brand even if one fails
         }
-
-        // Mark collection as completed
-        await supabase
-          .from('collection_status')
-          .upsert({
-            id: 'laptop_collection',
-            status: 'completed',
-            last_completed: new Date().toISOString()
-          })
-
-        console.log('Laptop collection completed')
-      } catch (error) {
-        console.error('Collection failed:', error)
-        // Mark collection as failed
-        await supabase
-          .from('collection_status')
-          .upsert({
-            id: 'laptop_collection',
-            status: 'failed',
-            last_error: error.message
-          })
       }
+
+      console.log('Laptop collection completed')
     })())
 
     return new Response(

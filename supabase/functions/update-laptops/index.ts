@@ -1,75 +1,149 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { corsHeaders, initializeProcessing, updateProcessingStatus, incrementProcessedCount, getProcessingStatus } from './utils.ts';
-import { fetchProductData } from './oxyLabsService.ts';
-import { updateProductInDatabase, updateErrorStatus } from './databaseService.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { corsHeaders } from '../_shared/cors.ts'
 
-const OXYLABS_USERNAME = Deno.env.get('OXYLABS_USERNAME');
-const OXYLABS_PASSWORD = Deno.env.get('OXYLABS_PASSWORD');
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const OXYLABS_USERNAME = Deno.env.get('OXYLABS_USERNAME')
+const OXYLABS_PASSWORD = Deno.env.get('OXYLABS_PASSWORD')
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
 interface Laptop {
   id: string;
   asin: string;
 }
 
-// Process all laptops with proper batching and delays
+// Track the update progress
+let isProcessing = false;
+let processedCount = 0;
+let totalLaptops = 0;
+
+// Handle all laptop updates in background
 async function processAllLaptops(laptops: Laptop[], supabase: any) {
-  const { isProcessing } = getProcessingStatus();
   if (isProcessing) {
     console.log('Already processing laptops, skipping...');
-    return { message: 'Update already in progress' };
+    return;
   }
 
-  initializeProcessing(laptops.length);
-  console.log(`Starting processing of ${laptops.length} laptops...`);
+  isProcessing = true;
+  processedCount = 0;
+  totalLaptops = laptops.length;
+
+  console.log(`Starting background processing of ${totalLaptops} laptops...`);
 
   try {
-    const BATCH_SIZE = 5;
-    for (let i = 0; i < laptops.length; i += BATCH_SIZE) {
-      const batch = laptops.slice(i, i + BATCH_SIZE);
-      console.log(`Processing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(laptops.length/BATCH_SIZE)}`);
-      
-      for (const laptop of batch) {
-        if (!updateProcessingStatus()) {
-          console.log('Processing stopped due to timeout');
-          return { message: 'Processing stopped due to timeout' };
-        }
-
-        try {
-          const content = await fetchProductData(laptop.asin, OXYLABS_USERNAME!, OXYLABS_PASSWORD!);
-          
-          if (!content) {
-            throw new Error('Invalid response format from Oxylabs');
-          }
-
-          await updateProductInDatabase(supabase, laptop, content);
-          const processedCount = incrementProcessedCount();
-          console.log(`Successfully updated laptop ${laptop.asin} (${processedCount}/${laptops.length})`);
-
-          // Add a delay between requests to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 1000));
-
-        } catch (error) {
-          console.error(`Error processing laptop ${laptop.asin}:`, error);
-          await updateErrorStatus(supabase, laptop.id);
-        }
+    for (const laptop of laptops) {
+      if (!laptop.id || !laptop.asin) {
+        console.error('Invalid laptop data:', laptop);
+        continue;
       }
-    }
 
-    const { processedCount, totalLaptops } = getProcessingStatus();
-    return { 
-      message: `Completed processing ${processedCount}/${totalLaptops} laptops`,
-      success: true
-    };
+      try {
+        console.log(`Processing laptop ${processedCount + 1}/${totalLaptops}: ${laptop.asin}`);
+
+        // Update status to in_progress
+        await supabase
+          .from('products')
+          .update({ update_status: 'in_progress' })
+          .eq('id', laptop.id);
+
+        // Make request to Oxylabs API
+        const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Basic ' + btoa(`${OXYLABS_USERNAME}:${OXYLABS_PASSWORD}`)
+          },
+          body: JSON.stringify({
+            source: 'amazon_product',
+            query: laptop.asin,
+            domain: 'com',
+            geo_location: '90210',
+            parse: true
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Oxylabs API error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log(`Got Oxylabs response for ${laptop.asin}:`, data);
+
+        if (!data.results || !data.results[0] || !data.results[0].content) {
+          throw new Error('Invalid response format from Oxylabs');
+        }
+
+        const content = data.results[0].content;
+
+        // Save all the information we get back
+        const updateData = {
+          title: content.title,
+          description: content.description,
+          current_price: content.price?.current,
+          original_price: content.price?.previous,
+          rating: content.rating,
+          rating_count: content.rating_breakdown?.total_count,
+          image_url: content.images?.[0],
+          review_data: content.reviews,
+          processor: content.specifications?.processor,
+          ram: content.specifications?.ram,
+          storage: content.specifications?.storage,
+          graphics: content.specifications?.graphics,
+          screen_size: content.specifications?.screen_size,
+          screen_resolution: content.specifications?.screen_resolution,
+          weight: content.specifications?.weight,
+          battery_life: content.specifications?.battery_life,
+          update_status: 'completed',
+          last_checked: new Date().toISOString(),
+          last_updated: new Date().toISOString()
+        };
+
+        // If we have a current price, store it in price_history
+        if (content.price?.current) {
+          await supabase
+            .from('price_history')
+            .insert({
+              product_id: laptop.id,
+              price: content.price.current,
+              timestamp: new Date().toISOString()
+            });
+        }
+
+        // Update product with all new information
+        const { error: updateError } = await supabase
+          .from('products')
+          .update(updateData)
+          .eq('id', laptop.id);
+
+        if (updateError) {
+          throw updateError;
+        }
+
+        processedCount++;
+        console.log(`Successfully updated laptop ${laptop.asin} (${processedCount}/${totalLaptops})`);
+
+      } catch (error) {
+        console.error(`Error processing laptop ${laptop.asin}:`, error);
+        
+        // Update status to error for this specific laptop
+        await supabase
+          .from('products')
+          .update({ 
+            update_status: 'error',
+            last_checked: new Date().toISOString()
+          })
+          .eq('id', laptop.id);
+      }
+
+      // Wait 1 second before processing next laptop
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
 
   } catch (error) {
     console.error('Error in background processing:', error);
-    return { 
-      message: `Error processing laptops: ${error.message}`,
-      success: false
-    };
+  } finally {
+    isProcessing = false;
+    console.log(`Completed processing ${processedCount}/${totalLaptops} laptops`);
   }
 }
 
@@ -81,36 +155,34 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Validate request
-    if (req.method !== 'POST') {
-      throw new Error('Method not allowed');
+    // Parse and validate request body
+    const body = await req.json();
+    if (!body || !body.laptops || !Array.isArray(body.laptops)) {
+      throw new Error('Invalid request body: laptops array is required');
     }
 
-    const { laptops } = await req.json();
-    
-    if (!laptops || !Array.isArray(laptops) || laptops.length === 0) {
-      throw new Error('Invalid request: laptops array is required');
+    const laptops = body.laptops as Laptop[];
+    if (laptops.length === 0) {
+      throw new Error('No laptops provided in request');
     }
 
-    console.log(`Received update request for ${laptops.length} laptops`);
-    
-    // Initialize Supabase client
+    console.log(`Received update request for ${laptops.length} laptops...`);
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
     // Start background processing
-    const processingPromise = processAllLaptops(laptops, supabase);
-    EdgeRuntime.waitUntil(processingPromise);
+    const backgroundProcessing = processAllLaptops(laptops, supabase);
+    EdgeRuntime.waitUntil(backgroundProcessing);
 
     return new Response(
       JSON.stringify({ 
-        message: `Started processing ${laptops.length} laptops`,
+        message: `Started background processing of ${laptops.length} laptops`,
         status: 'processing'
       }),
       { 
         headers: { 
           ...corsHeaders, 
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json' 
+        } 
       }
     );
 
@@ -122,10 +194,16 @@ Deno.serve(async (req) => {
         status: 500, 
         headers: { 
           ...corsHeaders, 
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json' 
+        } 
       }
     );
   }
+});
+
+// Handle function shutdown
+addEventListener('beforeunload', (ev) => {
+  console.log('Function shutdown initiated:', ev.detail?.reason);
+  console.log(`Progress: ${processedCount}/${totalLaptops} laptops processed`);
 });
 
