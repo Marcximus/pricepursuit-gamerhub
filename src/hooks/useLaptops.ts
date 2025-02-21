@@ -17,6 +17,10 @@ export const collectLaptops = async () => {
     }
     
     console.log('Laptop collection response:', data);
+    toast({
+      title: "Collection started",
+      description: "The laptop collection process has started and will take several minutes to complete. The data will refresh automatically.",
+    });
     return data;
   } catch (error) {
     console.error('Failed to collect laptops:', error);
@@ -64,6 +68,7 @@ export const useLaptops = () => {
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes to cache the data
+    refetchInterval: 1000 * 60 * 2, // Refetch every 2 minutes to check for updates
     retryDelay: 1000, // Wait 1 second between retries
     retry: 3, // Retry failed requests 3 times
     placeholderData: (previousData) => previousData, // This replaces keepPreviousData
@@ -74,3 +79,4 @@ export const useLaptops = () => {
     collectLaptops,
   };
 };
+

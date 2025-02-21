@@ -182,19 +182,8 @@ function calculateBenchmarkScore(processorScore: number, title: string): number 
   return Math.min(Math.max(Math.round(score), 0), 100);
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
+async function collectLaptopsTask() {
   try {
-    const { action } = await req.json();
-    console.log('Received request with action:', action);
-
-    if (action !== 'collect') {
-      throw new Error('Invalid action provided');
-    }
-
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -257,7 +246,7 @@ Deno.serve(async (req) => {
       "MacBook Air"
     ]
 
-    console.log('Starting laptop collection process...')
+    console.log('Starting laptop collection process in background...')
     const foundAsins = new Set<string>()
     const errors = []
 
@@ -310,7 +299,6 @@ Deno.serve(async (req) => {
 
           foundAsins.add(item.asin)
           
-          // Parse price values carefully
           const currentPrice = typeof item.price?.value === 'string' 
             ? parseFloat(item.price.value.replace(/[^0-9.]/g, '')) 
             : (typeof item.price?.value === 'number' ? item.price.value : 0)
@@ -319,7 +307,7 @@ Deno.serve(async (req) => {
             ? parseFloat(item.price.before_price.replace(/[^0-9.]/g, ''))
             : (currentPrice || 0)
 
-          // Check if it's actually a laptop based on title and category
+          // Check if it's actually a laptop
           const isLaptop = (item.title || '').toLowerCase().includes('laptop') ||
                           (item.title || '').toLowerCase().includes('notebook') ||
                           (item.title || '').toLowerCase().includes('macbook') ||
@@ -379,18 +367,35 @@ Deno.serve(async (req) => {
       }
     }
 
-    const message = errors.length > 0 
-      ? `Collection complete with some errors. Found ${foundAsins.size} unique laptops. ${errors.length} queries failed.`
-      : `Collection complete. Found ${foundAsins.size} unique laptops.`
+    console.log(`Background collection complete. Found ${foundAsins.size} unique laptops. ${errors.length} queries failed.`)
+  } catch (error) {
+    console.error('Error in background collection task:', error)
+  }
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
+  try {
+    const { action } = await req.json();
+    console.log('Received request with action:', action);
+
+    if (action !== 'collect') {
+      throw new Error('Invalid action provided');
+    }
+
+    // Start the background task without waiting for it to complete
+    EdgeRuntime.waitUntil(collectLaptopsTask())
 
     return respond({
       success: true,
-      message,
-      errors: errors.length > 0 ? errors : undefined
+      message: "Laptop collection started in background. This may take several minutes to complete.",
     })
 
   } catch (error) {
-    console.error('Error in collect-laptops function:', error)
+    console.error('Error initiating laptop collection:', error)
     return respond({ 
       success: false,
       error: error.message
