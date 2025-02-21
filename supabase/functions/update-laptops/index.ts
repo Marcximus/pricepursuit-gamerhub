@@ -71,14 +71,27 @@ serve(async (req) => {
 
         const content = data.results[0].content;
 
+        // Process price data
+        let currentPrice = null;
+        if (typeof content.price === 'number' && !isNaN(content.price)) {
+          currentPrice = content.price;
+        }
+
+        // Log price processing
+        console.log('Processing price data:', {
+          asin: laptop.asin,
+          rawPrice: content.price,
+          processedPrice: currentPrice
+        });
+
         // Simple direct update to products table
         await supabase
           .from('products')
           .update({
             title: content.title,
             description: content.description,
-            current_price: content.price?.current,
-            original_price: content.price?.previous || content.price?.current,
+            current_price: currentPrice,
+            original_price: content.price_strikethrough || currentPrice,
             rating: content.rating,
             rating_count: content.rating_breakdown?.total_count,
             image_url: content.images?.[0],
@@ -97,7 +110,7 @@ serve(async (req) => {
           })
           .eq('id', laptop.id);
 
-        console.log(`Successfully updated laptop ${laptop.asin}`);
+        console.log(`Successfully updated laptop ${laptop.asin} with price: ${currentPrice}`);
 
       } catch (error) {
         console.error(`Error processing laptop ${laptop.asin}:`, error);
