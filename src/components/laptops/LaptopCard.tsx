@@ -12,19 +12,21 @@ type LaptopCardProps = {
 };
 
 export function LaptopCard({ laptop }: LaptopCardProps) {
-  // Add detailed price logging
-  console.log('Laptop price data:', {
-    id: laptop.id,
-    asin: laptop.asin,
-    currentPrice: laptop.current_price,
-    originalPrice: laptop.original_price,
-  });
-
   // Validate required fields
   if (!laptop || !laptop.id) {
     console.error('Invalid laptop data received:', laptop);
     return null;
   }
+
+  // Detailed logging for debugging
+  console.log('Rendering LaptopCard:', {
+    id: laptop.id,
+    title: laptop.title || 'No title',
+    hasPrice: Boolean(laptop.current_price),
+    hasImage: Boolean(laptop.image_url),
+    hasSpecs: Boolean(laptop.processor || laptop.ram || laptop.storage || laptop.graphics),
+    hasReviews: Boolean(laptop.review_data?.recent_reviews?.length)
+  });
 
   // Base product URL with affiliate tag
   const baseProductUrl = laptop.asin 
