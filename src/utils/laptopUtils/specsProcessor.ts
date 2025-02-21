@@ -1,4 +1,3 @@
-
 export const processProcessor = (processor: string | undefined, title: string): string | undefined => {
   if (processor && typeof processor === 'string' && !processor.includes('undefined')) {
     return processor;
@@ -7,7 +6,7 @@ export const processProcessor = (processor: string | undefined, title: string): 
   // Look for processor in the title (more specific patterns first)
   const processorPatterns = [
     // Match full processor names with generation and model
-    /\b(?:Intel Core i[3579]|AMD Ryzen [3579]|Intel Celeron|Intel Pentium|MediaTek|Apple M[12])\s*(?:[A-Z0-9-]+(?:\s*[A-Z0-9]+)*)\b/i,
+    /\b(?:Intel Core i[3579]|AMD Ryzen [3579]|Intel Celeron|Intel Pentium|MediaTek|Apple M[12])\s*(?:[A-Z0-9-]+(?:\s*[A-Z0-9]+)*(?:\s*HX)?)\b/i,
     // Match processor names with generation numbers
     /\b(?:i[3579]-\d{4,5}[A-Z]*(?:\s*HX)?|Ryzen\s*\d\s*\d{4}[A-Z]*(?:\s*HX)?)\b/i,
     // Match processor with core count and generation
@@ -25,6 +24,9 @@ export const processProcessor = (processor: string | undefined, title: string): 
         .replace(/intel core/i, 'Intel Core')
         .replace(/amd ryzen/i, 'AMD Ryzen')
         .replace(/\bi(\d)/i, 'Intel Core i$1');  // Expand i5 to Intel Core i5
+      
+      // Remove duplicate "Intel Core" if present
+      processedName = processedName.replace(/(Intel Core)\s+Intel Core/i, '$1');
       
       // Add "Intel Core" prefix if it's just an i-series number
       if (/^i[3579]/i.test(processedName)) {
@@ -45,9 +47,14 @@ export const processRam = (ram: string | undefined, title: string): string | und
   
   // Look for RAM in the title (more specific patterns first)
   const ramPatterns = [
-    /\b(\d+)\s*GB\s*(?:DDR[34]|LPDDR[345]|RAM)\b/i,
-    /\b(\d+)\s*GB\b(?=.*\bRAM\b)/i, // Only match GB if "RAM" appears later in the string
-    /\bRAM\s*(\d+)\s*GB\b/i,
+    // Match RAM with DDR type
+    /\b(\d+)\s*GB\s*(?:DDR[345]|LPDDR[345])\b/i,
+    // Match generic RAM mentions
+    /\b(\d+)\s*GB\s*RAM\b/i,
+    // Match RAM before storage or other specs
+    /\b(\d+)\s*GB\b(?=.*(?:SSD|HDD|Storage|RAM))/i,
+    // Match RAM anywhere if followed by storage size
+    /\b(\d+)\s*GB\b(?=.*\d+\s*GB)/i,
   ];
   
   for (const pattern of ramPatterns) {
