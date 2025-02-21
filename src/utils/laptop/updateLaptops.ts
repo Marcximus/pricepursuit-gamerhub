@@ -44,10 +44,10 @@ export const updateLaptops = async () => {
       throw statusError;
     }
     
-    // Call edge function to update laptops
+    // Call edge function to update laptops without any timeout
     const { data, error } = await supabase.functions.invoke('update-laptops', {
       body: { 
-        laptops: laptops.map(l => ({ id: l.id, asin: l.asin })),
+        laptops: laptops.map(l => ({ id: l.id, asin: l.asin }))
       }
     });
     
