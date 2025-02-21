@@ -8,14 +8,22 @@ type LaptopPriceProps = {
 };
 
 export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopPriceProps) {
-  console.log('Rendering LaptopPrice with:', { currentPrice, originalPrice });
+  // Add detailed price logging
+  console.log('LaptopPrice received:', { 
+    currentPrice: currentPrice,
+    originalPrice: originalPrice,
+    hasValidCurrentPrice: currentPrice !== null && currentPrice > 0,
+    hasValidOriginalPrice: originalPrice !== null && originalPrice > 0
+  });
 
   const formatPrice = (price: number | null) => {
-    if (price === null) return 'Price not available';
+    if (price === null || price === 0) return 'Price not available';
     return `$${price.toFixed(2)}`;
   };
 
-  const showDiscount = currentPrice && originalPrice && currentPrice < originalPrice;
+  const showDiscount = currentPrice && originalPrice && 
+                      currentPrice > 0 && originalPrice > 0 && 
+                      currentPrice < originalPrice;
 
   return (
     <a 
@@ -27,7 +35,8 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
       <div className="flex flex-col items-center gap-1">
         <div className={cn(
           "text-xl font-bold",
-          showDiscount ? "text-red-600" : "text-blue-600"
+          showDiscount ? "text-red-600" : "text-blue-600",
+          (!currentPrice || currentPrice === 0) ? "text-gray-500" : ""
         )}>
           {formatPrice(currentPrice)}
         </div>
