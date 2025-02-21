@@ -1,6 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Index from './pages/Index';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Laptops from './pages/Laptops';
 import NotFound from './pages/NotFound';
 import { Toaster } from "@/components/ui/toaster";
@@ -14,8 +13,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/ComparePrice/Laptops" element={<Laptops />} />
+          <Route path="/" element={<Laptops />} />
+          <Route path="/ComparePrice/Laptops" element={<Navigate to="/" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />
@@ -25,3 +24,4 @@ function App() {
 }
 
 export default App;
+
