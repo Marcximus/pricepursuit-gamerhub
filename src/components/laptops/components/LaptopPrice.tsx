@@ -1,15 +1,17 @@
 
 type LaptopPriceProps = {
   currentPrice: number | null;
-  originalPrice: number | null; // Keeping prop for TypeScript compatibility but won't use it
+  originalPrice: number | null;
   productUrl: string;
 };
 
-export function LaptopPrice({ currentPrice, productUrl }: LaptopPriceProps) {
+export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopPriceProps) {
   console.log('Rendering LaptopPrice:', { 
     currentPrice,
+    originalPrice,
     hasCurrentPrice: currentPrice !== null && currentPrice !== undefined,
-    currentPriceType: typeof currentPrice
+    currentPriceType: typeof currentPrice,
+    processedPrice: currentPrice ? `$${currentPrice.toFixed(2)}` : 'N/A'
   });
 
   const formatPrice = (price: number | null) => {
@@ -17,7 +19,7 @@ export function LaptopPrice({ currentPrice, productUrl }: LaptopPriceProps) {
       console.log('Invalid price value:', price);
       return 'Price not available';
     }
-    return `$${Math.floor(price)}`;
+    return `$${price.toFixed(2)}`;
   };
 
   // Handle case where price is null/undefined
@@ -36,7 +38,7 @@ export function LaptopPrice({ currentPrice, productUrl }: LaptopPriceProps) {
     );
   }
 
-  // Handle case where price is 0 (indicates ASIN needs update)
+  // Handle case where price is 0
   if (currentPrice === 0) {
     return (
       <a 
@@ -62,7 +64,11 @@ export function LaptopPrice({ currentPrice, productUrl }: LaptopPriceProps) {
       <div className="text-xl font-bold text-blue-600 hover:text-blue-800">
         {formatPrice(currentPrice)}
       </div>
+      {originalPrice && originalPrice > currentPrice && (
+        <div className="text-sm text-gray-500 line-through">
+          {formatPrice(originalPrice)}
+        </div>
+      )}
     </a>
   );
 }
-

@@ -26,18 +26,35 @@ export function processProducts(result: OxylabsResult, brand: string): ProductDa
     }
 
     try {
-      const priceValue = item.price?.value || '0';
-      const originalPriceValue = item.price?.original_price || item.price?.value || '0';
-      const currentPrice = parseFloat(String(priceValue).replace(/[^0-9.]/g, ''));
-      const originalPrice = parseFloat(String(originalPriceValue).replace(/[^0-9.]/g, ''));
+      // Properly handle price data
+      let currentPrice = null;
+      let originalPrice = null;
+
+      // Check organic result price first (most reliable)
+      if (typeof item.price === 'number' && !isNaN(item.price)) {
+        currentPrice = item.price;
+        // If there's a strikethrough price, use it as original price
+        if (typeof item.price_strikethrough === 'number' && !isNaN(item.price_strikethrough)) {
+          originalPrice = item.price_strikethrough;
+        }
+      }
+
+      // Log price processing for debugging
+      console.log('Processing price for ASIN:', {
+        asin: item.asin,
+        rawPrice: item.price,
+        rawStrikethrough: item.price_strikethrough,
+        processedCurrentPrice: currentPrice,
+        processedOriginalPrice: originalPrice
+      });
 
       const productData: ProductData = {
         asin: item.asin,
         title: item.title || '',
-        current_price: isNaN(currentPrice) ? null : currentPrice,
-        original_price: isNaN(originalPrice) ? null : originalPrice,
-        rating: typeof item.rating === 'number' ? item.rating : 0,
-        rating_count: typeof item.reviews_count === 'number' ? item.reviews_count : 0,
+        current_price: currentPrice,
+        original_price: originalPrice,
+        rating: typeof item.rating === 'number' ? item.rating : null,
+        rating_count: typeof item.reviews_count === 'number' ? item.reviews_count : null,
         image_url: item.url_image || '',
         product_url: item.url || '',
         is_laptop: true,
@@ -57,6 +74,15 @@ export function processProducts(result: OxylabsResult, brand: string): ProductDa
     }
   }
 
-  console.log(`Processed ${validProducts.length} valid products for brand ${brand}`);
+  // Log summary of processed products
+  console.log(`Processed ${validProducts.length} valid products for brand ${brand}. Products with prices:`, {
+    totalProducts: validProducts.length,
+    productsWithPrices: validProducts.filter(p => p.current_price !== null).length,
+    priceRange: validProducts.length > 0 ? {
+      min: Math.min(...validProducts.filter(p => p.current_price !== null).map(p => p.current_price || 0)),
+      max: Math.max(...validProducts.filter(p => p.current_price !== null).map(p => p.current_price || 0))
+    } : 'no prices'
+  });
+
   return validProducts;
 }
