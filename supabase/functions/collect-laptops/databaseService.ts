@@ -22,4 +22,3 @@ export async function saveProduct(productData: ProductData): Promise<void> {
   
   console.log(`Successfully saved/updated product ${productData.asin}`);
 }
-
