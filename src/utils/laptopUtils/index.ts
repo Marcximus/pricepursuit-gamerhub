@@ -6,7 +6,12 @@ import { processScreenSize, processWeight, processBatteryLife } from './physical
 import type { Product } from "@/types/product";
 
 export const processLaptopData = (laptop: any): Product => {
-  console.log('Processing laptop:', laptop.title);
+  console.log('Processing laptop data:', {
+    id: laptop.id,
+    title: laptop.title,
+    rawPrice: laptop.current_price,
+    rawOriginalPrice: laptop.original_price
+  });
   
   // Parse review_data if it exists and is a string
   let parsedReviewData = laptop.review_data;
@@ -39,14 +44,28 @@ export const processLaptopData = (laptop: any): Product => {
     }
   }
 
+  // Ensure current_price and original_price are properly handled as numbers
+  const current_price = typeof laptop.current_price === 'number' ? laptop.current_price :
+                       typeof laptop.current_price === 'string' ? parseFloat(laptop.current_price) : null;
+                       
+  const original_price = typeof laptop.original_price === 'number' ? laptop.original_price :
+                        typeof laptop.original_price === 'string' ? parseFloat(laptop.original_price) : null;
+
+  console.log('Processed price data:', {
+    id: laptop.id,
+    processedCurrentPrice: current_price,
+    processedOriginalPrice: original_price,
+    priceType: typeof current_price
+  });
+
   const processed = {
     id: laptop.id,
     asin: laptop.asin,
     title: processTitle(laptop.title || ''),
-    current_price: laptop.current_price || null,
-    original_price: laptop.original_price || null,
-    rating: avgRating || null,
-    rating_count: totalReviews || null,
+    current_price: current_price,
+    original_price: original_price,
+    rating: laptop.rating || avgRating || null,
+    rating_count: laptop.rating_count || null,
     image_url: laptop.image_url || null,
     product_url: laptop.product_url || null,
     last_checked: laptop.last_checked || null,
@@ -66,7 +85,6 @@ export const processLaptopData = (laptop: any): Product => {
     review_data: parsedReviewData || null
   };
 
-  console.log('Processed laptop:', processed);
   return processed;
 };
 
@@ -74,3 +92,4 @@ export * from './titleProcessor';
 export * from './specsProcessor';
 export * from './graphicsProcessor';
 export * from './physicalSpecsProcessor';
+

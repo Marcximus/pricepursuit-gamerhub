@@ -18,13 +18,6 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
       original: laptop.original_price,
       type: typeof laptop.current_price,
       isValid: typeof laptop.current_price === 'number' && !isNaN(laptop.current_price)
-    },
-    image: laptop.image_url,
-    url: laptop.product_url,
-    reviews: {
-      total: laptop.total_reviews,
-      average: laptop.average_rating,
-      hasData: !!laptop.review_data
     }
   });
   
@@ -40,6 +33,12 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
   };
 
   const productUrl = getProductUrl();
+
+  // Format price for display
+  const formatPrice = (price: number | null) => {
+    if (typeof price !== 'number' || isNaN(price)) return 'Price not available';
+    return `£${price.toFixed(2)}`;
+  };
 
   // Function to render star rating
   const renderStarRating = (rating: number) => {
@@ -97,10 +96,13 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
             }}
           />
           <div className="text-xl font-bold text-center mt-2 text-blue-600 hover:text-blue-800">
-            {typeof laptop.current_price === 'number' && !isNaN(laptop.current_price)
-              ? `£${laptop.current_price.toFixed(2)}` 
-              : 'Price not available'}
+            {formatPrice(laptop.current_price)}
           </div>
+          {laptop.original_price && laptop.original_price > laptop.current_price && (
+            <div className="text-sm text-gray-500 line-through text-center">
+              {formatPrice(laptop.original_price)}
+            </div>
+          )}
         </a>
 
         {/* Rating section */}
