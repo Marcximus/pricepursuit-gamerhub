@@ -6,13 +6,11 @@ export const updateLaptops = async () => {
   try {
     console.log('Starting update for ALL laptops...');
     
-    // Get ALL laptops with is_laptop=true that aren't already being processed
+    // Get ALL laptops
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
-      .select('id, asin, update_status')
-      .eq('is_laptop', true)
-      .not('update_status', 'eq', 'in_progress')
-      .not('update_status', 'eq', 'pending_update');
+      .select('id, asin')
+      .eq('is_laptop', true);
 
     if (fetchError) {
       console.error('Error fetching laptops:', fetchError);
@@ -20,61 +18,62 @@ export const updateLaptops = async () => {
     }
 
     if (!laptops || laptops.length === 0) {
-      console.log('No laptops available for update');
+      console.log('No laptops found');
       toast({
-        title: "No updates needed",
-        description: "All laptops are either up to date or currently being processed",
+        title: "No laptops found",
+        description: "No laptops available in the database",
       });
       return null;
     }
 
     console.log(`Found ${laptops.length} laptops to update`);
-    
-    // Mark laptops as pending update
-    const { error: statusError } = await supabase
-      .from('products')
-      .update({ 
-        update_status: 'pending_update',
-        last_checked: new Date().toISOString()
-      })
-      .in('id', laptops.map(l => l.id));
 
-    if (statusError) {
-      console.error('Error marking laptops for update:', statusError);
-      throw statusError;
-    }
-    
-    // Call edge function to update laptops without any timeout
-    const { data, error } = await supabase.functions.invoke('update-laptops', {
-      body: { 
-        laptops: laptops.map(l => ({ id: l.id, asin: l.asin }))
-      }
-    });
-    
-    if (error) {
-      console.error('Error calling update-laptops function:', error);
-      // Reset status on error only for laptops that were pending
-      await supabase
-        .from('products')
-        .update({ update_status: null })
-        .in('id', laptops.map(l => l.id))
-        .eq('update_status', 'pending_update');
+    // Call Oxylabs API for each laptop
+    const results = [];
+    for (const laptop of laptops) {
+      try {
+        console.log(`Fetching data for ASIN: ${laptop.asin}`);
         
-      toast({
-        title: "Update failed",
-        description: error.message || "Failed to start laptop updates",
-        variant: "destructive"
-      });
-      throw error;
+        const payload = {
+          source: 'amazon_product',
+          query: laptop.asin,
+          domain: 'com',
+          geo_location: '90210',
+          parse: true
+        };
+
+        const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Basic ' + btoa(`${process.env.OXYLABS_USERNAME}:${process.env.OXYLABS_PASSWORD}`)
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Oxylabs response:', data);
+        results.push(data);
+
+        // Add a 1-second delay between requests
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+      } catch (error) {
+        console.error(`Error updating laptop ${laptop.asin}:`, error);
+      }
     }
-    
-    console.log('Update response:', data);
+
+    console.log('Update complete');
     toast({
-      title: "Update started",
-      description: `Starting updates for ${laptops.length} laptops. This may take several minutes to complete.`,
+      title: "Update complete",
+      description: `Processed ${laptops.length} laptops`,
     });
 
-    return data;
+    return results;
 
   } catch (error: any) {
     console.error('Failed to update laptops:', error);
