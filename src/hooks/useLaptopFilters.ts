@@ -4,7 +4,7 @@ import type { Product } from "@/types/product";
 
 export const useLaptopFilters = (laptops: Product[] | undefined) => {
   return useMemo(() => {
-    const getUniqueValues = (key: keyof Product) => {
+    const getUniqueValues = (key: keyof Pick<Product, 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size' | 'brand'>) => {
       if (!laptops) return new Set<string>();
       return new Set(laptops.map(laptop => {
         const value = laptop[key];
