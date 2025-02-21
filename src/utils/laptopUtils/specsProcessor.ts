@@ -1,3 +1,4 @@
+
 export const processProcessor = (processor: string | undefined, title: string): string | undefined => {
   if (processor && typeof processor === 'string' && !processor.includes('undefined')) {
     return processor;
@@ -45,14 +46,17 @@ export const processRam = (ram: string | undefined, title: string): string | und
   // Look for RAM in the title (more specific patterns first)
   const ramPatterns = [
     /\b(\d+)\s*GB\s*(?:DDR[34]|LPDDR[345]|RAM)\b/i,
-    /\b(\d+)\s*GB\b/i,
+    /\b(\d+)\s*GB\b(?=.*\bRAM\b)/i, // Only match GB if "RAM" appears later in the string
     /\bRAM\s*(\d+)\s*GB\b/i,
   ];
   
   for (const pattern of ramPatterns) {
     const match = title.match(pattern);
     if (match) {
-      return `${match[1]}GB`;
+      const ramSize = match[1];
+      // Look for DDR type
+      const ddrMatch = title.match(/\b(DDR[345]|LPDDR[345])\b/i);
+      return ddrMatch ? `${ramSize}GB ${ddrMatch[0].toUpperCase()}` : `${ramSize}GB`;
     }
   }
   
@@ -66,9 +70,14 @@ export const processStorage = (storage: string | undefined, title: string): stri
   
   // Look for storage in the title (more specific patterns first)
   const storagePatterns = [
-    /\b(\d+)\s*(?:GB|TB)\s*(?:SSD|HDD|eMMC|PCIe|NVMe|Storage)\b/i,
-    /\b(?:SSD|HDD|Storage)\s*(\d+)\s*(?:GB|TB)\b/i,
-    /\b(\d+)\s*(?:GB|TB)\b/i,
+    // Match specific SSD types with size
+    /\b(\d+)\s*(?:GB|TB)\s*(?:Gen ?[1-5]|PCIe|NVMe|M\.2)?\s*SSD\b/i,
+    // Match SSD/HDD with size and optional type
+    /\b(\d+)\s*(?:GB|TB)\s*(?:Solid State Drive|Hard Drive|SSD|HDD|eMMC|Storage)\b/i,
+    // Match storage mentions with Gen/PCIe/NVMe specification
+    /\b(?:Gen ?[1-5]|PCIe|NVMe|M\.2)?\s*(\d+)\s*(?:GB|TB)\s*(?:SSD|Storage)\b/i,
+    // Generic storage pattern (use only if no other matches)
+    /\b(\d+)\s*(?:GB|TB)\b(?!.*(?:RAM|Memory))/i, // Negative lookahead to avoid matching RAM
   ];
   
   for (const pattern of storagePatterns) {
@@ -76,8 +85,29 @@ export const processStorage = (storage: string | undefined, title: string): stri
     if (match) {
       const size = match[1];
       const unit = match[0].includes('TB') ? 'TB' : 'GB';
-      const type = match[0].match(/(?:SSD|HDD|eMMC|PCIe|NVMe)/i)?.[0] || 'SSD';
-      return `${size}${unit} ${type}`;
+      
+      // Extract storage type information
+      let type = 'SSD'; // Default to SSD
+      let generation = '';
+      
+      const genMatch = title.match(/\bGen ?([1-5])\b/i);
+      const typeMatch = title.match(/\b(?:PCIe|NVMe|M\.2)\b/i);
+      
+      if (genMatch) {
+        generation = ` Gen ${genMatch[1]}`;
+      }
+      
+      if (typeMatch) {
+        type = `${typeMatch[0].toUpperCase()} ${type}`;
+      }
+      
+      if (match[0].toLowerCase().includes('hdd')) {
+        type = 'HDD';
+      } else if (match[0].toLowerCase().includes('emmc')) {
+        type = 'eMMC';
+      }
+      
+      return `${size}${unit}${generation ? generation : ''} ${type}`.trim();
     }
   }
   
