@@ -1,12 +1,10 @@
 
 import { useState } from "react";
-import { useProduct } from "@/hooks/useProduct";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/components/ui/use-toast";
 import { LaptopFilters, type FilterOptions } from "@/components/laptops/LaptopFilters";
 import type { SortOption } from "@/components/laptops/LaptopSort";
-import { SearchForm } from "@/components/laptops/SearchForm";
 import { LaptopList } from "@/components/laptops/LaptopList";
 import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
@@ -14,7 +12,6 @@ import { useFilteredLaptops } from "@/hooks/useFilteredLaptops";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
 
 const ComparePriceLaptops = () => {
-  const [searchAsin, setSearchAsin] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("price-asc");
   const [filters, setFilters] = useState<FilterOptions>({
     priceRange: { min: 0, max: 10000 },
@@ -25,7 +22,6 @@ const ComparePriceLaptops = () => {
     screenSize: "all-screens",
   });
 
-  const { data: product, isLoading: isProductLoading } = useProduct(searchAsin);
   const { 
     data: laptops, 
     isLoading: isLaptopsLoading, 
@@ -69,7 +65,6 @@ const ComparePriceLaptops = () => {
   const handleUpdateLaptops = async () => {
     try {
       await updateLaptops();
-      // We'll let the regular refetch interval handle updates
       toast({
         title: "Update Started",
         description: "Started updating laptop information. This may take a few minutes.",
@@ -89,8 +84,6 @@ const ComparePriceLaptops = () => {
       
       <main className="pt-32 pb-16">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-          <SearchForm onSearch={setSearchAsin} />
-          
           <LaptopLayout
             filters={
               <LaptopFilters
