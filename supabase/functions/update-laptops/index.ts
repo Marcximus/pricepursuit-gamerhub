@@ -1,13 +1,16 @@
 
 import { serve } from "https://deno.land/std@0.170.0/http/server.ts";
-import { corsHeaders } from '../_shared/cors.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { fetchLaptopData } from './oxylabsService.ts';
-import { getLaptopsToUpdate, updateLaptopStatus, updateLaptopData } from './databaseService.ts';
-import { delay, parseRating, parseReviewCount, parsePrice } from './utils.ts';
+import { delay } from './utils.ts';
 
-const BATCH_SIZE = 5;
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -18,15 +21,23 @@ serve(async (req) => {
     const username = Deno.env.get('OXYLABS_USERNAME');
     const password = Deno.env.get('OXYLABS_PASSWORD');
 
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Supabase credentials not configured');
+    if (!supabaseUrl || !supabaseKey || !username || !password) {
+      throw new Error('Missing required environment variables');
     }
 
-    if (!username || !password) {
-      throw new Error('Oxylabs credentials not configured');
-    }
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const laptops = await getLaptopsToUpdate(supabaseUrl, supabaseKey, BATCH_SIZE);
+    // Get laptops that need updating
+    const { data: laptops, error: fetchError } = await supabase
+      .from('products')
+      .select('id, asin')
+      .eq('is_laptop', true)
+      .or('current_price.is.null,last_checked.lt.now()-interval\'1 day\'')
+      .eq('update_status', 'pending');
+
+    if (fetchError) {
+      throw fetchError;
+    }
 
     if (!laptops || laptops.length === 0) {
       return new Response(
@@ -36,42 +47,77 @@ serve(async (req) => {
     }
 
     console.log(`Processing ${laptops.length} laptops...`);
-    await updateLaptopStatus(supabaseUrl, supabaseKey, laptops.map(l => l.id), 'in_progress');
 
     const updates = [];
     for (const laptop of laptops) {
       try {
-        console.log(`Fetching data for ASIN: ${laptop.asin}`);
+        console.log(`Starting update for ASIN: ${laptop.asin}`);
+        
+        // Mark laptop as being updated
+        await supabase
+          .from('products')
+          .update({ update_status: 'in_progress' })
+          .eq('id', laptop.id);
+
         const data = await fetchLaptopData(laptop.asin, username, password);
         const content = data.results[0].content;
 
+        if (!content) {
+          throw new Error('No content in Oxylabs response');
+        }
+
+        // Extract and format all available data
         const updateData = {
-          title: content.title || undefined,
-          current_price: parsePrice(content.price),
-          rating: parseRating(content.ratings),
-          rating_count: parseReviewCount(content.reviews),
-          brand: content.brand || undefined,
-          model: content.model_name || undefined,
-          processor: content.cpu_model || undefined,
-          ram: content.ram_memory_installed_size || undefined,
-          storage: content.hard_disk_size || undefined,
-          screen_size: content.screen_size || undefined,
-          graphics: content.graphics_card_description || content.graphics_coprocessor || undefined
+          title: content.title,
+          current_price: content.price,
+          original_price: content.price, // Set as current price if no original price is available
+          rating: content.rating,
+          rating_count: content.rating_count,
+          image_url: content.images?.[0], // Primary image
+          brand: content.brand,
+          last_checked: new Date().toISOString(),
+          update_status: 'completed',
+          review_data: content.reviews ? {
+            rating_breakdown: content.reviews.rating_breakdown,
+            recent_reviews: content.reviews.recent_reviews
+          } : undefined
         };
 
-        await updateLaptopData(supabaseUrl, supabaseKey, laptop.id, updateData, 'completed');
+        // Update the database
+        const { error: updateError } = await supabase
+          .from('products')
+          .update(updateData)
+          .eq('id', laptop.id);
+
+        if (updateError) {
+          throw updateError;
+        }
+
         updates.push({ success: true, asin: laptop.asin });
+        console.log(`Successfully updated laptop ${laptop.asin}`);
+
+        // Wait 1 second before processing next laptop
         await delay(1000);
 
       } catch (error) {
         console.error(`Error updating laptop ${laptop.asin}:`, error);
-        await updateLaptopData(supabaseUrl, supabaseKey, laptop.id, {}, 'error');
-        updates.push({ success: false, asin: laptop.asin, error: error.message });
+        
+        // Mark laptop as failed
+        await supabase
+          .from('products')
+          .update({ update_status: 'error' })
+          .eq('id', laptop.id);
+
+        updates.push({ 
+          success: false, 
+          asin: laptop.asin, 
+          error: error.message 
+        });
       }
     }
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         message: 'Update process completed',
         results: updates
       }),
@@ -89,4 +135,3 @@ serve(async (req) => {
     );
   }
 });
-

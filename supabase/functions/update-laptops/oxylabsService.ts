@@ -2,58 +2,35 @@
 import { OxylabsResponse } from './types.ts';
 
 export async function fetchLaptopData(asin: string, username: string, password: string): Promise<OxylabsResponse> {
-  const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Basic ' + btoa(`${username}:${password}`),
-    },
-    body: JSON.stringify({
-      source: 'amazon_product',
-      query: asin,
-      parse: true,
-      parsing_instructions: {
-        title: {
-          _fns: [
-            {
-              _fn: "xpath_one",
-              _args: ["//span[@id=\"productTitle\"]/text()"]
-            }
-          ]
-        },
-        price: {
-          _fns: [
-            {
-              _fn: "xpath_one",
-              _args: ["//span[@class=\"a-price-whole\"]/text()"]
-            }
-          ]
-        },
-        ratings: {
-          _fns: [
-            {
-              _fn: "xpath_one",
-              _args: ["//span[@class=\"a-icon-alt\"]/text()"]
-            }
-          ]
-        },
-        reviews: {
-          _fns: [
-            {
-              _fn: "xpath_one",
-              _args: ["//span[@id=\"acrCustomerReviewText\"]/text()"]
-            }
-          ]
-        }
-      }
-    })
-  });
+  console.log(`Fetching data for ASIN: ${asin}`);
+  
+  const payload = {
+    source: 'amazon_product',
+    query: asin,
+    domain: 'com',
+    geo_location: '90210',
+    parse: true
+  };
 
-  const data: OxylabsResponse = await response.json();
-  if (!data.results?.[0]?.content) {
-    throw new Error('No content in Oxylabs response');
+  try {
+    const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + btoa(`${username}:${password}`)
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Oxylabs response:', JSON.stringify(data, null, 2));
+    return data;
+  } catch (error) {
+    console.error('Error fetching laptop data:', error);
+    throw error;
   }
-
-  return data;
 }
-
