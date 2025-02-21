@@ -1,16 +1,15 @@
-
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
-// Function to normalize laptop titles for better comparison
-function normalizeLaptopTitle(title: string): string {
-  return title.toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '') // Remove special characters
-    .replace(/\s+/g, ' ')        // Normalize spaces
+// Function to normalize laptop titles for comparison
+function normalizeLaptopTitle(title: string) {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
     .trim();
 }
 
@@ -19,15 +18,70 @@ function isTitleTooSimilar(title: string, existingTitles: Set<string>): boolean 
   const normalizedNew = normalizeLaptopTitle(title);
   for (const existing of existingTitles) {
     const normalizedExisting = normalizeLaptopTitle(existing);
-    // Check for high similarity (80% of words match)
-    const newWords = new Set(normalizedNew.split(' '));
-    const existingWords = new Set(normalizedExisting.split(' '));
-    const commonWords = [...newWords].filter(word => existingWords.has(word));
-    if (commonWords.length / Math.max(newWords.size, existingWords.size) > 0.8) {
+    const longerLength = Math.max(normalizedNew.length, normalizedExisting.length);
+    const distance = levenshteinDistance(normalizedNew, normalizedExisting);
+    const similarity = (longerLength - distance) / longerLength;
+    
+    if (similarity > 0.9) {
       return true;
     }
   }
   return false;
+}
+
+// Function to extract brand and model from title
+function extractBrandAndModel(title: string): { brand: string; model: string | null } {
+  // Define brand patterns with their common model prefixes
+  const brandPatterns = {
+    'MSI': ['Raider', 'Titan', 'Katana', 'Stealth', 'Creator', 'Modern', 'Prestige', 'Vector', 'Sword', 'Pulse', 'Alpha', 'Bravo', 'Delta'],
+    'Lenovo': ['ThinkPad', 'IdeaPad', 'Legion', 'Yoga'],
+    'HP': ['Pavilion', 'Envy', 'Spectre', 'Omen', 'EliteBook', 'ProBook'],
+    'Dell': ['XPS', 'Inspiron', 'Latitude', 'Precision', 'Alienware', 'Vostro'],
+    'ASUS': ['ROG', 'TUF', 'ZenBook', 'VivoBook', 'ProArt', 'ExpertBook'],
+    'Acer': ['Predator', 'Nitro', 'Swift', 'Aspire', 'TravelMate', 'ConceptD'],
+    'Apple': ['MacBook'],
+    'Microsoft': ['Surface'],
+    'Samsung': ['Galaxy Book'],
+    'Razer': ['Blade'],
+    'LG': ['Gram'],
+    'Huawei': ['MateBook'],
+    'GIGABYTE': ['AORUS', 'AERO'],
+    'Dynabook': ['Tecra', 'Portege'],
+    'Toshiba': ['Satellite', 'Tecra'],
+    'Fujitsu': ['LIFEBOOK'],
+    'Panasonic': ['Toughbook'],
+    'VAIO': ['VAIO'],
+    'Xiaomi': ['RedmiBook', 'Mi Notebook']
+  };
+
+  // First try to match brand with model prefix
+  for (const [brand, modelPrefixes] of Object.entries(brandPatterns)) {
+    for (const prefix of modelPrefixes) {
+      if (title.includes(prefix)) {
+        // Extract model name: everything after the prefix until the next major delimiter
+        const modelMatch = title.match(new RegExp(`${prefix}\\s+([\\w-]+)`));
+        return {
+          brand,
+          model: modelMatch ? `${prefix} ${modelMatch[1]}` : prefix
+        };
+      }
+    }
+    // If brand name exists in title without a specific model prefix
+    if (title.includes(brand)) {
+      // Try to extract model: look for numbers and letters after the brand
+      const modelMatch = title.match(new RegExp(`${brand}\\s+([\\w-]+)`));
+      return {
+        brand,
+        model: modelMatch ? modelMatch[1] : null
+      };
+    }
+  }
+
+  // If no specific brand/model pattern is found
+  return {
+    brand: 'Unknown Brand',
+    model: null
+  };
 }
 
 // Function to collect reviews for a product
@@ -124,17 +178,44 @@ async function collectProductReviews(asin: string, oxyUsername: string, oxyPassw
   }
 }
 
+// Levenshtein distance calculation for title similarity
+function levenshteinDistance(str1: string, str2: string): number {
+  const m = str1.length;
+  const n = str2.length;
+  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (str1[i - 1] === str2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1];
+      } else {
+        dp[i][j] = Math.min(
+          dp[i - 1][j - 1] + 1,
+          dp[i - 1][j] + 1,
+          dp[i][j - 1] + 1
+        );
+      }
+    }
+  }
+  return dp[m][n];
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { action, mode } = await req.json()
-    console.log('Received request with action:', action, 'mode:', mode)
-
-    if (action !== 'start') {
-      throw new Error('Invalid action provided - expected "start"')
+    const { action = 'start', mode = 'discovery' } = await req.json()
+    
+    const oxyUsername = Deno.env.get('OXYLABS_USERNAME')
+    const oxyPassword = Deno.env.get('OXYLABS_PASSWORD')
+    
+    if (!oxyUsername || !oxyPassword) {
+      throw new Error('Missing Oxylabs credentials')
     }
 
     const supabaseClient = createClient(
@@ -142,130 +223,77 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const oxyUsername = Deno.env.get('OXYLABS_USERNAME')
-    const oxyPassword = Deno.env.get('OXYLABS_PASSWORD')
+    if (action === 'start') {
+      let currentPage = 1
+      const existingTitles = new Set<string>()
+      
+      // Get existing laptop titles to check for duplicates
+      const { data: existingLaptops, error: fetchError } = await supabaseClient
+        .from('products')
+        .select('title')
+        .eq('is_laptop', true)
+      
+      if (fetchError) {
+        throw new Error(`Failed to fetch existing laptops: ${fetchError.message}`)
+      }
 
-    if (!oxyUsername || !oxyPassword) {
-      throw new Error('Oxylabs credentials not configured')
-    }
+      existingLaptops?.forEach(laptop => {
+        if (laptop.title) existingTitles.add(laptop.title)
+      })
 
-    // Update collection status for all laptops to 'collecting'
-    const { error: updateError } = await supabaseClient
-      .from('products')
-      .update({ collection_status: 'collecting' })
-      .eq('is_laptop', true)
-
-    if (updateError) {
-      throw new Error(`Failed to update collection status: ${updateError.message}`)
-    }
-
-    // Expanded search queries to cover more laptop categories and specifications
-    const searchQueries = [
-      "laptop computer",
-      "gaming laptop",
-      "business laptop",
-      "student laptop",
-      "ultrabook laptop",
-      "2-in-1 laptop",
-      "budget laptop",
-      "premium laptop",
-      "workstation laptop",
-      "chromebook laptop",
-      "MacBook laptop",
-      "laptop 32GB RAM",
-      "laptop 16GB RAM",
-      "laptop 1TB SSD",
-      "laptop RTX 4090",
-      "laptop RTX 4080",
-      "laptop RTX 4070",
-      "laptop RTX 4060",
-      "laptop RTX 4050",
-      "laptop AMD Ryzen",
-      "laptop Intel Core i9",
-      "laptop Intel Core i7",
-      "laptop Intel Core i5",
-      "laptop 17 inch",
-      "laptop 15.6 inch",
-      "laptop 14 inch",
-      "laptop 13 inch"
-    ]
-
-    EdgeRuntime.waitUntil((async () => {
-      console.log('Starting laptop collection process...')
-      const foundAsins = new Set()
-      const foundTitles = new Set()
-      let totalFound = 0
-      let duplicatesSkipped = 0
-
-      for (const query of searchQueries) {
+      while (currentPage <= 5) {
+        console.log(`Processing page ${currentPage}...`)
+        
         try {
-          console.log(`Processing search query: ${query}`)
-          
-          // Get multiple pages of results for each query
-          for (let page = 1; page <= 3; page++) {
-            const payload = {
-              source: 'amazon_search',
-              query: query,
-              domain: 'com',
-              geo_location: 'United States',
-              pages: page.toString(),
-              parse: true
-            }
+          const payload = {
+            source: 'amazon_search',
+            domain: 'co.uk',
+            query: 'laptop',
+            start_page: currentPage.toString(),
+            pages: '1',
+            context: [
+              { key: 'sort_by', value: 'featured' }
+            ],
+            parse: true
+          }
 
-            const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic ' + btoa(`${oxyUsername}:${oxyPassword}`)
-              },
-              body: JSON.stringify(payload)
-            })
+          const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Basic ' + btoa(`${oxyUsername}:${oxyPassword}`)
+            },
+            body: JSON.stringify(payload)
+          })
 
-            if (!response.ok) {
-              const errorText = await response.text()
-              console.error(`HTTP error for query "${query}" page ${page}:`, errorText)
-              continue // Skip to next page/query on error
-            }
+          if (!response.ok) {
+            throw new Error(`Failed to fetch results: ${await response.text()}`)
+          }
 
-            const data = await response.json()
-            const results = [
-              ...(data.results?.[0]?.content?.results?.organic || []),
-              ...(data.results?.[0]?.content?.results?.paid || [])
-            ]
+          const data = await response.json()
+          const results = data.results?.[0]?.content?.results
 
-            console.log(`Found ${results.length} results for query: ${query} (page ${page})`)
-
+          if (results && Array.isArray(results)) {
             for (const item of results) {
-              if (!item.asin || !item.title || foundAsins.has(item.asin)) continue
-
-              // Skip if not explicitly a laptop in title
-              if (!item.title.toLowerCase().includes('laptop') && 
-                  !item.title.toLowerCase().includes('notebook') &&
-                  !item.title.toLowerCase().includes('macbook')) {
+              if (!item.title || isTitleTooSimilar(item.title, existingTitles)) {
                 continue
               }
 
-              // Check for similar titles to avoid near-duplicates
-              if (isTitleTooSimilar(item.title, foundTitles)) {
-                duplicatesSkipped++
-                continue
-              }
+              // Extract brand and model from title
+              const { brand, model } = extractBrandAndModel(item.title);
 
-              foundAsins.add(item.asin)
-              foundTitles.add(item.title)
-              totalFound++
-              
               const productData = {
                 asin: item.asin,
                 title: item.title,
-                current_price: item.price?.value || null,
-                original_price: item.price?.before_price || item.price?.value || null,
-                rating: parseFloat(item.rating || '0'),
-                total_reviews: parseInt(item.reviews_count?.toString().replace(/,/g, '') || '0', 10),
-                image_url: item.url_image || item.image,
-                product_url: `https://www.amazon.com/dp/${item.asin}`,
+                current_price: parseFloat(item.price?.value || 0),
+                original_price: parseFloat(item.price?.original_price || 0) || null,
+                rating: parseFloat(item.rating || 0),
+                rating_count: parseInt(item.reviews?.rating_count || 0),
+                image_url: item.image?.url || null,
+                product_url: item.url || null,
                 is_laptop: true,
-                collection_status: 'collected',
+                brand: brand,
+                model: model,
                 last_checked: new Date().toISOString()
               }
 
@@ -287,46 +315,50 @@ Deno.serve(async (req) => {
             }
           }
         } catch (error) {
-          console.error(`Error processing query "${query}":`, error)
+          console.error(`Error processing page ${currentPage}:`, error)
+          break
         }
+
+        currentPage++
       }
 
-      // Mark collection as complete
-      const { error: finalUpdateError } = await supabaseClient
-        .from('products')
-        .update({ collection_status: 'completed' })
-        .eq('collection_status', 'collecting')
-
-      if (finalUpdateError) {
-        console.error('Error updating final collection status:', finalUpdateError)
-      }
-      
-      console.log(`Collection complete. Found ${totalFound} unique laptops, skipped ${duplicatesSkipped} potential duplicates`)
-    })())
+      return new Response(
+        JSON.stringify({
+          message: 'Collection process completed',
+          status: 'success'
+        }),
+        {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+    }
 
     return new Response(
       JSON.stringify({
-        success: true,
-        message: 'Laptop collection started in background.',
+        message: 'Invalid action specified',
+        status: 'error'
       }),
-      { 
-        headers: { 
+      {
+        headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'
-        },
-        status: 200 
+        }
       }
     )
 
   } catch (error) {
-    console.error('Error in collect-laptops function:', error)
+    console.error('Error:', error)
+    
     return new Response(
-      JSON.stringify({ 
-        success: false,
-        error: error.message 
+      JSON.stringify({
+        message: error.message || 'An unexpected error occurred',
+        status: 'error'
       }),
-      { 
-        headers: { 
+      {
+        headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'
         },
@@ -335,4 +367,3 @@ Deno.serve(async (req) => {
     )
   }
 })
-
