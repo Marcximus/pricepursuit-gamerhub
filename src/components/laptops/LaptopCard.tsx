@@ -23,16 +23,8 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
       isValid: typeof laptop.current_price === 'number' && !isNaN(laptop.current_price)
     }
   });
-  
-  // Construct the referral link
-  const getProductUrl = () => {
-    if (!laptop.product_url) return '#';
-    const url = new URL(laptop.product_url);
-    url.searchParams.set('tag', 'with-laptop-discount-20');
-    return url.toString();
-  };
 
-  const productUrl = getProductUrl();
+  const productUrl = `https://amazon.co.uk/dp/${laptop.asin}?tag=with-laptop-discount-20`;
 
   return (
     <Card className="flex p-4 gap-4 hover:shadow-lg transition-shadow">
