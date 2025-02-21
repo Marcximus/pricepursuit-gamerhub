@@ -10,7 +10,7 @@ const LAPTOP_BRANDS = [
 
 const BRANDS_PER_BATCH = 2;
 
-export const collectLaptops = async () => {
+export async function collectLaptops() {
   console.log('collectLaptops function called');
   
   try {
@@ -83,4 +83,4 @@ export const collectLaptops = async () => {
     });
     throw error;
   }
-};
+}

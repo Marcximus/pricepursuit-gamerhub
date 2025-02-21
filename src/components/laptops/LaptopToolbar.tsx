@@ -22,6 +22,11 @@ export function LaptopToolbar({
   isLoading,
   isRefetching
 }: LaptopToolbarProps) {
+  const handleCollectClick = () => {
+    console.log('Collect button clicked');
+    onCollectLaptops();
+  };
+
   return (
     <div className="mb-8 flex justify-between items-center">
       <div className="text-sm text-gray-600">
@@ -43,7 +48,7 @@ export function LaptopToolbar({
             Update Laptops
           </Button>
           <Button
-            onClick={onCollectLaptops}
+            onClick={handleCollectClick}
             disabled={isLoading || isRefetching}
             className="flex items-center gap-2"
           >
