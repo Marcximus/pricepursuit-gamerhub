@@ -14,7 +14,7 @@ function normalizeLaptopTitle(title: string): string {
     .trim();
 }
 
-// Function to check if a title is too similar to existing ones
+// Function to check if a title is too similar to existing ones 
 function isTitleTooSimilar(title: string, existingTitles: Set<string>): boolean {
   const normalizedNew = normalizeLaptopTitle(title);
   for (const existing of existingTitles) {
@@ -28,6 +28,100 @@ function isTitleTooSimilar(title: string, existingTitles: Set<string>): boolean 
     }
   }
   return false;
+}
+
+// Function to collect reviews for a product
+async function collectProductReviews(asin: string, oxyUsername: string, oxyPassword: string, supabaseClient: any, productId: string) {
+  console.log(`Collecting reviews for product ${asin}...`);
+  
+  try {
+    const payload = {
+      source: 'amazon_reviews',
+      domain: 'com',
+      query: asin,
+      start_page: '1',
+      pages: '2',
+      parse: true
+    };
+
+    const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + btoa(`${oxyUsername}:${oxyPassword}`)
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      console.error(`Failed to fetch reviews for ${asin}:`, await response.text());
+      return;
+    }
+
+    const data = await response.json();
+    const reviews = data.results?.[0]?.content?.reviews || [];
+    console.log(`Found ${reviews.length} reviews for product ${asin}`);
+
+    // Process and insert reviews
+    for (const review of reviews) {
+      if (!review.rating || !review.date) continue;
+
+      const reviewData = {
+        product_id: productId,
+        rating: parseInt(review.rating),
+        title: review.title || null,
+        content: review.content || null,
+        reviewer_name: review.reviewer || 'Anonymous',
+        review_date: new Date(review.date).toISOString(),
+        verified_purchase: review.verified_purchase || false,
+        helpful_votes: parseInt(review.helpful_votes || '0')
+      };
+
+      const { error: insertError } = await supabaseClient
+        .from('product_reviews')
+        .upsert([reviewData]);
+
+      if (insertError) {
+        console.error(`Error saving review for ${asin}:`, insertError);
+      }
+    }
+
+    // Update product with review stats
+    if (reviews.length > 0) {
+      const totalRating = reviews.reduce((sum: number, review: any) => sum + parseInt(review.rating || 0), 0);
+      const averageRating = totalRating / reviews.length;
+
+      const { error: updateError } = await supabaseClient
+        .from('products')
+        .update({
+          average_rating: averageRating,
+          total_reviews: reviews.length,
+          review_data: {
+            rating_breakdown: reviews.reduce((acc: any, review: any) => {
+              const rating = parseInt(review.rating || 0);
+              acc[rating] = (acc[rating] || 0) + 1;
+              return acc;
+            }, {}),
+            recent_reviews: reviews.slice(0, 5).map(review => ({
+              rating: parseInt(review.rating || 0),
+              title: review.title || '',
+              content: review.content || '',
+              reviewer_name: review.reviewer || 'Anonymous',
+              review_date: new Date(review.date).toISOString(),
+              verified_purchase: review.verified_purchase || false,
+              helpful_votes: parseInt(review.helpful_votes || '0')
+            }))
+          }
+        })
+        .eq('id', productId);
+
+      if (updateError) {
+        console.error(`Error updating product review stats for ${asin}:`, updateError);
+      }
+    }
+  } catch (error) {
+    console.error(`Error collecting reviews for ${asin}:`, error);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -175,15 +269,21 @@ Deno.serve(async (req) => {
                 last_checked: new Date().toISOString()
               }
 
-              const { error: insertError } = await supabaseClient
+              const { data: insertedProduct, error: insertError } = await supabaseClient
                 .from('products')
                 .upsert([productData])
+                .select()
+                .single()
 
               if (insertError) {
                 console.error(`Error saving product ${item.asin}:`, insertError)
-              } else {
-                console.log(`Successfully saved laptop: ${item.asin}`)
+                continue
               }
+
+              // Collect reviews for this product
+              await collectProductReviews(item.asin, oxyUsername, oxyPassword, supabaseClient, insertedProduct.id)
+              
+              console.log(`Successfully saved laptop and reviews: ${item.asin}`)
             }
           }
         } catch (error) {
@@ -235,3 +335,4 @@ Deno.serve(async (req) => {
     )
   }
 })
+
