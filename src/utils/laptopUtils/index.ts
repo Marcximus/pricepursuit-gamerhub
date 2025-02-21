@@ -10,10 +10,11 @@ export const processLaptopData = (laptop: any): Product => {
   console.log('Processing laptop data:', {
     id: laptop.id,
     title: laptop.title,
-    hasReviews: laptop.product_reviews?.length > 0,
-    reviewData: laptop.review_data,
+    rating: laptop.rating,
     averageRating: laptop.average_rating,
-    totalReviews: laptop.total_reviews
+    totalReviews: laptop.total_reviews,
+    hasReviews: laptop.product_reviews?.length > 0,
+    reviewData: laptop.review_data
   });
   
   // Ensure prices are properly converted to numbers
@@ -59,17 +60,17 @@ export const processLaptopData = (laptop: any): Product => {
     review_data.recent_reviews = [];
   }
 
-  // Process review metrics
-  const average_rating = laptop.average_rating || null;
-  const total_reviews = laptop.total_reviews || review_data.recent_reviews.length || null;
+  // Process rating and review metrics
+  const rating = laptop.rating || laptop.average_rating || null;
+  const total_reviews = laptop.total_reviews || review_data.recent_reviews.length || laptop.rating_count || null;
 
   // Log processed review data
-  console.log('Processed review data:', {
+  console.log('Processed rating data:', {
     id: laptop.id,
+    rating,
+    totalReviews: total_reviews,
     reviewCount: review_data.recent_reviews?.length,
-    hasRatingBreakdown: !!review_data.rating_breakdown,
-    avgRating: average_rating,
-    totalReviews: total_reviews
+    hasRatingBreakdown: !!review_data.rating_breakdown
   });
 
   return {
@@ -78,8 +79,8 @@ export const processLaptopData = (laptop: any): Product => {
     title: processTitle(laptop.title || ''),
     current_price: current_price,
     original_price: original_price,
-    rating: laptop.rating || average_rating || null,
-    rating_count: laptop.rating_count || total_reviews || null,
+    rating: rating,
+    rating_count: total_reviews,
     image_url: laptop.image_url || null,
     product_url: laptop.product_url || null,
     last_checked: laptop.last_checked || null,
@@ -95,7 +96,7 @@ export const processLaptopData = (laptop: any): Product => {
     weight: processWeight(laptop.weight, laptop.title || ''),
     battery_life: processBatteryLife(laptop.battery_life, laptop.title || ''),
     total_reviews: total_reviews,
-    average_rating: average_rating,
+    average_rating: rating,
     review_data: review_data
   };
 };

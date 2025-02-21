@@ -56,15 +56,15 @@ export const useLaptops = () => {
           return [];
         }
 
-        // Process reviews for each laptop
+        // Process reviews and ratings for each laptop
         const processedLaptops = laptopsWithReviews.map((laptop) => {
           const reviews = laptop.product_reviews || [];
           
-          // Calculate average rating from reviews if not already set
-          if (!laptop.average_rating && reviews.length > 0) {
+          // Calculate average rating from reviews if available, otherwise use the rating from search
+          let avgRating = laptop.rating;
+          if (!avgRating && reviews.length > 0) {
             const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-            laptop.average_rating = totalRating / reviews.length;
-            laptop.total_reviews = reviews.length;
+            avgRating = totalRating / reviews.length;
           }
 
           // Structure review data
@@ -90,14 +90,16 @@ export const useLaptops = () => {
           }
 
           // Log review processing for debugging
-          console.log(`Processing reviews for laptop ${laptop.id}:`, {
+          console.log(`Processing laptop ${laptop.id}:`, {
+            rating: avgRating,
             totalReviews: reviews.length,
-            averageRating: laptop.average_rating,
             hasReviewData: !!reviewData.recent_reviews.length
           });
 
           return {
             ...laptop,
+            average_rating: avgRating,
+            total_reviews: reviews.length || laptop.rating_count || 0,
             review_data: reviewData
           };
         });
@@ -122,4 +124,3 @@ export const useLaptops = () => {
     updateLaptops,
   };
 };
-

@@ -7,6 +7,12 @@ type LaptopRatingProps = {
 };
 
 export function LaptopRating({ rating, totalReviews }: LaptopRatingProps) {
+  if (!rating) {
+    return null;
+  }
+
+  console.log('Rendering rating:', { rating, totalReviews });
+
   const renderStarRating = (rating: number) => {
     const stars = [];
     const fullStars = Math.floor(rating);
@@ -46,7 +52,7 @@ export function LaptopRating({ rating, totalReviews }: LaptopRatingProps) {
       <div className="flex">
         {renderStarRating(rating)}
       </div>
-      {totalReviews && (
+      {totalReviews && totalReviews > 0 && (
         <span className="text-sm text-gray-600">
           {totalReviews.toLocaleString()} reviews
         </span>
