@@ -1,14 +1,13 @@
 
 type LaptopPriceProps = {
   currentPrice: number | null;
-  originalPrice: number | null;
+  originalPrice: number | null; // Keeping prop for TypeScript compatibility but won't use it
   productUrl: string;
 };
 
-export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopPriceProps) {
+export function LaptopPrice({ currentPrice, productUrl }: LaptopPriceProps) {
   console.log('Rendering LaptopPrice:', { 
-    currentPrice, 
-    originalPrice,
+    currentPrice,
     hasCurrentPrice: currentPrice !== null && currentPrice !== undefined,
     currentPriceType: typeof currentPrice
   });
@@ -21,8 +20,8 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
     return `$${Math.floor(price)}`;
   };
 
-  // Handle case where both prices are null/undefined
-  if (!currentPrice && !originalPrice) {
+  // Handle case where price is null/undefined
+  if (!currentPrice) {
     return (
       <a 
         href={productUrl}
@@ -37,8 +36,8 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
     );
   }
 
-  // Handle case where prices are 0
-  if (currentPrice === 0 && originalPrice === 0) {
+  // Handle case where price is 0
+  if (currentPrice === 0) {
     return (
       <a 
         href={productUrl}
@@ -63,11 +62,7 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
       <div className="text-xl font-bold text-blue-600 hover:text-blue-800">
         {formatPrice(currentPrice)}
       </div>
-      {originalPrice && originalPrice > currentPrice && (
-        <div className="text-sm text-gray-500 line-through">
-          {formatPrice(originalPrice)}
-        </div>
-      )}
     </a>
   );
 }
+
