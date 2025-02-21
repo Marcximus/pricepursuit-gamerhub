@@ -118,12 +118,12 @@ async function processAllLaptops(laptops: Laptop[], supabase: any) {
             last_updated: new Date().toISOString()
           };
 
-          // Call the stored procedure to update product and price history
+          // Call the stored procedure with correct parameter order
           const { error: updateError } = await supabase.rpc(
             'update_product_with_price_history',
             {
-              p_product_id: laptop.id,
               p_price: currentPrice,
+              p_product_id: laptop.id,
               p_update_data: updateData
             }
           );
@@ -197,3 +197,4 @@ Deno.serve(async (req) => {
     );
   }
 });
+
