@@ -16,7 +16,7 @@ export const useLaptops = () => {
         console.log('Fetching laptops from Supabase...');
         
         const startTime = Date.now();
-        const { data, error } = await supabase
+        const { data: laptopsWithReviews, error } = await supabase
           .from('products')
           .select(`
             *,
@@ -33,7 +33,7 @@ export const useLaptops = () => {
           `)
           .eq('is_laptop', true)
           .order('created_at', { ascending: false });
-        
+
         console.log(`Query completed in ${Date.now() - startTime}ms`);
 
         if (error) {
@@ -41,7 +41,7 @@ export const useLaptops = () => {
           throw error;
         }
 
-        if (!data || data.length === 0) {
+        if (!laptopsWithReviews || laptopsWithReviews.length === 0) {
           console.log('No laptops found in database');
           toast({
             title: "No laptops found",
@@ -56,72 +56,55 @@ export const useLaptops = () => {
           return [];
         }
 
-        // Log review data details
-        const withReviews = data.filter(l => l.product_reviews?.length > 0).length;
-        const withReviewData = data.filter(l => l.review_data !== null).length;
-        
-        console.log('Review Data Summary:', {
-          total: data.length,
-          withReviews,
-          withReviewData,
-          sampleReviews: data[0]?.product_reviews?.slice(0, 2) || []
-        });
-
-        // Log detailed status information
-        const pendingCollection = data.filter(l => l.collection_status === 'pending').length;
-        const updatingLaptops = data.filter(l => l.update_status === 'updating').length;
-        const missingPrices = data.filter(l => l.current_price === null).length;
-        const withPrices = data.filter(l => l.current_price !== null).length;
-        
-        console.log('Laptop Status Summary:', {
-          total: data.length,
-          pendingCollection,
-          updatingLaptops,
-          missingPrices,
-          withPrices,
-          averagePrice: withPrices ? 
-            data.reduce((sum, l) => sum + (l.current_price || 0), 0) / withPrices : 0
-        });
-        
-        if (pendingCollection > 0) {
-          console.log(`${pendingCollection} laptops pending collection`);
-        }
-        
-        if (updatingLaptops > 0) {
-          console.log(`${updatingLaptops} laptops being updated`);
-        }
-
-        if (missingPrices > 0) {
-          console.log(`${missingPrices} laptops missing price information`);
-          if (!updatingLaptops) {
-            try {
-              await updateLaptops();
-            } catch (error) {
-              console.error('Failed to trigger laptop updates:', error);
-              toast({
-                title: "Update Error",
-                description: "Failed to start laptop updates. Please try again later.",
-                variant: "destructive"
-              });
-            }
+        // Process reviews for each laptop
+        const processedLaptops = laptopsWithReviews.map((laptop) => {
+          const reviews = laptop.product_reviews || [];
+          
+          // Calculate average rating from reviews if not already set
+          if (!laptop.average_rating && reviews.length > 0) {
+            const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+            laptop.average_rating = totalRating / reviews.length;
+            laptop.total_reviews = reviews.length;
           }
-        }
 
-        console.log(`Processing ${data.length} laptops...`);
-        const processedLaptops = data.map((laptop, index) => {
-          const processed = processLaptopData(laptop as Product);
-          if (index === 0) {
-            console.log('First laptop review details:', {
-              id: processed.id,
-              title: processed.title,
-              reviewData: processed.review_data,
-              reviews: laptop.product_reviews
-            });
+          // Structure review data
+          const reviewData = {
+            rating_breakdown: {},
+            recent_reviews: reviews.map(review => ({
+              rating: review.rating,
+              title: review.title || '',
+              content: review.content || '',
+              reviewer_name: review.reviewer_name || 'Anonymous',
+              review_date: review.review_date,
+              verified_purchase: review.verified_purchase || false,
+              helpful_votes: review.helpful_votes || 0
+            }))
+          };
+
+          // Calculate rating breakdown
+          if (reviews.length > 0) {
+            reviewData.rating_breakdown = reviews.reduce((acc, review) => {
+              acc[review.rating] = (acc[review.rating] || 0) + 1;
+              return acc;
+            }, {});
           }
-          return processed;
+
+          // Log review processing for debugging
+          console.log(`Processing reviews for laptop ${laptop.id}:`, {
+            totalReviews: reviews.length,
+            averageRating: laptop.average_rating,
+            hasReviewData: !!reviewData.recent_reviews.length
+          });
+
+          return {
+            ...laptop,
+            review_data: reviewData
+          };
         });
 
-        return processedLaptops;
+        // Process each laptop through the existing processor
+        console.log(`Processing ${processedLaptops.length} laptops...`);
+        return processedLaptops.map(laptop => processLaptopData(laptop as Product));
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
         throw error;

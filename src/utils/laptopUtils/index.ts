@@ -7,10 +7,13 @@ import type { Product } from "@/types/product";
 
 export const processLaptopData = (laptop: any): Product => {
   // Add debug logging for review data
-  console.log('Raw review data:', {
+  console.log('Processing laptop data:', {
     id: laptop.id,
+    title: laptop.title,
+    hasReviews: laptop.product_reviews?.length > 0,
     reviewData: laptop.review_data,
-    productReviews: laptop.product_reviews
+    averageRating: laptop.average_rating,
+    totalReviews: laptop.total_reviews
   });
   
   // Ensure prices are properly converted to numbers
@@ -34,69 +37,39 @@ export const processLaptopData = (laptop: any): Product => {
   }
 
   // Process review data
-  let parsedReviewData = {
+  let review_data = laptop.review_data || {
     rating_breakdown: {},
     recent_reviews: []
   };
 
   // Try to parse review_data if it's a string
-  if (typeof laptop.review_data === 'string') {
+  if (typeof review_data === 'string') {
     try {
-      parsedReviewData = JSON.parse(laptop.review_data);
+      review_data = JSON.parse(review_data);
     } catch (error) {
       console.error('Error parsing review data:', error);
     }
-  } else if (laptop.review_data) {
-    parsedReviewData = laptop.review_data;
   }
 
-  // Process product_reviews into recent_reviews format if they exist
-  if (Array.isArray(laptop.product_reviews) && laptop.product_reviews.length > 0) {
-    parsedReviewData.recent_reviews = laptop.product_reviews.map(review => ({
-      rating: review.rating,
-      title: review.title,
-      content: review.content,
-      reviewer_name: review.reviewer_name,
-      review_date: review.review_date,
-      verified_purchase: review.verified_purchase,
-      helpful_votes: review.helpful_votes
-    }));
-    
-    // Calculate rating breakdown
-    const breakdown = laptop.product_reviews.reduce((acc, review) => {
-      acc[review.rating] = (acc[review.rating] || 0) + 1;
-      return acc;
-    }, {});
-    parsedReviewData.rating_breakdown = breakdown;
+  // Ensure review_data has the correct structure
+  if (!review_data.rating_breakdown) {
+    review_data.rating_breakdown = {};
+  }
+  if (!review_data.recent_reviews) {
+    review_data.recent_reviews = [];
   }
 
-  // Calculate average rating and total reviews
-  let avgRating = laptop.average_rating;
-  let totalReviews = laptop.total_reviews;
-  
-  if ((!avgRating || !totalReviews) && parsedReviewData.rating_breakdown) {
-    const ratings = Object.entries(parsedReviewData.rating_breakdown)
-      .map(([rating, count]) => ({
-        rating: parseInt(rating),
-        count: typeof count === 'number' ? count : 0
-      }));
-    
-    if (ratings.length > 0) {
-      const total = ratings.reduce((sum, { count }) => sum + count, 0);
-      const weightedSum = ratings.reduce((sum, { rating, count }) => sum + (rating * count), 0);
-      
-      totalReviews = total;
-      avgRating = total > 0 ? weightedSum / total : null;
-    }
-  }
+  // Process review metrics
+  const average_rating = laptop.average_rating || null;
+  const total_reviews = laptop.total_reviews || review_data.recent_reviews.length || null;
 
   // Log processed review data
   console.log('Processed review data:', {
     id: laptop.id,
-    reviewCount: parsedReviewData.recent_reviews?.length,
-    hasRatingBreakdown: !!parsedReviewData.rating_breakdown,
-    avgRating,
-    totalReviews
+    reviewCount: review_data.recent_reviews?.length,
+    hasRatingBreakdown: !!review_data.rating_breakdown,
+    avgRating: average_rating,
+    totalReviews: total_reviews
   });
 
   return {
@@ -105,8 +78,8 @@ export const processLaptopData = (laptop: any): Product => {
     title: processTitle(laptop.title || ''),
     current_price: current_price,
     original_price: original_price,
-    rating: laptop.rating || avgRating || null,
-    rating_count: laptop.rating_count || totalReviews || null,
+    rating: laptop.rating || average_rating || null,
+    rating_count: laptop.rating_count || total_reviews || null,
     image_url: laptop.image_url || null,
     product_url: laptop.product_url || null,
     last_checked: laptop.last_checked || null,
@@ -121,9 +94,9 @@ export const processLaptopData = (laptop: any): Product => {
     benchmark_score: laptop.benchmark_score || null,
     weight: processWeight(laptop.weight, laptop.title || ''),
     battery_life: processBatteryLife(laptop.battery_life, laptop.title || ''),
-    total_reviews: totalReviews || null,
-    average_rating: avgRating || null,
-    review_data: parsedReviewData
+    total_reviews: total_reviews,
+    average_rating: average_rating,
+    review_data: review_data
   };
 };
 
@@ -131,4 +104,3 @@ export * from './titleProcessor';
 export * from './specsProcessor';
 export * from './graphicsProcessor';
 export * from './physicalSpecsProcessor';
-
