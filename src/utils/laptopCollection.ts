@@ -21,6 +21,11 @@ export const collectLaptops = async () => {
     
     if (error) {
       console.error('Error collecting laptops:', error);
+      toast({
+        title: "Collection failed",
+        description: error.message || "Failed to start laptop collection",
+        variant: "destructive"
+      });
       throw new Error(error.message || 'Failed to collect laptops');
     }
     
@@ -32,11 +37,15 @@ export const collectLaptops = async () => {
     return data;
   } catch (error) {
     console.error('Failed to collect laptops:', error);
+    toast({
+      title: "Collection failed",
+      description: error.message || "An unexpected error occurred",
+      variant: "destructive"
+    });
     throw error;
   }
 };
 
-// Add a new function to manually trigger updates
 export const updateLaptops = async () => {
   try {
     console.log('Triggering laptop updates...');
@@ -47,6 +56,11 @@ export const updateLaptops = async () => {
     
     if (error) {
       console.error('Error updating laptops:', error);
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to start laptop updates",
+        variant: "destructive"
+      });
       throw new Error(error.message || 'Failed to update laptops');
     }
     
@@ -58,6 +72,12 @@ export const updateLaptops = async () => {
     return data;
   } catch (error) {
     console.error('Failed to update laptops:', error);
+    toast({
+      title: "Update failed",
+      description: error.message || "An unexpected error occurred",
+      variant: "destructive"
+    });
     throw error;
   }
 };
+

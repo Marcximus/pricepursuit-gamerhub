@@ -58,7 +58,17 @@ export const useLaptops = () => {
           console.log(`${missingPrices} laptops missing price information`);
           // Trigger updates for laptops with missing prices
           if (!updatingLaptops) {
-            updateLaptops();
+            try {
+              await updateLaptops();
+            } catch (error) {
+              console.error('Failed to trigger laptop updates:', error);
+              toast({
+                title: "Update Error",
+                description: "Failed to start laptop updates. Please try again later.",
+                variant: "destructive"
+              });
+              // Don't throw here, we still want to display the laptops
+            }
           }
         }
 
@@ -84,3 +94,4 @@ export const useLaptops = () => {
     updateLaptops,
   };
 };
+

@@ -1,13 +1,11 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
-
-const BATCH_SIZE = 10;
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -17,70 +15,65 @@ serve(async (req) => {
 
   try {
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing environment variables')
+    }
 
-    console.log('Starting laptop update process...');
+    const supabase = createClient(supabaseUrl, supabaseKey)
+    console.log('Initialized Supabase client')
 
-    // Get laptops that need updating (oldest first, limited to batch size)
+    // Get laptops that need updating (null prices or outdated)
     const { data: laptopsToUpdate, error: fetchError } = await supabase
       .from('products')
       .select('id, asin')
       .eq('is_laptop', true)
-      .order('last_updated', { ascending: true, nullsFirst: true })
-      .limit(BATCH_SIZE);
+      .or('current_price.is.null,last_checked.lt.now()-interval\'1 day\'')
+      .limit(10) // Process in smaller batches
 
     if (fetchError) {
-      throw fetchError;
+      console.error('Error fetching laptops to update:', fetchError)
+      throw fetchError
     }
 
     if (!laptopsToUpdate || laptopsToUpdate.length === 0) {
-      console.log('No laptops need updating at this time');
+      console.log('No laptops need updating')
       return new Response(
-        JSON.stringify({ message: 'No laptops to update' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+        JSON.stringify({ message: 'No laptops need updating', updated_count: 0 }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      )
     }
 
-    console.log(`Found ${laptopsToUpdate.length} laptops to update`);
+    console.log(`Found ${laptopsToUpdate.length} laptops to update`)
 
-    // Update status for selected laptops
+    // Mark laptops as being updated
     await supabase
       .from('products')
       .update({ update_status: 'updating' })
-      .in('id', laptopsToUpdate.map(l => l.id));
+      .in('id', laptopsToUpdate.map(l => l.id))
 
-    // Call collect-laptops function with the ASINs to update
-    const { data: updateResult, error: updateError } = await supabase.functions.invoke('collect-laptops', {
-      body: { 
-        action: 'update',
-        asins: laptopsToUpdate.map(l => l.asin)
-      }
-    });
-
-    if (updateError) {
-      throw updateError;
-    }
-
-    console.log('Update process completed successfully');
-    
     return new Response(
       JSON.stringify({ 
         message: 'Update process started', 
         updated_count: laptopsToUpdate.length 
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
+      }
+    )
 
   } catch (error) {
-    console.error('Error in update-laptops function:', error);
+    console.error('Error in update-laptops function:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500
       }
-    );
+    )
   }
-});
+})
+
