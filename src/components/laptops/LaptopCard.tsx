@@ -71,8 +71,7 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
             graphics: laptop.graphics,
             ram: laptop.ram,
             storage: laptop.storage,
-            weight: laptop.weight,
-            batteryLife: laptop.battery_life
+            weight: laptop.weight
           }}
         />
 
@@ -86,3 +85,4 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
     </Card>
   );
 }
+
