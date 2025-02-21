@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 
 const corsHeaders = {
@@ -15,8 +14,8 @@ Deno.serve(async (req) => {
     const { action } = await req.json()
     console.log('Received request with action:', action)
 
-    if (action !== 'collect') {
-      throw new Error('Invalid action provided')
+    if (action !== 'start') {
+      throw new Error('Invalid action provided - expected "start"')
     }
 
     // Start the background task without waiting for it to complete

@@ -21,7 +21,7 @@ export const collectLaptops = async () => {
     
     const { data, error } = await supabase.functions.invoke('collect-laptops', {
       body: { 
-        action: 'collect',
+        action: 'start',
         mode: 'discovery'
       }
     });
@@ -100,3 +100,4 @@ export const updateLaptops = async () => {
     throw error;
   }
 };
+
