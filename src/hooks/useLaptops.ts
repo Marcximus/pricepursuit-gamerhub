@@ -18,7 +18,19 @@ export const useLaptops = () => {
         const startTime = Date.now();
         const { data, error } = await supabase
           .from('products')
-          .select('*, product_reviews(*)')
+          .select(`
+            *,
+            product_reviews (
+              id,
+              rating,
+              title,
+              content,
+              reviewer_name,
+              review_date,
+              verified_purchase,
+              helpful_votes
+            )
+          `)
           .eq('is_laptop', true)
           .order('created_at', { ascending: false });
         
@@ -43,6 +55,17 @@ export const useLaptops = () => {
           }
           return [];
         }
+
+        // Log review data details
+        const withReviews = data.filter(l => l.product_reviews?.length > 0).length;
+        const withReviewData = data.filter(l => l.review_data !== null).length;
+        
+        console.log('Review Data Summary:', {
+          total: data.length,
+          withReviews,
+          withReviewData,
+          sampleReviews: data[0]?.product_reviews?.slice(0, 2) || []
+        });
 
         // Log detailed status information
         const pendingCollection = data.filter(l => l.collection_status === 'pending').length;
@@ -70,7 +93,6 @@ export const useLaptops = () => {
 
         if (missingPrices > 0) {
           console.log(`${missingPrices} laptops missing price information`);
-          // Trigger updates for laptops with missing prices
           if (!updatingLaptops) {
             try {
               await updateLaptops();
@@ -81,7 +103,6 @@ export const useLaptops = () => {
                 description: "Failed to start laptop updates. Please try again later.",
                 variant: "destructive"
               });
-              // Don't throw here, we still want to display the laptops
             }
           }
         }
@@ -89,18 +110,12 @@ export const useLaptops = () => {
         console.log(`Processing ${data.length} laptops...`);
         const processedLaptops = data.map((laptop, index) => {
           const processed = processLaptopData(laptop as Product);
-          if (index < 5 || !processed.current_price) {
-            console.log('Processed laptop details:', {
+          if (index === 0) {
+            console.log('First laptop review details:', {
               id: processed.id,
               title: processed.title,
-              price: processed.current_price,
-              originalPrice: laptop.current_price, // Log the original price for comparison
-              status: {
-                collection: laptop.collection_status,
-                update: laptop.update_status
-              },
-              lastChecked: laptop.last_checked,
-              reviewCount: processed.total_reviews
+              reviewData: processed.review_data,
+              reviews: laptop.product_reviews
             });
           }
           return processed;
@@ -112,8 +127,8 @@ export const useLaptops = () => {
         throw error;
       }
     },
-    staleTime: 1000 * 30, // 30 seconds
-    refetchInterval: 1000 * 15, // Refetch every 15 seconds to check for updates
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 15,
     retryDelay: 1000,
     retry: 3,
   });
@@ -124,3 +139,4 @@ export const useLaptops = () => {
     updateLaptops,
   };
 };
+
