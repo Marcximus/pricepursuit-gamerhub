@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
@@ -5,10 +6,36 @@ export const collectLaptops = async () => {
   try {
     console.log('Triggering laptop collection...');
     
+    const { data: existingLaptops, error: checkError } = await supabase
+      .from('products')
+      .select('id, last_collection_attempt')
+      .eq('is_laptop', true)
+      .order('last_collection_attempt', { ascending: true })
+      .limit(1);
+
+    if (checkError) {
+      console.error('Error checking existing laptops:', checkError);
+      throw checkError;
+    }
+
+    // Check if we've attempted collection recently (within last 5 minutes)
+    const lastAttempt = existingLaptops?.[0]?.last_collection_attempt;
+    if (lastAttempt && new Date(lastAttempt).getTime() > Date.now() - 5 * 60 * 1000) {
+      console.log('Collection attempted too recently, waiting...');
+      toast({
+        title: "Collection in progress",
+        description: "Please wait a few minutes before starting another collection",
+      });
+      return null;
+    }
+    
     // First update all existing laptops to pending status
     const { data: updatedLaptops, error: updateError } = await supabase
       .from('products')
-      .update({ collection_status: 'pending' })
+      .update({ 
+        collection_status: 'pending',
+        last_collection_attempt: new Date().toISOString()
+      })
       .eq('is_laptop', true)
       .select();
 
@@ -21,7 +48,8 @@ export const collectLaptops = async () => {
     const { data, error } = await supabase.functions.invoke('collect-laptops', {
       body: { 
         action: 'start',
-        mode: 'discovery'
+        mode: 'discovery',
+        force_refresh: true // Force a fresh collection
       }
     });
     
@@ -56,6 +84,27 @@ export const updateLaptops = async () => {
   try {
     console.log('Triggering laptop updates...');
     
+    // Check if an update is already in progress
+    const { data: inProgressUpdates, error: checkError } = await supabase
+      .from('products')
+      .select('count', { count: 'exact', head: true })
+      .eq('is_laptop', true)
+      .eq('update_status', 'in_progress');
+
+    if (checkError) {
+      console.error('Error checking update status:', checkError);
+      throw checkError;
+    }
+
+    if (inProgressUpdates && inProgressUpdates.count > 0) {
+      console.log('Update already in progress');
+      toast({
+        title: "Update in progress",
+        description: "Please wait for the current update to complete",
+      });
+      return null;
+    }
+    
     // Get count of laptops that need updating
     const { count: updateCount, error: countError } = await supabase
       .from('products')
@@ -67,10 +116,35 @@ export const updateLaptops = async () => {
       console.error('Error counting laptops to update:', countError);
       throw countError;
     }
+
+    if (!updateCount || updateCount === 0) {
+      console.log('No laptops need updating');
+      toast({
+        title: "No updates needed",
+        description: "All laptops are up to date",
+      });
+      return null;
+    }
+
     console.log(`Found ${updateCount} laptops that need updating`);
     
+    // Mark laptops as being updated
+    const { error: statusError } = await supabase
+      .from('products')
+      .update({ update_status: 'in_progress' })
+      .eq('is_laptop', true)
+      .or('current_price.is.null,last_checked.lt.now()-interval\'1 day\'');
+
+    if (statusError) {
+      console.error('Error updating status:', statusError);
+      throw statusError;
+    }
+    
     const { data, error } = await supabase.functions.invoke('update-laptops', {
-      body: { count: updateCount }
+      body: { 
+        count: updateCount,
+        force_refresh: true // Force refresh of all data
+      }
     });
     
     if (error) {
@@ -91,6 +165,15 @@ export const updateLaptops = async () => {
     return data;
   } catch (error) {
     console.error('Failed to update laptops:', error);
+    // Reset update status on error
+    try {
+      await supabase
+        .from('products')
+        .update({ update_status: 'pending' })
+        .eq('update_status', 'in_progress');
+    } catch (resetError) {
+      console.error('Error resetting update status:', resetError);
+    }
     toast({
       title: "Update failed",
       description: error.message || "An unexpected error occurred",
@@ -104,6 +187,27 @@ export const refreshBrandModels = async () => {
   try {
     console.log('Initiating brand and model refresh...');
     
+    // Check if a refresh is already in progress
+    const { data: inProgressRefresh, error: checkError } = await supabase
+      .from('products')
+      .select('count', { count: 'exact', head: true })
+      .eq('is_laptop', true)
+      .eq('collection_status', 'refreshing');
+
+    if (checkError) {
+      console.error('Error checking refresh status:', checkError);
+      throw checkError;
+    }
+
+    if (inProgressRefresh && inProgressRefresh.count > 0) {
+      console.log('Refresh already in progress');
+      toast({
+        title: "Refresh in progress",
+        description: "Please wait for the current refresh to complete",
+      });
+      return null;
+    }
+    
     // First get count of laptops that need brand/model refresh
     const { count, error: countError } = await supabase
       .from('products')
@@ -115,13 +219,36 @@ export const refreshBrandModels = async () => {
       console.error('Error counting laptops to refresh:', countError);
       throw countError;
     }
+
+    if (!count || count === 0) {
+      console.log('No laptops need refreshing');
+      toast({
+        title: "No refresh needed",
+        description: "All laptops have brand and model information",
+      });
+      return null;
+    }
+
     console.log(`Found ${count} laptops that need brand/model refresh`);
+    
+    // Mark laptops as being refreshed
+    const { error: statusError } = await supabase
+      .from('products')
+      .update({ collection_status: 'refreshing' })
+      .eq('is_laptop', true)
+      .or('brand.is.null,model.is.null');
+
+    if (statusError) {
+      console.error('Error updating refresh status:', statusError);
+      throw statusError;
+    }
     
     // Call edge function to handle the refresh
     const { data, error } = await supabase.functions.invoke('collect-laptops', {
       body: { 
         action: 'refresh-brands',
-        mode: 'brand_model_refresh'
+        mode: 'brand_model_refresh',
+        force_refresh: true
       }
     });
     
@@ -143,6 +270,15 @@ export const refreshBrandModels = async () => {
     return data;
   } catch (error) {
     console.error('Failed to refresh brands/models:', error);
+    // Reset refresh status on error
+    try {
+      await supabase
+        .from('products')
+        .update({ collection_status: 'pending' })
+        .eq('collection_status', 'refreshing');
+    } catch (resetError) {
+      console.error('Error resetting refresh status:', resetError);
+    }
     toast({
       title: "Refresh failed",
       description: error.message || "An unexpected error occurred",

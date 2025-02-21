@@ -32,6 +32,7 @@ export const useLaptops = () => {
             )
           `)
           .eq('is_laptop', true)
+          .order('last_checked', { ascending: false })
           .order('created_at', { ascending: false });
 
         console.log(`Query completed in ${Date.now() - startTime}ms`);
@@ -54,6 +55,38 @@ export const useLaptops = () => {
             throw error;
           }
           return [];
+        }
+
+        // Check for laptops needing updates
+        const outdatedLaptops = laptopsWithReviews.filter(laptop => {
+          const lastChecked = laptop.last_checked ? new Date(laptop.last_checked) : null;
+          const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          return !laptop.current_price || !lastChecked || lastChecked < oneDayAgo;
+        });
+
+        if (outdatedLaptops.length > 0) {
+          console.log(`Found ${outdatedLaptops.length} laptops needing updates`);
+          try {
+            await updateLaptops();
+          } catch (error) {
+            console.error('Failed to trigger updates:', error);
+            // Continue processing existing data even if update fails
+          }
+        }
+
+        // Check for laptops missing brand/model
+        const incompleteLaptops = laptopsWithReviews.filter(laptop => 
+          !laptop.brand || !laptop.model
+        );
+
+        if (incompleteLaptops.length > 0) {
+          console.log(`Found ${incompleteLaptops.length} laptops missing brand/model info`);
+          try {
+            await refreshBrandModels();
+          } catch (error) {
+            console.error('Failed to trigger brand/model refresh:', error);
+            // Continue processing existing data even if refresh fails
+          }
         }
 
         // Process reviews and ratings for each laptop
@@ -83,7 +116,7 @@ export const useLaptops = () => {
 
           // Calculate rating breakdown
           if (reviews.length > 0) {
-            reviewData.rating_breakdown = reviews.reduce((acc, review) => {
+            reviewData.rating_breakdown = reviews.reduce((acc: any, review) => {
               acc[review.rating] = (acc[review.rating] || 0) + 1;
               return acc;
             }, {});
@@ -105,8 +138,8 @@ export const useLaptops = () => {
         throw error;
       }
     },
-    staleTime: 1000 * 30,
-    refetchInterval: 1000 * 15,
+    staleTime: 1000 * 30, // Data stays fresh for 30 seconds
+    refetchInterval: 1000 * 60, // Check for updates every minute
     retryDelay: 1000,
     retry: 3,
   });
