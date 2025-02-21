@@ -85,9 +85,9 @@ export const updateLaptops = async () => {
     console.log('Triggering laptop updates...');
     
     // Check if an update is already in progress
-    const { data: inProgressUpdatesData, error: checkError } = await supabase
+    const { count: inProgressCount, error: checkError } = await supabase
       .from('products')
-      .select('count', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true })
       .eq('is_laptop', true)
       .eq('update_status', 'in_progress');
 
@@ -96,8 +96,7 @@ export const updateLaptops = async () => {
       throw checkError;
     }
 
-    // Access count directly from the data object
-    if (inProgressUpdatesData && inProgressUpdatesData.count > 0) {
+    if (inProgressCount && inProgressCount > 0) {
       console.log('Update already in progress');
       toast({
         title: "Update in progress",
@@ -107,7 +106,7 @@ export const updateLaptops = async () => {
     }
     
     // Get count of laptops that need updating
-    const { data: updateCountData, error: countError } = await supabase
+    const { count: updateCount, error: countError } = await supabase
       .from('products')
       .select('*', { count: 'exact', head: true })
       .eq('is_laptop', true)
@@ -118,7 +117,7 @@ export const updateLaptops = async () => {
       throw countError;
     }
 
-    if (!updateCountData || updateCountData.count === 0) {
+    if (!updateCount || updateCount === 0) {
       console.log('No laptops need updating');
       toast({
         title: "No updates needed",
@@ -127,7 +126,7 @@ export const updateLaptops = async () => {
       return null;
     }
 
-    console.log(`Found ${updateCountData.count} laptops that need updating`);
+    console.log(`Found ${updateCount} laptops that need updating`);
     
     // Mark laptops as being updated
     const { error: statusError } = await supabase
@@ -143,7 +142,7 @@ export const updateLaptops = async () => {
     
     const { data, error } = await supabase.functions.invoke('update-laptops', {
       body: { 
-        count: updateCountData.count,
+        count: updateCount,
         force_refresh: true // Force refresh of all data
       }
     });
@@ -189,9 +188,9 @@ export const refreshBrandModels = async () => {
     console.log('Initiating brand and model refresh...');
     
     // Check if a refresh is already in progress
-    const { data: inProgressRefreshData, error: checkError } = await supabase
+    const { count: inProgressCount, error: checkError } = await supabase
       .from('products')
-      .select('count', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true })
       .eq('is_laptop', true)
       .eq('collection_status', 'refreshing');
 
@@ -200,7 +199,7 @@ export const refreshBrandModels = async () => {
       throw checkError;
     }
 
-    if (inProgressRefreshData && inProgressRefreshData.count > 0) {
+    if (inProgressCount && inProgressCount > 0) {
       console.log('Refresh already in progress');
       toast({
         title: "Refresh in progress",
@@ -210,7 +209,7 @@ export const refreshBrandModels = async () => {
     }
     
     // First get count of laptops that need brand/model refresh
-    const { data: countData, error: countError } = await supabase
+    const { count: refreshCount, error: countError } = await supabase
       .from('products')
       .select('*', { count: 'exact', head: true })
       .eq('is_laptop', true)
@@ -221,7 +220,7 @@ export const refreshBrandModels = async () => {
       throw countError;
     }
 
-    if (!countData || countData.count === 0) {
+    if (!refreshCount || refreshCount === 0) {
       console.log('No laptops need refreshing');
       toast({
         title: "No refresh needed",
@@ -230,7 +229,7 @@ export const refreshBrandModels = async () => {
       return null;
     }
 
-    console.log(`Found ${countData.count} laptops that need brand/model refresh`);
+    console.log(`Found ${refreshCount} laptops that need brand/model refresh`);
     
     // Mark laptops as being refreshed
     const { error: statusError } = await supabase
@@ -266,7 +265,7 @@ export const refreshBrandModels = async () => {
     console.log('Brand/model refresh response:', data);
     toast({
       title: "Refresh started",
-      description: `Starting brand/model refresh for ${countData.count} laptops. This will take a few minutes to complete.`,
+      description: `Starting brand/model refresh for ${refreshCount} laptops. This will take a few minutes to complete.`,
     });
     return data;
   } catch (error) {
@@ -288,4 +287,5 @@ export const refreshBrandModels = async () => {
     throw error;
   }
 };
+
 
