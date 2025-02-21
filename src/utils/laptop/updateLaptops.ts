@@ -6,14 +6,14 @@ export const updateLaptops = async () => {
   try {
     console.log('Starting update for ALL laptops...');
     
-    // Get laptops with priority for those without prices
+    // Get laptops with priority for those without prices - fixed OR syntax
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
       .select('id, asin, current_price')
       .eq('is_laptop', true)
       .not('update_status', 'eq', 'in_progress')
-      .or('current_price.is.null,eq.0')  // Prioritize laptops with null or 0 prices
-      .order('current_price', { nullsFirst: true }); // Put null prices first
+      .or('current_price.is.null,current_price.eq.0')  // Fixed OR condition syntax
+      .order('current_price', { nullsFirst: true });
 
     if (fetchError) {
       console.error('Error fetching laptops:', fetchError);
@@ -67,7 +67,7 @@ export const updateLaptops = async () => {
 
       // Call edge function for this chunk
       try {
-        const { error } = await supabase.functions.invoke('update-laptops', {
+        const { data, error } = await supabase.functions.invoke('update-laptops', {
           body: { 
             laptops: chunk.map(l => ({ id: l.id, asin: l.asin }))
           }
@@ -80,6 +80,8 @@ export const updateLaptops = async () => {
             .from('products')
             .update({ update_status: 'error' })
             .in('id', chunkIds);
+        } else {
+          console.log(`Successfully initiated update for chunk ${i + 1}:`, data);
         }
       } catch (error) {
         console.error(`Failed to process chunk ${i + 1}:`, error);
