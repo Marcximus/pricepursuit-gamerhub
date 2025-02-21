@@ -4,8 +4,9 @@ import { toast } from "@/components/ui/use-toast";
 
 export const refreshBrandModels = async () => {
   try {
-    console.log('Initiating brand and model refresh...');
-    
+    console.log('Starting brand/model refresh...');
+
+    // Check if refresh is already in progress
     const { count: inProgressCount, error: checkError } = await supabase
       .from('products')
       .select('*', { count: 'exact', head: true })
@@ -25,7 +26,8 @@ export const refreshBrandModels = async () => {
       });
       return null;
     }
-    
+
+    // Find laptops missing brand/model
     const { count: refreshCount, error: countError } = await supabase
       .from('products')
       .select('*', { count: 'exact', head: true })
@@ -38,7 +40,7 @@ export const refreshBrandModels = async () => {
     }
 
     if (!refreshCount || refreshCount === 0) {
-      console.log('No laptops need refreshing');
+      console.log('No laptops need brand/model refresh');
       toast({
         title: "No refresh needed",
         description: "All laptops have brand and model information",
@@ -46,8 +48,7 @@ export const refreshBrandModels = async () => {
       return null;
     }
 
-    console.log(`Found ${refreshCount} laptops that need brand/model refresh`);
-    
+    // Update status for laptops that need refresh
     const { error: statusError } = await supabase
       .from('products')
       .update({ collection_status: 'refreshing' })
@@ -58,7 +59,8 @@ export const refreshBrandModels = async () => {
       console.error('Error updating refresh status:', statusError);
       throw statusError;
     }
-    
+
+    // Start refresh process
     const { data, error } = await supabase.functions.invoke('collect-laptops', {
       body: { 
         action: 'refresh-brands',
@@ -66,7 +68,7 @@ export const refreshBrandModels = async () => {
         force_refresh: true
       }
     });
-    
+
     if (error) {
       console.error('Error refreshing brands/models:', error);
       toast({
@@ -74,14 +76,15 @@ export const refreshBrandModels = async () => {
         description: error.message || "Failed to start brand/model refresh",
         variant: "destructive"
       });
-      throw new Error(error.message || 'Failed to refresh brands/models');
+      throw error;
     }
-    
-    console.log('Brand/model refresh response:', data);
+
+    console.log('Refresh response:', data);
     toast({
       title: "Refresh started",
-      description: `Starting brand/model refresh for ${refreshCount} laptops. This will take a few minutes to complete.`,
+      description: `Started refreshing brand/model information for ${refreshCount} laptops`,
     });
+    
     return data;
   } catch (error) {
     console.error('Failed to refresh brands/models:', error);
@@ -91,7 +94,7 @@ export const refreshBrandModels = async () => {
         .update({ collection_status: 'pending' })
         .eq('collection_status', 'refreshing');
     } catch (resetError) {
-      console.error('Error resetting refresh status:', resetError);
+      console.error('Error resetting collection status:', resetError);
     }
     toast({
       title: "Refresh failed",
