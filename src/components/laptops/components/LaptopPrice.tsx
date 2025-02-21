@@ -29,14 +29,14 @@ export function LaptopPrice({ currentPrice, productUrl }: LaptopPriceProps) {
         rel="noopener noreferrer"
         className="block text-center"
       >
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-red-500">
           Price not available
         </div>
       </a>
     );
   }
 
-  // Handle case where price is 0
+  // Handle case where price is 0 (indicates ASIN needs update)
   if (currentPrice === 0) {
     return (
       <a 
@@ -45,8 +45,8 @@ export function LaptopPrice({ currentPrice, productUrl }: LaptopPriceProps) {
         rel="noopener noreferrer"
         className="block text-center"
       >
-        <div className="text-sm text-gray-500">
-          Checking price...
+        <div className="text-sm text-red-500">
+          Price unavailable - ASIN needs update
         </div>
       </a>
     );
