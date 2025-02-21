@@ -28,6 +28,114 @@ export const collectLaptops = async () => {
   }
 };
 
+const processTitle = (title: string): string => {
+  // Remove common prefixes and suffixes
+  title = title.replace(/^(New|Latest|2024|2023)\s*/i, '');
+  title = title.replace(/\([^)]*\)/g, ''); // Remove parentheses and their contents
+  title = title.replace(/\[[^\]]*\]/g, ''); // Remove square brackets and their contents
+  title = title.replace(/\s+/g, ' ').trim(); // Remove extra spaces
+  return title;
+};
+
+const processProcessor = (processor: string | undefined): string | undefined => {
+  if (!processor) return undefined;
+  
+  // Standardize processor names
+  let processed = processor
+    .replace(/Intel\s+Core\s+/i, '')
+    .replace(/AMD\s+Ryzen\s+/i, 'Ryzen ')
+    .replace(/\s+processor$/i, '')
+    .trim();
+    
+  // Add generation if missing for Intel processors
+  if (processed.match(/i[357]|i[357]-\d{4,5}/i)) {
+    processed = processed.replace(/^(i[357])(?!-\d)/, '$1-12th Gen');
+  }
+  
+  return processed;
+};
+
+const processRam = (ram: string | undefined): string | undefined => {
+  if (!ram) return undefined;
+  
+  // Standardize RAM format
+  return ram
+    .replace(/^RAM\s+/i, '')
+    .replace(/gigabytes?/i, 'GB')
+    .replace(/(\d+)\s*GB?/i, '$1GB')
+    .trim();
+};
+
+const processStorage = (storage: string | undefined): string | undefined => {
+  if (!storage) return undefined;
+  
+  // Standardize storage format
+  return storage
+    .replace(/solid\s+state\s+drive/i, 'SSD')
+    .replace(/hard\s+disk\s+drive/i, 'HDD')
+    .replace(/(\d+)\s*(GB|TB)/i, '$1$2')
+    .trim();
+};
+
+const processGraphics = (graphics: string | undefined): string | undefined => {
+  if (!graphics) return undefined;
+  
+  // Standardize graphics card names
+  return graphics
+    .replace(/NVIDIA\s+GeForce\s+/i, '')
+    .replace(/AMD\s+Radeon\s+/i, 'Radeon ')
+    .replace(/Intel\s+/i, '')
+    .replace(/\s+Graphics$/i, '')
+    .trim();
+};
+
+const processScreenSize = (size: string | undefined): string | undefined => {
+  if (!size) return undefined;
+  
+  // Standardize screen size format
+  return size
+    .replace(/(\d+(\.\d+)?)\s*inch(es)?/i, '$1"')
+    .trim();
+};
+
+const processWeight = (weight: string | undefined): string | undefined => {
+  if (!weight) return undefined;
+  
+  // Standardize weight format
+  return weight
+    .replace(/(\d+(\.\d+)?)\s*(kg|pounds?|lbs?)/i, (_, num, dec, unit) => {
+      if (unit.toLowerCase().startsWith('lb')) {
+        return `${(parseFloat(num) * 0.453592).toFixed(2)} kg`;
+      }
+      return `${num} kg`;
+    })
+    .trim();
+};
+
+const processBatteryLife = (battery: string | undefined): string | undefined => {
+  if (!battery) return undefined;
+  
+  // Standardize battery life format
+  return battery
+    .replace(/up\s+to\s+/i, '')
+    .replace(/(\d+(\.\d+)?)\s*(hour|hr)s?/i, '$1 hours')
+    .trim();
+};
+
+const processLaptopData = (laptop: Product): Product => {
+  return {
+    ...laptop,
+    title: processTitle(laptop.title || ''),
+    processor: processProcessor(laptop.processor),
+    ram: processRam(laptop.ram),
+    storage: processStorage(laptop.storage),
+    graphics: processGraphics(laptop.graphics),
+    screen_size: processScreenSize(laptop.screen_size),
+    weight: processWeight(laptop.weight),
+    battery_life: processBatteryLife(laptop.battery_life)
+  };
+};
+
 export const useLaptops = () => {
   const query = useQuery({
     queryKey: ['laptops'],
@@ -61,7 +169,8 @@ export const useLaptops = () => {
         }
 
         console.log(`Found ${data.length} laptops from database`);
-        return data;
+        // Process each laptop's data before returning
+        return data.map(processLaptopData);
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
         return [];
@@ -71,7 +180,7 @@ export const useLaptops = () => {
     refetchInterval: 1000 * 60 * 60 * 24, // Refetch every 24 hours to check for updates
     retryDelay: 1000, // Wait 1 second between retries
     retry: 3, // Retry failed requests 3 times
-    placeholderData: (previousData) => previousData, // This replaces keepPreviousData
+    placeholderData: (previousData) => previousData?.map(processLaptopData), // Process previous data as well
   });
 
   return {
