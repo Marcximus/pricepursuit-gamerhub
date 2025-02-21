@@ -6,23 +6,31 @@ export interface CollectLaptopsRequest {
 
 export interface OxylabsResult {
   content: {
-    results?: {
-      asin?: string;
-      title?: string;
-      price?: {
-        value?: string | number;
-        original_price?: string | number;
-      };
-      rating?: string;
-      reviews?: {
-        rating_count?: string;
-      };
-      image?: {
-        url?: string;
-      };
-      url?: string;
-    }[];
+    url: string;
+    page: number;
+    query: string;
+    results: {
+      paid?: Array<ProductResult>;
+      organic?: Array<ProductResult>;
+    };
   };
+}
+
+interface ProductResult {
+  url?: string;
+  asin?: string;
+  title?: string;
+  rating?: number;
+  currency?: string;
+  url_image?: string;
+  price?: {
+    value?: string | number;
+    original_price?: string | number;
+  };
+  reviews_count?: number;
+  manufacturer?: string;
+  is_sponsored?: boolean;
+  is_amazons_choice?: boolean;
 }
 
 export interface ProductData {
@@ -40,4 +48,3 @@ export interface ProductData {
   last_checked: string;
   last_collection_attempt: string;
 }
-

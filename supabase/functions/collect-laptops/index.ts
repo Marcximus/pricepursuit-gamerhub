@@ -4,7 +4,7 @@ import { corsHeaders } from './cors.ts';
 import { CollectLaptopsRequest } from './types.ts';
 import { fetchBrandData } from './oxylabsService.ts';
 import { saveProduct } from './databaseService.ts';
-import { processProduct } from './productProcessor.ts';
+import { processProducts } from './productProcessor.ts';
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -43,35 +43,24 @@ serve(async (req) => {
             firstResultContent: results[0]?.content ? 'present' : 'missing'
           });
 
-          // Process all results from all pages
-          const allResults = results.flatMap(page => page.content.results || []);
-          console.log(`Processing ${allResults.length} total results for ${brand}`);
+          for (const pageResult of results) {
+            const products = processProducts(pageResult, brand);
+            console.log(`Processing page results for ${brand}:`, {
+              pageNumber: pageResult.content.page,
+              productsFound: products.length
+            });
 
-          let brandProcessed = 0;
-          let brandSaved = 0;
-
-          for (const result of allResults) {
-            brandProcessed++;
-            totalProcessed++;
-
-            const productData = processProduct(result, brand);
-            if (!productData) continue;
-
-            try {
-              await saveProduct(productData);
-              brandSaved++;
-              totalSaved++;
-            } catch (error) {
-              console.error(`Failed to save product ${productData.asin}:`, error);
-              continue;
+            for (const product of products) {
+              try {
+                await saveProduct(product);
+                totalSaved++;
+              } catch (error) {
+                console.error(`Failed to save product ${product.asin}:`, error);
+                continue;
+              }
+              totalProcessed++;
             }
           }
-
-          console.log(`\nBrand ${brand} summary:`, {
-            processed: brandProcessed,
-            saved: brandSaved,
-            skipped: brandProcessed - brandSaved
-          });
 
           // Add delay between brands to avoid rate limits
           await new Promise(resolve => setTimeout(resolve, 2000));
@@ -117,4 +106,3 @@ serve(async (req) => {
     );
   }
 });
-
