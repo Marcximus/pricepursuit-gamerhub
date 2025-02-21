@@ -3,22 +3,59 @@ export const processScreenSize = (screenSize: string | undefined, title: string)
     return screenSize;
   }
   
-  // Look for screen size in the title first (more specific patterns first)
+  // Look for screen size in the title (more specific patterns first)
   const screenPatterns = [
+    // Match patterns like "17.3" QHD 240Hz", "15.6" 240Hz IPS QHD Display"
+    /\b(\d{2}\.?\d?)"?\s*(?:QHD|FHD|HD\+?|UHD|OLED|LED|IPS)?(?:\s+\d+Hz)?(?:\s+IPS)?(?:\s+(?:QHD|FHD|HD\+?|UHD|OLED|LED|Display|Screen|Monitor))?\b/i,
+    
     // Match patterns like "15.6-inch FHD", "15.6" HD", "15.6-inch display"
     /\b(\d{2}\.?\d?)"?\s*(?:inch|"|inches)\s*(?:FHD|HD\+?|QHD|UHD|OLED|LED|IPS|touch\s*screen|display|monitor|screen|laptop)\b/i,
+    
+    // Match specifications after screen size
+    /\b(\d{2}\.?\d?)"?\s*(?:\d+Hz\s*)?(?:QHD|FHD|HD\+?|UHD|OLED|LED|IPS)?(?:\s+Display|\s+Screen|\s+Monitor)?\b/i,
+    
     // Match patterns like "15.6-inch", "15.6""
     /\b(\d{2}\.?\d?)"?\s*(?:inch|"|inches)\b/i,
+    
     // Match just the number with inch
     /\b(\d{2}\.?\d?)[-\s]?(?:inch|"|inches)\b/i,
+    
     // Match patterns like "15.6 laptop", "15.6 display"
     /\b(\d{2}\.?\d?)[-\s]?(?:laptop|display|screen)\b/i,
   ];
   
+  // Try to extract resolution and refresh rate if available
+  const resolutionPattern = /\b(QHD|FHD|HD\+?|UHD|4K)\b/i;
+  const refreshRatePattern = /\b(\d+)Hz\b/i;
+  const panelTypePattern = /\b(IPS|OLED|LED)\b/i;
+  
+  let screenSpec = '';
+  
+  // First try to find the screen size
   for (const pattern of screenPatterns) {
     const match = title.match(pattern);
     if (match) {
-      return `${match[1]}"`;
+      screenSpec = `${match[1]}"`;
+      
+      // Try to add resolution
+      const resMatch = title.match(resolutionPattern);
+      if (resMatch) {
+        screenSpec += ` ${resMatch[1]}`;
+      }
+      
+      // Try to add refresh rate
+      const refreshMatch = title.match(refreshRatePattern);
+      if (refreshMatch) {
+        screenSpec += ` ${refreshMatch[1]}Hz`;
+      }
+      
+      // Try to add panel type
+      const panelMatch = title.match(panelTypePattern);
+      if (panelMatch) {
+        screenSpec += ` ${panelMatch[1]}`;
+      }
+      
+      return screenSpec;
     }
   }
   
