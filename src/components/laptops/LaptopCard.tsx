@@ -24,7 +24,12 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
     }
   });
 
-  const productUrl = `https://amazon.co.uk/dp/${laptop.asin}?tag=with-laptop-discount-20`;
+  // Base product URL with affiliate tag
+  const baseProductUrl = `https://amazon.co.uk/dp/${laptop.asin}?tag=with-laptop-discount-20`;
+  
+  // URLs for different purposes
+  const productUrl = baseProductUrl;
+  const reviewsUrl = `${baseProductUrl}#customerReviews`;
 
   return (
     <Card className="flex p-4 gap-4 hover:shadow-lg transition-shadow">
@@ -68,7 +73,10 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
         />
 
         {laptop.review_data && (
-          <LaptopReviews reviewData={laptop.review_data} />
+          <LaptopReviews 
+            reviewData={laptop.review_data}
+            productUrl={reviewsUrl}
+          />
         )}
       </div>
     </Card>

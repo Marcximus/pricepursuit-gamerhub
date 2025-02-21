@@ -7,6 +7,7 @@ import { ArrowRight } from "lucide-react";
 
 type LaptopReviewsProps = {
   reviewData: NonNullable<Product["review_data"]>;
+  productUrl: string;
 };
 
 type ReviewDialogProps = {
@@ -55,7 +56,7 @@ const ReviewDialog = ({ review, isOpen, onClose }: ReviewDialogProps) => (
   </Dialog>
 );
 
-export function LaptopReviews({ reviewData }: LaptopReviewsProps) {
+export function LaptopReviews({ reviewData, productUrl }: LaptopReviewsProps) {
   const [selectedReview, setSelectedReview] = useState<number | null>(null);
 
   console.log('LaptopReviews received reviewData:', reviewData);
@@ -75,9 +76,11 @@ export function LaptopReviews({ reviewData }: LaptopReviewsProps) {
           console.log(`Rendering review ${index}:`, review);
           return (
             <div key={index}>
-              <button 
-                onClick={() => setSelectedReview(index)}
-                className="w-full text-left text-sm hover:bg-gray-50 p-2 rounded-lg transition-colors group"
+              <a 
+                href={productUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full text-left text-sm hover:bg-gray-50 p-2 rounded-lg transition-colors group"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -97,7 +100,7 @@ export function LaptopReviews({ reviewData }: LaptopReviewsProps) {
                 {review.content && (
                   <p className="text-gray-600 line-clamp-2 mt-1">{review.content}</p>
                 )}
-              </button>
+              </a>
 
               {selectedReview === index && (
                 <ReviewDialog
