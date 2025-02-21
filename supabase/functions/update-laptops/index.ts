@@ -1,6 +1,6 @@
 
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { corsHeaders } from '../_shared/cors.ts'
 
 const OXYLABS_USERNAME = Deno.env.get('OXYLABS_USERNAME')
 const OXYLABS_PASSWORD = Deno.env.get('OXYLABS_PASSWORD')
@@ -12,42 +12,37 @@ interface Laptop {
   asin: string;
 }
 
-// Global state management with batch processing
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Global state management
 const state = {
   isProcessing: false,
   processedCount: 0,
   totalLaptops: 0,
-  batchSize: 5, // Process 5 laptops at a time
+  batchSize: 2, // Reduced batch size to 2
   failedUpdates: [] as Array<{ id: string; asin: string; error: string }>,
   currentBatch: 0
 };
-
-// Process laptops in smaller batches
-async function processBatch(laptops: Laptop[], startIndex: number, supabase: any) {
-  const batchEnd = Math.min(startIndex + state.batchSize, laptops.length);
-  const batch = laptops.slice(startIndex, batchEnd);
-  
-  console.log(`Processing batch ${state.currentBatch + 1}: ${startIndex} to ${batchEnd - 1}`);
-
-  const batchPromises = batch.map(laptop => processLaptop(laptop, supabase));
-  await Promise.allSettled(batchPromises);
-
-  state.processedCount += batch.length;
-  state.currentBatch++;
-
-  // Return true if there are more batches to process
-  return batchEnd < laptops.length;
-}
 
 async function processLaptop(laptop: Laptop, supabase: any) {
   try {
     console.log(`Processing laptop ${laptop.asin}`);
 
-    // Update status to in_progress
-    await supabase
+    // Mark laptop as in_progress
+    const { error: updateError } = await supabase
       .from('products')
-      .update({ update_status: 'in_progress' })
+      .update({ 
+        update_status: 'in_progress',
+        last_checked: new Date().toISOString()
+      })
       .eq('id', laptop.id);
+
+    if (updateError) {
+      throw new Error(`Failed to mark laptop as in_progress: ${updateError.message}`);
+    }
 
     // Make request to Oxylabs API
     const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
@@ -77,13 +72,13 @@ async function processLaptop(laptop: Laptop, supabase: any) {
     }
 
     const content = data.results[0].content;
-
-    // Save all the information we get back
+    
+    // Prepare update data
     const updateData = {
       title: content.title,
       description: content.description,
       current_price: content.price?.current,
-      original_price: content.price?.previous,
+      original_price: content.price?.previous || content.price?.current,
       rating: content.rating,
       rating_count: content.rating_breakdown?.total_count,
       image_url: content.images?.[0],
@@ -101,24 +96,22 @@ async function processLaptop(laptop: Laptop, supabase: any) {
       last_updated: new Date().toISOString()
     };
 
-    // If we have a current price, store it in price_history
-    if (content.price?.current) {
-      await supabase
-        .from('price_history')
-        .insert({
-          product_id: laptop.id,
-          price: content.price.current,
-          timestamp: new Date().toISOString()
-        });
+    // Call the database function to update product
+    const { error: dbError } = await supabase.rpc(
+      'update_product_with_price_history',
+      { 
+        p_product_id: laptop.id,
+        p_price: content.price?.current,
+        p_update_data: updateData
+      }
+    );
+
+    if (dbError) {
+      throw new Error(`Database update error: ${dbError.message}`);
     }
 
-    // Update product with all new information
-    await supabase
-      .from('products')
-      .update(updateData)
-      .eq('id', laptop.id);
-
     console.log(`Successfully updated laptop ${laptop.asin}`);
+    return true;
 
   } catch (error) {
     console.error(`Error processing laptop ${laptop.asin}:`, error);
@@ -128,21 +121,50 @@ async function processLaptop(laptop: Laptop, supabase: any) {
       error: error.message 
     });
     
-    // Update status to error for this specific laptop
-    await supabase
-      .from('products')
-      .update({ 
-        update_status: 'error',
-        last_checked: new Date().toISOString()
-      })
-      .eq('id', laptop.id);
+    try {
+      await supabase
+        .from('products')
+        .update({ 
+          update_status: 'error',
+          last_checked: new Date().toISOString()
+        })
+        .eq('id', laptop.id);
+    } catch (statusError) {
+      console.error(`Failed to update error status for ${laptop.asin}:`, statusError);
+    }
+    
+    return false;
   }
-
-  // Small delay between processing each laptop to avoid rate limiting
-  await new Promise(resolve => setTimeout(resolve, 500));
 }
 
-// Main processing function that handles batches
+async function processBatch(laptops: Laptop[], startIndex: number, supabase: any) {
+  try {
+    const batchEnd = Math.min(startIndex + state.batchSize, laptops.length);
+    const batch = laptops.slice(startIndex, batchEnd);
+    
+    console.log(`Processing batch ${state.currentBatch + 1}: ${startIndex} to ${batchEnd - 1}`);
+
+    for (const laptop of batch) {
+      await processLaptop(laptop, supabase);
+      // Add a delay between individual laptop processing
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    state.processedCount += batch.length;
+    state.currentBatch++;
+
+    console.log(`Batch ${state.currentBatch} complete. Processed ${state.processedCount}/${state.totalLaptops} laptops`);
+    
+    // Add a longer delay between batches
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    return batchEnd < laptops.length;
+  } catch (error) {
+    console.error(`Error in batch ${state.currentBatch}:`, error);
+    throw error;
+  }
+}
+
 async function processAllLaptops(laptops: Laptop[], supabase: any) {
   if (state.isProcessing) {
     console.log('Already processing laptops, skipping...');
@@ -163,12 +185,7 @@ async function processAllLaptops(laptops: Laptop[], supabase: any) {
       const hasMoreBatches = await processBatch(laptops, currentIndex, supabase);
       currentIndex += state.batchSize;
       
-      console.log(`Completed batch ${state.currentBatch}. Progress: ${state.processedCount}/${state.totalLaptops}`);
-      
       if (!hasMoreBatches) break;
-      
-      // Add a small delay between batches
-      await new Promise(resolve => setTimeout(resolve, 1000));
     }
   } catch (error) {
     console.error('Error in batch processing:', error);
@@ -181,15 +198,12 @@ async function processAllLaptops(laptops: Laptop[], supabase: any) {
   }
 }
 
-// Main request handler
-Deno.serve(async (req) => {
-  // Handle CORS preflight requests
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Parse and validate request body
     const { laptops } = await req.json();
     
     if (!laptops || !Array.isArray(laptops) || laptops.length === 0) {
@@ -232,7 +246,6 @@ Deno.serve(async (req) => {
   }
 });
 
-// Handle function shutdown
 addEventListener('beforeunload', (ev) => {
   console.log('Function shutdown initiated:', ev.detail?.reason);
   console.log(`Progress: ${state.processedCount}/${state.totalLaptops} laptops processed`);
