@@ -1,5 +1,5 @@
 
-import { OxylabsResponse } from './types';
+import { OxylabsResponse } from './types.ts';
 
 export async function fetchLaptopData(asin: string, username: string, password: string): Promise<OxylabsResponse> {
   const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
