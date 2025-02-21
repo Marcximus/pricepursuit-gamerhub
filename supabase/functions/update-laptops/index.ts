@@ -57,35 +57,57 @@ Deno.serve(async (req) => {
         const data = await response.json()
         console.log(`Got Oxylabs response for ${laptop.asin}:`, data)
 
-        // Update product in database with ALL information
+        if (!data.results || !data.results[0] || !data.results[0].content) {
+          throw new Error('Invalid response format from Oxylabs')
+        }
+
+        const content = data.results[0].content
+
+        // Save all the information we get back
+        const updateData = {
+          title: content.title,
+          description: content.description,
+          current_price: content.price?.current,
+          original_price: content.price?.previous,
+          rating: content.rating,
+          rating_count: content.rating_breakdown?.total_count,
+          image_url: content.images?.[0],
+          review_data: content.reviews,
+          processor: content.specifications?.processor,
+          ram: content.specifications?.ram,
+          storage: content.specifications?.storage,
+          graphics: content.specifications?.graphics,
+          screen_size: content.specifications?.screen_size,
+          screen_resolution: content.specifications?.screen_resolution,
+          weight: content.specifications?.weight,
+          battery_life: content.specifications?.battery_life,
+          update_status: 'completed',
+          last_checked: new Date().toISOString(),
+          last_updated: new Date().toISOString()
+        }
+
+        // If we have a current price, store it in price_history
+        if (content.price?.current) {
+          await supabase
+            .from('price_history')
+            .insert({
+              product_id: laptop.id,
+              price: content.price.current,
+              timestamp: new Date().toISOString()
+            })
+        }
+
+        // Update product with all new information
         const { error: updateError } = await supabase
           .from('products')
-          .update({
-            title: data.results[0].content.title,
-            description: data.results[0].content.description,
-            current_price: data.results[0].content.price?.current,
-            original_price: data.results[0].content.price?.previous,
-            rating: data.results[0].content.rating,
-            rating_count: data.results[0].content.rating_breakdown?.total_count,
-            image_url: data.results[0].content.images?.[0],
-            review_data: data.results[0].content.reviews,
-            processor: data.results[0].content.specifications?.processor,
-            ram: data.results[0].content.specifications?.ram,
-            storage: data.results[0].content.specifications?.storage,
-            graphics: data.results[0].content.specifications?.graphics,
-            screen_size: data.results[0].content.specifications?.screen_size,
-            screen_resolution: data.results[0].content.specifications?.screen_resolution,
-            weight: data.results[0].content.specifications?.weight,
-            battery_life: data.results[0].content.specifications?.battery_life,
-            update_status: 'completed',
-            last_checked: new Date().toISOString(),
-            last_updated: new Date().toISOString()
-          })
+          .update(updateData)
           .eq('id', laptop.id)
 
         if (updateError) {
           throw updateError
         }
+
+        console.log(`Successfully updated laptop ${laptop.asin}`)
 
         // Wait 1 second before processing next laptop
         await new Promise(resolve => setTimeout(resolve, 1000))
@@ -117,4 +139,3 @@ Deno.serve(async (req) => {
     )
   }
 })
-
