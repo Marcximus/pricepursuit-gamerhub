@@ -17,7 +17,7 @@ export const useLaptops = () => {
         
         const { data, error } = await supabase
           .from('products')
-          .select('*')
+          .select('*, product_reviews(*)')
           .eq('is_laptop', true)
           .order('created_at', { ascending: false });
 
@@ -44,6 +44,7 @@ export const useLaptops = () => {
         // Log collection and update status
         const pendingCollection = data.filter(l => l.collection_status === 'pending').length;
         const updatingLaptops = data.filter(l => l.update_status === 'updating').length;
+        const missingPrices = data.filter(l => l.current_price === null).length;
         
         if (pendingCollection > 0) {
           console.log(`${pendingCollection} laptops pending collection`);
@@ -51,6 +52,14 @@ export const useLaptops = () => {
         
         if (updatingLaptops > 0) {
           console.log(`${updatingLaptops} laptops being updated`);
+        }
+
+        if (missingPrices > 0) {
+          console.log(`${missingPrices} laptops missing price information`);
+          // Trigger updates for laptops with missing prices
+          if (!updatingLaptops) {
+            updateLaptops();
+          }
         }
 
         console.log(`Found ${data.length} laptops in database`);

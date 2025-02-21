@@ -19,14 +19,34 @@ export const processLaptopData = (laptop: any): Product => {
     }
   }
 
+  // Calculate average rating and total reviews from review data if not available directly
+  let avgRating = laptop.average_rating;
+  let totalReviews = laptop.total_reviews;
+  
+  if ((!avgRating || !totalReviews) && parsedReviewData?.rating_breakdown) {
+    const ratings = Object.entries(parsedReviewData.rating_breakdown)
+      .map(([rating, count]) => ({
+        rating: parseInt(rating),
+        count: typeof count === 'number' ? count : 0
+      }));
+    
+    if (ratings.length > 0) {
+      const total = ratings.reduce((sum, { count }) => sum + count, 0);
+      const weightedSum = ratings.reduce((sum, { rating, count }) => sum + (rating * count), 0);
+      
+      totalReviews = total;
+      avgRating = total > 0 ? weightedSum / total : null;
+    }
+  }
+
   const processed = {
     id: laptop.id,
     asin: laptop.asin,
     title: processTitle(laptop.title || ''),
     current_price: laptop.current_price || null,
     original_price: laptop.original_price || null,
-    rating: laptop.rating || null,
-    rating_count: laptop.rating_count || null,
+    rating: avgRating || null,
+    rating_count: totalReviews || null,
     image_url: laptop.image_url || null,
     product_url: laptop.product_url || null,
     last_checked: laptop.last_checked || null,
@@ -41,8 +61,8 @@ export const processLaptopData = (laptop: any): Product => {
     benchmark_score: laptop.benchmark_score || null,
     weight: processWeight(laptop.weight, laptop.title || ''),
     battery_life: processBatteryLife(laptop.battery_life, laptop.title || ''),
-    total_reviews: laptop.total_reviews || null,
-    average_rating: laptop.average_rating || null,
+    total_reviews: totalReviews || null,
+    average_rating: avgRating || null,
     review_data: parsedReviewData || null
   };
 

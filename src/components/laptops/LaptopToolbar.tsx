@@ -1,5 +1,5 @@
 
-import { ReloadIcon, UpdateIcon, ScanIcon } from "@radix-ui/react-icons";
+import { ReloadIcon, UpdateIcon, SearchIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { LaptopSort, type SortOption } from "@/components/laptops/LaptopSort";
 
@@ -47,7 +47,7 @@ export function LaptopToolbar({
             disabled={isLoading || isRefetching}
             className="flex items-center gap-2"
           >
-            <ScanIcon className="h-4 w-4" />
+            <SearchIcon className="h-4 w-4" />
             Discover Laptops
           </Button>
         </div>
