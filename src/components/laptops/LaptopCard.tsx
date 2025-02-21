@@ -12,43 +12,37 @@ type LaptopCardProps = {
 };
 
 export function LaptopCard({ laptop }: LaptopCardProps) {
-  // Add detailed logging for debugging
-  console.log('Rendering laptop:', {
-    id: laptop.id,
-    title: laptop.title,
-    asin: laptop.asin,
-    currentPrice: laptop.current_price,
-    originalPrice: laptop.original_price,
-    lastChecked: laptop.last_checked,
-    updateStatus: laptop.update_status,
-    specs: {
-      processor: laptop.processor,
-      ram: laptop.ram,
-      storage: laptop.storage,
-      graphics: laptop.graphics,
-      screenSize: laptop.screen_size,
-    }
-  });
-
-  // Input validation
-  if (!laptop.asin || !laptop.title) {
-    console.error('Invalid laptop data:', laptop);
+  // Validate required fields
+  if (!laptop || !laptop.id) {
+    console.error('Invalid laptop data received:', laptop);
     return null;
   }
 
+  // Detailed logging for debugging
+  console.log('Rendering LaptopCard:', {
+    id: laptop.id,
+    title: laptop.title || 'No title',
+    hasPrice: Boolean(laptop.current_price),
+    hasImage: Boolean(laptop.image_url),
+    hasSpecs: Boolean(laptop.processor || laptop.ram || laptop.storage || laptop.graphics),
+    hasReviews: Boolean(laptop.review_data?.recent_reviews?.length)
+  });
+
   // Base product URL with affiliate tag
-  const baseProductUrl = `https://amazon.com/dp/${laptop.asin}?tag=with-laptop-discount-20`;
+  const baseProductUrl = laptop.asin 
+    ? `https://amazon.com/dp/${laptop.asin}?tag=with-laptop-discount-20`
+    : '';
   
   // URLs for different purposes
   const productUrl = baseProductUrl;
-  const reviewsUrl = `${baseProductUrl}#customerReviews`;
+  const reviewsUrl = laptop.asin ? `${baseProductUrl}#customerReviews` : '';
 
   return (
     <Card className="flex p-4 gap-4 hover:shadow-lg transition-shadow">
       {/* Left side - Image and Price */}
       <div className="flex flex-col items-center gap-2 w-40">
         <LaptopImage 
-          title={laptop.title}
+          title={laptop.title || 'Laptop'}
           imageUrl={laptop.image_url}
           productUrl={productUrl}
         />
@@ -59,7 +53,7 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
           productUrl={productUrl}
         />
 
-        {laptop.average_rating && (
+        {laptop.average_rating && laptop.average_rating > 0 && (
           <LaptopRating 
             rating={laptop.average_rating}
             totalReviews={laptop.total_reviews}
@@ -71,7 +65,7 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
       {/* Right side - Specs and Reviews */}
       <div className="flex-1">
         <LaptopSpecs 
-          title={laptop.title}
+          title={laptop.title || 'Untitled Laptop'}
           productUrl={productUrl}
           specs={{
             screenSize: laptop.screen_size,
@@ -84,7 +78,7 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
           }}
         />
 
-        {laptop.review_data && laptop.review_data.recent_reviews && laptop.review_data.recent_reviews.length > 0 && (
+        {laptop.review_data?.recent_reviews && laptop.review_data.recent_reviews.length > 0 && (
           <LaptopReviews 
             reviewData={laptop.review_data}
             productUrl={reviewsUrl}
