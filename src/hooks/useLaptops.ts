@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -56,35 +57,52 @@ export const useLaptops = () => {
           return [];
         }
 
-        // Check for laptops needing updates
-        const outdatedLaptops = laptopsWithReviews.filter(laptop => {
-          const lastChecked = laptop.last_checked ? new Date(laptop.last_checked) : null;
-          const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-          return !laptop.current_price || !lastChecked || lastChecked < oneDayAgo;
-        });
+        // Check for in-progress updates first
+        const { count: updatesInProgress } = await supabase
+          .from('products')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_laptop', true)
+          .eq('update_status', 'in_progress');
 
-        if (outdatedLaptops.length > 0) {
-          console.log(`Found ${outdatedLaptops.length} laptops needing updates`);
-          try {
-            await updateLaptops();
-          } catch (error) {
-            console.error('Failed to trigger updates:', error);
-            // Continue processing existing data even if update fails
+        const { count: refreshInProgress } = await supabase
+          .from('products')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_laptop', true)
+          .eq('collection_status', 'refreshing');
+
+        // Only proceed with updates if nothing is currently in progress
+        if (!updatesInProgress) {
+          // Check for laptops needing updates - more conservative timeout (2 days)
+          const outdatedLaptops = laptopsWithReviews.filter(laptop => {
+            const lastChecked = laptop.last_checked ? new Date(laptop.last_checked) : null;
+            const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+            return !laptop.current_price || !lastChecked || lastChecked < twoDaysAgo;
+          });
+
+          if (outdatedLaptops.length > 0) {
+            console.log(`Found ${outdatedLaptops.length} laptops needing updates`);
+            try {
+              await updateLaptops();
+            } catch (error) {
+              console.error('Failed to trigger updates:', error);
+            }
           }
         }
 
-        // Check for laptops missing brand/model
-        const incompleteLaptops = laptopsWithReviews.filter(laptop => 
-          !laptop.brand || !laptop.model
-        );
+        // Only proceed with brand/model refresh if nothing is currently in progress
+        if (!refreshInProgress) {
+          // Check for laptops missing brand/model
+          const incompleteLaptops = laptopsWithReviews.filter(laptop => 
+            !laptop.brand || !laptop.model
+          );
 
-        if (incompleteLaptops.length > 0) {
-          console.log(`Found ${incompleteLaptops.length} laptops missing brand/model info`);
-          try {
-            await refreshBrandModels();
-          } catch (error) {
-            console.error('Failed to trigger brand/model refresh:', error);
-            // Continue processing existing data even if refresh fails
+          if (incompleteLaptops.length > 0) {
+            console.log(`Found ${incompleteLaptops.length} laptops missing brand/model info`);
+            try {
+              await refreshBrandModels();
+            } catch (error) {
+              console.error('Failed to trigger brand/model refresh:', error);
+            }
           }
         }
 
@@ -92,14 +110,12 @@ export const useLaptops = () => {
         const processedLaptops = laptopsWithReviews.map((laptop) => {
           const reviews = laptop.product_reviews || [];
           
-          // Calculate average rating from reviews if available, otherwise use the rating from search
           let avgRating = laptop.rating;
           if (!avgRating && reviews.length > 0) {
             const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
             avgRating = totalRating / reviews.length;
           }
 
-          // Structure review data
           const reviewData = {
             rating_breakdown: {},
             recent_reviews: reviews.map(review => ({
@@ -113,7 +129,6 @@ export const useLaptops = () => {
             }))
           };
 
-          // Calculate rating breakdown
           if (reviews.length > 0) {
             reviewData.rating_breakdown = reviews.reduce((acc: any, review) => {
               acc[review.rating] = (acc[review.rating] || 0) + 1;
@@ -129,7 +144,6 @@ export const useLaptops = () => {
           };
         });
 
-        // Process each laptop through the existing processor
         console.log(`Processing ${processedLaptops.length} laptops...`);
         return processedLaptops.map(laptop => processLaptopData(laptop as Product));
       } catch (error) {
@@ -137,8 +151,8 @@ export const useLaptops = () => {
         throw error;
       }
     },
-    staleTime: 1000 * 30, // Data stays fresh for 30 seconds
-    refetchInterval: 1000 * 60, // Check for updates every minute
+    staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
+    refetchInterval: 1000 * 60 * 15, // Check for updates every 15 minutes
     retryDelay: 1000,
     retry: 3,
   });
