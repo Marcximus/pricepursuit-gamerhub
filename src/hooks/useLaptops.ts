@@ -57,52 +57,37 @@ export const useLaptops = () => {
           return [];
         }
 
-        // Check for in-progress updates first
-        const { count: updatesInProgress } = await supabase
-          .from('products')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_laptop', true)
-          .eq('update_status', 'in_progress');
+        // Check for laptops needing updates
+        const outdatedLaptops = laptopsWithReviews.filter(laptop => {
+          const lastChecked = laptop.last_checked ? new Date(laptop.last_checked) : null;
+          const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000); // Change to 24 hours instead of 48
+          return !lastChecked || lastChecked < oneDayAgo || !laptop.current_price;
+        });
 
-        const { count: refreshInProgress } = await supabase
-          .from('products')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_laptop', true)
-          .eq('collection_status', 'refreshing');
-
-        // Only proceed with updates if nothing is currently in progress
-        if (!updatesInProgress) {
-          // Check for laptops needing updates - include those with zero prices
-          const outdatedLaptops = laptopsWithReviews.filter(laptop => {
-            const lastChecked = laptop.last_checked ? new Date(laptop.last_checked) : null;
-            const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
-            return !laptop.current_price || laptop.current_price === 0 || !lastChecked || lastChecked < twoDaysAgo;
-          });
-
-          if (outdatedLaptops.length > 0) {
-            console.log(`Found ${outdatedLaptops.length} laptops needing updates (including zero prices)`);
-            try {
-              await updateLaptops();
-            } catch (error) {
-              console.error('Failed to trigger updates:', error);
-            }
+        if (outdatedLaptops.length > 0) {
+          console.log(`Found ${outdatedLaptops.length} laptops needing price updates`);
+          try {
+            await updateLaptops();
+            toast({
+              title: "Updating prices",
+              description: `Updating prices for ${outdatedLaptops.length} laptops`,
+            });
+          } catch (error) {
+            console.error('Failed to trigger updates:', error);
           }
         }
 
-        // Only proceed with brand/model refresh if nothing is currently in progress
-        if (!refreshInProgress) {
-          // Check for laptops missing brand/model
-          const incompleteLaptops = laptopsWithReviews.filter(laptop => 
-            !laptop.brand || !laptop.model
-          );
+        // Check for laptops missing brand/model
+        const incompleteLaptops = laptopsWithReviews.filter(laptop => 
+          !laptop.brand || !laptop.model
+        );
 
-          if (incompleteLaptops.length > 0) {
-            console.log(`Found ${incompleteLaptops.length} laptops missing brand/model info`);
-            try {
-              await refreshBrandModels();
-            } catch (error) {
-              console.error('Failed to trigger brand/model refresh:', error);
-            }
+        if (incompleteLaptops.length > 0) {
+          console.log(`Found ${incompleteLaptops.length} laptops missing brand/model info`);
+          try {
+            await refreshBrandModels();
+          } catch (error) {
+            console.error('Failed to trigger brand/model refresh:', error);
           }
         }
 
@@ -152,7 +137,7 @@ export const useLaptops = () => {
       }
     },
     staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
-    refetchInterval: 1000 * 60 * 15, // Check for updates every 15 minutes
+    refetchInterval: 1000 * 60 * 5, // Check for updates every 5 minutes
     retryDelay: 1000,
     retry: 3,
   });
