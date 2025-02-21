@@ -13,18 +13,33 @@ interface Laptop {
 }
 
 Deno.serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!)
-    const { laptops } = await req.json()
+    // Parse and validate request body
+    const body = await req.json()
+    if (!body || !body.laptops || !Array.isArray(body.laptops)) {
+      throw new Error('Invalid request body: laptops array is required')
+    }
+
+    const laptops = body.laptops as Laptop[]
+    if (laptops.length === 0) {
+      throw new Error('No laptops provided in request')
+    }
 
     console.log(`Starting update process for ${laptops.length} laptops...`)
+    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!)
 
     // Process laptops one by one with a 1-second delay
     for (const laptop of laptops) {
+      if (!laptop.id || !laptop.asin) {
+        console.error('Invalid laptop data:', laptop)
+        continue
+      }
+
       console.log(`Processing laptop ${laptop.asin}...`)
 
       try {
