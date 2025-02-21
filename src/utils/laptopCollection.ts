@@ -7,15 +7,22 @@ export const collectLaptops = async () => {
     console.log('Triggering laptop collection...');
     
     // First update all existing laptops to pending status
-    await supabase
+    const { data: updatedLaptops, error: updateError } = await supabase
       .from('products')
       .update({ collection_status: 'pending' })
-      .eq('is_laptop', true);
+      .eq('is_laptop', true)
+      .select();
+
+    if (updateError) {
+      console.error('Error updating laptop status:', updateError);
+      throw updateError;
+    }
+    console.log(`Updated ${updatedLaptops?.length || 0} laptops to pending status`);
     
     const { data, error } = await supabase.functions.invoke('collect-laptops', {
       body: { 
         action: 'collect',
-        mode: 'discovery' // This indicates we want to discover new laptops
+        mode: 'discovery'
       }
     });
     
@@ -50,8 +57,21 @@ export const updateLaptops = async () => {
   try {
     console.log('Triggering laptop updates...');
     
+    // Get count of laptops that need updating
+    const { count: updateCount, error: countError } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_laptop', true)
+      .or('current_price.is.null,last_checked.lt.now()-interval\'1 day\'');
+
+    if (countError) {
+      console.error('Error counting laptops to update:', countError);
+      throw countError;
+    }
+    console.log(`Found ${updateCount} laptops that need updating`);
+    
     const { data, error } = await supabase.functions.invoke('update-laptops', {
-      body: {}
+      body: { count: updateCount }
     });
     
     if (error) {
@@ -80,4 +100,3 @@ export const updateLaptops = async () => {
     throw error;
   }
 };
-

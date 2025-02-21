@@ -9,17 +9,22 @@ type LaptopCardProps = {
 };
 
 export function LaptopCard({ laptop }: LaptopCardProps) {
-  // Add more detailed console log to debug the data
-  console.log('Laptop data for rendering:', {
+  // Add more detailed console log for debugging price issues
+  console.log('Rendering laptop:', {
     id: laptop.id,
     title: laptop.title,
-    price: laptop.current_price,
+    price: {
+      current: laptop.current_price,
+      original: laptop.original_price,
+      type: typeof laptop.current_price,
+      isValid: typeof laptop.current_price === 'number' && !isNaN(laptop.current_price)
+    },
     image: laptop.image_url,
     url: laptop.product_url,
     reviews: {
       total: laptop.total_reviews,
       average: laptop.average_rating,
-      data: laptop.review_data
+      hasData: !!laptop.review_data
     }
   });
   
@@ -191,4 +196,3 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
     </Card>
   );
 }
-
