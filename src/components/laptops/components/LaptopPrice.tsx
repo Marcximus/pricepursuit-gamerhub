@@ -13,7 +13,7 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
       console.log('Invalid price value:', price);
       return 'Price not available';
     }
-    return `$${price.toFixed(2)}`;
+    return `$${Math.floor(price)}`;
   };
 
   // If both prices are zero, it likely means they haven't been fetched yet
@@ -42,11 +42,6 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
       <div className="text-xl font-bold text-blue-600 hover:text-blue-800">
         {formatPrice(currentPrice)}
       </div>
-      {originalPrice && originalPrice > (currentPrice || 0) && (
-        <div className="text-sm text-gray-500 line-through">
-          {formatPrice(originalPrice)}
-        </div>
-      )}
     </a>
   );
 }
