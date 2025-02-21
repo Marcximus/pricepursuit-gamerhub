@@ -19,7 +19,6 @@ export const useLaptops = () => {
           .from('products')
           .select('*')
           .eq('is_laptop', true)
-          .eq('collection_status', 'collected')
           .order('created_at', { ascending: false });
 
         if (error) {
@@ -29,38 +28,25 @@ export const useLaptops = () => {
 
         if (!data || data.length === 0) {
           console.log('No laptops found in database');
-          
-          // Check if there are any laptops in pending state
-          const { data: pendingData } = await supabase
-            .from('products')
-            .select('*')
-            .eq('is_laptop', true)
-            .eq('collection_status', 'pending');
-            
-          if (!pendingData || pendingData.length === 0) {
-            console.log('No pending laptops found, starting initial collection...');
-            toast({
-              title: "Starting laptop collection",
-              description: "No laptops found. Starting initial collection...",
-            });
-            try {
-              await collectLaptops();
-            } catch (error) {
-              console.error('Failed to start initial collection:', error);
-              throw error;
-            }
-          } else {
-            console.log('Found pending laptops, collection in progress...');
-            toast({
-              title: "Collection in progress",
-              description: "Laptop collection is in progress. Please wait...",
-            });
+          toast({
+            title: "No laptops found",
+            description: "Starting initial laptop collection...",
+          });
+          try {
+            await collectLaptops();
+          } catch (error) {
+            console.error('Failed to start initial collection:', error);
+            throw error;
           }
           return [];
         }
 
         console.log(`Found ${data.length} laptops from database`);
-        return data.map(laptop => processLaptopData(laptop as any));
+        return data.map(laptop => {
+          const processed = processLaptopData(laptop as Product);
+          console.log('Processed laptop:', processed);
+          return processed;
+        });
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
         throw error;

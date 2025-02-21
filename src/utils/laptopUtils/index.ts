@@ -17,21 +17,33 @@ export const processLaptopData = (laptop: any): Product => {
       console.error('Error parsing review data:', error);
       parsedReviewData = undefined;
     }
-  } else if (laptop.review_data === null) {
-    parsedReviewData = undefined;
   }
 
   const processed = {
-    ...laptop,
+    id: laptop.id,
+    asin: laptop.asin,
     title: processTitle(laptop.title || ''),
+    current_price: laptop.current_price || null,
+    original_price: laptop.original_price || null,
+    rating: laptop.rating || null,
+    rating_count: laptop.rating_count || null,
+    image_url: laptop.image_url || null,
+    product_url: laptop.product_url || null,
+    last_checked: laptop.last_checked || null,
+    created_at: laptop.created_at || null,
     processor: processProcessor(laptop.processor, laptop.title || ''),
+    processor_score: laptop.processor_score || null,
     ram: processRam(laptop.ram, laptop.title || ''),
     storage: processStorage(laptop.storage, laptop.title || ''),
-    graphics: processGraphics(laptop.graphics, laptop.title || ''),
     screen_size: processScreenSize(laptop.screen_size, laptop.title || ''),
+    screen_resolution: laptop.screen_resolution || null,
+    graphics: processGraphics(laptop.graphics, laptop.title || ''),
+    benchmark_score: laptop.benchmark_score || null,
     weight: processWeight(laptop.weight, laptop.title || ''),
     battery_life: processBatteryLife(laptop.battery_life, laptop.title || ''),
-    review_data: parsedReviewData
+    total_reviews: laptop.total_reviews || null,
+    average_rating: laptop.average_rating || null,
+    review_data: parsedReviewData || null
   };
 
   console.log('Processed laptop:', processed);
