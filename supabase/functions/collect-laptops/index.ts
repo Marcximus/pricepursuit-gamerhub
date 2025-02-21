@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 
 const corsHeaders = {
@@ -259,7 +260,7 @@ async function collectLaptopsTask() {
         domain: 'com',
         geo_location: '90210',
         start_page: '1',
-        pages: '2',
+        pages: '5', // Increased from 2 to 5 pages per query
         parse: true
       }
 
@@ -293,69 +294,77 @@ async function collectLaptopsTask() {
 
         console.log(`Found ${results.length} results for query: ${query}`)
 
-        // Process and store each product
-        for (const item of results) {
-          if (!item.asin || foundAsins.has(item.asin)) continue
-
-          foundAsins.add(item.asin)
+        // Process results in smaller batches to avoid overwhelming the database
+        const BATCH_SIZE = 20;
+        for (let i = 0; i < results.length; i += BATCH_SIZE) {
+          const batch = results.slice(i, i + BATCH_SIZE);
           
-          const currentPrice = typeof item.price?.value === 'string' 
-            ? parseFloat(item.price.value.replace(/[^0-9.]/g, '')) 
-            : (typeof item.price?.value === 'number' ? item.price.value : 0)
-          
-          const originalPrice = typeof item.price?.before_price === 'string'
-            ? parseFloat(item.price.before_price.replace(/[^0-9.]/g, ''))
-            : (currentPrice || 0)
+          for (const item of batch) {
+            if (!item.asin || foundAsins.has(item.asin)) continue
 
-          // Check if it's actually a laptop
-          const isLaptop = (item.title || '').toLowerCase().includes('laptop') ||
-                          (item.title || '').toLowerCase().includes('notebook') ||
-                          (item.title || '').toLowerCase().includes('macbook') ||
-                          (item.title || '').toLowerCase().includes('chromebook') ||
-                          (item.title || '').toLowerCase().includes('2 in 1') ||
-                          (item.title || '').toLowerCase().includes('2-in-1')
+            foundAsins.add(item.asin)
+            
+            const currentPrice = typeof item.price?.value === 'string' 
+              ? parseFloat(item.price.value.replace(/[^0-9.]/g, '')) 
+              : (typeof item.price?.value === 'number' ? item.price.value : 0)
+            
+            const originalPrice = typeof item.price?.before_price === 'string'
+              ? parseFloat(item.price.before_price.replace(/[^0-9.]/g, ''))
+              : (currentPrice || 0)
 
-          if (!isLaptop) {
-            console.log(`Skipping non-laptop item: ${item.title}`)
-            continue
+            // Check if it's actually a laptop
+            const isLaptop = (item.title || '').toLowerCase().includes('laptop') ||
+                            (item.title || '').toLowerCase().includes('notebook') ||
+                            (item.title || '').toLowerCase().includes('macbook') ||
+                            (item.title || '').toLowerCase().includes('chromebook') ||
+                            (item.title || '').toLowerCase().includes('2 in 1') ||
+                            (item.title || '').toLowerCase().includes('2-in-1')
+
+            if (!isLaptop) {
+              console.log(`Skipping non-laptop item: ${item.title}`)
+              continue
+            }
+
+            // Prepare product data
+            const productData = {
+              asin: item.asin,
+              title: item.title,
+              current_price: currentPrice,
+              original_price: originalPrice,
+              rating: parseFloat(item.rating || '0'),
+              rating_count: parseInt(item.rating_count?.replace(/,/g, '') || '0', 10),
+              image_url: item.image,
+              product_url: `https://www.amazon.com/dp/${item.asin}`,
+              processor: extractProcessor(item.title || ''),
+              ram: extractRAM(item.title || ''),
+              storage: extractStorage(item.title || ''),
+              screen_size: extractScreenSize(item.title || ''),
+              graphics: extractGraphics(item.title || ''),
+              is_laptop: true,
+              processor_score: calculateProcessorScore(item.title || ''),
+              benchmark_score: calculateBenchmarkScore(calculateProcessorScore(item.title || ''), item.title || ''),
+              last_checked: new Date().toISOString()
+            }
+
+            console.log(`Processing laptop: ${productData.title}`)
+
+            // Upsert the product into the database
+            const { error } = await supabaseClient
+              .from('products')
+              .upsert(productData, { 
+                onConflict: 'asin',
+                ignoreDuplicates: false 
+              })
+
+            if (error) {
+              console.error(`Error upserting product ${item.asin}:`, error)
+            } else {
+              console.log(`Successfully saved laptop: ${item.asin}`)
+            }
           }
 
-          // Prepare product data
-          const productData = {
-            asin: item.asin,
-            title: item.title,
-            current_price: currentPrice,
-            original_price: originalPrice,
-            rating: parseFloat(item.rating || '0'),
-            rating_count: parseInt(item.rating_count?.replace(/,/g, '') || '0', 10),
-            image_url: item.image,
-            product_url: `https://www.amazon.com/dp/${item.asin}`,
-            processor: extractProcessor(item.title || ''),
-            ram: extractRAM(item.title || ''),
-            storage: extractStorage(item.title || ''),
-            screen_size: extractScreenSize(item.title || ''),
-            graphics: extractGraphics(item.title || ''),
-            is_laptop: true,
-            processor_score: calculateProcessorScore(item.title || ''),
-            benchmark_score: calculateBenchmarkScore(calculateProcessorScore(item.title || ''), item.title || ''),
-            last_checked: new Date().toISOString()
-          }
-
-          console.log(`Processing laptop: ${productData.title}`)
-
-          // Upsert the product into the database
-          const { error } = await supabaseClient
-            .from('products')
-            .upsert(productData, { 
-              onConflict: 'asin',
-              ignoreDuplicates: false 
-            })
-
-          if (error) {
-            console.error(`Error upserting product ${item.asin}:`, error)
-          } else {
-            console.log(`Successfully saved laptop: ${item.asin}`)
-          }
+          // Add a small delay between batches to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 500))
         }
 
         // Add a delay between queries to respect rate limits
@@ -402,3 +411,4 @@ Deno.serve(async (req) => {
     }, 500)
   }
 })
+
