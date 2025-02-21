@@ -24,10 +24,17 @@ export const useFilteredLaptops = (
         }
 
         // Brand filter
-        if (filters.brand !== "all-brands" && laptop.brand) {
-          const brandMatches = laptop.brand.toLowerCase() === filters.brand.toLowerCase();
+        if (filters.brand !== "all-brands") {
+          if (!laptop.brand) {
+            console.log('Laptop has no brand:', laptop.title);
+            return false;
+          }
+          const laptopBrand = laptop.brand.toLowerCase().trim();
+          const selectedBrand = filters.brand.toLowerCase().trim();
+          const brandMatches = laptopBrand === selectedBrand;
+          
           if (!brandMatches) {
-            console.log(`Brand filter mismatch - Laptop brand: ${laptop.brand}, Filter: ${filters.brand}`);
+            console.log(`Brand mismatch - Laptop: "${laptopBrand}", Filter: "${selectedBrand}"`);
             return false;
           }
         }
