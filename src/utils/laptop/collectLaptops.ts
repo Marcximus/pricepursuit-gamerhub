@@ -12,9 +12,10 @@ const BRANDS_PER_BATCH = 2;
 
 export const collectLaptops = async () => {
   try {
-    console.log('Starting laptop collection...');
+    console.log('Starting laptop collection process...');
     
     // Check collection status first
+    console.log('Checking if collection is already in progress...');
     const { data: statusData, error: statusError } = await supabase
       .from('products')
       .select('asin, current_price, collection_status')
@@ -23,11 +24,11 @@ export const collectLaptops = async () => {
 
     if (statusError) {
       console.error('Error checking collection status:', statusError);
-      throw statusError;
+      throw new Error(`Failed to check collection status: ${statusError.message}`);
     }
 
     if (statusData && statusData.length > 0) {
-      console.log('Collection already in progress');
+      console.log('Collection already in progress, aborting');
       toast({
         title: "Collection in progress",
         description: "Please wait for the current collection to complete",
@@ -35,15 +36,15 @@ export const collectLaptops = async () => {
       return null;
     }
 
-    // Log current price data for debugging
-    const { data: priceCheck, error: priceError } = await supabase
+    // Log current database state for debugging
+    const { data: dbState, error: dbError } = await supabase
       .from('products')
-      .select('asin, current_price')
-      .is('current_price', null)
-      .limit(5);
+      .select('collection_status, current_price')
+      .limit(10);
 
-    if (priceCheck) {
-      console.log('Sample of products missing prices:', priceCheck);
+    console.log('Current database state (sample):', dbState);
+    if (dbError) {
+      console.error('Error checking database state:', dbError);
     }
 
     // Split brands into smaller batches
@@ -52,75 +53,86 @@ export const collectLaptops = async () => {
       brandBatches.push(LAPTOP_BRANDS.slice(i, i + BRANDS_PER_BATCH));
     }
 
-    console.log(`Split collection into ${brandBatches.length} batches`);
+    console.log(`Created ${brandBatches.length} batches for processing`);
 
     // Process each batch sequentially
     for (let i = 0; i < brandBatches.length; i++) {
       const batch = brandBatches[i];
-      console.log(`Processing batch ${i + 1}/${brandBatches.length}: ${batch.join(', ')}`);
+      console.log(`Starting batch ${i + 1}/${brandBatches.length}: ${batch.join(', ')}`);
 
       try {
-        // Update status for this batch
-        await supabase
-          .from('products')
-          .update({ collection_status: 'in_progress' })
-          .in('brand', batch);
-
+        console.log('Invoking collect-laptops edge function...');
         const { data, error } = await supabase.functions.invoke('collect-laptops', {
           body: { 
             brands: batch,
-            pages_per_brand: 5, // Updated from 2 to 5 pages per brand
+            pages_per_brand: 5,
             batch_number: i + 1,
             total_batches: brandBatches.length
           }
         });
 
         if (error) {
-          console.error(`Error processing batch ${i + 1}:`, error);
+          console.error(`Error in batch ${i + 1}:`, error);
           toast({
             title: `Batch ${i + 1} failed`,
             description: error.message,
             variant: "destructive"
           });
         } else {
-          console.log(`Batch ${i + 1} completed:`, data);
+          console.log(`Batch ${i + 1} completed successfully:`, data);
           toast({
-            title: "Batch progress",
+            title: "Batch Progress",
             description: `Completed batch ${i + 1} of ${brandBatches.length}`,
           });
         }
 
+        // Clear any in_progress status that might be stuck
+        await supabase
+          .from('products')
+          .update({ collection_status: 'completed' })
+          .eq('collection_status', 'in_progress')
+          .in('brand', batch);
+
       } catch (error) {
-        console.error(`Failed to process batch ${i + 1}:`, error);
+        console.error(`Critical error in batch ${i + 1}:`, error);
+        toast({
+          title: "Error",
+          description: `Failed to process batch ${i + 1}: ${error.message}`,
+          variant: "destructive"
+        });
       }
 
       // Add delay between batches
       if (i < brandBatches.length - 1) {
+        console.log('Waiting before processing next batch...');
         await new Promise(resolve => setTimeout(resolve, 10000));
       }
     }
 
-    console.log('Collection batches completed');
+    console.log('All collection batches completed');
     toast({
       title: "Collection completed",
-      description: `Processed all ${brandBatches.length} collection batches`,
+      description: `Processed all ${brandBatches.length} batches`,
     });
 
-    // Final status check
-    const { data: finalCheck } = await supabase
+    // Final status check and cleanup
+    const { data: finalStatus } = await supabase
       .from('products')
-      .select('asin, current_price')
-      .is('current_price', null)
-      .limit(5);
+      .select('collection_status')
+      .eq('collection_status', 'in_progress');
 
-    if (finalCheck && finalCheck.length > 0) {
-      console.log('Products still missing prices after collection:', finalCheck);
+    if (finalStatus && finalStatus.length > 0) {
+      console.log(`Found ${finalStatus.length} items still marked as in_progress, cleaning up...`);
+      await supabase
+        .from('products')
+        .update({ collection_status: 'completed' })
+        .eq('collection_status', 'in_progress');
     }
 
     return { batches: brandBatches.length };
 
   } catch (error) {
-    console.error('Failed to start collection:', error);
+    console.error('Critical error in collectLaptops:', error);
     toast({
       title: "Collection failed",
       description: error.message || "An unexpected error occurred",
