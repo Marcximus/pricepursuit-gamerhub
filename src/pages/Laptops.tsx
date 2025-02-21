@@ -39,7 +39,7 @@ const ComparePriceLaptops = () => {
 
   const handleCollectLaptops = async () => {
     try {
-      console.log('Triggering laptop collection...');
+      console.log('handleCollectLaptops called');
       const result = await collectLaptops();
       
       if (result) {

@@ -21,7 +21,12 @@ export const collectLaptops = async () => {
       .eq('collection_status', 'in_progress')
       .limit(1);
 
-    if (statusError) throw statusError;
+    console.log('Status check result:', { statusData, statusError });
+
+    if (statusError) {
+      console.error('Status check error:', statusError);
+      throw statusError;
+    }
 
     if (statusData && statusData.length > 0) {
       console.log('Collection already in progress');
@@ -53,7 +58,12 @@ export const collectLaptops = async () => {
         }
       });
 
-      if (functionError) throw functionError;
+      if (functionError) {
+        console.error('Edge function error:', functionError);
+        throw functionError;
+      }
+
+      console.log(`Successfully processed batch ${index + 1}`);
 
       // Add delay between batches
       if (index < brandBatches.length - 1) {
