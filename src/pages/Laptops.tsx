@@ -39,14 +39,29 @@ const ComparePriceLaptops = () => {
 
   const handleCollectLaptops = async () => {
     console.log('handleCollectLaptops called'); // Debug log
+    
+    toast({
+      title: "Starting Collection",
+      description: "Initiating laptop data collection...",
+    });
+
     try {
+      console.log('Calling collectLaptops function...'); // Debug log
       const result = await collectLaptops();
       console.log('collectLaptops result:', result); // Debug log
 
       if (result) {
+        toast({
+          title: "Collection Started",
+          description: `Started collection process in ${result.batches} batches`,
+        });
+
         // Set up polling for new data
         const pollInterval = setInterval(async () => {
+          console.log('Polling for new data...'); // Debug log
           const { data: newData } = await refetchLaptops();
+          console.log('Poll result:', newData?.length || 0, 'laptops'); // Debug log
+          
           if (newData && newData.length > 0) {
             clearInterval(pollInterval);
             toast({

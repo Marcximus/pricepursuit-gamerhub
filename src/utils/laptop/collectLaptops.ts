@@ -30,7 +30,7 @@ export const collectLaptops = async () => {
         description: errorMsg,
         variant: "destructive"
       });
-      return null;
+      throw new Error(errorMsg);
     }
 
     if (statusData && statusData.length > 0) {
@@ -40,17 +40,6 @@ export const collectLaptops = async () => {
         description: "Please wait for the current collection to complete",
       });
       return null;
-    }
-
-    // Log current database state for debugging
-    const { data: dbState, error: dbError } = await supabase
-      .from('products')
-      .select('collection_status, current_price')
-      .limit(10);
-
-    console.log('Current database state (sample):', dbState);
-    if (dbError) {
-      console.error('Error checking database state:', dbError);
     }
 
     // Split brands into smaller batches
@@ -89,6 +78,7 @@ export const collectLaptops = async () => {
             description: functionError.message,
             variant: "destructive"
           });
+          throw functionError;
         } else {
           console.log(`Edge function response for batch ${i + 1}:`, responseData);
           toast({
@@ -116,6 +106,7 @@ export const collectLaptops = async () => {
           description: `Failed to process batch ${i + 1}: ${error.message}`,
           variant: "destructive"
         });
+        throw error;
       }
 
       // Add delay between batches
