@@ -182,13 +182,19 @@ function calculateBenchmarkScore(processorScore: number, title: string): number 
   return Math.min(Math.max(Math.round(score), 0), 100);
 }
 
-// Handle CORS preflight requests
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    const { action } = await req.json();
+    console.log('Received request with action:', action);
+
+    if (action !== 'collect') {
+      throw new Error('Invalid action provided');
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -201,7 +207,6 @@ Deno.serve(async (req) => {
       throw new Error('Oxylabs credentials not configured')
     }
 
-    // Expanded list of search queries for laptops, including all major brands
     const searchQueries = [
       // Generic laptop searches
       "laptop",
@@ -254,6 +259,7 @@ Deno.serve(async (req) => {
 
     console.log('Starting laptop collection process...')
     const foundAsins = new Set<string>()
+    const errors = []
 
     for (const query of searchQueries) {
       console.log(`Searching for: ${query}`)
@@ -264,13 +270,13 @@ Deno.serve(async (req) => {
         domain: 'com',
         geo_location: '90210',
         start_page: '1',
-        pages: '2', // Keeping at 2 pages per query to avoid rate limits
+        pages: '2',
         parse: true
       }
 
-      console.log('Making request to Oxylabs with payload:', JSON.stringify(payload))
-      
       try {
+        console.log('Making request to Oxylabs with payload:', JSON.stringify(payload))
+        
         const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
           method: 'POST',
           headers: {
@@ -281,12 +287,12 @@ Deno.serve(async (req) => {
         })
 
         if (!response.ok) {
-          console.error(`Error fetching results for ${query}: ${response.status}`)
-          continue
+          const errorText = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
         }
 
         const data = await response.json()
-        console.log(`Received response for query "${query}":`, JSON.stringify(data).slice(0, 200) + '...')
+        console.log(`Received response for query "${query}"`)
 
         // Extract results from the response
         const results = data.results?.[0]?.content?.results?.organic || []
@@ -368,17 +374,26 @@ Deno.serve(async (req) => {
         await new Promise(resolve => setTimeout(resolve, 2000))
       } catch (error) {
         console.error(`Error processing query "${query}":`, error)
+        errors.push({ query, error: error.message })
         continue
       }
     }
 
+    const message = errors.length > 0 
+      ? `Collection complete with some errors. Found ${foundAsins.size} unique laptops. ${errors.length} queries failed.`
+      : `Collection complete. Found ${foundAsins.size} unique laptops.`
+
     return respond({
       success: true,
-      message: `Collection complete. Found ${foundAsins.size} unique laptops.`
+      message,
+      errors: errors.length > 0 ? errors : undefined
     })
 
   } catch (error) {
     console.error('Error in collect-laptops function:', error)
-    return respond({ error: error.message }, 500)
+    return respond({ 
+      success: false,
+      error: error.message
+    }, 500)
   }
 })

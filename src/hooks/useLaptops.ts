@@ -7,11 +7,13 @@ import type { Product } from "@/types/product";
 export const collectLaptops = async () => {
   try {
     console.log('Triggering laptop collection...');
-    const { data, error } = await supabase.functions.invoke('collect-laptops');
+    const { data, error } = await supabase.functions.invoke('collect-laptops', {
+      body: { action: 'collect' }
+    });
     
     if (error) {
       console.error('Error collecting laptops:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to collect laptops');
     }
     
     console.log('Laptop collection response:', data);
@@ -42,7 +44,15 @@ export const useLaptops = () => {
 
         if (!data || data.length === 0) {
           console.log('No laptops found in database');
-          collectLaptops().catch(console.error);
+          toast({
+            title: "No laptops found",
+            description: "Starting initial laptop collection...",
+          });
+          try {
+            await collectLaptops();
+          } catch (error) {
+            console.error('Failed to start initial collection:', error);
+          }
           return [];
         }
 
