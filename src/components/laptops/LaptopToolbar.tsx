@@ -1,5 +1,5 @@
 
-import { ReloadIcon, UpdateIcon } from "@radix-ui/react-icons";
+import { ReloadIcon, UpdateIcon, ScanIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { LaptopSort, type SortOption } from "@/components/laptops/LaptopSort";
 
@@ -8,6 +8,7 @@ type LaptopToolbarProps = {
   sortBy: SortOption;
   onSortChange: (value: SortOption) => void;
   onCollectLaptops: () => void;
+  onUpdateLaptops: () => void;
   isLoading: boolean;
   isRefetching: boolean;
 };
@@ -17,6 +18,7 @@ export function LaptopToolbar({
   sortBy,
   onSortChange,
   onCollectLaptops,
+  onUpdateLaptops,
   isLoading,
   isRefetching
 }: LaptopToolbarProps) {
@@ -30,23 +32,25 @@ export function LaptopToolbar({
           sortBy={sortBy}
           onSortChange={onSortChange}
         />
-        <Button
-          onClick={onCollectLaptops}
-          disabled={isLoading || isRefetching}
-          className="flex items-center gap-2"
-        >
-          {(isLoading || isRefetching) ? (
-            <>
-              <ReloadIcon className="h-4 w-4 animate-spin" />
-              Collecting...
-            </>
-          ) : (
-            <>
-              <UpdateIcon className="h-4 w-4" />
-              Collect Laptops
-            </>
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={onUpdateLaptops}
+            disabled={isLoading || isRefetching}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <UpdateIcon className="h-4 w-4" />
+            Update Laptops
+          </Button>
+          <Button
+            onClick={onCollectLaptops}
+            disabled={isLoading || isRefetching}
+            className="flex items-center gap-2"
+          >
+            <ScanIcon className="h-4 w-4" />
+            Discover Laptops
+          </Button>
+        </div>
       </div>
     </div>
   );

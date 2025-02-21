@@ -105,6 +105,7 @@ export type Database = {
           is_laptop: boolean | null
           last_checked: string | null
           last_collection_attempt: string | null
+          last_updated: string | null
           original_price: number | null
           processor: string | null
           processor_score: number | null
@@ -118,6 +119,7 @@ export type Database = {
           storage: string | null
           title: string | null
           total_reviews: number | null
+          update_status: string | null
           weight: string | null
         }
         Insert: {
@@ -136,6 +138,7 @@ export type Database = {
           is_laptop?: boolean | null
           last_checked?: string | null
           last_collection_attempt?: string | null
+          last_updated?: string | null
           original_price?: number | null
           processor?: string | null
           processor_score?: number | null
@@ -149,6 +152,7 @@ export type Database = {
           storage?: string | null
           title?: string | null
           total_reviews?: number | null
+          update_status?: string | null
           weight?: string | null
         }
         Update: {
@@ -167,6 +171,7 @@ export type Database = {
           is_laptop?: boolean | null
           last_checked?: string | null
           last_collection_attempt?: string | null
+          last_updated?: string | null
           original_price?: number | null
           processor?: string | null
           processor_score?: number | null
@@ -180,6 +185,7 @@ export type Database = {
           storage?: string | null
           title?: string | null
           total_reviews?: number | null
+          update_status?: string | null
           weight?: string | null
         }
         Relationships: []

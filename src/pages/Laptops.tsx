@@ -32,13 +32,10 @@ const ComparePriceLaptops = () => {
     error: laptopsError,
     refetch: refetchLaptops,
     isRefetching,
-    collectLaptops
+    collectLaptops,
+    updateLaptops
   } = useLaptops();
   const { toast } = useToast();
-
-  console.log('Raw laptops data:', laptops?.length, 'laptops');
-  console.log('Current filters:', filters);
-  console.log('Current sort:', sortBy);
 
   const filteredAndSortedLaptops = useFilteredLaptops(laptops, filters, sortBy);
   const filterOptions = useLaptopFilters(laptops);
@@ -46,10 +43,6 @@ const ComparePriceLaptops = () => {
   const handleCollectLaptops = async () => {
     try {
       await collectLaptops();
-      toast({
-        title: "Collection Started",
-        description: "Started collecting laptops from Amazon. This may take a few minutes...",
-      });
       const pollInterval = setInterval(async () => {
         const { data: newData } = await refetchLaptops();
         if (newData && newData.length > 0) {
@@ -73,19 +66,19 @@ const ComparePriceLaptops = () => {
     }
   };
 
-  const handleRetry = async () => {
+  const handleUpdateLaptops = async () => {
     try {
-      await collectLaptops();
+      await updateLaptops();
+      // We'll let the regular refetch interval handle updates
       toast({
-        title: "Success",
-        description: "Started collecting laptops from Amazon...",
+        title: "Update Started",
+        description: "Started updating laptop information. This may take a few minutes.",
       });
-      setTimeout(() => refetchLaptops(), 5000);
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to collect laptops. Please try again.",
+        description: "Failed to start laptop updates. Please try again.",
       });
     }
   };
@@ -116,6 +109,7 @@ const ComparePriceLaptops = () => {
                 sortBy={sortBy}
                 onSortChange={setSortBy}
                 onCollectLaptops={handleCollectLaptops}
+                onUpdateLaptops={handleUpdateLaptops}
                 isLoading={isLaptopsLoading}
                 isRefetching={isRefetching}
               />
@@ -125,7 +119,7 @@ const ComparePriceLaptops = () => {
                 laptops={filteredAndSortedLaptops}
                 isLoading={isLaptopsLoading}
                 error={laptopsError}
-                onRetry={handleRetry}
+                onRetry={handleCollectLaptops}
                 isRefetching={isRefetching}
               />
             }
@@ -137,4 +131,3 @@ const ComparePriceLaptops = () => {
 };
 
 export default ComparePriceLaptops;
-

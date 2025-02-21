@@ -3,10 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { processLaptopData } from "@/utils/laptopUtils";
-import { collectLaptops } from "@/utils/laptopCollection";
+import { collectLaptops, updateLaptops } from "@/utils/laptopCollection";
 import type { Product } from "@/types/product";
 
-export { collectLaptops };
+export { collectLaptops, updateLaptops };
 
 export const useLaptops = () => {
   const query = useQuery({
@@ -41,10 +41,21 @@ export const useLaptops = () => {
           return [];
         }
 
-        console.log(`Found ${data.length} laptops from database`);
+        // Log collection and update status
+        const pendingCollection = data.filter(l => l.collection_status === 'pending').length;
+        const updatingLaptops = data.filter(l => l.update_status === 'updating').length;
+        
+        if (pendingCollection > 0) {
+          console.log(`${pendingCollection} laptops pending collection`);
+        }
+        
+        if (updatingLaptops > 0) {
+          console.log(`${updatingLaptops} laptops being updated`);
+        }
+
+        console.log(`Found ${data.length} laptops in database`);
         return data.map(laptop => {
           const processed = processLaptopData(laptop as Product);
-          console.log('Processed laptop:', processed);
           return processed;
         });
       } catch (error) {
@@ -52,14 +63,15 @@ export const useLaptops = () => {
         throw error;
       }
     },
-    staleTime: 1000 * 30, // 30 seconds to cache the data
+    staleTime: 1000 * 30, // 30 seconds
     refetchInterval: 1000 * 15, // Refetch every 15 seconds to check for updates
-    retryDelay: 1000, // Wait 1 second between retries
-    retry: 3, // Retry failed requests 3 times
+    retryDelay: 1000,
+    retry: 3,
   });
 
   return {
     ...query,
     collectLaptops,
+    updateLaptops,
   };
 };
