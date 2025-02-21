@@ -6,11 +6,12 @@ export const updateLaptops = async () => {
   try {
     console.log('Starting update for ALL laptops...');
     
-    // Get ALL laptops with is_laptop=true, no other filters
+    // Get ALL laptops with is_laptop=true that aren't already being processed
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
       .select('id, asin')
-      .eq('is_laptop', true);
+      .eq('is_laptop', true)
+      .not('update_status', 'eq', 'in_progress');
 
     if (fetchError) {
       console.error('Error fetching laptops:', fetchError);
@@ -18,7 +19,7 @@ export const updateLaptops = async () => {
     }
 
     if (!laptops || laptops.length === 0) {
-      console.log('No laptops found in database');
+      console.log('No laptops found to update');
       toast({
         title: "No laptops found",
         description: "No laptops found in the database to update",
@@ -28,50 +29,67 @@ export const updateLaptops = async () => {
 
     const updateCount = laptops.length;
     console.log(`Found ${updateCount} laptops to update`);
-    
-    // Mark ALL laptops as pending update
-    const { error: statusError } = await supabase
-      .from('products')
-      .update({ 
-        update_status: 'pending_update',
-        last_checked: new Date().toISOString()
-      })
-      .in('id', laptops.map(l => l.id));
 
-    if (statusError) {
-      console.error('Error marking laptops for update:', statusError);
-      throw statusError;
+    // Split laptops into chunks of 10
+    const chunkSize = 10;
+    const chunks = [];
+    for (let i = 0; i < laptops.length; i += chunkSize) {
+      chunks.push(laptops.slice(i, i + chunkSize));
     }
+
+    console.log(`Split updates into ${chunks.length} chunks of ${chunkSize} laptops each`);
     
-    // Call edge function to update ALL laptops
-    const { data, error } = await supabase.functions.invoke('update-laptops', {
-      body: { 
-        laptops: laptops.map(l => ({ id: l.id, asin: l.asin }))
-      }
-    });
-    
-    if (error) {
-      console.error('Error calling update-laptops function:', error);
-      // Reset status on error
-      await supabase
+    // Process each chunk sequentially
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const chunkIds = chunk.map(l => l.id);
+      
+      // Mark chunk laptops as pending update
+      const { error: statusError } = await supabase
         .from('products')
-        .update({ update_status: null })
-        .in('id', laptops.map(l => l.id));
+        .update({ 
+          update_status: 'pending_update',
+          last_checked: new Date().toISOString()
+        })
+        .in('id', chunkIds);
+
+      if (statusError) {
+        console.error('Error marking laptops for update:', statusError);
+        continue; // Continue with next chunk even if this one fails
+      }
+
+      // Call edge function for this chunk
+      console.log(`Processing chunk ${i + 1}/${chunks.length} (${chunk.length} laptops)`);
+      try {
+        const { error } = await supabase.functions.invoke('update-laptops', {
+          body: { 
+            laptops: chunk.map(l => ({ id: l.id, asin: l.asin }))
+          }
+        });
         
-      toast({
-        title: "Update failed",
-        description: error.message || "Failed to start laptop updates",
-        variant: "destructive"
-      });
-      throw error;
+        if (error) {
+          console.error(`Error processing chunk ${i + 1}:`, error);
+          // Reset status for failed chunk
+          await supabase
+            .from('products')
+            .update({ update_status: 'error' })
+            .in('id', chunkIds);
+        }
+      } catch (error) {
+        console.error(`Failed to process chunk ${i + 1}:`, error);
+      }
+
+      // Add a small delay between chunks to prevent rate limiting
+      if (i < chunks.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
     }
     
-    console.log('Update response:', data);
     toast({
       title: "Update started",
-      description: `Starting batch updates for ${updateCount} laptops. This may take several minutes to complete.`,
+      description: `Started batch updates for ${updateCount} laptops in ${chunks.length} chunks.`,
     });
-    return data;
+    return { totalLaptops: updateCount, chunks: chunks.length };
 
   } catch (error: any) {
     console.error('Failed to update laptops:', error);
