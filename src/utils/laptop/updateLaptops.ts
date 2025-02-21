@@ -9,7 +9,7 @@ export const updateLaptops = async () => {
     // Get ALL laptops, regardless of status
     const { data: laptopsToUpdate, error: fetchError } = await supabase
       .from('products')
-      .select('id')
+      .select('id, asin')
       .eq('is_laptop', true);
 
     if (fetchError) {
