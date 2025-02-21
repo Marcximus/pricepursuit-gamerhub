@@ -29,27 +29,54 @@ export const collectLaptops = async () => {
 };
 
 const processTitle = (title: string): string => {
-  // Remove common prefixes and suffixes
-  title = title.replace(/^(New|Latest|2024|2023)\s*/i, '');
-  title = title.replace(/\([^)]*\)/g, ''); // Remove parentheses and their contents
-  title = title.replace(/\[[^\]]*\]/g, ''); // Remove square brackets and their contents
-  title = title.replace(/\s+/g, ' ').trim(); // Remove extra spaces
-  return title;
+  if (!title) return '';
+  
+  // Remove common marketing terms and extras
+  let processed = title
+    .replace(/^(New|Latest|2024|2023|Updated)\s*/i, '')
+    .replace(/\([^)]*\)/g, '') // Remove parentheses and contents
+    .replace(/\[[^\]]*\]/g, '') // Remove square brackets and contents
+    .replace(/with Windows \d+( Home| Pro)?/i, '')
+    .replace(/\b(Gaming|Business|Student)\s*(Laptop|Notebook)?\b/i, '')
+    .replace(/\b(Free|Premium|Professional)\s+\w+(\s+\w+)?\b/i, '')
+    .replace(/\s+/g, ' ') // Remove extra spaces
+    .trim();
+    
+  // Limit length and add ellipsis if needed
+  return processed.length > 80 ? processed.substring(0, 77) + '...' : processed;
 };
 
 const processProcessor = (processor: string | undefined): string | undefined => {
   if (!processor) return undefined;
   
-  // Standardize processor names
   let processed = processor
-    .replace(/Intel\s+Core\s+/i, '')
-    .replace(/AMD\s+Ryzen\s+/i, 'Ryzen ')
-    .replace(/\s+processor$/i, '')
+    .replace(/\s*processor\s*/i, '')
+    .replace(/\s*CPU\s*/i, '')
     .trim();
     
-  // Add generation if missing for Intel processors
-  if (processed.match(/i[357]|i[357]-\d{4,5}/i)) {
-    processed = processed.replace(/^(i[357])(?!-\d)/, '$1-12th Gen');
+  // Process Intel processors
+  if (processed.toLowerCase().includes('intel')) {
+    processed = processed
+      .replace(/Intel\s*Core\s*/i, '')
+      .replace(/\s*processor\s*/i, '')
+      .replace(/(\d+)th\s*Gen\s*/i, '$1th Gen ')
+      .replace(/(\d+)nd\s*Gen\s*/i, '$1nd Gen ')
+      .replace(/(\d+)rd\s*Gen\s*/i, '$1rd Gen ')
+      .trim();
+      
+    // Add generation if missing for newer Intel processors
+    if (processed.match(/i[357959](?!-\d)/i)) {
+      processed = processed.replace(/^(i[357959])(?!-|\d)/i, '$1-13th Gen');
+    }
+  }
+  
+  // Process AMD processors
+  if (processed.toLowerCase().includes('amd')) {
+    processed = processed
+      .replace(/AMD\s*/i, '')
+      .replace(/\s*processor\s*/i, '')
+      .replace(/Ryzen\s*(\d+)\s*/i, 'Ryzen $1 ')
+      .trim();
   }
   
   return processed;
@@ -58,56 +85,86 @@ const processProcessor = (processor: string | undefined): string | undefined => 
 const processRam = (ram: string | undefined): string | undefined => {
   if (!ram) return undefined;
   
-  // Standardize RAM format
-  return ram
-    .replace(/^RAM\s+/i, '')
-    .replace(/gigabytes?/i, 'GB')
-    .replace(/(\d+)\s*GB?/i, '$1GB')
+  let processed = ram
+    .replace(/^RAM\s*/i, '')
+    .replace(/\s*Memory\s*/i, '')
+    .replace(/DDR\d+/i, '') // Remove DDR version
+    .replace(/\s*RAM\s*/i, '')
+    .replace(/gigabytes?\b/i, 'GB')
     .trim();
+    
+  // Extract the number and standardize format
+  const match = processed.match(/(\d+)\s*GB?/i);
+  if (match) {
+    return `${match[1]}GB`;
+  }
+  
+  return processed;
 };
 
 const processStorage = (storage: string | undefined): string | undefined => {
   if (!storage) return undefined;
   
-  // Standardize storage format
-  return storage
-    .replace(/solid\s+state\s+drive/i, 'SSD')
-    .replace(/hard\s+disk\s+drive/i, 'HDD')
-    .replace(/(\d+)\s*(GB|TB)/i, '$1$2')
+  let processed = storage
+    .replace(/solid\s*state\s*drive/i, 'SSD')
+    .replace(/hard\s*disk\s*drive/i, 'HDD')
+    .replace(/\s*PCIe\s*NVMe\s*M\.2\s*/i, ' ')
     .trim();
+    
+  // Convert all sizes to standardized format
+  processed = processed.replace(/(\d+)\s*(GB|TB|PB)/i, (_, num, unit) => {
+    const number = parseInt(num);
+    if (unit.toLowerCase() === 'tb') {
+      return `${number}TB`;
+    } else if (unit.toLowerCase() === 'pb') {
+      return `${number * 1024}TB`;
+    }
+    return `${number}GB`;
+  });
+  
+  // Add storage type if missing
+  if (!processed.includes('SSD') && !processed.includes('HDD')) {
+    processed += ' SSD';
+  }
+  
+  return processed;
 };
 
 const processGraphics = (graphics: string | undefined): string | undefined => {
   if (!graphics) return undefined;
   
-  // Standardize graphics card names
   return graphics
-    .replace(/NVIDIA\s+GeForce\s+/i, '')
-    .replace(/AMD\s+Radeon\s+/i, 'Radeon ')
-    .replace(/Intel\s+/i, '')
-    .replace(/\s+Graphics$/i, '')
+    .replace(/NVIDIA\s*GeForce\s*/i, '')
+    .replace(/AMD\s*Radeon\s*/i, 'Radeon ')
+    .replace(/Intel\s*(UHD|Iris)\s*/i, '$1 ')
+    .replace(/\s*Graphics\s*/i, '')
+    .replace(/\s*with\s*\d+GB\s*GDDR\d+/i, '')
     .trim();
 };
 
 const processScreenSize = (size: string | undefined): string | undefined => {
   if (!size) return undefined;
   
-  // Standardize screen size format
-  return size
-    .replace(/(\d+(\.\d+)?)\s*inch(es)?/i, '$1"')
-    .trim();
+  // Extract numeric size and standardize format
+  const match = size.match(/(\d+\.?\d*)\s*-?\s*inch/i);
+  if (match) {
+    return `${match[1]}"`;
+  }
+  
+  return size.replace(/(\d+\.?\d*)\s*inch(es)?/i, '$1"').trim();
 };
 
 const processWeight = (weight: string | undefined): string | undefined => {
   if (!weight) return undefined;
   
-  // Standardize weight format
+  // Convert all weights to kg and standardize format
   return weight
-    .replace(/(\d+(\.\d+)?)\s*(kg|pounds?|lbs?)/i, (_, num, dec, unit) => {
+    .replace(/(\d+\.?\d*)\s*(kg|pounds?|lbs?)/i, (_, num, unit) => {
+      const number = parseFloat(num);
       if (unit.toLowerCase().startsWith('lb')) {
-        return `${(parseFloat(num) * 0.453592).toFixed(2)} kg`;
+        return `${(number * 0.453592).toFixed(2)} kg`;
       }
-      return `${num} kg`;
+      return `${number} kg`;
     })
     .trim();
 };
@@ -115,15 +172,21 @@ const processWeight = (weight: string | undefined): string | undefined => {
 const processBatteryLife = (battery: string | undefined): string | undefined => {
   if (!battery) return undefined;
   
-  // Standardize battery life format
+  // Extract hours and standardize format
+  const match = battery.match(/(\d+\.?\d*)\s*(hour|hr)/i);
+  if (match) {
+    return `${match[1]} hours`;
+  }
+  
   return battery
-    .replace(/up\s+to\s+/i, '')
-    .replace(/(\d+(\.\d+)?)\s*(hour|hr)s?/i, '$1 hours')
+    .replace(/up\s*to\s*/i, '')
+    .replace(/(\d+\.?\d*)\s*(hour|hr)s?/i, '$1 hours')
     .trim();
 };
 
 const processLaptopData = (laptop: Product): Product => {
-  return {
+  console.log('Processing laptop:', laptop.title);
+  const processed = {
     ...laptop,
     title: processTitle(laptop.title || ''),
     processor: processProcessor(laptop.processor),
@@ -134,6 +197,8 @@ const processLaptopData = (laptop: Product): Product => {
     weight: processWeight(laptop.weight),
     battery_life: processBatteryLife(laptop.battery_life)
   };
+  console.log('Processed laptop:', processed);
+  return processed;
 };
 
 export const useLaptops = () => {
