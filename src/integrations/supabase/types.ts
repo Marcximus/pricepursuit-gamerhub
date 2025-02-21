@@ -41,9 +41,57 @@ export type Database = {
           },
         ]
       }
+      product_reviews: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          helpful_votes: number | null
+          id: string
+          product_id: string
+          rating: number
+          review_date: string | null
+          reviewer_name: string | null
+          title: string | null
+          verified_purchase: boolean | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          helpful_votes?: number | null
+          id?: string
+          product_id: string
+          rating: number
+          review_date?: string | null
+          reviewer_name?: string | null
+          title?: string | null
+          verified_purchase?: boolean | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          helpful_votes?: number | null
+          id?: string
+          product_id?: string
+          rating?: number
+          review_date?: string | null
+          reviewer_name?: string | null
+          title?: string | null
+          verified_purchase?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           asin: string
+          average_rating: number | null
           battery_life: string | null
           benchmark_score: number | null
           category: string | null
@@ -62,14 +110,17 @@ export type Database = {
           ram: string | null
           rating: number | null
           rating_count: number | null
+          review_data: Json | null
           screen_resolution: string | null
           screen_size: string | null
           storage: string | null
           title: string | null
+          total_reviews: number | null
           weight: string | null
         }
         Insert: {
           asin: string
+          average_rating?: number | null
           battery_life?: string | null
           benchmark_score?: number | null
           category?: string | null
@@ -88,14 +139,17 @@ export type Database = {
           ram?: string | null
           rating?: number | null
           rating_count?: number | null
+          review_data?: Json | null
           screen_resolution?: string | null
           screen_size?: string | null
           storage?: string | null
           title?: string | null
+          total_reviews?: number | null
           weight?: string | null
         }
         Update: {
           asin?: string
+          average_rating?: number | null
           battery_life?: string | null
           benchmark_score?: number | null
           category?: string | null
@@ -114,10 +168,12 @@ export type Database = {
           ram?: string | null
           rating?: number | null
           rating_count?: number | null
+          review_data?: Json | null
           screen_resolution?: string | null
           screen_size?: string | null
           storage?: string | null
           title?: string | null
+          total_reviews?: number | null
           weight?: string | null
         }
         Relationships: []

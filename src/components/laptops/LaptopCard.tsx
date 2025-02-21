@@ -1,6 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { StarIcon } from "lucide-react";
 import type { Product } from "@/types/product";
 
 type LaptopCardProps = {
@@ -14,7 +15,12 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
     title: laptop.title,
     price: laptop.current_price,
     image: laptop.image_url,
-    url: laptop.product_url
+    url: laptop.product_url,
+    reviews: {
+      total: laptop.total_reviews,
+      average: laptop.average_rating,
+      data: laptop.review_data
+    }
   });
   
   // Default image URL if none is provided
@@ -24,11 +30,46 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
   const getProductUrl = () => {
     if (!laptop.product_url) return '#';
     const url = new URL(laptop.product_url);
-    url.searchParams.set('tag', 'with-laptop-discount-20'); // Updated Amazon Associates tag
+    url.searchParams.set('tag', 'with-laptop-discount-20');
     return url.toString();
   };
 
   const productUrl = getProductUrl();
+
+  // Function to render star rating
+  const renderStarRating = (rating: number) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+
+    for (let i = 0; i < 5; i++) {
+      if (i < fullStars) {
+        stars.push(
+          <StarIcon 
+            key={i} 
+            className="h-4 w-4 fill-yellow-400 text-yellow-400" 
+          />
+        );
+      } else if (i === fullStars && hasHalfStar) {
+        stars.push(
+          <div key={i} className="relative">
+            <StarIcon className="h-4 w-4 text-gray-300" />
+            <div className="absolute inset-0 overflow-hidden w-[50%]">
+              <StarIcon className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+            </div>
+          </div>
+        );
+      } else {
+        stars.push(
+          <StarIcon 
+            key={i} 
+            className="h-4 w-4 text-gray-300" 
+          />
+        );
+      }
+    }
+    return stars;
+  };
 
   return (
     <Card className="flex p-4 gap-4 hover:shadow-lg transition-shadow">
@@ -56,6 +97,20 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
               : 'Price not available'}
           </div>
         </a>
+
+        {/* Rating section */}
+        {laptop.average_rating && (
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex">
+              {renderStarRating(laptop.average_rating)}
+            </div>
+            <span className="text-sm text-gray-600">
+              {laptop.total_reviews 
+                ? `${laptop.total_reviews.toLocaleString()} reviews`
+                : ''}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Right side - Specs */}
@@ -104,7 +159,36 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
             </li>
           )}
         </ul>
+
+        {/* Recent Reviews Preview */}
+        {laptop.review_data?.recent_reviews && laptop.review_data.recent_reviews.length > 0 && (
+          <div className="mt-4">
+            <h4 className="text-sm font-semibold mb-2">Recent Reviews</h4>
+            <div className="space-y-2">
+              {laptop.review_data.recent_reviews.slice(0, 2).map((review, index) => (
+                <div key={index} className="text-sm">
+                  <div className="flex items-center gap-2">
+                    {renderStarRating(review.rating)}
+                    <span className="text-gray-600 text-xs">
+                      {review.reviewer_name || 'Anonymous'}
+                      {review.verified_purchase && (
+                        <span className="text-green-600 ml-1">(Verified Purchase)</span>
+                      )}
+                    </span>
+                  </div>
+                  {review.title && (
+                    <p className="font-medium">{review.title}</p>
+                  )}
+                  {review.content && (
+                    <p className="text-gray-600 line-clamp-2">{review.content}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </Card>
   );
 }
+

@@ -21,6 +21,22 @@ export interface Product {
   benchmark_score?: number;
   weight?: string;
   battery_life?: string;
+  total_reviews?: number;
+  average_rating?: number;
+  review_data?: {
+    rating_breakdown?: {
+      [key: string]: number;
+    };
+    recent_reviews?: Array<{
+      rating: number;
+      title?: string;
+      content?: string;
+      reviewer_name?: string;
+      review_date?: string;
+      verified_purchase?: boolean;
+      helpful_votes?: number;
+    }>;
+  };
 }
 
 export interface PriceHistory {
@@ -30,3 +46,4 @@ export interface PriceHistory {
   timestamp: string;
   created_at: string;
 }
+
