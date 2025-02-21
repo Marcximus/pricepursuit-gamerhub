@@ -94,6 +94,7 @@ export type Database = {
           average_rating: number | null
           battery_life: string | null
           benchmark_score: number | null
+          brand: string | null
           category: string | null
           collection_status: string | null
           created_at: string | null
@@ -106,6 +107,7 @@ export type Database = {
           last_checked: string | null
           last_collection_attempt: string | null
           last_updated: string | null
+          model: string | null
           original_price: number | null
           processor: string | null
           processor_score: number | null
@@ -127,6 +129,7 @@ export type Database = {
           average_rating?: number | null
           battery_life?: string | null
           benchmark_score?: number | null
+          brand?: string | null
           category?: string | null
           collection_status?: string | null
           created_at?: string | null
@@ -139,6 +142,7 @@ export type Database = {
           last_checked?: string | null
           last_collection_attempt?: string | null
           last_updated?: string | null
+          model?: string | null
           original_price?: number | null
           processor?: string | null
           processor_score?: number | null
@@ -160,6 +164,7 @@ export type Database = {
           average_rating?: number | null
           battery_life?: string | null
           benchmark_score?: number | null
+          brand?: string | null
           category?: string | null
           collection_status?: string | null
           created_at?: string | null
@@ -172,6 +177,7 @@ export type Database = {
           last_checked?: string | null
           last_collection_attempt?: string | null
           last_updated?: string | null
+          model?: string | null
           original_price?: number | null
           processor?: string | null
           processor_score?: number | null
