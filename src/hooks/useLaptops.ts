@@ -15,6 +15,19 @@ export const useLaptops = () => {
       try {
         console.log('Fetching laptops from Supabase...');
         
+        // First get a count of all laptop products
+        const { count: totalCount, error: countError } = await supabase
+          .from('products')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_laptop', true);
+
+        if (countError) {
+          console.error('Error getting laptop count:', countError);
+          throw countError;
+        }
+
+        console.log(`Total laptop count in database: ${totalCount}`);
+        
         const { data: laptopsData, error } = await supabase
           .from('products')
           .select(`
@@ -34,7 +47,11 @@ export const useLaptops = () => {
           return [];
         }
 
-        console.log(`Found ${laptopsData.length} laptops in database`);
+        console.log(`Successfully fetched ${laptopsData.length} laptops with their reviews`);
+
+        // Log count of laptops with prices for debugging
+        const laptopsWithPrices = laptopsData.filter(laptop => laptop.current_price != null && laptop.current_price > 0);
+        console.log(`Number of laptops with valid prices: ${laptopsWithPrices.length}`);
 
         // Process and return the laptops
         const processedLaptops = laptopsData.map(laptop => {
@@ -86,3 +103,4 @@ export const useLaptops = () => {
     refreshBrandModels,
   };
 };
+
