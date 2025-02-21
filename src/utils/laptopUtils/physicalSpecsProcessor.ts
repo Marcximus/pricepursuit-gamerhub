@@ -1,4 +1,3 @@
-
 export const processScreenSize = (screenSize: string | undefined, title: string): string | undefined => {
   if (screenSize && typeof screenSize === 'string' && !screenSize.includes('undefined')) {
     return screenSize;
@@ -6,9 +5,14 @@ export const processScreenSize = (screenSize: string | undefined, title: string)
   
   // Look for screen size in the title first (more specific patterns first)
   const screenPatterns = [
-    /\b(\d{2}\.?\d?)"?\s*(?:inch|"|inches)\s+(?:FHD|HD\+?|QHD|UHD|OLED|LED|IPS|touch\s*screen|display|monitor|screen|laptop)\b/i,
+    // Match patterns like "15.6-inch FHD", "15.6" HD", "15.6-inch display"
+    /\b(\d{2}\.?\d?)"?\s*(?:inch|"|inches)\s*(?:FHD|HD\+?|QHD|UHD|OLED|LED|IPS|touch\s*screen|display|monitor|screen|laptop)\b/i,
+    // Match patterns like "15.6-inch", "15.6""
     /\b(\d{2}\.?\d?)"?\s*(?:inch|"|inches)\b/i,
+    // Match just the number with inch
     /\b(\d{2}\.?\d?)[-\s]?(?:inch|"|inches)\b/i,
+    // Match patterns like "15.6 laptop", "15.6 display"
+    /\b(\d{2}\.?\d?)[-\s]?(?:laptop|display|screen)\b/i,
   ];
   
   for (const pattern of screenPatterns) {
@@ -69,4 +73,3 @@ export const processBatteryLife = (batteryLife: string | undefined, title: strin
   
   return undefined;
 };
-

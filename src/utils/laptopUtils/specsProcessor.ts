@@ -1,4 +1,3 @@
-
 export const processProcessor = (processor: string | undefined, title: string): string | undefined => {
   if (processor && typeof processor === 'string' && !processor.includes('undefined')) {
     return processor;
@@ -6,15 +5,32 @@ export const processProcessor = (processor: string | undefined, title: string): 
   
   // Look for processor in the title (more specific patterns first)
   const processorPatterns = [
-    /\b(?:Intel Core i[3579]|AMD Ryzen [3579]|Intel Celeron|Intel Pentium|MediaTek|Apple M[12])\s*(?:[A-Z0-9-]+)?\b/i,
-    /\b(?:i[3579]-\d{4,5}[A-Z]*|Ryzen\s*\d\s*\d{4}[A-Z]*)\b/i,
+    // Match full processor names with generation and model
+    /\b(?:Intel Core i[3579]|AMD Ryzen [3579]|Intel Celeron|Intel Pentium|MediaTek|Apple M[12])\s*(?:[A-Z0-9-]+(?:\s*[A-Z0-9]+)*)\b/i,
+    // Match processor names with generation numbers
+    /\b(?:i[3579]-\d{4,5}[A-Z]*(?:\s*HX)?|Ryzen\s*\d\s*\d{4}[A-Z]*(?:\s*HX)?)\b/i,
+    // Match processor with core count and generation
+    /\b(?:\d{1,2}-Core\s+i[3579](?:-\d{4,5}[A-Z]*)?)\b/i,
+    // Match any Intel or AMD processor pattern
     /\b(?:Intel|AMD)\s+(?:Core\s+)?(?:[A-Za-z]+(?:\s+[A-Za-z]+)*\s+)?(?:[0-9]+[A-Z]*(?:-[0-9]+[A-Z]*)?)\b/i,
   ];
   
   for (const pattern of processorPatterns) {
     const match = title.match(pattern);
     if (match) {
-      return match[0].trim();
+      // Clean up and standardize processor name
+      let processedName = match[0].trim()
+        .replace(/\s+/g, ' ')  // Normalize spaces
+        .replace(/intel core/i, 'Intel Core')
+        .replace(/amd ryzen/i, 'AMD Ryzen')
+        .replace(/\bi(\d)/i, 'Intel Core i$1');  // Expand i5 to Intel Core i5
+      
+      // Add "Intel Core" prefix if it's just an i-series number
+      if (/^i[3579]/i.test(processedName)) {
+        processedName = `Intel Core ${processedName}`;
+      }
+      
+      return processedName;
     }
   }
   
@@ -67,4 +83,3 @@ export const processStorage = (storage: string | undefined, title: string): stri
   
   return undefined;
 };
-
