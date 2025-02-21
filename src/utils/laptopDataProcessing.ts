@@ -1,4 +1,3 @@
-
 import type { Product } from "@/types/product";
 
 const extractNumber = (text: string, pattern: RegExp): number | undefined => {
@@ -9,19 +8,42 @@ const extractNumber = (text: string, pattern: RegExp): number | undefined => {
 export const processTitle = (title: string): string => {
   if (!title) return '';
   
-  // Remove common marketing terms and extras
+  // Extract brand name first
+  const brandPatterns = [
+    /\b(HP|Dell|Lenovo|ASUS|Acer|Apple|Microsoft|MSI|Razer|Samsung|LG|Toshiba|Alienware|Gateway|Gigabyte|Huawei)\b/i,
+  ];
+  
+  let brand = '';
+  for (const pattern of brandPatterns) {
+    const match = title.match(pattern);
+    if (match) {
+      brand = match[1];
+      break;
+    }
+  }
+  
+  // Clean up the title and keep only essential model information
   let processed = title
     .replace(/^(New|Latest|2024|2023|Updated)\s*/i, '')
     .replace(/\([^)]*\)/g, '') // Remove parentheses and contents
     .replace(/\[[^\]]*\]/g, '') // Remove square brackets and contents
-    .replace(/with Windows \d+( Home| Pro)?/i, '')
+    .replace(/with\s+.*$/i, '') // Remove everything after 'with'
     .replace(/\b(Gaming|Business|Student)\s*(Laptop|Notebook)?\b/i, '')
     .replace(/\b(Free|Premium|Professional)\s+\w+(\s+\w+)?\b/i, '')
+    .replace(/\b\d+GB\b/gi, '') // Remove RAM/storage specs
+    .replace(/\b(DDR4|DDR5|SSD|HDD|PCIe|NVMe)\b/gi, '') // Remove memory/storage types
+    .replace(/\b(Intel Core i[3579](-\d{4,5}[A-Z]*)?|AMD Ryzen [3579]|Intel Celeron|Intel Pentium|MediaTek|Apple M[12])\s*[\w-]*\b/gi, '') // Remove processor info
+    .replace(/\b(NVIDIA GeForce RTX \d{4}|GTX \d{3,4})\b/gi, '') // Remove GPU info
+    .replace(/\b\d{2,4}x\d{2,4}\b/g, '') // Remove resolution
+    .replace(/\b\d+(\.\d+)?"?\s*(inch|display|screen)\b/gi, '') // Remove screen size
     .replace(/\s+/g, ' ') // Remove extra spaces
     .trim();
     
+  // Combine brand with cleaned model info
+  processed = brand ? `${brand} ${processed}` : processed;
+  
   // Limit length and add ellipsis if needed
-  return processed.length > 80 ? processed.substring(0, 77) + '...' : processed;
+  return processed.length > 50 ? processed.substring(0, 47) + '...' : processed;
 };
 
 export const processProcessor = (processor: string | undefined, title: string): string | undefined => {
