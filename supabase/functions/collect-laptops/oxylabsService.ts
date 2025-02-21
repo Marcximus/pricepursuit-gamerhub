@@ -1,19 +1,17 @@
 
-import { OxylabsResult } from './types.ts';
-
 const OXYLABS_USERNAME = Deno.env.get('OXYLABS_USERNAME');
 const OXYLABS_PASSWORD = Deno.env.get('OXYLABS_PASSWORD');
 
-export async function fetchBrandData(brand: string, pages: number, startPage: number = 1): Promise<OxylabsResult[]> {
-  console.log(`Fetching data for brand ${brand} (pages ${startPage} to ${startPage + pages - 1})`);
+export async function fetchBrandData(brand: string, pages: number = 5): Promise<OxylabsResult[]> {
+  console.log(`Fetching data for brand ${brand} (5 pages)`);
   
   const payload = {
     source: 'amazon_search',
     query: `${brand} laptop`,
     domain: 'com',
     geo_location: '90210',
-    start_page: startPage.toString(),
-    pages: pages.toString(),
+    start_page: '1',  // Fixed to start from page 1
+    pages: '5',       // Fixed to 5 pages as per requirements
     parse: true
   };
 
