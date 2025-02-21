@@ -6,13 +6,42 @@ import { processScreenSize, processWeight, processBatteryLife } from './physical
 import type { Product } from "@/types/product";
 
 export const processLaptopData = (laptop: any): Product => {
-  console.log('Processing laptop data:', {
+  // Add debug logging for raw price data
+  console.log('Raw laptop price data:', {
     id: laptop.id,
-    title: laptop.title,
-    rawPrice: laptop.current_price,
-    rawOriginalPrice: laptop.original_price
+    rawCurrentPrice: laptop.current_price,
+    rawOriginalPrice: laptop.original_price,
+    currentPriceType: typeof laptop.current_price
   });
   
+  // Ensure prices are properly converted to numbers
+  let current_price = null;
+  let original_price = null;
+
+  // Handle current price
+  if (laptop.current_price !== null && laptop.current_price !== undefined) {
+    const parsedPrice = parseFloat(laptop.current_price);
+    if (!isNaN(parsedPrice)) {
+      current_price = parsedPrice;
+    }
+  }
+
+  // Handle original price
+  if (laptop.original_price !== null && laptop.original_price !== undefined) {
+    const parsedPrice = parseFloat(laptop.original_price);
+    if (!isNaN(parsedPrice)) {
+      original_price = parsedPrice;
+    }
+  }
+
+  // Log processed price data
+  console.log('Processed price data:', {
+    id: laptop.id,
+    processedCurrentPrice: current_price,
+    processedOriginalPrice: original_price,
+    currentPriceType: typeof current_price
+  });
+
   // Parse review_data if it exists and is a string
   let parsedReviewData = laptop.review_data;
   if (typeof laptop.review_data === 'string') {
@@ -43,20 +72,6 @@ export const processLaptopData = (laptop: any): Product => {
       avgRating = total > 0 ? weightedSum / total : null;
     }
   }
-
-  // Ensure current_price and original_price are properly handled as numbers
-  const current_price = typeof laptop.current_price === 'number' ? laptop.current_price :
-                       typeof laptop.current_price === 'string' ? parseFloat(laptop.current_price) : null;
-                       
-  const original_price = typeof laptop.original_price === 'number' ? laptop.original_price :
-                        typeof laptop.original_price === 'string' ? parseFloat(laptop.original_price) : null;
-
-  console.log('Processed price data:', {
-    id: laptop.id,
-    processedCurrentPrice: current_price,
-    processedOriginalPrice: original_price,
-    priceType: typeof current_price
-  });
 
   const processed = {
     id: laptop.id,
