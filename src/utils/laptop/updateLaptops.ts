@@ -9,7 +9,7 @@ export const updateLaptops = async () => {
     // Get ALL laptops with is_laptop=true, no other filters
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
-      .select('id, asin')
+      .select('id, asin, update_status')
       .eq('is_laptop', true);
 
     if (fetchError) {
@@ -26,38 +26,52 @@ export const updateLaptops = async () => {
       return null;
     }
 
-    const updateCount = laptops.length;
+    // Filter out laptops that are already being processed
+    const laptopsToUpdate = laptops.filter(l => 
+      l.update_status !== 'in_progress' && l.update_status !== 'pending_update'
+    );
+
+    if (laptopsToUpdate.length === 0) {
+      console.log('All laptops are already being processed');
+      toast({
+        title: "Update in progress",
+        description: "All laptops are currently being updated. Please wait for the current update to complete.",
+      });
+      return null;
+    }
+
+    const updateCount = laptopsToUpdate.length;
     console.log(`Found ${updateCount} laptops to update`);
     
-    // Mark ALL laptops as pending update
+    // Mark laptops as pending update
     const { error: statusError } = await supabase
       .from('products')
       .update({ 
         update_status: 'pending_update',
         last_checked: new Date().toISOString()
       })
-      .in('id', laptops.map(l => l.id));
+      .in('id', laptopsToUpdate.map(l => l.id));
 
     if (statusError) {
       console.error('Error marking laptops for update:', statusError);
       throw statusError;
     }
     
-    // Call edge function to update ALL laptops
+    // Call edge function to update laptops
     const { data, error } = await supabase.functions.invoke('update-laptops', {
       body: { 
-        laptops: laptops.map(l => ({ id: l.id, asin: l.asin })),
-        updateAll: true // Flag to indicate we want ALL laptops updated
+        laptops: laptopsToUpdate.map(l => ({ id: l.id, asin: l.asin })),
       }
     });
     
     if (error) {
       console.error('Error calling update-laptops function:', error);
-      // Reset status on error
+      // Reset status on error only for laptops that were pending
       await supabase
         .from('products')
         .update({ update_status: null })
-        .in('id', laptops.map(l => l.id));
+        .in('id', laptopsToUpdate.map(l => l.id))
+        .eq('update_status', 'pending_update');
         
       toast({
         title: "Update failed",
