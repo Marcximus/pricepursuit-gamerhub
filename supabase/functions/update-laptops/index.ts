@@ -118,7 +118,8 @@ async function processAllLaptops(laptops: Laptop[], supabase: any) {
             last_updated: new Date().toISOString()
           };
 
-          // Call the stored procedure with correct parameter order
+          // Call the stored procedure with the correct parameter order (p_price, p_product_id, p_update_data)
+          console.log(`Updating laptop ${laptop.id} with current price ${currentPrice}`);
           const { error: updateError } = await supabase.rpc(
             'update_product_with_price_history',
             {
