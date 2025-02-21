@@ -192,8 +192,22 @@ export const processBatteryLife = (batteryLife: string | undefined, title: strin
   return undefined;
 };
 
-export const processLaptopData = (laptop: Product): Product => {
+export const processLaptopData = (laptop: any): Product => {
   console.log('Processing laptop:', laptop.title);
+  
+  // Parse review_data if it exists and is a string
+  let parsedReviewData = laptop.review_data;
+  if (typeof laptop.review_data === 'string') {
+    try {
+      parsedReviewData = JSON.parse(laptop.review_data);
+    } catch (error) {
+      console.error('Error parsing review data:', error);
+      parsedReviewData = undefined;
+    }
+  } else if (laptop.review_data === null) {
+    parsedReviewData = undefined;
+  }
+
   const processed = {
     ...laptop,
     title: processTitle(laptop.title || ''),
@@ -203,8 +217,10 @@ export const processLaptopData = (laptop: Product): Product => {
     graphics: processGraphics(laptop.graphics, laptop.title || ''),
     screen_size: processScreenSize(laptop.screen_size, laptop.title || ''),
     weight: processWeight(laptop.weight, laptop.title || ''),
-    battery_life: processBatteryLife(laptop.battery_life, laptop.title || '')
+    battery_life: processBatteryLife(laptop.battery_life, laptop.title || ''),
+    review_data: parsedReviewData
   };
+
   console.log('Processed laptop:', processed);
   return processed;
 };

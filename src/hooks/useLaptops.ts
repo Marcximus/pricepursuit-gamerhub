@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { processLaptopData } from "@/utils/laptopDataProcessing";
 import { collectLaptops } from "@/utils/laptopCollection";
+import type { Product } from "@/types/product";
 
 export { collectLaptops };
 
@@ -41,7 +42,7 @@ export const useLaptops = () => {
 
         console.log(`Found ${data.length} laptops from database`);
         // Process each laptop's data before returning
-        return data.map(processLaptopData);
+        return data.map(laptop => processLaptopData(laptop as any));
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
         return [];
@@ -51,7 +52,7 @@ export const useLaptops = () => {
     refetchInterval: 1000 * 60 * 60 * 24, // Refetch every 24 hours to check for updates
     retryDelay: 1000, // Wait 1 second between retries
     retry: 3, // Retry failed requests 3 times
-    placeholderData: (previousData) => previousData?.map(processLaptopData), // Process previous data as well
+    placeholderData: (previousData) => previousData?.map(laptop => processLaptopData(laptop as any)), // Process previous data as well
   });
 
   return {
