@@ -67,8 +67,8 @@ export const useLaptops = () => {
         return [];
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes to cache the data
-    refetchInterval: 1000 * 60 * 2, // Refetch every 2 minutes to check for updates
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours to cache the data
+    refetchInterval: 1000 * 60 * 60 * 24, // Refetch every 24 hours to check for updates
     retryDelay: 1000, // Wait 1 second between retries
     retry: 3, // Retry failed requests 3 times
     placeholderData: (previousData) => previousData, // This replaces keepPreviousData
@@ -79,4 +79,3 @@ export const useLaptops = () => {
     collectLaptops,
   };
 };
-
