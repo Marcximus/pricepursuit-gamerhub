@@ -13,7 +13,12 @@ serve(async (req) => {
 
   try {
     const requestData = await req.json();
-    const { brands, pages_per_brand = 3 } = requestData as CollectLaptopsRequest;
+    const { 
+      brands, 
+      pages_per_brand = 2,
+      batch_number,
+      total_batches 
+    } = requestData as CollectLaptopsRequest;
 
     if (!brands || !Array.isArray(brands) || brands.length === 0) {
       return new Response(
@@ -22,12 +27,25 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Starting collection for ${brands.length} brands, ${pages_per_brand} pages each`);
+    console.log(`Starting batch ${batch_number}/${total_batches} for brands: ${brands.join(', ')}`);
 
-    // Define the main collection task
+    // Update status for brands being processed
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    await supabaseClient
+      .from('products')
+      .update({ collection_status: 'in_progress' })
+      .eq('is_laptop', true)
+      .in('brand', brands);
+
+    // Define the collection task
     const collectionTask = async () => {
       let totalProcessed = 0;
       let totalSaved = 0;
+      const errors = [];
 
       for (const brand of brands) {
         console.log(`\n=== Processing brand: ${brand} ===`);
@@ -46,37 +64,50 @@ serve(async (req) => {
                 totalProcessed++;
               } catch (error) {
                 console.error(`Failed to save product ${product.asin}:`, error);
+                errors.push({ brand, asin: product.asin, error: error.message });
                 continue;
               }
             }
+
+            // Small delay between pages
+            await new Promise(resolve => setTimeout(resolve, 1000));
           }
 
         } catch (brandError) {
           console.error(`Error processing brand ${brand}:`, brandError);
+          errors.push({ brand, error: brandError.message });
           continue;
         }
+
+        // Update status for completed brand
+        await supabaseClient
+          .from('products')
+          .update({ collection_status: 'completed' })
+          .eq('brand', brand);
       }
 
-      console.log('\n=== Collection Process Complete ===');
+      console.log(`\n=== Batch ${batch_number}/${total_batches} Complete ===`);
       console.log({
         totalProcessed,
         totalSaved,
-        brandsProcessed: brands.length,
-        pagesPerBrand: pages_per_brand
+        errorCount: errors.length,
+        brandsProcessed: brands.length
       });
+
+      if (errors.length > 0) {
+        console.error('Collection errors:', errors);
+      }
     };
 
-    // Ensure the function runs to completion using waitUntil
+    // Use waitUntil to ensure the function runs to completion
     EdgeRuntime.waitUntil(collectionTask());
 
-    // Return immediate response while collection continues in background
+    // Return immediate response while collection continues
     return new Response(
       JSON.stringify({ 
-        message: 'Laptop collection started in background',
-        details: {
-          brands: brands.length,
-          pagesPerBrand: pages_per_brand
-        }
+        message: `Started collection for batch ${batch_number}/${total_batches}`,
+        brands: brands.length,
+        pages_per_brand
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -89,3 +120,4 @@ serve(async (req) => {
     );
   }
 });
+
