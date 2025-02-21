@@ -23,12 +23,18 @@ export const collectLaptops = async () => {
       .limit(1);
 
     if (statusError) {
-      console.error('Error checking collection status:', statusError);
-      throw new Error(`Failed to check collection status: ${statusError.message}`);
+      const errorMsg = `Failed to check collection status: ${statusError.message}`;
+      console.error(errorMsg);
+      toast({
+        title: "Error checking collection status",
+        description: errorMsg,
+        variant: "destructive"
+      });
+      return null;
     }
 
     if (statusData && statusData.length > 0) {
-      console.log('Collection already in progress, aborting');
+      console.log('Collection already in progress:', statusData);
       toast({
         title: "Collection in progress",
         description: "Please wait for the current collection to complete",
@@ -53,7 +59,7 @@ export const collectLaptops = async () => {
       brandBatches.push(LAPTOP_BRANDS.slice(i, i + BRANDS_PER_BATCH));
     }
 
-    console.log(`Created ${brandBatches.length} batches for processing`);
+    console.log(`Created ${brandBatches.length} batches for processing:`, brandBatches);
 
     // Process each batch sequentially
     for (let i = 0; i < brandBatches.length; i++) {
@@ -61,25 +67,30 @@ export const collectLaptops = async () => {
       console.log(`Starting batch ${i + 1}/${brandBatches.length}: ${batch.join(', ')}`);
 
       try {
-        console.log('Invoking collect-laptops edge function...');
-        const { data, error } = await supabase.functions.invoke('collect-laptops', {
-          body: { 
-            brands: batch,
-            pages_per_brand: 5,
-            batch_number: i + 1,
-            total_batches: brandBatches.length
-          }
+        console.log('Preparing to invoke collect-laptops edge function...');
+        
+        const requestBody = { 
+          brands: batch,
+          pages_per_brand: 5,
+          batch_number: i + 1,
+          total_batches: brandBatches.length
+        };
+        
+        console.log('Edge function request body:', requestBody);
+        
+        const { data: responseData, error: functionError } = await supabase.functions.invoke('collect-laptops', {
+          body: requestBody
         });
 
-        if (error) {
-          console.error(`Error in batch ${i + 1}:`, error);
+        if (functionError) {
+          console.error(`Edge function error in batch ${i + 1}:`, functionError);
           toast({
             title: `Batch ${i + 1} failed`,
-            description: error.message,
+            description: functionError.message,
             variant: "destructive"
           });
         } else {
-          console.log(`Batch ${i + 1} completed successfully:`, data);
+          console.log(`Edge function response for batch ${i + 1}:`, responseData);
           toast({
             title: "Batch Progress",
             description: `Completed batch ${i + 1} of ${brandBatches.length}`,
@@ -87,16 +98,21 @@ export const collectLaptops = async () => {
         }
 
         // Clear any in_progress status that might be stuck
-        await supabase
+        console.log(`Cleaning up in_progress status for batch ${i + 1}...`);
+        const { error: cleanupError } = await supabase
           .from('products')
           .update({ collection_status: 'completed' })
           .eq('collection_status', 'in_progress')
           .in('brand', batch);
 
+        if (cleanupError) {
+          console.error(`Error cleaning up batch ${i + 1} status:`, cleanupError);
+        }
+
       } catch (error) {
         console.error(`Critical error in batch ${i + 1}:`, error);
         toast({
-          title: "Error",
+          title: "Critical Error",
           description: `Failed to process batch ${i + 1}: ${error.message}`,
           variant: "destructive"
         });
@@ -116,26 +132,35 @@ export const collectLaptops = async () => {
     });
 
     // Final status check and cleanup
-    const { data: finalStatus } = await supabase
+    const { data: finalStatus, error: finalStatusError } = await supabase
       .from('products')
       .select('collection_status')
       .eq('collection_status', 'in_progress');
 
+    if (finalStatusError) {
+      console.error('Error checking final status:', finalStatusError);
+    }
+
     if (finalStatus && finalStatus.length > 0) {
       console.log(`Found ${finalStatus.length} items still marked as in_progress, cleaning up...`);
-      await supabase
+      const { error: cleanupError } = await supabase
         .from('products')
         .update({ collection_status: 'completed' })
         .eq('collection_status', 'in_progress');
+
+      if (cleanupError) {
+        console.error('Error during final cleanup:', cleanupError);
+      }
     }
 
     return { batches: brandBatches.length };
 
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'An unexpected error occurred';
     console.error('Critical error in collectLaptops:', error);
     toast({
       title: "Collection failed",
-      description: error.message || "An unexpected error occurred",
+      description: errorMsg,
       variant: "destructive"
     });
     throw error;
