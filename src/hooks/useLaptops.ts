@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -28,6 +27,11 @@ export const collectLaptops = async () => {
   }
 };
 
+const extractNumber = (text: string, pattern: RegExp): number | undefined => {
+  const match = text.match(pattern);
+  return match ? parseFloat(match[1]) : undefined;
+};
+
 const processTitle = (title: string): string => {
   if (!title) return '';
   
@@ -46,142 +50,150 @@ const processTitle = (title: string): string => {
   return processed.length > 80 ? processed.substring(0, 77) + '...' : processed;
 };
 
-const processProcessor = (processor: string | undefined): string | undefined => {
-  if (!processor) return undefined;
+const processProcessor = (processor: string | undefined, title: string): string | undefined => {
+  // If we already have a valid processor, return it
+  if (processor && typeof processor === 'string' && !processor.includes('undefined')) {
+    return processor;
+  }
   
-  let processed = processor
-    .replace(/\s*processor\s*/i, '')
-    .replace(/\s*CPU\s*/i, '')
-    .trim();
-    
-  // Process Intel processors
-  if (processed.toLowerCase().includes('intel')) {
-    processed = processed
-      .replace(/Intel\s*Core\s*/i, '')
-      .replace(/\s*processor\s*/i, '')
-      .replace(/(\d+)th\s*Gen\s*/i, '$1th Gen ')
-      .replace(/(\d+)nd\s*Gen\s*/i, '$1nd Gen ')
-      .replace(/(\d+)rd\s*Gen\s*/i, '$1rd Gen ')
-      .trim();
-      
-    // Add generation if missing for newer Intel processors
-    if (processed.match(/i[357959](?!-\d)/i)) {
-      processed = processed.replace(/^(i[357959])(?!-|\d)/i, '$1-13th Gen');
+  // Try to extract processor info from title
+  const processorPatterns = [
+    /\b(Intel Core i[3579]|AMD Ryzen [3579]|Intel Celeron|Intel Pentium|MediaTek|Apple M[12])\s*[\w-]*\b/i,
+    /\b(i[3579]-\d{4,5}[A-Z]*|Ryzen\s*\d\s*\d{4}[A-Z]*)\b/i
+  ];
+  
+  for (const pattern of processorPatterns) {
+    const match = title.match(pattern);
+    if (match) {
+      return match[0].trim();
     }
   }
   
-  // Process AMD processors
-  if (processed.toLowerCase().includes('amd')) {
-    processed = processed
-      .replace(/AMD\s*/i, '')
-      .replace(/\s*processor\s*/i, '')
-      .replace(/Ryzen\s*(\d+)\s*/i, 'Ryzen $1 ')
-      .trim();
-  }
-  
-  return processed;
+  return undefined;
 };
 
-const processRam = (ram: string | undefined): string | undefined => {
-  if (!ram) return undefined;
+const processRam = (ram: string | undefined, title: string): string | undefined => {
+  // If we already have valid RAM info, return it
+  if (ram && typeof ram === 'string' && !ram.includes('undefined')) {
+    return ram;
+  }
   
-  let processed = ram
-    .replace(/^RAM\s*/i, '')
-    .replace(/\s*Memory\s*/i, '')
-    .replace(/DDR\d+/i, '') // Remove DDR version
-    .replace(/\s*RAM\s*/i, '')
-    .replace(/gigabytes?\b/i, 'GB')
-    .trim();
-    
-  // Extract the number and standardize format
-  const match = processed.match(/(\d+)\s*GB?/i);
+  // Try to extract RAM from title
+  const ramPattern = /\b(\d+)\s*GB\s*(DDR[34]|LPDDR[345]|RAM)?\b/i;
+  const match = title.match(ramPattern);
   if (match) {
     return `${match[1]}GB`;
   }
   
-  return processed;
+  return undefined;
 };
 
-const processStorage = (storage: string | undefined): string | undefined => {
-  if (!storage) return undefined;
-  
-  let processed = storage
-    .replace(/solid\s*state\s*drive/i, 'SSD')
-    .replace(/hard\s*disk\s*drive/i, 'HDD')
-    .replace(/\s*PCIe\s*NVMe\s*M\.2\s*/i, ' ')
-    .trim();
-    
-  // Convert all sizes to standardized format
-  processed = processed.replace(/(\d+)\s*(GB|TB|PB)/i, (_, num, unit) => {
-    const number = parseInt(num);
-    if (unit.toLowerCase() === 'tb') {
-      return `${number}TB`;
-    } else if (unit.toLowerCase() === 'pb') {
-      return `${number * 1024}TB`;
-    }
-    return `${number}GB`;
-  });
-  
-  // Add storage type if missing
-  if (!processed.includes('SSD') && !processed.includes('HDD')) {
-    processed += ' SSD';
+const processStorage = (storage: string | undefined, title: string): string | undefined => {
+  // If we already have valid storage info, return it
+  if (storage && typeof storage === 'string' && !storage.includes('undefined')) {
+    return storage;
   }
   
-  return processed;
+  // Try to extract storage information from title
+  const storagePattern = /\b(\d+)\s*(GB|TB)\s*(SSD|HDD|eMMC|PCIe|NVMe|Storage)?\b/i;
+  const match = title.match(storagePattern);
+  if (match) {
+    const size = match[1];
+    const unit = match[2].toUpperCase();
+    const type = match[3]?.toUpperCase() || 'SSD';
+    return `${size}${unit} ${type}`;
+  }
+  
+  return undefined;
 };
 
-const processGraphics = (graphics: string | undefined): string | undefined => {
-  if (!graphics) return undefined;
+const processGraphics = (graphics: string | undefined, title: string): string | undefined => {
+  // If we already have valid graphics info, return it
+  if (graphics && typeof graphics === 'string' && !graphics.includes('undefined')) {
+    return graphics;
+  }
   
-  return graphics
-    .replace(/NVIDIA\s*GeForce\s*/i, '')
-    .replace(/AMD\s*Radeon\s*/i, 'Radeon ')
-    .replace(/Intel\s*(UHD|Iris)\s*/i, '$1 ')
-    .replace(/\s*Graphics\s*/i, '')
-    .replace(/\s*with\s*\d+GB\s*GDDR\d+/i, '')
-    .trim();
+  // Try to extract graphics info from title
+  const graphicsPatterns = [
+    /\b(NVIDIA GeForce RTX \d{4}(?:\s*Ti)?|NVIDIA GeForce GTX \d{3,4}(?:\s*Ti)?)\b/i,
+    /\b(Intel (UHD|Iris Xe|Iris Plus) Graphics|AMD Radeon)\b/i,
+    /\bRTX\s*(\d{4})(?:\s*Ti)?\b/i,
+    /\bGTX\s*(\d{3,4})(?:\s*Ti)?\b/i
+  ];
+  
+  for (const pattern of graphicsPatterns) {
+    const match = title.match(pattern);
+    if (match) {
+      let gpu = match[0];
+      if (gpu.startsWith('RTX')) {
+        gpu = 'NVIDIA GeForce ' + gpu;
+      } else if (gpu.startsWith('GTX')) {
+        gpu = 'NVIDIA GeForce ' + gpu;
+      }
+      return gpu.trim();
+    }
+  }
+  
+  // If no dedicated GPU found and we see Intel processor, assume integrated graphics
+  if (title.includes('Intel')) {
+    return 'Intel UHD Graphics';
+  }
+  
+  return undefined;
 };
 
-const processScreenSize = (size: string | undefined): string | undefined => {
-  if (!size) return undefined;
+const processScreenSize = (screenSize: string | undefined, title: string): string | undefined => {
+  // If we already have valid screen size, return it
+  if (screenSize && typeof screenSize === 'string' && !screenSize.includes('undefined')) {
+    return screenSize;
+  }
   
-  // Extract numeric size and standardize format
-  const match = size.match(/(\d+\.?\d*)\s*-?\s*inch/i);
+  // Try to extract screen size from title
+  const screenPattern = /\b([\d.]+)[-"]?\s*(?:inch|"|inches)\b/i;
+  const match = title.match(screenPattern);
   if (match) {
     return `${match[1]}"`;
   }
   
-  return size.replace(/(\d+\.?\d*)\s*inch(es)?/i, '$1"').trim();
+  return undefined;
 };
 
-const processWeight = (weight: string | undefined): string | undefined => {
-  if (!weight) return undefined;
-  
-  // Convert all weights to kg and standardize format
-  return weight
-    .replace(/(\d+\.?\d*)\s*(kg|pounds?|lbs?)/i, (_, num, unit) => {
-      const number = parseFloat(num);
-      if (unit.toLowerCase().startsWith('lb')) {
-        return `${(number * 0.453592).toFixed(2)} kg`;
-      }
-      return `${number} kg`;
-    })
-    .trim();
-};
-
-const processBatteryLife = (battery: string | undefined): string | undefined => {
-  if (!battery) return undefined;
-  
-  // Extract hours and standardize format
-  const match = battery.match(/(\d+\.?\d*)\s*(hour|hr)/i);
-  if (match) {
-    return `${match[1]} hours`;
+const processWeight = (weight: string | undefined, title: string): string | undefined => {
+  // If we already have valid weight info, return it
+  if (weight && typeof weight === 'string' && !weight.includes('undefined')) {
+    return weight;
   }
   
-  return battery
-    .replace(/up\s*to\s*/i, '')
-    .replace(/(\d+\.?\d*)\s*(hour|hr)s?/i, '$1 hours')
-    .trim();
+  // Try to extract weight from title
+  const weightPattern = /\b([\d.]+)\s*(kg|pounds?|lbs?)\b/i;
+  const match = title.match(weightPattern);
+  if (match) {
+    const value = parseFloat(match[1]);
+    const unit = match[2].toLowerCase();
+    if (unit.startsWith('lb')) {
+      return `${(value * 0.453592).toFixed(2)} kg`;
+    }
+    return `${value} kg`;
+  }
+  
+  return undefined;
+};
+
+const processBatteryLife = (batteryLife: string | undefined, title: string): string | undefined => {
+  // If we already have valid battery life info, return it
+  if (batteryLife && typeof batteryLife === 'string' && !batteryLife.includes('undefined')) {
+    return batteryLife;
+  }
+  
+  // Try to extract battery life from title
+  const batteryPattern = /\b(?:up to |(\d+)[+]?\s*(?:hour|hr)s?|(\d+)[+]?\s*(?:hour|hr)s? battery)\b/i;
+  const match = title.match(batteryPattern);
+  if (match) {
+    const hours = match[1] || match[2];
+    return `${hours} hours`;
+  }
+  
+  return undefined;
 };
 
 const processLaptopData = (laptop: Product): Product => {
@@ -189,13 +201,13 @@ const processLaptopData = (laptop: Product): Product => {
   const processed = {
     ...laptop,
     title: processTitle(laptop.title || ''),
-    processor: processProcessor(laptop.processor),
-    ram: processRam(laptop.ram),
-    storage: processStorage(laptop.storage),
-    graphics: processGraphics(laptop.graphics),
-    screen_size: processScreenSize(laptop.screen_size),
-    weight: processWeight(laptop.weight),
-    battery_life: processBatteryLife(laptop.battery_life)
+    processor: processProcessor(laptop.processor, laptop.title || ''),
+    ram: processRam(laptop.ram, laptop.title || ''),
+    storage: processStorage(laptop.storage, laptop.title || ''),
+    graphics: processGraphics(laptop.graphics, laptop.title || ''),
+    screen_size: processScreenSize(laptop.screen_size, laptop.title || ''),
+    weight: processWeight(laptop.weight, laptop.title || ''),
+    battery_life: processBatteryLife(laptop.battery_life, laptop.title || '')
   };
   console.log('Processed laptop:', processed);
   return processed;
