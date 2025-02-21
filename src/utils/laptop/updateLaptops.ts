@@ -6,26 +6,6 @@ export const updateLaptops = async () => {
   try {
     console.log('Triggering laptop updates...');
     
-    const { count: inProgressCount, error: checkError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true)
-      .eq('update_status', 'in_progress');
-
-    if (checkError) {
-      console.error('Error checking update status:', checkError);
-      throw checkError;
-    }
-
-    if (inProgressCount && inProgressCount > 0) {
-      console.log('Update already in progress');
-      toast({
-        title: "Update in progress",
-        description: "Please wait for the current update to complete",
-      });
-      return null;
-    }
-    
     // Find laptops needing updates
     const { count: updateCount, error: countError } = await supabase
       .from('products')
@@ -49,10 +29,10 @@ export const updateLaptops = async () => {
 
     console.log(`Found ${updateCount} laptops that need updating`);
     
-    // Mark laptops as being updated
+    // Mark laptops for update with explicit status
     const { error: statusError } = await supabase
       .from('products')
-      .update({ update_status: 'in_progress' })
+      .update({ update_status: 'pending_update' })
       .eq('is_laptop', true)
       .or('current_price.is.null,last_checked.lt.now()-interval\'1 day\'');
 
@@ -71,6 +51,12 @@ export const updateLaptops = async () => {
     
     if (error) {
       console.error('Error updating laptops:', error);
+      // Reset status on error
+      await supabase
+        .from('products')
+        .update({ update_status: null })
+        .eq('update_status', 'pending_update');
+        
       toast({
         title: "Update failed",
         description: error.message || "Failed to start laptop updates",
@@ -85,14 +71,14 @@ export const updateLaptops = async () => {
       description: `Starting updates for ${updateCount} laptops. This may take a few minutes to complete.`,
     });
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to update laptops:', error);
     try {
       // Reset status on error
       await supabase
         .from('products')
-        .update({ update_status: 'pending' })
-        .eq('update_status', 'in_progress');
+        .update({ update_status: null })
+        .eq('update_status', 'pending_update');
     } catch (resetError) {
       console.error('Error resetting update status:', resetError);
     }
