@@ -6,12 +6,11 @@ import { processScreenSize, processWeight, processBatteryLife } from './physical
 import type { Product } from "@/types/product";
 
 export const processLaptopData = (laptop: any): Product => {
-  // Add debug logging for raw price data
-  console.log('Raw laptop price data:', {
+  // Add debug logging for review data
+  console.log('Raw review data:', {
     id: laptop.id,
-    rawCurrentPrice: laptop.current_price,
-    rawOriginalPrice: laptop.original_price,
-    currentPriceType: typeof laptop.current_price
+    reviewData: laptop.review_data,
+    productReviews: laptop.product_reviews
   });
   
   // Ensure prices are properly converted to numbers
@@ -34,30 +33,48 @@ export const processLaptopData = (laptop: any): Product => {
     }
   }
 
-  // Log processed price data
-  console.log('Processed price data:', {
-    id: laptop.id,
-    processedCurrentPrice: current_price,
-    processedOriginalPrice: original_price,
-    currentPriceType: typeof current_price
-  });
+  // Process review data
+  let parsedReviewData = {
+    rating_breakdown: {},
+    recent_reviews: []
+  };
 
-  // Parse review_data if it exists and is a string
-  let parsedReviewData = laptop.review_data;
+  // Try to parse review_data if it's a string
   if (typeof laptop.review_data === 'string') {
     try {
       parsedReviewData = JSON.parse(laptop.review_data);
     } catch (error) {
       console.error('Error parsing review data:', error);
-      parsedReviewData = undefined;
     }
+  } else if (laptop.review_data) {
+    parsedReviewData = laptop.review_data;
   }
 
-  // Calculate average rating and total reviews from review data if not available directly
+  // Process product_reviews into recent_reviews format if they exist
+  if (Array.isArray(laptop.product_reviews) && laptop.product_reviews.length > 0) {
+    parsedReviewData.recent_reviews = laptop.product_reviews.map(review => ({
+      rating: review.rating,
+      title: review.title,
+      content: review.content,
+      reviewer_name: review.reviewer_name,
+      review_date: review.review_date,
+      verified_purchase: review.verified_purchase,
+      helpful_votes: review.helpful_votes
+    }));
+    
+    // Calculate rating breakdown
+    const breakdown = laptop.product_reviews.reduce((acc, review) => {
+      acc[review.rating] = (acc[review.rating] || 0) + 1;
+      return acc;
+    }, {});
+    parsedReviewData.rating_breakdown = breakdown;
+  }
+
+  // Calculate average rating and total reviews
   let avgRating = laptop.average_rating;
   let totalReviews = laptop.total_reviews;
   
-  if ((!avgRating || !totalReviews) && parsedReviewData?.rating_breakdown) {
+  if ((!avgRating || !totalReviews) && parsedReviewData.rating_breakdown) {
     const ratings = Object.entries(parsedReviewData.rating_breakdown)
       .map(([rating, count]) => ({
         rating: parseInt(rating),
@@ -73,14 +90,23 @@ export const processLaptopData = (laptop: any): Product => {
     }
   }
 
-  const processed = {
+  // Log processed review data
+  console.log('Processed review data:', {
+    id: laptop.id,
+    reviewCount: parsedReviewData.recent_reviews?.length,
+    hasRatingBreakdown: !!parsedReviewData.rating_breakdown,
+    avgRating,
+    totalReviews
+  });
+
+  return {
     id: laptop.id,
     asin: laptop.asin,
     title: processTitle(laptop.title || ''),
     current_price: current_price,
     original_price: original_price,
     rating: laptop.rating || avgRating || null,
-    rating_count: laptop.rating_count || null,
+    rating_count: laptop.rating_count || totalReviews || null,
     image_url: laptop.image_url || null,
     product_url: laptop.product_url || null,
     last_checked: laptop.last_checked || null,
@@ -97,10 +123,8 @@ export const processLaptopData = (laptop: any): Product => {
     battery_life: processBatteryLife(laptop.battery_life, laptop.title || ''),
     total_reviews: totalReviews || null,
     average_rating: avgRating || null,
-    review_data: parsedReviewData || null
+    review_data: parsedReviewData
   };
-
-  return processed;
 };
 
 export * from './titleProcessor';

@@ -7,7 +7,9 @@ type LaptopReviewsProps = {
 };
 
 export function LaptopReviews({ reviewData }: LaptopReviewsProps) {
-  if (!reviewData.recent_reviews?.length) return null;
+  if (!reviewData?.recent_reviews || reviewData.recent_reviews.length === 0) {
+    return null;
+  }
 
   return (
     <div className="mt-4">
