@@ -11,6 +11,7 @@ export interface Product {
   product_url: string;
   last_checked: string;
   created_at: string;
+  update_status?: 'pending' | 'in_progress' | 'completed' | 'error';
   processor?: string;
   processor_score?: number;
   ram?: string;
@@ -46,4 +47,3 @@ export interface PriceHistory {
   timestamp: string;
   created_at: string;
 }
-
