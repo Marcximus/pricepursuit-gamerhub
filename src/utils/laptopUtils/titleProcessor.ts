@@ -1,9 +1,10 @@
+
 export const processTitle = (title: string): string => {
   if (!title) return '';
   
-  // Extract brand name first
+  // Extract brand name first with expanded patterns
   const brandPatterns = [
-    /\b(HP|Dell|Lenovo|ASUS|Acer|Apple|Microsoft|MSI|Razer|Samsung|LG|Toshiba|Alienware|Gateway|Gigabyte|Huawei)\b/i,
+    /\b(Lenovo|HP|Dell|Apple|Acer|ASUS|Microsoft|Samsung|MSI|Razer|LG|Huawei|Dynabook|Toshiba|Gigabyte|Fujitsu|Panasonic|VAIO|Xiaomi|ThinkPad|IdeaPad|Pavilion|Inspiron|XPS|MacBook|Chromebook|ROG|Alienware|Predator|Swift|Aspire|Surface|Galaxy|GS|Blade|Gram|MateBook|LIFEBOOK|ToughBook|ProArt|Zenbook|Vivobook)\b/i,
   ];
   
   let brand = '';

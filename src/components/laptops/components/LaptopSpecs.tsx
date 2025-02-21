@@ -15,8 +15,8 @@ type LaptopSpecsProps = {
 };
 
 export function LaptopSpecs({ title, productUrl, specs }: LaptopSpecsProps) {
-  // Extract brand using regex pattern
-  const brandPattern = /\b(HP|Dell|Lenovo|ASUS|Acer|Apple|Microsoft|MSI|Razer|Samsung|LG|Toshiba|Alienware|Gateway|Gigabyte|Huawei)\b/i;
+  // Extract brand using comprehensive regex pattern
+  const brandPattern = /\b(Lenovo|HP|Dell|Apple|Acer|ASUS|Microsoft|Samsung|MSI|Razer|LG|Huawei|Dynabook|Toshiba|Gigabyte|Fujitsu|Panasonic|VAIO|Xiaomi|ThinkPad|IdeaPad|Pavilion|Inspiron|XPS|MacBook|Chromebook|ROG|Alienware|Predator|Swift|Aspire|Surface|Galaxy|GS|Blade|Gram|MateBook|LIFEBOOK|ToughBook|ProArt|Zenbook|Vivobook)\b/i;
   const brandMatch = title.match(brandPattern);
   const brand = brandMatch ? brandMatch[1] : 'Unknown Brand';
 
