@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 
 const corsHeaders = {
@@ -202,28 +201,55 @@ Deno.serve(async (req) => {
       throw new Error('Oxylabs credentials not configured')
     }
 
-    // Expanded list of search queries for laptops
+    // Expanded list of search queries for laptops, including all major brands
     const searchQueries = [
+      // Generic laptop searches
       "laptop",
-      "notebook",
-      "gaming laptop",
-      "2 in 1 laptop",
-      "chromebook",
-      "business laptop",
-      "ultrabook",
-      "student laptop",
-      "Dell laptop",
-      "HP laptop",
+      "notebook computer",
+      
+      // Major brands
       "Lenovo laptop",
+      "HP laptop",
+      "Dell laptop",
       "Apple MacBook",
-      "ASUS laptop",
       "Acer laptop",
-      "MSI gaming laptop",
-      "Razer laptop",
+      "ASUS laptop",
       "Microsoft Surface laptop",
-      "convertible laptop",
+      "Samsung laptop",
+      "MSI laptop",
+      "Razer laptop",
+      "LG gram laptop",
+      "Huawei laptop",
+      "Dynabook laptop",
+      "Gigabyte laptop",
+      "Fujitsu laptop",
+      "Panasonic laptop",
+      "VAIO laptop",
+      "Xiaomi laptop",
+      
+      // Use cases and categories
+      "gaming laptop",
+      "business laptop",
+      "student laptop",
+      "2-in-1 laptop",
+      "ultrabook",
+      "workstation laptop",
+      
+      // Price ranges
+      "premium laptop",
       "budget laptop",
-      "premium laptop"
+      
+      // Specific popular models
+      "ThinkPad laptop",
+      "XPS laptop",
+      "Spectre laptop",
+      "ROG laptop",
+      "Predator laptop",
+      "ZenBook laptop",
+      "IdeaPad laptop",
+      "Chromebook",
+      "MacBook Pro",
+      "MacBook Air"
     ]
 
     console.log('Starting laptop collection process...')
@@ -238,7 +264,7 @@ Deno.serve(async (req) => {
         domain: 'com',
         geo_location: '90210',
         start_page: '1',
-        pages: '2', // Changed from 100 to 2 to avoid rate limits
+        pages: '2', // Keeping at 2 pages per query to avoid rate limits
         parse: true
       }
 
@@ -260,7 +286,7 @@ Deno.serve(async (req) => {
         }
 
         const data = await response.json()
-        console.log('Oxylabs response:', JSON.stringify(data))
+        console.log(`Received response for query "${query}":`, JSON.stringify(data).slice(0, 200) + '...')
 
         // Extract results from the response
         const results = data.results?.[0]?.content?.results?.organic || []
@@ -356,4 +382,3 @@ Deno.serve(async (req) => {
     return respond({ error: error.message }, 500)
   }
 })
-
