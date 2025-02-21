@@ -12,18 +12,27 @@ type LaptopCardProps = {
 };
 
 export function LaptopCard({ laptop }: LaptopCardProps) {
-  // Add more detailed price logging
-  console.log('Rendering laptop prices:', {
+  // Add detailed logging for debugging
+  console.log('Rendering laptop:', {
     id: laptop.id,
+    title: laptop.title,
     asin: laptop.asin,
     currentPrice: laptop.current_price,
     originalPrice: laptop.original_price,
     lastChecked: laptop.last_checked,
     updateStatus: laptop.update_status,
+    specs: {
+      processor: laptop.processor,
+      ram: laptop.ram,
+      storage: laptop.storage,
+      graphics: laptop.graphics,
+      screenSize: laptop.screen_size,
+    }
   });
 
-  if (!laptop.asin) {
-    console.error('Missing ASIN for laptop:', laptop.title);
+  // Input validation
+  if (!laptop.asin || !laptop.title) {
+    console.error('Invalid laptop data:', laptop);
     return null;
   }
 
@@ -85,4 +94,3 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
     </Card>
   );
 }
-

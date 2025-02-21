@@ -20,6 +20,14 @@ export function LaptopList({
   onRetry,
   isRefetching 
 }: LaptopListProps) {
+  // Add debug logging
+  console.log('LaptopList render state:', {
+    laptopCount: laptops?.length || 0,
+    isLoading,
+    hasError: !!error,
+    isRefetching
+  });
+
   if (isLoading) {
     return (
       <div className="text-center py-12">
@@ -29,6 +37,7 @@ export function LaptopList({
   }
 
   if (error) {
+    console.error('LaptopList error:', error);
     return (
       <Card className="border-red-200 bg-red-50">
         <CardHeader>
@@ -46,6 +55,20 @@ export function LaptopList({
             {isRefetching ? "Retrying..." : "Try Again"}
           </Button>
         </CardContent>
+      </Card>
+    );
+  }
+
+  if (!laptops || laptops.length === 0) {
+    console.log('No laptops available to display');
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>No Laptops Found</CardTitle>
+          <CardDescription>
+            Try updating the laptop data or adjusting your filters.
+          </CardDescription>
+        </CardHeader>
       </Card>
     );
   }
