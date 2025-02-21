@@ -52,24 +52,37 @@ serve(async (req) => {
             }
 
             const data = await response.json()
+            
+            // Check if results exist and is an array
+            if (!data.results?.[0]?.content?.results || !Array.isArray(data.results[0].content.results)) {
+              console.log(`No valid results for ${brand} on page ${page}`)
+              continue
+            }
+
             const results = data.results[0].content.results
 
             // Process and save each result
             for (const result of results) {
               if (!result.asin) continue
 
+              // Extract numeric price value
+              const priceValue = result.price?.value || '0'
+              const originalPriceValue = result.price?.original_price || result.price?.value || '0'
+              const currentPrice = parseFloat(String(priceValue).replace(/[^0-9.]/g, ''))
+              const originalPrice = parseFloat(String(originalPriceValue).replace(/[^0-9.]/g, ''))
+
               // Save to Supabase
               const { error: upsertError } = await supabase
                 .from('products')
                 .upsert({
                   asin: result.asin,
-                  title: result.title,
-                  current_price: parseFloat(result.price?.value || '0'),
-                  original_price: parseFloat(result.price?.original_price || '0'),
+                  title: result.title || '',
+                  current_price: currentPrice,
+                  original_price: originalPrice,
                   rating: parseFloat(result.rating || '0'),
-                  rating_count: parseInt(result.reviews?.rating_count || '0'),
-                  image_url: result.image?.url,
-                  product_url: result.url,
+                  rating_count: parseInt(result.reviews?.rating_count?.replace(/[^0-9]/g, '') || '0'),
+                  image_url: result.image?.url || '',
+                  product_url: result.url || '',
                   is_laptop: true,
                   brand: brand,
                   collection_status: 'completed',
