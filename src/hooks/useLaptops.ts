@@ -1,18 +1,19 @@
 
 import { useQuery, QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 import { processLaptopData } from "@/utils/laptopUtils";
 import { collectLaptops, updateLaptops, refreshBrandModels } from "@/utils/laptop";
 import type { Product } from "@/types/product";
-import { initialLaptops } from "@/data/initialLaptops";
 
 export { collectLaptops, updateLaptops, refreshBrandModels };
 
+// Static QueryClient instance for sharing cache across components
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
-      gcTime: 10 * 60 * 1000,
+      staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes
+      gcTime: 10 * 60 * 1000,   // Keep unused data for 10 minutes
       refetchOnMount: false,
       refetchOnWindowFocus: false,
       refetchInterval: false,
@@ -20,10 +21,17 @@ const queryClient = new QueryClient({
   }
 });
 
-// Store initial data globally using our static dataset
-let initialData: Product[] = initialLaptops;
+// Store initial data globally
+let initialData: Product[] | undefined;
 
+// Function to fetch laptops that can be used for prefetching
 const fetchLaptops = async (): Promise<Product[]> => {
+  // Return cached data if available
+  if (initialData) {
+    console.log('Using cached initial data:', initialData.length, 'laptops');
+    return initialData;
+  }
+
   console.log('Fetching laptops from Supabase...');
   
   const { data: laptops, error } = await supabase
@@ -37,17 +45,17 @@ const fetchLaptops = async (): Promise<Product[]> => {
 
   if (error) {
     console.error('Error fetching laptops:', error);
-    // Return current initialData instead of throwing error
-    return initialData;
+    throw error;
   }
 
   if (!laptops || laptops.length === 0) {
-    console.log('No laptops found in database, using initial data');
-    return initialData;
+    console.log('No laptops found in database');
+    return [];
   }
 
   console.log('Processing', laptops.length, 'laptops');
   
+  // Process laptops in chunks to avoid blocking the main thread
   const chunkSize = 50;
   const processedLaptops: Product[] = [];
   
@@ -85,18 +93,17 @@ const fetchLaptops = async (): Promise<Product[]> => {
     processedLaptops.push(...processed);
   }
 
-  // Update our initialData with the latest data
+  // Cache the processed data
   initialData = processedLaptops;
   return processedLaptops;
 };
 
-// Start background fetch immediately
-console.log('Starting background data fetch...');
+// Prefetch laptops data and store in cache immediately
+console.log('Starting initial data prefetch...');
 fetchLaptops()
   .then(data => {
-    console.log('Background data fetch complete:', data.length, 'laptops');
+    console.log('Initial data prefetch complete:', data.length, 'laptops');
     queryClient.setQueryData(['laptops'], data);
-    initialData = data; // Update static data
   })
   .catch(console.error);
 
@@ -104,13 +111,14 @@ export const useLaptops = () => {
   const query = useQuery<Product[]>({
     queryKey: ['laptops'],
     queryFn: fetchLaptops,
+    // Use the shared QueryClient instance
     gcTime: queryClient.getDefaultOptions().queries?.gcTime,
     staleTime: queryClient.getDefaultOptions().queries?.staleTime,
     refetchOnMount: queryClient.getDefaultOptions().queries?.refetchOnMount,
     refetchOnWindowFocus: queryClient.getDefaultOptions().queries?.refetchOnWindowFocus,
     refetchInterval: queryClient.getDefaultOptions().queries?.refetchInterval,
-    // Always return initialData immediately
-    placeholderData: () => initialData,
+    // Always return initialData as placeholder if available
+    placeholderData: () => initialData || [],
     initialData: () => initialData,
   });
 
@@ -121,4 +129,3 @@ export const useLaptops = () => {
     refreshBrandModels,
   };
 };
-
