@@ -20,28 +20,6 @@ export function LaptopList({
   onRetry,
   isRefetching 
 }: LaptopListProps) {
-  // Add detailed logging for debugging
-  console.log('LaptopList render state:', {
-    laptopCount: laptops?.length || 0,
-    isLoading,
-    hasError: !!error,
-    isRefetching,
-    laptops: laptops?.map(l => ({
-      id: l.id,
-      title: l.title,
-      price: l.current_price
-    }))
-  });
-
-  if (isLoading) {
-    return (
-      <div className="text-center py-12">
-        <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
-        <p className="mt-2 text-gray-600">Loading laptops...</p>
-      </div>
-    );
-  }
-
   if (error) {
     console.error('LaptopList error:', error);
     return (
@@ -73,33 +51,44 @@ export function LaptopList({
     );
   }
 
-  if (!laptops || laptops.length === 0) {
-    console.log('No laptops available to display');
+  // Only show loading state on initial load, not during refetching
+  if (isLoading && !laptops?.length) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>No Laptops Found</CardTitle>
-          <CardDescription>
-            Try updating the laptop data or adjusting your filters.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button 
-            onClick={onRetry}
-            disabled={isRefetching}
-          >
-            {isRefetching ? "Updating..." : "Update Laptop Data"}
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="text-center py-12">
+        <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
+        <p className="mt-2 text-gray-600">Loading laptops...</p>
+      </div>
     );
   }
 
+  // Always show laptops if we have them, even during loading/refetching
+  if (laptops?.length > 0) {
+    return (
+      <div className="space-y-4">
+        {laptops.map((laptop) => (
+          <LaptopCard key={laptop.id} laptop={laptop} />
+        ))}
+      </div>
+    );
+  }
+
+  // Only show no laptops message if we're not loading and truly have no laptops
   return (
-    <div className="space-y-4">
-      {laptops.map((laptop) => (
-        <LaptopCard key={laptop.id} laptop={laptop} />
-      ))}
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>No Laptops Found</CardTitle>
+        <CardDescription>
+          Try updating the laptop data or adjusting your filters.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button 
+          onClick={onRetry}
+          disabled={isRefetching}
+        >
+          {isRefetching ? "Updating..." : "Update Laptop Data"}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

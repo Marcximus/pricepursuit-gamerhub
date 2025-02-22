@@ -15,71 +15,32 @@ export const useLaptops = () => {
       try {
         console.log('Fetching laptops from Supabase...');
         
-        // First get a count of all laptop products
-        const { count: totalCount, error: countError } = await supabase
+        // Fetch all laptops in one go with price and review data
+        const { data: laptops, error } = await supabase
           .from('products')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_laptop', true);
+          .select(`
+            *,
+            product_reviews (*)
+          `)
+          .eq('is_laptop', true)
+          .order('last_checked', { ascending: false });
 
-        if (countError) {
-          console.error('Error getting laptop count:', countError);
-          throw countError;
+        if (error) {
+          console.error('Error fetching laptops:', error);
+          throw error;
         }
 
-        console.log(`Total laptop count in database: ${totalCount}`);
-
-        // Fetch all laptops using pagination
-        const CHUNK_SIZE = 1000;
-        const allLaptops: any[] = [];
-        
-        for (let i = 0; i < Math.ceil((totalCount || 0) / CHUNK_SIZE); i++) {
-          console.log(`Fetching laptops chunk ${i + 1}`);
-          
-          const { data: laptopsChunk, error } = await supabase
-            .from('products')
-            .select(`
-              *,
-              product_reviews (*)
-            `)
-            .eq('is_laptop', true)
-            .order('last_checked', { ascending: false })
-            .range(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE - 1);
-
-          if (error) {
-            console.error('Error fetching laptops chunk:', error);
-            throw error;
-          }
-
-          if (laptopsChunk) {
-            allLaptops.push(...laptopsChunk);
-          }
-        }
-
-        if (!allLaptops || allLaptops.length === 0) {
+        if (!laptops || laptops.length === 0) {
           console.log('No laptops found in database');
           return [];
         }
 
         console.log('Laptops data fetched:', {
-          totalCount,
-          fetchedCount: allLaptops.length,
-          match: totalCount === allLaptops.length ? 'YES' : 'NO'
-        });
-
-        // Log count of laptops with prices for debugging
-        const laptopsWithPrices = allLaptops.filter(laptop => laptop.current_price != null && laptop.current_price > 0);
-        console.log('Laptop price analysis:', {
-          totalLaptops: allLaptops.length,
-          withPrices: laptopsWithPrices.length,
-          withoutPrices: allLaptops.length - laptopsWithPrices.length,
-          priceRange: laptopsWithPrices.length > 0 ? {
-            min: Math.min(...laptopsWithPrices.map(l => l.current_price || 0)),
-            max: Math.max(...laptopsWithPrices.map(l => l.current_price || 0))
-          } : 'no prices available'
+          fetchedCount: laptops.length
         });
 
         // Process and return the laptops
-        const processedLaptops = allLaptops.map(laptop => {
+        const processedLaptops = laptops.map(laptop => {
           const reviews = laptop.product_reviews || [];
           
           const reviewData = {
@@ -123,8 +84,9 @@ export const useLaptops = () => {
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchInterval: 1000 * 60 * 5, // 5 minutes
-    retry: 3,
+    gcTime: 1000 * 60 * 10, // 10 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false
   });
 
   return {
