@@ -120,8 +120,8 @@ export const useLaptops = () => {
         throw error;
       }
     },
-    staleTime: 1000 * 60 * 30, // 30 minutes
-    gcTime: 1000 * 60 * 60, // 1 hour
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours (garbage collection time)
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false
