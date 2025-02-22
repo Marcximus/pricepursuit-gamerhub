@@ -22,7 +22,7 @@ const queryClient = new QueryClient({
 });
 
 // Function to fetch laptops that can be used for prefetching
-const fetchLaptops = async () => {
+const fetchLaptops = async (): Promise<Product[]> => {
   console.log('Fetching laptops from Supabase...');
   
   const { data: laptops, error } = await supabase
@@ -103,7 +103,7 @@ export const prefetchLaptops = async () => {
 prefetchLaptops().catch(console.error);
 
 export const useLaptops = () => {
-  const query = useQuery({
+  const query = useQuery<Product[]>({
     queryKey: ['laptops'],
     queryFn: fetchLaptops,
     // Use the shared QueryClient instance
@@ -113,7 +113,7 @@ export const useLaptops = () => {
     refetchOnWindowFocus: queryClient.getDefaultOptions().queries?.refetchOnWindowFocus,
     refetchInterval: queryClient.getDefaultOptions().queries?.refetchInterval,
     // Placeholders should return empty array instead of undefined
-    placeholderData: () => [],
+    placeholderData: () => [] as Product[],
     // Get initial data from cache
     initialData: () => {
       return queryClient.getQueryData(['laptops']) as Product[] | undefined;

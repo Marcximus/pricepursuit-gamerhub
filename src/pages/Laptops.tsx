@@ -11,6 +11,7 @@ import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useFilteredLaptops } from "@/hooks/useFilteredLaptops";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
 import { collectLaptops } from "@/utils/laptop/collectLaptops";
+import type { Product } from "@/types/product";
 
 const ComparePriceLaptops = () => {
   const [sortBy, setSortBy] = useState<SortOption>("price-asc");
@@ -25,7 +26,7 @@ const ComparePriceLaptops = () => {
   });
 
   const { 
-    data: laptops, 
+    data: laptops = [] as Product[], 
     isLoading: isLaptopsLoading, 
     error: laptopsError,
     refetch: refetchLaptops,
