@@ -13,7 +13,7 @@ export async function fetchBrandData(brand: string, pagesPerBrand: number): Prom
     source: "amazon_search",
     domain: "com",
     query: sanitizedQuery,
-    start_page: 1,
+    start_page: 6,
     pages: pagesPerBrand,
     geo_location: "United States",
     user_agent_type: "desktop",
@@ -29,7 +29,8 @@ export async function fetchBrandData(brand: string, pagesPerBrand: number): Prom
   console.log('Sending request to Oxylabs:', {
     brand,
     query: sanitizedQuery,
-    pages: pagesPerBrand
+    pages: pagesPerBrand,
+    start_page: 6
   });
 
   try {
