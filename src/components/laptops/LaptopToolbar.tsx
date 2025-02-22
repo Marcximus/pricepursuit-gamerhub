@@ -40,8 +40,15 @@ export function LaptopToolbar({
 
   return (
     <div className="mb-8 flex justify-between items-center">
-      <div className="text-sm text-gray-600">
-        {!isLoading && `Found ${totalLaptops} laptops`}
+      <div className="text-sm text-gray-600 space-y-1">
+        {!isLoading && (
+          <>
+            <div>Showing {totalLaptops} laptops</div>
+            <div className="text-xs text-gray-400">
+              {totalLaptops === 0 ? "(No laptops match current filters)" : ""}
+            </div>
+          </>
+        )}
       </div>
       <div className="flex gap-4 items-center">
         <LaptopSort
