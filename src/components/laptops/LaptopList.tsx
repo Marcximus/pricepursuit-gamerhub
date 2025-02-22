@@ -20,14 +20,36 @@ export function LaptopList({
   onRetry,
   isRefetching 
 }: LaptopListProps) {
-  // Only show error state if there's an error
+  // Add detailed logging for debugging
+  console.log('LaptopList render state:', {
+    laptopCount: laptops?.length || 0,
+    isLoading,
+    hasError: !!error,
+    isRefetching,
+    laptops: laptops?.map(l => ({
+      id: l.id,
+      title: l.title,
+      price: l.current_price
+    }))
+  });
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-12">
+        <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
+        <p className="mt-2 text-gray-600">Loading laptops...</p>
+      </div>
+    );
+  }
+
   if (error) {
+    console.error('LaptopList error:', error);
     return (
       <Card className="border-red-200 bg-red-50">
         <CardHeader>
           <CardTitle className="text-red-800">Error Loading Laptops</CardTitle>
           <CardDescription className="text-red-600">
-            {error instanceof Error ? error.message : "Failed to fetch laptops"}
+            {error instanceof Error ? error.message : "Failed to fetch laptops. Please try again later."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -51,7 +73,28 @@ export function LaptopList({
     );
   }
 
-  // Always render laptops list
+  if (!laptops || laptops.length === 0) {
+    console.log('No laptops available to display');
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>No Laptops Found</CardTitle>
+          <CardDescription>
+            Try updating the laptop data or adjusting your filters.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            onClick={onRetry}
+            disabled={isRefetching}
+          >
+            {isRefetching ? "Updating..." : "Update Laptop Data"}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {laptops.map((laptop) => (

@@ -10,6 +10,7 @@ import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useFilteredLaptops } from "@/hooks/useFilteredLaptops";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
+import { collectLaptops } from "@/utils/laptop/collectLaptops";
 
 const ComparePriceLaptops = () => {
   const [sortBy, setSortBy] = useState<SortOption>("price-asc");
@@ -24,16 +25,15 @@ const ComparePriceLaptops = () => {
   });
 
   const { 
-    data: laptops = [], 
-    isLoading, 
-    error,
+    data: laptops, 
+    isLoading: isLaptopsLoading, 
+    error: laptopsError,
     refetch: refetchLaptops,
     isRefetching,
-    collectLaptops,
     updateLaptops
   } = useLaptops();
-  
   const { toast } = useToast();
+
   const filteredAndSortedLaptops = useFilteredLaptops(laptops, filters, sortBy);
   const filterOptions = useLaptopFilters(laptops);
 
@@ -116,15 +116,15 @@ const ComparePriceLaptops = () => {
                 onSortChange={setSortBy}
                 onCollectLaptops={handleCollectLaptops}
                 onUpdateLaptops={handleUpdateLaptops}
-                isLoading={isLoading}
+                isLoading={isLaptopsLoading}
                 isRefetching={isRefetching}
               />
             }
             content={
               <LaptopList
                 laptops={filteredAndSortedLaptops}
-                isLoading={isLoading}
-                error={error}
+                isLoading={isLaptopsLoading}
+                error={laptopsError}
                 onRetry={handleCollectLaptops}
                 isRefetching={isRefetching}
               />
