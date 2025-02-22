@@ -27,38 +27,51 @@ export const useLaptops = () => {
         }
 
         console.log(`Total laptop count in database: ${totalCount}`);
-        
-        const { data: laptopsData, error } = await supabase
-          .from('products')
-          .select(`
-            *,
-            product_reviews (*)
-          `)
-          .eq('is_laptop', true)
-          .order('last_checked', { ascending: false });
 
-        if (error) {
-          console.error('Error fetching laptops:', error);
-          throw error;
+        // Fetch all laptops using pagination
+        const CHUNK_SIZE = 1000;
+        const allLaptops: any[] = [];
+        
+        for (let i = 0; i < Math.ceil((totalCount || 0) / CHUNK_SIZE); i++) {
+          console.log(`Fetching laptops chunk ${i + 1}`);
+          
+          const { data: laptopsChunk, error } = await supabase
+            .from('products')
+            .select(`
+              *,
+              product_reviews (*)
+            `)
+            .eq('is_laptop', true)
+            .order('last_checked', { ascending: false })
+            .range(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE - 1);
+
+          if (error) {
+            console.error('Error fetching laptops chunk:', error);
+            throw error;
+          }
+
+          if (laptopsChunk) {
+            allLaptops.push(...laptopsChunk);
+          }
         }
 
-        if (!laptopsData || laptopsData.length === 0) {
+        if (!allLaptops || allLaptops.length === 0) {
           console.log('No laptops found in database');
           return [];
         }
 
         console.log('Laptops data fetched:', {
           totalCount,
-          fetchedCount: laptopsData.length,
-          match: totalCount === laptopsData.length ? 'YES' : 'NO'
+          fetchedCount: allLaptops.length,
+          match: totalCount === allLaptops.length ? 'YES' : 'NO'
         });
 
         // Log count of laptops with prices for debugging
-        const laptopsWithPrices = laptopsData.filter(laptop => laptop.current_price != null && laptop.current_price > 0);
+        const laptopsWithPrices = allLaptops.filter(laptop => laptop.current_price != null && laptop.current_price > 0);
         console.log('Laptop price analysis:', {
-          totalLaptops: laptopsData.length,
+          totalLaptops: allLaptops.length,
           withPrices: laptopsWithPrices.length,
-          withoutPrices: laptopsData.length - laptopsWithPrices.length,
+          withoutPrices: allLaptops.length - laptopsWithPrices.length,
           priceRange: laptopsWithPrices.length > 0 ? {
             min: Math.min(...laptopsWithPrices.map(l => l.current_price || 0)),
             max: Math.max(...laptopsWithPrices.map(l => l.current_price || 0))
@@ -66,7 +79,7 @@ export const useLaptops = () => {
         });
 
         // Process and return the laptops
-        const processedLaptops = laptopsData.map(laptop => {
+        const processedLaptops = allLaptops.map(laptop => {
           const reviews = laptop.product_reviews || [];
           
           const reviewData = {
