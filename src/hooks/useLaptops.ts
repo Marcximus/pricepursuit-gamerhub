@@ -78,7 +78,6 @@ export const useLaptops = () => {
           } : 'no prices available'
         });
 
-        // Process and return the laptops
         const processedLaptops = allLaptops.map(laptop => {
           const reviews = laptop.product_reviews || [];
           
@@ -95,7 +94,6 @@ export const useLaptops = () => {
             }))
           };
 
-          // Calculate average rating if needed
           let avgRating = laptop.rating;
           if (!avgRating && reviews.length > 0) {
             const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
@@ -122,9 +120,11 @@ export const useLaptops = () => {
         throw error;
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchInterval: 1000 * 60 * 5, // 5 minutes
-    retry: 3,
+    staleTime: 1000 * 60 * 30, // 30 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false
   });
 
   return {
