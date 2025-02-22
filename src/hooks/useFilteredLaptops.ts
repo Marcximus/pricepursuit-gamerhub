@@ -93,6 +93,18 @@ export const useFilteredLaptops = (
       }
       
       const sorted = [...laptops].sort((a, b) => {
+        // First check if either laptop has no price
+        const aHasPrice = a.current_price && a.current_price > 0;
+        const bHasPrice = b.current_price && b.current_price > 0;
+        
+        // If one has a price and the other doesn't, the one with price comes first
+        if (aHasPrice && !bHasPrice) return -1;
+        if (!aHasPrice && bHasPrice) return 1;
+        
+        // If neither has a price, maintain their relative order
+        if (!aHasPrice && !bHasPrice) return 0;
+        
+        // If both have prices, sort according to selected criteria
         switch (sortBy) {
           case "price-asc":
             return (a.current_price || 0) - (b.current_price || 0);
