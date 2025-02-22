@@ -16,7 +16,8 @@ export const useLaptops = () => {
     queryKey: ['laptops'],
     queryFn: async () => {
       try {
-        console.log('Fetching fresh laptops data from Supabase...');
+        console.log('Starting laptop fetch...');
+        console.log('Supabase client:', !!supabase);
         
         // First get a count of all laptop products
         const { count: totalCount, error: countError } = await supabase
@@ -26,10 +27,34 @@ export const useLaptops = () => {
 
         if (countError) {
           console.error('Error getting laptop count:', countError);
+          toast({
+            variant: "destructive",
+            title: "Database Error",
+            description: "Failed to get laptop count: " + countError.message
+          });
           throw countError;
         }
 
         console.log(`Found ${totalCount} laptops in database`);
+
+        // If no laptops found, try collecting them
+        if (!totalCount || totalCount === 0) {
+          console.log('No laptops found, initiating collection...');
+          try {
+            await collectLaptops();
+            toast({
+              title: "Collection Started",
+              description: "Started collecting laptop data. Please wait a few minutes."
+            });
+          } catch (collectError) {
+            console.error('Error starting collection:', collectError);
+            toast({
+              variant: "destructive",
+              title: "Collection Error",
+              description: "Failed to start laptop collection: " + (collectError as Error).message
+            });
+          }
+        }
 
         // Fetch all laptops using pagination
         const CHUNK_SIZE = 1000;
@@ -50,6 +75,11 @@ export const useLaptops = () => {
 
           if (error) {
             console.error('Error fetching laptops chunk:', error);
+            toast({
+              variant: "destructive",
+              title: "Fetch Error",
+              description: "Failed to fetch laptops: " + error.message
+            });
             throw error;
           }
 
@@ -58,9 +88,15 @@ export const useLaptops = () => {
           }
         }
 
+        console.log(`Fetched ${allLaptops.length} laptops total`);
+
         if (!allLaptops.length) {
-          console.log('No laptops found in database');
-          return cachedLaptopsData.length > 0 ? cachedLaptopsData : [];
+          if (cachedLaptopsData.length > 0) {
+            console.log('No laptops found in database, using cached data:', cachedLaptopsData.length);
+            return cachedLaptopsData;
+          }
+          console.log('No laptops found and no cached data available');
+          return [];
         }
 
         const processedLaptops = allLaptops.map(laptop => {
@@ -105,6 +141,12 @@ export const useLaptops = () => {
         return finalLaptops;
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to fetch laptops. Please try again."
+        });
+        
         // Return cached data on error if available
         if (cachedLaptopsData.length > 0) {
           console.log('Falling back to cached data:', cachedLaptopsData.length);
