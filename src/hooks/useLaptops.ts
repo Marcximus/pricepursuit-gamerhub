@@ -22,7 +22,7 @@ const fetchLaptopsFromDb = async () => {
       throw countError;
     }
 
-    console.log(`Total laptop count in database: ${totalCount}`);
+    console.log(`Total laptop count in database after deletion: ${totalCount}`);
 
     const CHUNK_SIZE = 1000;
     const allLaptops: any[] = [];
@@ -47,6 +47,8 @@ const fetchLaptopsFromDb = async () => {
         allLaptops.push(...laptopsChunk);
       }
     }
+
+    console.log(`Successfully fetched ${allLaptops.length} laptops`);
 
     const processedLaptops = allLaptops.map(laptop => {
       const reviews = laptop.product_reviews || [];
@@ -91,10 +93,10 @@ export const useLaptops = () => {
   const query = useQuery({
     queryKey: ['laptops'],
     queryFn: fetchLaptopsFromDb,
-    initialData: staticLaptopData, // Use static data as initial data
-    staleTime: Infinity, // Never mark the data as stale
-    gcTime: Infinity, // Never garbage collect the data
-    refetchOnMount: false,
+    initialData: staticLaptopData,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnMount: true, // Changed to true to ensure fresh data after deletions
     refetchOnWindowFocus: false,
     refetchOnReconnect: false
   });
