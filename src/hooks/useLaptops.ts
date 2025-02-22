@@ -3,20 +3,19 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { processLaptopData } from "@/utils/laptopUtils";
+import { collectLaptops, updateLaptops, refreshBrandModels } from "@/utils/laptop";
 import type { Product } from "@/types/product";
+
+export { collectLaptops, updateLaptops, refreshBrandModels };
 
 export const useLaptops = () => {
   const query = useQuery({
     queryKey: ['laptops'],
     queryFn: async () => {
       try {
-        console.log('Starting laptop fetch...');
+        console.log('Fetching laptops from Supabase...');
         
-        // Fetch all laptops using pagination
-        const CHUNK_SIZE = 1000;
-        const allLaptops: any[] = [];
-        
-        // First get total count
+        // First get a count of all laptop products
         const { count: totalCount, error: countError } = await supabase
           .from('products')
           .select('*', { count: 'exact', head: true })
@@ -27,7 +26,12 @@ export const useLaptops = () => {
           throw countError;
         }
 
-        // Fetch all data in chunks
+        console.log(`Total laptop count in database: ${totalCount}`);
+
+        // Fetch all laptops using pagination
+        const CHUNK_SIZE = 1000;
+        const allLaptops: any[] = [];
+        
         for (let i = 0; i < Math.ceil((totalCount || 0) / CHUNK_SIZE); i++) {
           console.log(`Fetching laptops chunk ${i + 1}`);
           
@@ -51,9 +55,29 @@ export const useLaptops = () => {
           }
         }
 
-        console.log(`Successfully fetched ${allLaptops.length} laptops`);
+        if (!allLaptops || allLaptops.length === 0) {
+          console.log('No laptops found in database');
+          return [];
+        }
 
-        // Process the laptops
+        console.log('Laptops data fetched:', {
+          totalCount,
+          fetchedCount: allLaptops.length,
+          match: totalCount === allLaptops.length ? 'YES' : 'NO'
+        });
+
+        // Log count of laptops with prices for debugging
+        const laptopsWithPrices = allLaptops.filter(laptop => laptop.current_price != null && laptop.current_price > 0);
+        console.log('Laptop price analysis:', {
+          totalLaptops: allLaptops.length,
+          withPrices: laptopsWithPrices.length,
+          withoutPrices: allLaptops.length - laptopsWithPrices.length,
+          priceRange: laptopsWithPrices.length > 0 ? {
+            min: Math.min(...laptopsWithPrices.map(l => l.current_price || 0)),
+            max: Math.max(...laptopsWithPrices.map(l => l.current_price || 0))
+          } : 'no prices available'
+        });
+
         const processedLaptops = allLaptops.map(laptop => {
           const reviews = laptop.product_reviews || [];
           
@@ -85,39 +109,28 @@ export const useLaptops = () => {
         });
 
         const finalLaptops = processedLaptops.map(laptop => processLaptopData(laptop as Product));
-        
-        if (!finalLaptops.length) {
-          console.log('No laptops found, initiating collection...');
-          try {
-            await collectLaptops();
-            toast({
-              title: "Collection Started",
-              description: "Started collecting laptop data. Please wait a few minutes."
-            });
-          } catch (error) {
-            console.error('Error starting collection:', error);
-          }
-        }
+        console.log('Final processed laptops:', {
+          count: finalLaptops.length,
+          uniqueBrands: [...new Set(finalLaptops.map(l => l.brand))].length
+        });
 
         return finalLaptops;
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch laptops. Please try again."
-        });
         throw error;
       }
     },
-    staleTime: Infinity, // Keep data fresh forever until manually invalidated
-    gcTime: Infinity, // Never delete cached data
-    refetchOnMount: false, // Don't refetch when component mounts
-    refetchOnWindowFocus: false, // Don't refetch when window gains focus
-    refetchOnReconnect: false, // Don't refetch when reconnecting
-    retry: 3, // Retry failed requests 3 times
-    retryDelay: 1000, // Wait 1 second between retries
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours (garbage collection time)
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false
   });
 
-  return query;
+  return {
+    ...query,
+    collectLaptops,
+    updateLaptops,
+    refreshBrandModels,
+  };
 };

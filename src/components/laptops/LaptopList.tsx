@@ -20,29 +20,36 @@ export function LaptopList({
   onRetry,
   isRefetching 
 }: LaptopListProps) {
-  // Show loading state only on initial load, not during refetching
-  if (isLoading && !laptops?.length) {
+  // Add detailed logging for debugging
+  console.log('LaptopList render state:', {
+    laptopCount: laptops?.length || 0,
+    isLoading,
+    hasError: !!error,
+    isRefetching,
+    laptops: laptops?.map(l => ({
+      id: l.id,
+      title: l.title,
+      price: l.current_price
+    }))
+  });
+
+  if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Loading Laptops</CardTitle>
-          <CardDescription>Please wait while we fetch the latest laptop data...</CardDescription>
-        </CardHeader>
-        <CardContent className="flex justify-center py-4">
-          <ReloadIcon className="h-6 w-6 animate-spin" />
-        </CardContent>
-      </Card>
+      <div className="text-center py-12">
+        <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
+        <p className="mt-2 text-gray-600">Loading laptops...</p>
+      </div>
     );
   }
 
-  // Show error state
   if (error) {
+    console.error('LaptopList error:', error);
     return (
       <Card className="border-red-200 bg-red-50">
         <CardHeader>
           <CardTitle className="text-red-800">Error Loading Laptops</CardTitle>
           <CardDescription className="text-red-600">
-            {error instanceof Error ? error.message : "Failed to fetch laptops"}
+            {error instanceof Error ? error.message : "Failed to fetch laptops. Please try again later."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -50,6 +57,7 @@ export function LaptopList({
             variant="secondary" 
             onClick={onRetry}
             disabled={isRefetching}
+            className="w-full sm:w-auto"
           >
             {isRefetching ? (
               <>
@@ -65,42 +73,33 @@ export function LaptopList({
     );
   }
 
-  // Show empty state
   if (!laptops || laptops.length === 0) {
+    console.log('No laptops available to display');
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Loading Laptop Data</CardTitle>
+          <CardTitle>No Laptops Found</CardTitle>
           <CardDescription>
-            Please wait while we collect the latest laptop information...
+            Try updating the laptop data or adjusting your filters.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-center py-4">
-            <ReloadIcon className="h-6 w-6 animate-spin" />
-          </div>
+          <Button 
+            onClick={onRetry}
+            disabled={isRefetching}
+          >
+            {isRefetching ? "Updating..." : "Update Laptop Data"}
+          </Button>
         </CardContent>
       </Card>
     );
   }
 
-  // Show laptops list
   return (
     <div className="space-y-4">
-      {/* Show a subtle loading indicator for background updates */}
-      {isRefetching && (
-        <div className="flex items-center justify-center py-2 text-sm text-gray-500 bg-gray-50 rounded-lg">
-          <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
-          Updating data in background...
-        </div>
-      )}
-      
-      {/* Display laptops */}
-      <div className="space-y-4">
-        {laptops.map((laptop) => (
-          <LaptopCard key={laptop.id} laptop={laptop} />
-        ))}
-      </div>
+      {laptops.map((laptop) => (
+        <LaptopCard key={laptop.id} laptop={laptop} />
+      ))}
     </div>
   );
 }
