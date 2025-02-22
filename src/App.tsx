@@ -1,5 +1,5 @@
 
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Laptops from './pages/Laptops';
 import NotFound from './pages/NotFound';
 import { Toaster } from "@/components/ui/toaster";
@@ -11,14 +11,17 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Routes>
-        <Route path="/" element={<Laptops />} />
-        <Route path="/ComparePrice/Laptops" element={<Navigate to="/" replace />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <Toaster />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Laptops />} />
+          <Route path="/ComparePrice/Laptops" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster />
+      </Router>
     </QueryClientProvider>
   );
 }
 
 export default App;
+

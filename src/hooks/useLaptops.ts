@@ -108,13 +108,12 @@ export const useLaptops = () => {
         throw error;
       }
     },
-    staleTime: Infinity, // Data never goes stale automatically
-    gcTime: Infinity, // Data never gets garbage collected
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    initialData: [], // Provide empty array as initial data
-    placeholderData: (oldData) => oldData // Keep showing old data while fetching
+    placeholderData: (oldData) => oldData // This ensures we keep showing old data while fetching
   });
 
   return {
