@@ -1,5 +1,4 @@
 
-import { memo } from "react";
 import { Card } from "@/components/ui/card";
 import type { Product } from "@/types/product";
 import { LaptopImage } from "./components/LaptopImage";
@@ -12,19 +11,22 @@ type LaptopCardProps = {
   laptop: Product;
 };
 
-// Memoize subcomponents to prevent unnecessary re-renders
-const MemoizedLaptopImage = memo(LaptopImage);
-const MemoizedLaptopPrice = memo(LaptopPrice);
-const MemoizedLaptopRating = memo(LaptopRating);
-const MemoizedLaptopSpecs = memo(LaptopSpecs);
-const MemoizedLaptopReviews = memo(LaptopReviews);
-
-function LaptopCardComponent({ laptop }: LaptopCardProps) {
+export function LaptopCard({ laptop }: LaptopCardProps) {
   // Validate required fields
   if (!laptop || !laptop.id) {
     console.error('Invalid laptop data received:', laptop);
     return null;
   }
+
+  // Detailed logging for debugging
+  console.log('Rendering LaptopCard:', {
+    id: laptop.id,
+    title: laptop.title || 'No title',
+    hasPrice: Boolean(laptop.current_price),
+    hasImage: Boolean(laptop.image_url),
+    hasSpecs: Boolean(laptop.processor || laptop.ram || laptop.storage || laptop.graphics),
+    hasReviews: Boolean(laptop.review_data?.recent_reviews?.length)
+  });
 
   // Base product URL with affiliate tag
   const baseProductUrl = laptop.asin 
@@ -39,20 +41,20 @@ function LaptopCardComponent({ laptop }: LaptopCardProps) {
     <Card className="flex p-4 gap-4 hover:shadow-lg transition-shadow">
       {/* Left side - Image and Price */}
       <div className="flex flex-col items-center gap-2 w-40">
-        <MemoizedLaptopImage 
+        <LaptopImage 
           title={laptop.title || 'Laptop'}
           imageUrl={laptop.image_url}
           productUrl={productUrl}
         />
         
-        <MemoizedLaptopPrice 
+        <LaptopPrice 
           currentPrice={laptop.current_price}
           originalPrice={laptop.original_price}
           productUrl={productUrl}
         />
 
         {laptop.average_rating && laptop.average_rating > 0 && (
-          <MemoizedLaptopRating 
+          <LaptopRating 
             rating={laptop.average_rating}
             totalReviews={laptop.total_reviews}
             reviewsUrl={reviewsUrl}
@@ -62,7 +64,7 @@ function LaptopCardComponent({ laptop }: LaptopCardProps) {
 
       {/* Right side - Specs and Reviews */}
       <div className="flex-1">
-        <MemoizedLaptopSpecs 
+        <LaptopSpecs 
           title={laptop.title || 'Untitled Laptop'}
           productUrl={productUrl}
           specs={{
@@ -77,7 +79,7 @@ function LaptopCardComponent({ laptop }: LaptopCardProps) {
         />
 
         {laptop.review_data?.recent_reviews && laptop.review_data.recent_reviews.length > 0 && (
-          <MemoizedLaptopReviews 
+          <LaptopReviews 
             reviewData={laptop.review_data}
             productUrl={reviewsUrl}
           />
@@ -86,6 +88,3 @@ function LaptopCardComponent({ laptop }: LaptopCardProps) {
     </Card>
   );
 }
-
-// Memoize the entire LaptopCard component
-export const LaptopCard = memo(LaptopCardComponent);

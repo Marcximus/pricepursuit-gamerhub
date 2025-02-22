@@ -1,5 +1,5 @@
 
-import { useQuery, QueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { processLaptopData } from "@/utils/laptopUtils";
@@ -8,164 +8,123 @@ import type { Product } from "@/types/product";
 
 export { collectLaptops, updateLaptops, refreshBrandModels };
 
-// Create a static QueryClient instance
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,    // Data stays fresh for 5 minutes
-      gcTime: 10 * 60 * 1000,      // Keep unused data for 10 minutes
-      refetchOnMount: false,
-      refetchOnWindowFocus: false,
-      refetchInterval: false,
-    }
-  }
-});
-
-// In-memory cache for instant data access
-let cachedData: Product[] | undefined;
-
-// Function to store data in localStorage
-const storeInLocalStorage = (data: Product[]) => {
-  try {
-    localStorage.setItem('laptops-cache', JSON.stringify(data));
-    localStorage.setItem('laptops-cache-timestamp', Date.now().toString());
-  } catch (error) {
-    console.warn('Failed to store laptops in localStorage:', error);
-  }
-};
-
-// Function to get data from localStorage
-const getFromLocalStorage = (): Product[] | undefined => {
-  try {
-    const timestamp = Number(localStorage.getItem('laptops-cache-timestamp'));
-    const cacheAge = Date.now() - timestamp;
-    const maxAge = 30 * 60 * 1000; // 30 minutes
-
-    if (cacheAge < maxAge) {
-      const cachedData = localStorage.getItem('laptops-cache');
-      if (cachedData) {
-        console.log('Using localStorage cache, age:', Math.round(cacheAge / 1000), 'seconds');
-        return JSON.parse(cachedData);
-      }
-    }
-  } catch (error) {
-    console.warn('Failed to retrieve laptops from localStorage:', error);
-  }
-  return undefined;
-};
-
-// Function to fetch laptops that can be used for prefetching
-const fetchLaptops = async (): Promise<Product[]> => {
-  // Return in-memory cache if available
-  if (cachedData) {
-    console.log('Using in-memory cache:', cachedData.length, 'laptops');
-    return cachedData;
-  }
-
-  // Try to get data from localStorage
-  const localData = getFromLocalStorage();
-  if (localData) {
-    cachedData = localData; // Store in memory for faster subsequent access
-    return localData;
-  }
-
-  console.log('Fetching laptops from Supabase...');
-  
-  const { data: laptops, error } = await supabase
-    .from('products')
-    .select(`
-      *,
-      product_reviews (*)
-    `)
-    .eq('is_laptop', true)
-    .order('rating', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching laptops:', error);
-    throw error;
-  }
-
-  if (!laptops || laptops.length === 0) {
-    console.log('No laptops found in database');
-    return [];
-  }
-
-  console.log('Processing', laptops.length, 'laptops');
-  
-  // Process laptops in chunks to avoid blocking the main thread
-  const chunkSize = 50;
-  const processedLaptops: Product[] = [];
-  
-  for (let i = 0; i < laptops.length; i += chunkSize) {
-    const chunk = laptops.slice(i, i + chunkSize);
-    const processed = chunk.map(laptop => {
-      const reviews = laptop.product_reviews || [];
-      const reviewData = {
-        rating_breakdown: {},
-        recent_reviews: reviews.map(review => ({
-          rating: review.rating,
-          title: review.title || '',
-          content: review.content || '',
-          reviewer_name: review.reviewer_name || 'Anonymous',
-          review_date: review.review_date,
-          verified_purchase: review.verified_purchase || false,
-          helpful_votes: review.helpful_votes || 0
-        }))
-      };
-
-      let avgRating = laptop.rating;
-      if (!avgRating && reviews.length > 0) {
-        const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-        avgRating = totalRating / reviews.length;
-      }
-
-      return processLaptopData({
-        ...laptop,
-        average_rating: avgRating,
-        total_reviews: reviews.length,
-        review_data: reviewData
-      } as Product);
-    });
-    
-    processedLaptops.push(...processed);
-  }
-
-  // Store the processed data in both caches
-  cachedData = processedLaptops;
-  storeInLocalStorage(processedLaptops);
-  
-  return processedLaptops;
-};
-
-// Pre-fetch laptops data immediately
-console.log('Starting initial data prefetch...');
-fetchLaptops()
-  .then(data => {
-    console.log('Initial data prefetch complete:', data.length, 'laptops');
-    queryClient.setQueryData(['laptops'], data);
-  })
-  .catch(console.error);
-
-// Function to clear cache (useful for debugging or forced refresh)
-export const clearLaptopsCache = () => {
-  cachedData = undefined;
-  localStorage.removeItem('laptops-cache');
-  localStorage.removeItem('laptops-cache-timestamp');
-  queryClient.removeQueries({ queryKey: ['laptops'] });
-};
-
 export const useLaptops = () => {
-  const query = useQuery<Product[]>({
+  const query = useQuery({
     queryKey: ['laptops'],
-    queryFn: fetchLaptops,
-    gcTime: queryClient.getDefaultOptions().queries?.gcTime,
-    staleTime: queryClient.getDefaultOptions().queries?.staleTime,
-    refetchOnMount: queryClient.getDefaultOptions().queries?.refetchOnMount,
-    refetchOnWindowFocus: queryClient.getDefaultOptions().queries?.refetchOnWindowFocus,
-    refetchInterval: queryClient.getDefaultOptions().queries?.refetchInterval,
-    // Always return cached data as placeholder
-    placeholderData: () => cachedData || getFromLocalStorage() || [],
-    initialData: () => cachedData || getFromLocalStorage(),
+    queryFn: async () => {
+      try {
+        console.log('Fetching laptops from Supabase...');
+        
+        // First get a count of all laptop products
+        const { count: totalCount, error: countError } = await supabase
+          .from('products')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_laptop', true);
+
+        if (countError) {
+          console.error('Error getting laptop count:', countError);
+          throw countError;
+        }
+
+        console.log(`Total laptop count in database: ${totalCount}`);
+
+        // Fetch all laptops using pagination
+        const CHUNK_SIZE = 1000;
+        const allLaptops: any[] = [];
+        
+        for (let i = 0; i < Math.ceil((totalCount || 0) / CHUNK_SIZE); i++) {
+          console.log(`Fetching laptops chunk ${i + 1}`);
+          
+          const { data: laptopsChunk, error } = await supabase
+            .from('products')
+            .select(`
+              *,
+              product_reviews (*)
+            `)
+            .eq('is_laptop', true)
+            .order('last_checked', { ascending: false })
+            .range(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE - 1);
+
+          if (error) {
+            console.error('Error fetching laptops chunk:', error);
+            throw error;
+          }
+
+          if (laptopsChunk) {
+            allLaptops.push(...laptopsChunk);
+          }
+        }
+
+        if (!allLaptops || allLaptops.length === 0) {
+          console.log('No laptops found in database');
+          return [];
+        }
+
+        console.log('Laptops data fetched:', {
+          totalCount,
+          fetchedCount: allLaptops.length,
+          match: totalCount === allLaptops.length ? 'YES' : 'NO'
+        });
+
+        // Log count of laptops with prices for debugging
+        const laptopsWithPrices = allLaptops.filter(laptop => laptop.current_price != null && laptop.current_price > 0);
+        console.log('Laptop price analysis:', {
+          totalLaptops: allLaptops.length,
+          withPrices: laptopsWithPrices.length,
+          withoutPrices: allLaptops.length - laptopsWithPrices.length,
+          priceRange: laptopsWithPrices.length > 0 ? {
+            min: Math.min(...laptopsWithPrices.map(l => l.current_price || 0)),
+            max: Math.max(...laptopsWithPrices.map(l => l.current_price || 0))
+          } : 'no prices available'
+        });
+
+        // Process and return the laptops
+        const processedLaptops = allLaptops.map(laptop => {
+          const reviews = laptop.product_reviews || [];
+          
+          const reviewData = {
+            rating_breakdown: {},
+            recent_reviews: reviews.map(review => ({
+              rating: review.rating,
+              title: review.title || '',
+              content: review.content || '',
+              reviewer_name: review.reviewer_name || 'Anonymous',
+              review_date: review.review_date,
+              verified_purchase: review.verified_purchase || false,
+              helpful_votes: review.helpful_votes || 0
+            }))
+          };
+
+          // Calculate average rating if needed
+          let avgRating = laptop.rating;
+          if (!avgRating && reviews.length > 0) {
+            const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+            avgRating = totalRating / reviews.length;
+          }
+
+          return {
+            ...laptop,
+            average_rating: avgRating,
+            total_reviews: reviews.length,
+            review_data: reviewData
+          };
+        });
+
+        const finalLaptops = processedLaptops.map(laptop => processLaptopData(laptop as Product));
+        console.log('Final processed laptops:', {
+          count: finalLaptops.length,
+          uniqueBrands: [...new Set(finalLaptops.map(l => l.brand))].length
+        });
+
+        return finalLaptops;
+      } catch (error) {
+        console.error('Error in useLaptops hook:', error);
+        throw error;
+      }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchInterval: 1000 * 60 * 5, // 5 minutes
+    retry: 3,
   });
 
   return {
@@ -173,7 +132,5 @@ export const useLaptops = () => {
     collectLaptops,
     updateLaptops,
     refreshBrandModels,
-    clearCache: clearLaptopsCache,
   };
 };
-

@@ -11,10 +11,9 @@ import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useFilteredLaptops } from "@/hooks/useFilteredLaptops";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
 import { collectLaptops } from "@/utils/laptop/collectLaptops";
-import type { Product } from "@/types/product";
 
 const ComparePriceLaptops = () => {
-  const [sortBy, setSortBy] = useState<SortOption>("rating-desc");
+  const [sortBy, setSortBy] = useState<SortOption>("price-asc");
   const [filters, setFilters] = useState<FilterOptions>({
     priceRange: { min: 0, max: 10000 },
     processor: "all-processors",
@@ -26,7 +25,7 @@ const ComparePriceLaptops = () => {
   });
 
   const { 
-    data: laptops = [] as Product[], 
+    data: laptops, 
     isLoading: isLaptopsLoading, 
     error: laptopsError,
     refetch: refetchLaptops,
@@ -138,4 +137,3 @@ const ComparePriceLaptops = () => {
 };
 
 export default ComparePriceLaptops;
-
