@@ -24,6 +24,20 @@ export function LaptopToolbar({
 }: LaptopToolbarProps) {
   console.log('LaptopToolbar render:', { isLoading, isRefetching, totalLaptops });
 
+  const handleCollectClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    console.log('Collect button clicked');
+    console.log('Button states:', { isLoading, isRefetching });
+    
+    if (isLoading || isRefetching) {
+      console.log('Button is disabled due to loading states');
+      return;
+    }
+    
+    console.log('Calling onCollectLaptops from handleCollectClick');
+    onCollectLaptops();
+  };
+
   return (
     <div className="mb-8 flex justify-between items-center">
       <div className="text-sm text-gray-600">
@@ -45,15 +59,10 @@ export function LaptopToolbar({
             Update Laptops
           </Button>
           <Button
-            onClick={() => {
-              console.log('Direct button click handler');
-              if (!isLoading && !isRefetching) {
-                console.log('Calling onCollectLaptops');
-                onCollectLaptops();
-              }
-            }}
+            onClick={handleCollectClick}
             disabled={isLoading || isRefetching}
             className="flex items-center gap-2"
+            type="button"
           >
             <MagnifyingGlassIcon className="h-4 w-4" />
             Discover Laptops
@@ -63,3 +72,4 @@ export function LaptopToolbar({
     </div>
   );
 }
+
