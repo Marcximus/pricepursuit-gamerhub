@@ -91,7 +91,7 @@ export async function collectLaptops() {
         const { error: functionError } = await supabase.functions.invoke('collect-laptops', {
           body: {
             brands: brands,
-            pages_per_brand: 5,
+            pages_per_brand: 1, // Changed from 5 to 1
             batch_number: index + 1,
             total_batches: brandBatches.length
           }
@@ -143,3 +143,4 @@ export async function collectLaptops() {
     throw error;
   }
 }
+
