@@ -5,6 +5,8 @@ export const processProcessor = (processor: string | undefined, title: string): 
   
   // Look for processor in the title (more specific patterns first)
   const processorPatterns = [
+    // Match Apple M-series chips
+    /\b(?:Apple\s*)?M[123]\s*(?:Pro|Max|Ultra)?\s*(?:chip)?\b/i,
     // Match full processor names with generation and model
     /\b(?:Intel Core i[3579]|AMD Ryzen [3579]|Intel Celeron|Intel Pentium|MediaTek|Apple M[12])\s*(?:[A-Z0-9-]+(?:\s*[A-Z0-9]+)*(?:\s*HX)?)\b/i,
     // Match processor names with generation numbers
@@ -23,7 +25,8 @@ export const processProcessor = (processor: string | undefined, title: string): 
         .replace(/\s+/g, ' ')  // Normalize spaces
         .replace(/intel core/i, 'Intel Core')
         .replace(/amd ryzen/i, 'AMD Ryzen')
-        .replace(/\bi(\d)/i, 'Intel Core i$1');  // Expand i5 to Intel Core i5
+        .replace(/\bi(\d)/i, 'Intel Core i$1')  // Expand i5 to Intel Core i5
+        .replace(/apple\s*m(\d)/i, 'Apple M$1'); // Standardize Apple M-series naming
       
       // Remove duplicate "Intel Core" if present
       processedName = processedName.replace(/(Intel Core)\s+Intel Core/i, '$1');
@@ -31,6 +34,16 @@ export const processProcessor = (processor: string | undefined, title: string): 
       // Add "Intel Core" prefix if it's just an i-series number
       if (/^i[3579]/i.test(processedName)) {
         processedName = `Intel Core ${processedName}`;
+      }
+      
+      // Add "Apple" prefix if it's just an M-series number
+      if (/^M[123]/i.test(processedName)) {
+        processedName = `Apple ${processedName}`;
+      }
+      
+      // Add "chip" suffix for Apple processors if not present
+      if (/Apple M[123]/i.test(processedName) && !processedName.toLowerCase().includes('chip')) {
+        processedName = `${processedName} chip`;
       }
       
       return processedName;
