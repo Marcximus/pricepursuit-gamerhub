@@ -24,16 +24,6 @@ const queryClient = new QueryClient({
 // In-memory cache for instant data access
 let cachedData: Product[] | undefined;
 
-// Get inline data embedded in HTML
-const getInlineData = (): Product[] => {
-  try {
-    // @ts-ignore - we know this exists from our HTML template
-    return window.__INITIAL_LAPTOPS__ || [];
-  } catch {
-    return [];
-  }
-};
-
 // Function to store data in localStorage
 const storeInLocalStorage = (data: Product[]) => {
   try {
@@ -173,9 +163,9 @@ export const useLaptops = () => {
     refetchOnMount: queryClient.getDefaultOptions().queries?.refetchOnMount,
     refetchOnWindowFocus: queryClient.getDefaultOptions().queries?.refetchOnWindowFocus,
     refetchInterval: queryClient.getDefaultOptions().queries?.refetchInterval,
-    // Always return inline data first, then cached data as placeholder
-    placeholderData: () => getInlineData() || cachedData || getFromLocalStorage() || [],
-    initialData: () => getInlineData() || cachedData || getFromLocalStorage(),
+    // Always return cached data as placeholder
+    placeholderData: () => cachedData || getFromLocalStorage() || [],
+    initialData: () => cachedData || getFromLocalStorage(),
   });
 
   return {
