@@ -29,17 +29,8 @@ export function LaptopList({
     hasCachedData: laptops && laptops.length > 0,
   });
 
-  // Only show loading state if we're loading AND we don't have any cached data
-  if (isLoading && (!laptops || laptops.length === 0)) {
-    return (
-      <div className="text-center py-12">
-        <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
-        <p className="mt-2 text-gray-600">Loading laptops...</p>
-      </div>
-    );
-  }
-
-  if (error) {
+  // Show error state when there's an error and no data
+  if (error && (!laptops || laptops.length === 0)) {
     console.error('LaptopList error:', error);
     return (
       <Card className="border-red-200 bg-red-50">
@@ -70,6 +61,7 @@ export function LaptopList({
     );
   }
 
+  // Show empty state when there's no data
   if (!laptops || laptops.length === 0) {
     console.log('No laptops available to display');
     return (
@@ -94,17 +86,20 @@ export function LaptopList({
 
   return (
     <div className="space-y-4">
-      {/* Show a subtle loading indicator at the top when refetching */}
+      {/* Show a subtle loading indicator for background updates */}
       {isRefetching && (
-        <div className="flex items-center justify-center py-2 text-sm text-gray-500">
+        <div className="flex items-center justify-center py-2 text-sm text-gray-500 bg-gray-50 rounded-lg">
           <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
-          Refreshing data...
+          Updating data in background...
         </div>
       )}
-      {laptops.map((laptop) => (
-        <LaptopCard key={laptop.id} laptop={laptop} />
-      ))}
+      
+      {/* Always show laptops when we have them */}
+      <div className="space-y-4">
+        {laptops.map((laptop) => (
+          <LaptopCard key={laptop.id} laptop={laptop} />
+        ))}
+      </div>
     </div>
   );
 }
-

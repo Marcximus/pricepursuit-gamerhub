@@ -8,12 +8,15 @@ import type { Product } from "@/types/product";
 
 export { collectLaptops, updateLaptops, refreshBrandModels };
 
+// Static data fallback - this will be populated during build
+const staticLaptopsData: Product[] = [];
+
 export const useLaptops = () => {
   const query = useQuery({
     queryKey: ['laptops'],
     queryFn: async () => {
       try {
-        console.log('Fetching laptops from Supabase...');
+        console.log('Fetching fresh laptops data from Supabase...');
         
         // First get a count of all laptop products
         const { count: totalCount, error: countError } = await supabase
@@ -25,8 +28,6 @@ export const useLaptops = () => {
           console.error('Error getting laptop count:', countError);
           throw countError;
         }
-
-        console.log(`Total laptop count in database: ${totalCount}`);
 
         // Fetch all laptops using pagination
         const CHUNK_SIZE = 1000;
@@ -54,17 +55,6 @@ export const useLaptops = () => {
             allLaptops.push(...laptopsChunk);
           }
         }
-
-        if (!allLaptops || allLaptops.length === 0) {
-          console.log('No laptops found in database');
-          return [];
-        }
-
-        console.log('Laptops data fetched:', {
-          totalCount,
-          fetchedCount: allLaptops.length,
-          match: totalCount === allLaptops.length ? 'YES' : 'NO'
-        });
 
         const processedLaptops = allLaptops.map(laptop => {
           const reviews = laptop.product_reviews || [];
@@ -97,23 +87,32 @@ export const useLaptops = () => {
         });
 
         const finalLaptops = processedLaptops.map(laptop => processLaptopData(laptop as Product));
-        console.log('Final processed laptops:', {
+        console.log('Fresh laptops data fetched:', {
           count: finalLaptops.length,
           uniqueBrands: [...new Set(finalLaptops.map(l => l.brand))].length
         });
 
+        // Update static data for future initial loads
+        staticLaptopsData.splice(0, staticLaptopsData.length, ...finalLaptops);
+
         return finalLaptops;
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
+        // If we have static data, return it on error
+        if (staticLaptopsData.length > 0) {
+          console.log('Falling back to static data');
+          return staticLaptopsData;
+        }
         throw error;
       }
     },
-    staleTime: 1000 * 60 * 60 * 24, // 24 hours
-    gcTime: 1000 * 60 * 60 * 24, // 24 hours
-    refetchOnMount: false,
+    initialData: staticLaptopsData,
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    gcTime: 1000 * 60 * 30, // Keep unused data for 30 minutes
+    refetchInterval: 1000 * 60 * 15, // Refetch every 15 minutes in the background
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    placeholderData: (oldData) => oldData // This ensures we keep showing old data while fetching
+    refetchOnReconnect: true,
   });
 
   return {
