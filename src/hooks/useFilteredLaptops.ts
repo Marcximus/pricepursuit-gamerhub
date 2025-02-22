@@ -10,9 +10,8 @@ export const useFilteredLaptops = (
   sortBy: SortOption
 ) => {
   return useMemo(() => {
-    // Important: If we have no laptops, just return undefined to indicate loading
     if (!laptops) {
-      return undefined;
+      return [];
     }
 
     console.log('Processing laptops:', {
@@ -24,61 +23,49 @@ export const useFilteredLaptops = (
     // Start with all laptops
     let filtered = [...laptops];
 
-    // Only apply filters if user has made explicit selections
-    const hasActiveFilters = 
-      filters.priceRange.min > 0 || 
-      filters.priceRange.max < 10000 ||
-      filters.brand !== "all-brands" ||
-      filters.processor !== "all-processors" ||
-      filters.ram !== "all-ram" ||
-      filters.storage !== "all-storage" ||
-      filters.graphics !== "all-graphics" ||
-      filters.screenSize !== "all-screens";
-
-    if (hasActiveFilters) {
-      filtered = laptops.filter(laptop => {
-        // Only apply price filter if explicitly set
-        if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
-          if (laptop.current_price && 
-              (laptop.current_price < filters.priceRange.min || 
-               laptop.current_price > filters.priceRange.max)) {
-            return false;
-          }
-        }
-
-        // Only apply other filters if specifically selected
-        if (filters.brand !== "all-brands" && 
-            laptop.brand?.toLowerCase() !== filters.brand.toLowerCase()) {
-          return false;
-        }
-        
-        if (filters.processor !== "all-processors" && 
-            laptop.processor?.toLowerCase() !== filters.processor.toLowerCase()) {
-          return false;
-        }
-        
-        if (filters.ram !== "all-ram" && 
-            laptop.ram?.toLowerCase() !== filters.ram.toLowerCase()) {
-          return false;
-        }
-        
-        if (filters.storage !== "all-storage" && 
-            laptop.storage?.toLowerCase() !== filters.storage.toLowerCase()) {
-          return false;
-        }
-        
-        if (filters.graphics !== "all-graphics" && 
-            laptop.graphics?.toLowerCase() !== filters.graphics.toLowerCase()) {
-          return false;
-        }
-        
-        if (filters.screenSize !== "all-screens" && 
-            laptop.screen_size?.toLowerCase() !== filters.screenSize.toLowerCase()) {
-          return false;
-        }
-        
-        return true;
+    // Only apply filters if they're different from defaults
+    if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
+      filtered = filtered.filter(laptop => {
+        if (!laptop.current_price) return true;
+        return laptop.current_price >= filters.priceRange.min && 
+               laptop.current_price <= filters.priceRange.max;
       });
+    }
+
+    if (filters.brand !== "all-brands") {
+      filtered = filtered.filter(laptop => 
+        laptop.brand?.toLowerCase() === filters.brand.toLowerCase()
+      );
+    }
+
+    if (filters.processor !== "all-processors") {
+      filtered = filtered.filter(laptop => 
+        laptop.processor?.toLowerCase() === filters.processor.toLowerCase()
+      );
+    }
+
+    if (filters.ram !== "all-ram") {
+      filtered = filtered.filter(laptop => 
+        laptop.ram?.toLowerCase() === filters.ram.toLowerCase()
+      );
+    }
+
+    if (filters.storage !== "all-storage") {
+      filtered = filtered.filter(laptop => 
+        laptop.storage?.toLowerCase() === filters.storage.toLowerCase()
+      );
+    }
+
+    if (filters.graphics !== "all-graphics") {
+      filtered = filtered.filter(laptop => 
+        laptop.graphics?.toLowerCase() === filters.graphics.toLowerCase()
+      );
+    }
+
+    if (filters.screenSize !== "all-screens") {
+      filtered = filtered.filter(laptop => 
+        laptop.screen_size?.toLowerCase() === filters.screenSize.toLowerCase()
+      );
     }
 
     console.log(`After filtering: ${filtered.length} of ${laptops.length} laptops`);
