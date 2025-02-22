@@ -20,11 +20,13 @@ export const useFilteredLaptops = (
       console.log('Current filters:', filters);
       
       const filtered = laptops.filter(laptop => {
-        // Price filter
-        const price = laptop.current_price || 0;
-        if (price < filters.priceRange.min || price > filters.priceRange.max) {
-          console.log(`Laptop ${laptop.title} filtered out by price range:`, { price, min: filters.priceRange.min, max: filters.priceRange.max });
-          return false;
+        // Price filter - only apply if the laptop has a valid price
+        if (laptop.current_price && laptop.current_price > 0) {
+          const price = laptop.current_price;
+          if (price < filters.priceRange.min || price > filters.priceRange.max) {
+            console.log(`Laptop ${laptop.title} filtered out by price range:`, { price, min: filters.priceRange.min, max: filters.priceRange.max });
+            return false;
+          }
         }
 
         // Brand filter
@@ -114,18 +116,19 @@ export const useFilteredLaptops = (
         const aHasPrice = a.current_price && a.current_price > 0;
         const bHasPrice = b.current_price && b.current_price > 0;
         
-        // If one has a price and the other doesn't, the one with price comes first
-        if (aHasPrice && !bHasPrice) return -1;
-        if (!aHasPrice && bHasPrice) return 1;
-        
-        // If neither has a price, maintain their relative order
-        if (!aHasPrice && !bHasPrice) return 0;
-        
-        // If both have prices, sort according to selected criteria
         switch (sortBy) {
           case "price-asc":
+            // If neither has a price, maintain their order
+            if (!aHasPrice && !bHasPrice) return 0;
+            // If only one has a price, put the one with price first
+            if (aHasPrice && !bHasPrice) return -1;
+            if (!aHasPrice && bHasPrice) return 1;
+            // If both have prices, sort by price
             return (a.current_price || 0) - (b.current_price || 0);
           case "price-desc":
+            if (!aHasPrice && !bHasPrice) return 0;
+            if (aHasPrice && !bHasPrice) return -1;
+            if (!aHasPrice && bHasPrice) return 1;
             return (b.current_price || 0) - (a.current_price || 0);
           case "rating-desc":
             return ((b.rating || 0) * (b.rating_count || 0)) - 
