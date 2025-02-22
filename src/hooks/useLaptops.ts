@@ -8,8 +8,8 @@ import type { Product } from "@/types/product";
 
 export { collectLaptops, updateLaptops, refreshBrandModels };
 
-// Static data fallback - this will be populated during build
-const staticLaptopsData: Product[] = [];
+// Static data fallback - stored in module scope
+let cachedLaptopsData: Product[] = [];
 
 export const useLaptops = () => {
   const query = useQuery({
@@ -28,6 +28,8 @@ export const useLaptops = () => {
           console.error('Error getting laptop count:', countError);
           throw countError;
         }
+
+        console.log(`Found ${totalCount} laptops in database`);
 
         // Fetch all laptops using pagination
         const CHUNK_SIZE = 1000;
@@ -54,6 +56,11 @@ export const useLaptops = () => {
           if (laptopsChunk) {
             allLaptops.push(...laptopsChunk);
           }
+        }
+
+        if (!allLaptops.length) {
+          console.log('No laptops found in database');
+          return cachedLaptopsData.length > 0 ? cachedLaptopsData : [];
         }
 
         const processedLaptops = allLaptops.map(laptop => {
@@ -92,21 +99,24 @@ export const useLaptops = () => {
           uniqueBrands: [...new Set(finalLaptops.map(l => l.brand))].length
         });
 
-        // Update static data for future initial loads
-        staticLaptopsData.splice(0, staticLaptopsData.length, ...finalLaptops);
-
+        // Update cached data
+        cachedLaptopsData = [...finalLaptops];
+        
         return finalLaptops;
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
-        // If we have static data, return it on error
-        if (staticLaptopsData.length > 0) {
-          console.log('Falling back to static data');
-          return staticLaptopsData;
+        // Return cached data on error if available
+        if (cachedLaptopsData.length > 0) {
+          console.log('Falling back to cached data:', cachedLaptopsData.length);
+          return cachedLaptopsData;
         }
         throw error;
       }
     },
-    initialData: staticLaptopsData,
+    initialData: () => {
+      console.log('Using cached data as initial data:', cachedLaptopsData.length);
+      return cachedLaptopsData;
+    },
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
     gcTime: 1000 * 60 * 30, // Keep unused data for 30 minutes
     refetchInterval: 1000 * 60 * 15, // Refetch every 15 minutes in the background
