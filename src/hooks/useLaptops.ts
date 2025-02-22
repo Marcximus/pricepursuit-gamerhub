@@ -54,8 +54,26 @@ const getFromLocalStorage = (): Product[] | undefined => {
   return undefined;
 };
 
+// Get initial data from the build-time injection
+const getBuildTimeData = (): Product[] => {
+  try {
+    // @ts-ignore - __INITIAL_DATA__ is defined in vite.config.ts
+    return __INITIAL_DATA__ || [];
+  } catch (e) {
+    console.warn('No build-time data available:', e);
+    return [];
+  }
+};
+
 // Function to fetch laptops that can be used for prefetching
 const fetchLaptops = async (): Promise<Product[]> => {
+  // First try build-time data
+  const buildTimeData = getBuildTimeData();
+  if (buildTimeData.length > 0) {
+    console.log('Using build-time data:', buildTimeData.length, 'laptops');
+    return buildTimeData;
+  }
+
   // Return in-memory cache if available
   if (cachedData) {
     console.log('Using in-memory cache:', cachedData.length, 'laptops');
@@ -163,9 +181,8 @@ export const useLaptops = () => {
     refetchOnMount: queryClient.getDefaultOptions().queries?.refetchOnMount,
     refetchOnWindowFocus: queryClient.getDefaultOptions().queries?.refetchOnWindowFocus,
     refetchInterval: queryClient.getDefaultOptions().queries?.refetchInterval,
-    // Always return cached data as placeholder
-    placeholderData: () => cachedData || getFromLocalStorage() || [],
-    initialData: () => cachedData || getFromLocalStorage(),
+    // Initialize with build-time data, then fall back to other caches
+    initialData: () => getBuildTimeData() || cachedData || getFromLocalStorage() || [],
   });
 
   return {
@@ -176,4 +193,3 @@ export const useLaptops = () => {
     clearCache: clearLaptopsCache,
   };
 };
-
