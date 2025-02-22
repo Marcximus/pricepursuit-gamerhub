@@ -21,8 +21,17 @@ const queryClient = new QueryClient({
   }
 });
 
+// Store initial data globally
+let initialData: Product[] | undefined;
+
 // Function to fetch laptops that can be used for prefetching
 const fetchLaptops = async (): Promise<Product[]> => {
+  // Return cached data if available
+  if (initialData) {
+    console.log('Using cached initial data:', initialData.length, 'laptops');
+    return initialData;
+  }
+
   console.log('Fetching laptops from Supabase...');
   
   const { data: laptops, error } = await supabase
@@ -32,7 +41,7 @@ const fetchLaptops = async (): Promise<Product[]> => {
       product_reviews (*)
     `)
     .eq('is_laptop', true)
-    .order('last_checked', { ascending: false });
+    .order('rating', { ascending: false });
 
   if (error) {
     console.error('Error fetching laptops:', error);
@@ -82,25 +91,21 @@ const fetchLaptops = async (): Promise<Product[]> => {
     });
     
     processedLaptops.push(...processed);
-    
-    // Allow other tasks to run between chunks
-    await new Promise(resolve => setTimeout(resolve, 0));
   }
 
+  // Cache the processed data
+  initialData = processedLaptops;
   return processedLaptops;
 };
 
-// Prefetch laptops data and store in cache
-export const prefetchLaptops = async () => {
-  console.log('Prefetching laptops data...');
-  await queryClient.prefetchQuery({
-    queryKey: ['laptops'],
-    queryFn: fetchLaptops,
-  });
-};
-
-// Call prefetch immediately
-prefetchLaptops().catch(console.error);
+// Prefetch laptops data and store in cache immediately
+console.log('Starting initial data prefetch...');
+fetchLaptops()
+  .then(data => {
+    console.log('Initial data prefetch complete:', data.length, 'laptops');
+    queryClient.setQueryData(['laptops'], data);
+  })
+  .catch(console.error);
 
 export const useLaptops = () => {
   const query = useQuery<Product[]>({
@@ -112,12 +117,9 @@ export const useLaptops = () => {
     refetchOnMount: queryClient.getDefaultOptions().queries?.refetchOnMount,
     refetchOnWindowFocus: queryClient.getDefaultOptions().queries?.refetchOnWindowFocus,
     refetchInterval: queryClient.getDefaultOptions().queries?.refetchInterval,
-    // Placeholders should return empty array instead of undefined
-    placeholderData: () => [] as Product[],
-    // Get initial data from cache
-    initialData: () => {
-      return queryClient.getQueryData(['laptops']) as Product[] | undefined;
-    }
+    // Always return initialData as placeholder if available
+    placeholderData: () => initialData || [],
+    initialData: () => initialData,
   });
 
   return {

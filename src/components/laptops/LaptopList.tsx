@@ -24,6 +24,7 @@ export function LaptopList({
   onRetry,
   isRefetching 
 }: LaptopListProps) {
+  // Show error state
   if (error) {
     console.error('LaptopList error:', error);
     return (
@@ -55,50 +56,36 @@ export function LaptopList({
     );
   }
 
-  // Show laptops immediately if we have them
-  if (laptops?.length > 0) {
-    return (
-      <div className="space-y-4">
-        {laptops.map((laptop) => (
-          <MemoizedLaptopCard key={laptop.id} laptop={laptop} />
-        ))}
-        {isLoading && (
-          <div className="text-center py-4">
-            <ReloadIcon className="inline-block h-4 w-4 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading more laptops...</span>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Only show loading state if we have no laptops at all
-  if (isLoading) {
-    return (
-      <div className="text-center py-12">
-        <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
-        <p className="mt-2 text-gray-600">Loading laptops...</p>
-      </div>
-    );
-  }
-
-  // Show no laptops message only when we're sure there are none
+  // Always show laptops if we have them, regardless of loading state
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>No Laptops Found</CardTitle>
-        <CardDescription>
-          Try updating the laptop data or adjusting your filters.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Button 
-          onClick={onRetry}
-          disabled={isRefetching}
-        >
-          {isRefetching ? "Updating..." : "Update Laptop Data"}
-        </Button>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      {laptops.map((laptop) => (
+        <MemoizedLaptopCard key={laptop.id} laptop={laptop} />
+      ))}
+      {isLoading && laptops.length === 0 && (
+        <div className="text-center py-4">
+          <ReloadIcon className="inline-block h-4 w-4 animate-spin text-gray-400" />
+          <span className="ml-2 text-sm text-gray-500">Loading laptops...</span>
+        </div>
+      )}
+      {!isLoading && laptops.length === 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>No Laptops Found</CardTitle>
+            <CardDescription>
+              Try updating the laptop data or adjusting your filters.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={onRetry}
+              disabled={isRefetching}
+            >
+              {isRefetching ? "Updating..." : "Update Laptop Data"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
