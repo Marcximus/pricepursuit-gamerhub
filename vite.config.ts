@@ -4,6 +4,8 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { supabase } from "./src/integrations/supabase/client";
+import type { Connect, IncomingMessage, ServerResponse } from 'http';
+import type { ProxyOptions } from 'vite';
 
 // Function to fetch data at build time
 async function fetchBuildTimeData() {
@@ -35,27 +37,29 @@ export default defineConfig(async ({ mode }) => ({
       '/api': {
         target: 'https://kkebyebrhdpcwqnxhjcx.supabase.co',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-        configure: (proxy) => {
+        rewrite: (path: string) => path.replace(/^\/api/, ''),
+        configure: (proxy: ProxyOptions) => {
           // Add basic memory cache
-          const cache = new Map();
+          const cache = new Map<string, string>();
           
-          proxy.on('proxyReq', (proxyReq, req) => {
+          proxy.on('proxyReq', (proxyReq: Connect.ProxyRequest, req: IncomingMessage) => {
             const key = req.url;
-            if (cache.has(key)) {
+            if (key && cache.has(key)) {
               console.log('Cache hit:', key);
               return cache.get(key);
             }
           });
 
-          proxy.on('proxyRes', (proxyRes, req) => {
+          proxy.on('proxyRes', (proxyRes: Connect.ProxyResponse, req: IncomingMessage) => {
             const key = req.url;
             let body = '';
-            proxyRes.on('data', chunk => body += chunk);
+            proxyRes.on('data', (chunk: Buffer) => body += chunk);
             proxyRes.on('end', () => {
-              cache.set(key, body);
-              // Cache for 5 minutes
-              setTimeout(() => cache.delete(key), 5 * 60 * 1000);
+              if (key) {
+                cache.set(key, body);
+                // Cache for 5 minutes
+                setTimeout(() => cache.delete(key), 5 * 60 * 1000);
+              }
             });
           });
         }
@@ -77,4 +81,3 @@ export default defineConfig(async ({ mode }) => ({
       JSON.stringify([])
   }
 }));
-
