@@ -66,18 +66,6 @@ export const useLaptops = () => {
           match: totalCount === allLaptops.length ? 'YES' : 'NO'
         });
 
-        // Log count of laptops with prices for debugging
-        const laptopsWithPrices = allLaptops.filter(laptop => laptop.current_price != null && laptop.current_price > 0);
-        console.log('Laptop price analysis:', {
-          totalLaptops: allLaptops.length,
-          withPrices: laptopsWithPrices.length,
-          withoutPrices: allLaptops.length - laptopsWithPrices.length,
-          priceRange: laptopsWithPrices.length > 0 ? {
-            min: Math.min(...laptopsWithPrices.map(l => l.current_price || 0)),
-            max: Math.max(...laptopsWithPrices.map(l => l.current_price || 0))
-          } : 'no prices available'
-        });
-
         const processedLaptops = allLaptops.map(laptop => {
           const reviews = laptop.product_reviews || [];
           
@@ -121,10 +109,11 @@ export const useLaptops = () => {
       }
     },
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
-    gcTime: 1000 * 60 * 60 * 24, // 24 hours (garbage collection time)
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours
     refetchOnMount: false,
     refetchOnWindowFocus: false,
-    refetchOnReconnect: false
+    refetchOnReconnect: false,
+    placeholderData: (oldData) => oldData // This ensures we keep showing old data while fetching
   });
 
   return {
