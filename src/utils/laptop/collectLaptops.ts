@@ -8,8 +8,7 @@ const LAPTOP_BRANDS = [
   'Alienware', 'Vaio', 'Fsjun', 'Jumper', 'Xiaomi', 'ACEMAGIC'
 ];
 
-// Reduce batch size to minimize concurrent requests
-const BRANDS_PER_BATCH = 1;
+const BRANDS_PER_BATCH = 2;
 
 export async function collectLaptops() {
   console.log('collectLaptops function called');
@@ -76,14 +75,14 @@ export async function collectLaptops() {
 
     console.log(`Processing ${brandBatches.length} batches`);
 
-    // Process each batch with increased delays
+    // Process each batch
     for (const [index, brands] of brandBatches.entries()) {
       console.log(`Processing batch ${index + 1}/${brandBatches.length}: ${brands.join(', ')}`);
       
       const { error: functionError } = await supabase.functions.invoke('collect-laptops', {
         body: {
           brands: brands,
-          pages_per_brand: 3, // Reduced from 5 to 3 pages per brand
+          pages_per_brand: 5,
           batch_number: index + 1,
           total_batches: brandBatches.length
         }
@@ -96,9 +95,9 @@ export async function collectLaptops() {
 
       console.log(`Successfully processed batch ${index + 1}`);
 
-      // Increase delay between batches to 10 seconds
+      // Add delay between batches
       if (index < brandBatches.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 10000));
+        await new Promise(resolve => setTimeout(resolve, 5000));
       }
     }
 
@@ -121,3 +120,4 @@ export async function collectLaptops() {
     throw error;
   }
 }
+
