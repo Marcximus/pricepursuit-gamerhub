@@ -9,7 +9,7 @@ const LAPTOP_BRANDS = [
 ];
 
 const BRANDS_PER_BATCH = 2;
-const DELAY_BETWEEN_BATCHES = 1000; // 1 second delay
+const DELAY_BETWEEN_BATCHES = 500; // 500ms delay
 
 export async function collectLaptops() {
   console.log('collectLaptops function called');
