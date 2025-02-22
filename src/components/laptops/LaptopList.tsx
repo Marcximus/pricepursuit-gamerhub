@@ -20,22 +20,14 @@ export function LaptopList({
   onRetry,
   isRefetching 
 }: LaptopListProps) {
-  console.log('LaptopList render:', {
-    laptopCount: laptops?.length || 0,
-    isLoading,
-    hasError: !!error,
-    isRefetching,
-    hasLaptops: Array.isArray(laptops) && laptops.length > 0
-  });
-
+  // Only show error state if there's an error
   if (error) {
-    console.error('LaptopList error:', error);
     return (
       <Card className="border-red-200 bg-red-50">
         <CardHeader>
           <CardTitle className="text-red-800">Error Loading Laptops</CardTitle>
           <CardDescription className="text-red-600">
-            {error instanceof Error ? error.message : "Failed to fetch laptops. Please try again later."}
+            {error instanceof Error ? error.message : "Failed to fetch laptops"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -59,39 +51,7 @@ export function LaptopList({
     );
   }
 
-  // Show loading state only on initial load, not during refetching
-  if (isLoading && !isRefetching && (!laptops || laptops.length === 0)) {
-    return (
-      <div className="text-center py-12">
-        <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
-        <p className="mt-2 text-gray-600">Loading laptops...</p>
-      </div>
-    );
-  }
-
-  // Return empty state only when we're sure there are no laptops
-  if (!isLoading && !isRefetching && (!laptops || laptops.length === 0)) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>No Laptops Found</CardTitle>
-          <CardDescription>
-            Please click "Discover Laptops" to fetch new laptops.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button 
-            onClick={onRetry}
-            className="w-full sm:w-auto"
-          >
-            Discover Laptops
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Render laptops
+  // Always render laptops list
   return (
     <div className="space-y-4">
       {laptops.map((laptop) => (
