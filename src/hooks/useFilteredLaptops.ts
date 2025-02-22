@@ -20,12 +20,15 @@ export const useFilteredLaptops = (
       console.log('Current filters:', filters);
       
       const filtered = laptops.filter(laptop => {
-        // Price filter - only apply if the laptop has a valid price
-        if (laptop.current_price && laptop.current_price > 0) {
-          const price = laptop.current_price;
-          if (price < filters.priceRange.min || price > filters.priceRange.max) {
-            console.log(`Laptop ${laptop.title} filtered out by price range:`, { price, min: filters.priceRange.min, max: filters.priceRange.max });
-            return false;
+        // Price filter - only apply if both min and max are set
+        if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
+          // Only apply price filter to laptops that have a valid price
+          if (laptop.current_price && laptop.current_price > 0) {
+            const price = laptop.current_price;
+            if (price < filters.priceRange.min || price > filters.priceRange.max) {
+              console.log(`Laptop ${laptop.title} filtered out by price range:`, { price, min: filters.priceRange.min, max: filters.priceRange.max });
+              return false;
+            }
           }
         }
 
