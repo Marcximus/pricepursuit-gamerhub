@@ -26,14 +26,11 @@ export function LaptopList({
     isLoading,
     hasError: !!error,
     isRefetching,
-    laptops: laptops?.map(l => ({
-      id: l.id,
-      title: l.title,
-      price: l.current_price
-    }))
+    hasCachedData: laptops && laptops.length > 0,
   });
 
-  if (isLoading) {
+  // Only show loading state if we're loading AND we don't have any cached data
+  if (isLoading && (!laptops || laptops.length === 0)) {
     return (
       <div className="text-center py-12">
         <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
@@ -97,9 +94,17 @@ export function LaptopList({
 
   return (
     <div className="space-y-4">
+      {/* Show a subtle loading indicator at the top when refetching */}
+      {isRefetching && (
+        <div className="flex items-center justify-center py-2 text-sm text-gray-500">
+          <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+          Refreshing data...
+        </div>
+      )}
       {laptops.map((laptop) => (
         <LaptopCard key={laptop.id} laptop={laptop} />
       ))}
     </div>
   );
 }
+
