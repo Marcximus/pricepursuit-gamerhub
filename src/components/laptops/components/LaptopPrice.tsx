@@ -31,8 +31,8 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
         rel="noopener noreferrer"
         className="block text-center"
       >
-        <div className="text-sm text-red-500">
-          Price not available
+        <div className="text-sm text-blue-600 hover:text-blue-800">
+          Click to check price
         </div>
       </a>
     );
@@ -47,8 +47,8 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
         rel="noopener noreferrer"
         className="block text-center"
       >
-        <div className="text-sm text-red-500">
-          Price unavailable - ASIN needs update
+        <div className="text-sm text-blue-600 hover:text-blue-800">
+          Click to check price
         </div>
       </a>
     );
