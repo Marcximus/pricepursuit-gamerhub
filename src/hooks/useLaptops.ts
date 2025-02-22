@@ -5,11 +5,17 @@ import { processLaptopData } from "@/utils/laptopUtils";
 import { collectLaptops, updateLaptops, refreshBrandModels } from "@/utils/laptop";
 import type { Product } from "@/types/product";
 
-// Initialize with empty data that will be populated on first fetch
-let staticLaptopData: Product[] = [];
+// Initialize static data as null to indicate no initial fetch has occurred
+let staticLaptopData: Product[] | null = null;
 
 const fetchLaptopsFromDb = async () => {
   try {
+    // If we have static data and this is an initial load, return it immediately
+    if (staticLaptopData !== null) {
+      console.log('Returning cached data:', staticLaptopData.length, 'laptops');
+      return staticLaptopData;
+    }
+
     console.log('Fetching laptops from Supabase...');
     
     const { count: totalCount, error: countError } = await supabase
@@ -22,7 +28,7 @@ const fetchLaptopsFromDb = async () => {
       throw countError;
     }
 
-    console.log(`Total laptop count in database after deletion: ${totalCount}`);
+    console.log(`Total laptop count in database: ${totalCount}`);
 
     const CHUNK_SIZE = 1000;
     const allLaptops: any[] = [];
@@ -48,7 +54,7 @@ const fetchLaptopsFromDb = async () => {
       }
     }
 
-    console.log(`Successfully fetched ${allLaptops.length} laptops`);
+    console.log(`Successfully fetched ${allLaptops.length} laptops from database`);
 
     const processedLaptops = allLaptops.map(laptop => {
       const reviews = laptop.product_reviews || [];
@@ -93,12 +99,11 @@ export const useLaptops = () => {
   const query = useQuery({
     queryKey: ['laptops'],
     queryFn: fetchLaptopsFromDb,
-    initialData: staticLaptopData,
-    staleTime: Infinity,
-    gcTime: Infinity,
-    refetchOnMount: true, // Changed to true to ensure fresh data after deletions
+    staleTime: Infinity, // Never mark data as stale
+    gcTime: Infinity, // Never garbage collect
+    refetchOnMount: false,
     refetchOnWindowFocus: false,
-    refetchOnReconnect: false
+    refetchOnReconnect: false,
   });
 
   return {

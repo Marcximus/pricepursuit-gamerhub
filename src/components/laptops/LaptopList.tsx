@@ -20,20 +20,15 @@ export function LaptopList({
   onRetry,
   isRefetching 
 }: LaptopListProps) {
-  // Add detailed logging for debugging
-  console.log('LaptopList render state:', {
+  console.log('LaptopList render:', {
     laptopCount: laptops?.length || 0,
     isLoading,
     hasError: !!error,
-    isRefetching,
-    laptops: laptops?.map(l => ({
-      id: l.id,
-      title: l.title,
-      price: l.current_price
-    }))
+    isRefetching
   });
 
-  if (isLoading) {
+  // Show loading only if we have no laptops yet
+  if (isLoading && (!laptops || laptops.length === 0)) {
     return (
       <div className="text-center py-12">
         <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
@@ -73,8 +68,8 @@ export function LaptopList({
     );
   }
 
-  if (!laptops || laptops.length === 0) {
-    console.log('No laptops available to display');
+  // Only show no laptops message if we're not loading and have no data
+  if ((!laptops || laptops.length === 0) && !isLoading) {
     return (
       <Card>
         <CardHeader>
