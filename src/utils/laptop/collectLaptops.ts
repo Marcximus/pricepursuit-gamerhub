@@ -8,7 +8,7 @@ const LAPTOP_BRANDS = [
   'Alienware', 'Vaio', 'Fsjun', 'Jumper', 'Xiaomi', 'ACEMAGIC'
 ];
 
-const BRANDS_PER_BATCH = 2;
+const BRANDS_PER_BATCH = 1; // Reduced to 1 brand at a time
 const DELAY_BETWEEN_BATCHES = 500; // 500ms delay
 
 export async function collectLaptops() {
@@ -53,15 +53,15 @@ export async function collectLaptops() {
       return null;
     }
 
-    // Update collection status for the first batch before starting
-    const firstBatch = LAPTOP_BRANDS.slice(0, BRANDS_PER_BATCH);
+    // Update collection status for the first brand before starting
+    const firstBrand = LAPTOP_BRANDS[0];
     const { error: updateError } = await supabase
       .from('products')
       .update({ 
         collection_status: 'in_progress',
         last_collection_attempt: new Date().toISOString()
       })
-      .in('brand', firstBatch);
+      .eq('brand', firstBrand);
 
     if (updateError) {
       console.error('Error updating collection status:', updateError);
