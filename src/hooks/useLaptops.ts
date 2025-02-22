@@ -5,14 +5,14 @@ import { processLaptopData } from "@/utils/laptopUtils";
 import { collectLaptops, updateLaptops, refreshBrandModels } from "@/utils/laptop";
 import type { Product } from "@/types/product";
 
-// Initialize static data as null to indicate no initial fetch has occurred
-let staticLaptopData: Product[] | null = null;
+// Initialize static data as empty array instead of null
+let staticLaptopData: Product[] = [];
 
 const fetchLaptopsFromDb = async () => {
   try {
-    // If we have static data and this is an initial load, return it immediately
-    if (staticLaptopData !== null) {
-      console.log('Returning cached data:', staticLaptopData.length, 'laptops');
+    // If we have static data, log it
+    if (staticLaptopData.length > 0) {
+      console.log('Using cached data:', staticLaptopData.length, 'laptops');
       return staticLaptopData;
     }
 
@@ -99,6 +99,7 @@ export const useLaptops = () => {
   const query = useQuery({
     queryKey: ['laptops'],
     queryFn: fetchLaptopsFromDb,
+    initialData: staticLaptopData, // Provide initial data from static storage
     staleTime: Infinity, // Never mark data as stale
     gcTime: Infinity, // Never garbage collect
     refetchOnMount: false,
