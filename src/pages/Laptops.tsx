@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/components/ui/use-toast";
@@ -13,9 +13,6 @@ import { useLaptopFilters } from "@/hooks/useLaptopFilters";
 import { collectLaptops } from "@/utils/laptop/collectLaptops";
 import type { Product } from "@/types/product";
 
-// Declare the global variable for TypeScript
-declare const __INITIAL_DATA__: Product[];
-
 const ComparePriceLaptops = () => {
   const [sortBy, setSortBy] = useState<SortOption>("rating-desc");
   const [filters, setFilters] = useState<FilterOptions>({
@@ -28,34 +25,18 @@ const ComparePriceLaptops = () => {
     brand: "all-brands",
   });
 
-  // Initialize with build-time data
-  const [initialData] = useState<Product[]>(() => {
-    try {
-      return __INITIAL_DATA__ || [];
-    } catch (e) {
-      console.warn('No build-time data available:', e);
-      return [];
-    }
-  });
-
   const { 
-    data: laptops = initialData, 
+    data: laptops = [] as Product[], 
     isLoading: isLaptopsLoading, 
     error: laptopsError,
     refetch: refetchLaptops,
     isRefetching,
     updateLaptops
   } = useLaptops();
-
   const { toast } = useToast();
 
-  const filteredAndSortedLaptops = useFilteredLaptops(
-    laptops.length > 0 ? laptops : initialData,
-    filters, 
-    sortBy
-  );
-
-  const filterOptions = useLaptopFilters(laptops.length > 0 ? laptops : initialData);
+  const filteredAndSortedLaptops = useFilteredLaptops(laptops, filters, sortBy);
+  const filterOptions = useLaptopFilters(laptops);
 
   const handleCollectLaptops = async () => {
     console.log('handleCollectLaptops called in Laptops.tsx');
@@ -110,9 +91,6 @@ const ComparePriceLaptops = () => {
     }
   };
 
-  // Only show loading state if we don't have any data at all
-  const showLoading = isLaptopsLoading && laptops.length === 0 && initialData.length === 0;
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -139,14 +117,14 @@ const ComparePriceLaptops = () => {
                 onSortChange={setSortBy}
                 onCollectLaptops={handleCollectLaptops}
                 onUpdateLaptops={handleUpdateLaptops}
-                isLoading={showLoading}
+                isLoading={isLaptopsLoading}
                 isRefetching={isRefetching}
               />
             }
             content={
               <LaptopList
                 laptops={filteredAndSortedLaptops}
-                isLoading={showLoading}
+                isLoading={isLaptopsLoading}
                 error={laptopsError}
                 onRetry={handleCollectLaptops}
                 isRefetching={isRefetching}
