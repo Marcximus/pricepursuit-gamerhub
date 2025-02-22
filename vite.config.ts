@@ -4,8 +4,9 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { supabase } from "./src/integrations/supabase/client";
-import type { Connect, IncomingMessage, ServerResponse } from 'http';
-import type { ProxyOptions } from 'vite';
+import type { IncomingMessage } from 'http';
+import type { ConfigEnv, UserConfig } from 'vite';
+import type { Server } from 'http-proxy';
 
 // Function to fetch data at build time
 async function fetchBuildTimeData() {
@@ -29,7 +30,7 @@ async function fetchBuildTimeData() {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig(async ({ mode }) => ({
+export default defineConfig(async ({ mode }: ConfigEnv): Promise<UserConfig> => ({
   server: {
     host: "::",
     port: 8080,
@@ -38,11 +39,11 @@ export default defineConfig(async ({ mode }) => ({
         target: 'https://kkebyebrhdpcwqnxhjcx.supabase.co',
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/api/, ''),
-        configure: (proxy: ProxyOptions) => {
+        configure: (proxy: Server) => {
           // Add basic memory cache
           const cache = new Map<string, string>();
           
-          proxy.on('proxyReq', (proxyReq: Connect.ProxyRequest, req: IncomingMessage) => {
+          proxy.on('proxyReq', (_, req: IncomingMessage) => {
             const key = req.url;
             if (key && cache.has(key)) {
               console.log('Cache hit:', key);
@@ -50,7 +51,7 @@ export default defineConfig(async ({ mode }) => ({
             }
           });
 
-          proxy.on('proxyRes', (proxyRes: Connect.ProxyResponse, req: IncomingMessage) => {
+          proxy.on('proxyRes', (proxyRes, req: IncomingMessage) => {
             const key = req.url;
             let body = '';
             proxyRes.on('data', (chunk: Buffer) => body += chunk);
