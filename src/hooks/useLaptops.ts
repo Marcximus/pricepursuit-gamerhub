@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { processLaptopData } from "@/utils/laptopUtils";
@@ -9,13 +10,18 @@ let cachedLaptops: Product[] = [];
 
 const fetchLaptopsFromDb = async () => {
   try {
-    // Use cached data if available
+    console.log('Fetching laptops - cache status:', {
+      hasCachedData: cachedLaptops.length > 0,
+      cachedCount: cachedLaptops.length
+    });
+
+    // First try to get data from cache
     if (cachedLaptops.length > 0) {
-      console.log('Using cached data:', cachedLaptops.length, 'laptops');
+      console.log('Returning cached laptops:', cachedLaptops.length);
       return cachedLaptops;
     }
 
-    console.log('Fetching laptops from Supabase...');
+    console.log('No cache, fetching from Supabase...');
     
     const { data: laptops, error } = await supabase
       .from('products')
@@ -31,7 +37,7 @@ const fetchLaptopsFromDb = async () => {
       throw error;
     }
 
-    if (!laptops) {
+    if (!laptops || laptops.length === 0) {
       console.log('No laptops found in database');
       return [];
     }
@@ -69,7 +75,11 @@ const fetchLaptopsFromDb = async () => {
     });
 
     const finalLaptops = processedLaptops.map(laptop => processLaptopData(laptop as Product));
+    
+    // Update cache
     cachedLaptops = finalLaptops;
+    console.log('Updated cache with', finalLaptops.length, 'laptops');
+    
     return finalLaptops;
   } catch (error) {
     console.error('Error in fetchLaptopsFromDb:', error);
@@ -81,12 +91,11 @@ export const useLaptops = () => {
   const query = useQuery({
     queryKey: ['laptops'],
     queryFn: fetchLaptopsFromDb,
-    initialData: cachedLaptops,
-    staleTime: Infinity,
-    gcTime: Infinity,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 10 * 60 * 1000,   // Keep unused data in cache for 10 minutes
+    retry: 2,                  // Retry failed requests twice
+    refetchOnMount: true,      // Refetch when component mounts
+    refetchOnWindowFocus: false // Don't refetch when window regains focus
   });
 
   return {

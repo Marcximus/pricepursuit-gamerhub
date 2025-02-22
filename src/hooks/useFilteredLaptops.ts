@@ -11,6 +11,7 @@ export const useFilteredLaptops = (
 ) => {
   return useMemo(() => {
     if (!laptops) {
+      console.log('No laptops data available');
       return [];
     }
 
@@ -23,15 +24,15 @@ export const useFilteredLaptops = (
     // Start with all laptops
     let filtered = [...laptops];
 
-    // Only apply filters if they're different from defaults
+    // Only apply price filter if range is modified
     if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
       filtered = filtered.filter(laptop => {
-        if (!laptop.current_price) return true;
-        return laptop.current_price >= filters.priceRange.min && 
-               laptop.current_price <= filters.priceRange.max;
+        const price = laptop.current_price || 0;
+        return price >= filters.priceRange.min && price <= filters.priceRange.max;
       });
     }
 
+    // Only apply other filters if they're not set to "all"
     if (filters.brand !== "all-brands") {
       filtered = filtered.filter(laptop => 
         laptop.brand?.toLowerCase() === filters.brand.toLowerCase()

@@ -24,7 +24,8 @@ export function LaptopList({
     laptopCount: laptops?.length || 0,
     isLoading,
     hasError: !!error,
-    isRefetching
+    isRefetching,
+    hasLaptops: Array.isArray(laptops) && laptops.length > 0
   });
 
   if (error) {
@@ -58,8 +59,8 @@ export function LaptopList({
     );
   }
 
-  // Show loading state
-  if (isLoading && (!laptops || laptops.length === 0)) {
+  // Show loading state only on initial load, not during refetching
+  if (isLoading && !isRefetching && (!laptops || laptops.length === 0)) {
     return (
       <div className="text-center py-12">
         <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
@@ -68,16 +69,24 @@ export function LaptopList({
     );
   }
 
-  // Return empty state only if we're not loading and have no laptops
-  if (!isLoading && (!laptops || laptops.length === 0)) {
+  // Return empty state only when we're sure there are no laptops
+  if (!isLoading && !isRefetching && (!laptops || laptops.length === 0)) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>No Laptops Found</CardTitle>
           <CardDescription>
-            Try updating your filters to see more laptops.
+            Please click "Discover Laptops" to fetch new laptops.
           </CardDescription>
         </CardHeader>
+        <CardContent>
+          <Button 
+            onClick={onRetry}
+            className="w-full sm:w-auto"
+          >
+            Discover Laptops
+          </Button>
+        </CardContent>
       </Card>
     );
   }
