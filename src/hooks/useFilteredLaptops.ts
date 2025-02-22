@@ -15,11 +15,15 @@ export const useFilteredLaptops = (
         console.log('No laptops to filter');
         return [];
       }
+
+      console.log('Starting filtering process with', laptops.length, 'laptops');
+      console.log('Current filters:', filters);
       
       const filtered = laptops.filter(laptop => {
         // Price filter
         const price = laptop.current_price || 0;
         if (price < filters.priceRange.min || price > filters.priceRange.max) {
+          console.log(`Laptop ${laptop.title} filtered out by price range:`, { price, min: filters.priceRange.min, max: filters.priceRange.max });
           return false;
         }
 
@@ -43,6 +47,7 @@ export const useFilteredLaptops = (
         if (filters.processor !== "all-processors" && laptop.processor) {
           const processorMatches = laptop.processor.toLowerCase() === filters.processor.toLowerCase();
           if (!processorMatches) {
+            console.log(`Processor mismatch - Laptop: "${laptop.processor}", Filter: "${filters.processor}"`);
             return false;
           }
         }
@@ -51,6 +56,7 @@ export const useFilteredLaptops = (
         if (filters.ram !== "all-ram" && laptop.ram) {
           const ramMatches = laptop.ram.toLowerCase() === filters.ram.toLowerCase();
           if (!ramMatches) {
+            console.log(`RAM mismatch - Laptop: "${laptop.ram}", Filter: "${filters.ram}"`);
             return false;
           }
         }
@@ -59,6 +65,7 @@ export const useFilteredLaptops = (
         if (filters.storage !== "all-storage" && laptop.storage) {
           const storageMatches = laptop.storage.toLowerCase() === filters.storage.toLowerCase();
           if (!storageMatches) {
+            console.log(`Storage mismatch - Laptop: "${laptop.storage}", Filter: "${filters.storage}"`);
             return false;
           }
         }
@@ -67,6 +74,7 @@ export const useFilteredLaptops = (
         if (filters.graphics !== "all-graphics" && laptop.graphics) {
           const graphicsMatches = laptop.graphics.toLowerCase() === filters.graphics.toLowerCase();
           if (!graphicsMatches) {
+            console.log(`Graphics mismatch - Laptop: "${laptop.graphics}", Filter: "${filters.graphics}"`);
             return false;
           }
         }
@@ -75,6 +83,7 @@ export const useFilteredLaptops = (
         if (filters.screenSize !== "all-screens" && laptop.screen_size) {
           const screenSizeMatches = laptop.screen_size.toLowerCase() === filters.screenSize.toLowerCase();
           if (!screenSizeMatches) {
+            console.log(`Screen size mismatch - Laptop: "${laptop.screen_size}", Filter: "${filters.screenSize}"`);
             return false;
           }
         }
@@ -82,7 +91,13 @@ export const useFilteredLaptops = (
         return true;
       });
 
-      console.log(`Filtered from ${laptops.length} to ${filtered.length} laptops`);
+      console.log(`Filtering complete: ${laptops.length} → ${filtered.length} laptops`);
+      console.log('Filter breakdown:', {
+        totalStart: laptops.length,
+        totalAfterFilter: filtered.length,
+        filterSettings: filters,
+      });
+      
       return filtered;
     };
 
@@ -91,6 +106,8 @@ export const useFilteredLaptops = (
         console.log('No laptops to sort');
         return [];
       }
+      
+      console.log(`Starting sort of ${laptops.length} laptops by ${sortBy}`);
       
       const sorted = [...laptops].sort((a, b) => {
         // First check if either laptop has no price
@@ -120,7 +137,7 @@ export const useFilteredLaptops = (
         }
       });
 
-      console.log(`Sorted ${sorted.length} laptops by ${sortBy}`);
+      console.log(`Sorting complete. Final laptop count: ${sorted.length}`);
       return sorted;
     };
 

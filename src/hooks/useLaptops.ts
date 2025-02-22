@@ -47,11 +47,23 @@ export const useLaptops = () => {
           return [];
         }
 
-        console.log(`Successfully fetched ${laptopsData.length} laptops with their reviews`);
+        console.log('Laptops data fetched:', {
+          totalCount,
+          fetchedCount: laptopsData.length,
+          match: totalCount === laptopsData.length ? 'YES' : 'NO'
+        });
 
         // Log count of laptops with prices for debugging
         const laptopsWithPrices = laptopsData.filter(laptop => laptop.current_price != null && laptop.current_price > 0);
-        console.log(`Number of laptops with valid prices: ${laptopsWithPrices.length}`);
+        console.log('Laptop price analysis:', {
+          totalLaptops: laptopsData.length,
+          withPrices: laptopsWithPrices.length,
+          withoutPrices: laptopsData.length - laptopsWithPrices.length,
+          priceRange: laptopsWithPrices.length > 0 ? {
+            min: Math.min(...laptopsWithPrices.map(l => l.current_price || 0)),
+            max: Math.max(...laptopsWithPrices.map(l => l.current_price || 0))
+          } : 'no prices available'
+        });
 
         // Process and return the laptops
         const processedLaptops = laptopsData.map(laptop => {
@@ -85,7 +97,13 @@ export const useLaptops = () => {
           };
         });
 
-        return processedLaptops.map(laptop => processLaptopData(laptop as Product));
+        const finalLaptops = processedLaptops.map(laptop => processLaptopData(laptop as Product));
+        console.log('Final processed laptops:', {
+          count: finalLaptops.length,
+          uniqueBrands: [...new Set(finalLaptops.map(l => l.brand))].length
+        });
+
+        return finalLaptops;
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
         throw error;
@@ -103,4 +121,3 @@ export const useLaptops = () => {
     refreshBrandModels,
   };
 };
-
