@@ -15,7 +15,7 @@ export async function fetchBrandData(brand: string, pagesPerBrand: number): Prom
     query: sanitizedQuery,
     start_page: 6,
     pages: pagesPerBrand,
-    geo_location: "United States",
+    geo_location: "90210",
     user_agent_type: "desktop",
     parse: true,
     context: [
