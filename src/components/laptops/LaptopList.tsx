@@ -55,8 +55,25 @@ export function LaptopList({
     );
   }
 
-  // Only show loading state on initial load, not during refetching
-  if (isLoading && !laptops?.length) {
+  // Show laptops immediately if we have them
+  if (laptops?.length > 0) {
+    return (
+      <div className="space-y-4">
+        {laptops.map((laptop) => (
+          <MemoizedLaptopCard key={laptop.id} laptop={laptop} />
+        ))}
+        {isLoading && (
+          <div className="text-center py-4">
+            <ReloadIcon className="inline-block h-4 w-4 animate-spin text-gray-400" />
+            <span className="ml-2 text-sm text-gray-500">Loading more laptops...</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Only show loading state if we have no laptops at all
+  if (isLoading) {
     return (
       <div className="text-center py-12">
         <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
@@ -65,19 +82,7 @@ export function LaptopList({
     );
   }
 
-  // Always show laptops if we have them, even during loading/refetching
-  if (laptops?.length > 0) {
-    // Use windowing if there are many laptops
-    return (
-      <div className="space-y-4">
-        {laptops.map((laptop) => (
-          <MemoizedLaptopCard key={laptop.id} laptop={laptop} />
-        ))}
-      </div>
-    );
-  }
-
-  // Only show no laptops message if we're not loading and truly have no laptops
+  // Show no laptops message only when we're sure there are none
   return (
     <Card>
       <CardHeader>

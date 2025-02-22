@@ -8,6 +8,19 @@ import type { Product } from "@/types/product";
 
 export { collectLaptops, updateLaptops, refreshBrandModels };
 
+// Static QueryClient instance for sharing cache across components
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes
+      gcTime: 10 * 60 * 1000,   // Keep unused data for 10 minutes
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      refetchInterval: false,
+    }
+  }
+});
+
 // Function to fetch laptops that can be used for prefetching
 const fetchLaptops = async () => {
   console.log('Fetching laptops from Supabase...');
@@ -77,19 +90,32 @@ const fetchLaptops = async () => {
   return processedLaptops;
 };
 
+// Prefetch laptops data and store in cache
+export const prefetchLaptops = async () => {
+  console.log('Prefetching laptops data...');
+  await queryClient.prefetchQuery({
+    queryKey: ['laptops'],
+    queryFn: fetchLaptops,
+  });
+};
+
+// Call prefetch immediately
+prefetchLaptops().catch(console.error);
+
 export const useLaptops = () => {
   const query = useQuery({
     queryKey: ['laptops'],
     queryFn: fetchLaptops,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    gcTime: 10 * 60 * 1000,   // Keep unused data for 10 minutes
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchInterval: false,
-    retry: 2,
-    // Initialize with previously cached data if available
+    // Use the shared QueryClient instance
+    gcTime: queryClient.getDefaultOptions().queries?.gcTime,
+    staleTime: queryClient.getDefaultOptions().queries?.staleTime,
+    refetchOnMount: queryClient.getDefaultOptions().queries?.refetchOnMount,
+    refetchOnWindowFocus: queryClient.getDefaultOptions().queries?.refetchOnWindowFocus,
+    refetchInterval: queryClient.getDefaultOptions().queries?.refetchInterval,
+    // Placeholders should return empty array instead of undefined
+    placeholderData: () => [],
+    // Get initial data from cache
     initialData: () => {
-      const queryClient = new QueryClient();
       return queryClient.getQueryData(['laptops']) as Product[] | undefined;
     }
   });
@@ -100,13 +126,4 @@ export const useLaptops = () => {
     updateLaptops,
     refreshBrandModels,
   };
-};
-
-// Prefetch laptops data
-export const prefetchLaptops = async () => {
-  const queryClient = new QueryClient();
-  await queryClient.prefetchQuery({
-    queryKey: ['laptops'],
-    queryFn: fetchLaptops,
-  });
 };
