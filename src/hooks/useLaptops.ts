@@ -1,62 +1,44 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { processLaptopData } from "@/utils/laptopUtils";
 import { collectLaptops, updateLaptops, refreshBrandModels } from "@/utils/laptop";
 import type { Product } from "@/types/product";
 
-// Initialize static data as empty array instead of null
-let staticLaptopData: Product[] = [];
+// Keep laptops in memory
+let cachedLaptops: Product[] = [];
 
 const fetchLaptopsFromDb = async () => {
   try {
-    // If we have static data, log it
-    if (staticLaptopData.length > 0) {
-      console.log('Using cached data:', staticLaptopData.length, 'laptops');
-      return staticLaptopData;
+    // Use cached data if available
+    if (cachedLaptops.length > 0) {
+      console.log('Using cached data:', cachedLaptops.length, 'laptops');
+      return cachedLaptops;
     }
 
     console.log('Fetching laptops from Supabase...');
     
-    const { count: totalCount, error: countError } = await supabase
+    const { data: laptops, error } = await supabase
       .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true);
+      .select(`
+        *,
+        product_reviews (*)
+      `)
+      .eq('is_laptop', true)
+      .order('last_checked', { ascending: false });
 
-    if (countError) {
-      console.error('Error getting laptop count:', countError);
-      throw countError;
+    if (error) {
+      console.error('Error fetching laptops:', error);
+      throw error;
     }
 
-    console.log(`Total laptop count in database: ${totalCount}`);
-
-    const CHUNK_SIZE = 1000;
-    const allLaptops: any[] = [];
-    
-    for (let i = 0; i < Math.ceil((totalCount || 0) / CHUNK_SIZE); i++) {
-      const { data: laptopsChunk, error } = await supabase
-        .from('products')
-        .select(`
-          *,
-          product_reviews (*)
-        `)
-        .eq('is_laptop', true)
-        .order('last_checked', { ascending: false })
-        .range(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE - 1);
-
-      if (error) {
-        console.error('Error fetching laptops chunk:', error);
-        throw error;
-      }
-
-      if (laptopsChunk) {
-        allLaptops.push(...laptopsChunk);
-      }
+    if (!laptops) {
+      console.log('No laptops found in database');
+      return [];
     }
 
-    console.log(`Successfully fetched ${allLaptops.length} laptops from database`);
+    console.log(`Fetched ${laptops.length} laptops from database`);
 
-    const processedLaptops = allLaptops.map(laptop => {
+    const processedLaptops = laptops.map(laptop => {
       const reviews = laptop.product_reviews || [];
       
       const reviewData = {
@@ -87,7 +69,7 @@ const fetchLaptopsFromDb = async () => {
     });
 
     const finalLaptops = processedLaptops.map(laptop => processLaptopData(laptop as Product));
-    staticLaptopData = finalLaptops; // Update static data
+    cachedLaptops = finalLaptops;
     return finalLaptops;
   } catch (error) {
     console.error('Error in fetchLaptopsFromDb:', error);
@@ -99,9 +81,9 @@ export const useLaptops = () => {
   const query = useQuery({
     queryKey: ['laptops'],
     queryFn: fetchLaptopsFromDb,
-    initialData: staticLaptopData, // Provide initial data from static storage
-    staleTime: Infinity, // Never mark data as stale
-    gcTime: Infinity, // Never garbage collect
+    initialData: cachedLaptops,
+    staleTime: Infinity,
+    gcTime: Infinity,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
