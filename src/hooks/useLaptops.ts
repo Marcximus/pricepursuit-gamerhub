@@ -1,5 +1,5 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { processLaptopData } from "@/utils/laptopUtils";
@@ -89,8 +89,8 @@ export const useLaptops = () => {
     retry: 2,
     // Initialize with previously cached data if available
     initialData: () => {
-      const queryCache = query.getQueryCache();
-      return queryCache.find(['laptops'])?.state?.data as Product[] | undefined;
+      const queryClient = new QueryClient();
+      return queryClient.getQueryData(['laptops']) as Product[] | undefined;
     }
   });
 
@@ -104,7 +104,7 @@ export const useLaptops = () => {
 
 // Prefetch laptops data
 export const prefetchLaptops = async () => {
-  const queryClient = useQuery.getQueryClient();
+  const queryClient = new QueryClient();
   await queryClient.prefetchQuery({
     queryKey: ['laptops'],
     queryFn: fetchLaptops,
