@@ -27,16 +27,6 @@ export function LaptopList({
     isRefetching
   });
 
-  // Show loading only if we have no laptops yet
-  if (isLoading && (!laptops || laptops.length === 0)) {
-    return (
-      <div className="text-center py-12">
-        <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
-        <p className="mt-2 text-gray-600">Loading laptops...</p>
-      </div>
-    );
-  }
-
   if (error) {
     console.error('LaptopList error:', error);
     return (
@@ -68,28 +58,31 @@ export function LaptopList({
     );
   }
 
-  // Only show no laptops message if we're not loading and have no data
-  if ((!laptops || laptops.length === 0) && !isLoading) {
+  // Show loading state
+  if (isLoading && (!laptops || laptops.length === 0)) {
+    return (
+      <div className="text-center py-12">
+        <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
+        <p className="mt-2 text-gray-600">Loading laptops...</p>
+      </div>
+    );
+  }
+
+  // Return empty state only if we're not loading and have no laptops
+  if (!isLoading && (!laptops || laptops.length === 0)) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>No Laptops Found</CardTitle>
           <CardDescription>
-            Try updating the laptop data or adjusting your filters.
+            Try updating your filters to see more laptops.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Button 
-            onClick={onRetry}
-            disabled={isRefetching}
-          >
-            {isRefetching ? "Updating..." : "Update Laptop Data"}
-          </Button>
-        </CardContent>
       </Card>
     );
   }
 
+  // Render laptops
   return (
     <div className="space-y-4">
       {laptops.map((laptop) => (
