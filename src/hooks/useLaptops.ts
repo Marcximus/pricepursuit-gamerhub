@@ -8,12 +8,12 @@ import type { Product } from "@/types/product";
 
 export { collectLaptops, updateLaptops, refreshBrandModels };
 
-// Static QueryClient instance for sharing cache across components
+// Create a static QueryClient instance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes
-      gcTime: 10 * 60 * 1000,   // Keep unused data for 10 minutes
+      staleTime: 5 * 60 * 1000,    // Data stays fresh for 5 minutes
+      gcTime: 10 * 60 * 1000,      // Keep unused data for 10 minutes
       refetchOnMount: false,
       refetchOnWindowFocus: false,
       refetchInterval: false,
@@ -21,15 +21,52 @@ const queryClient = new QueryClient({
   }
 });
 
-// Store initial data globally
-let initialData: Product[] | undefined;
+// In-memory cache for instant data access
+let cachedData: Product[] | undefined;
+
+// Function to store data in localStorage
+const storeInLocalStorage = (data: Product[]) => {
+  try {
+    localStorage.setItem('laptops-cache', JSON.stringify(data));
+    localStorage.setItem('laptops-cache-timestamp', Date.now().toString());
+  } catch (error) {
+    console.warn('Failed to store laptops in localStorage:', error);
+  }
+};
+
+// Function to get data from localStorage
+const getFromLocalStorage = (): Product[] | undefined => {
+  try {
+    const timestamp = Number(localStorage.getItem('laptops-cache-timestamp'));
+    const cacheAge = Date.now() - timestamp;
+    const maxAge = 30 * 60 * 1000; // 30 minutes
+
+    if (cacheAge < maxAge) {
+      const cachedData = localStorage.getItem('laptops-cache');
+      if (cachedData) {
+        console.log('Using localStorage cache, age:', Math.round(cacheAge / 1000), 'seconds');
+        return JSON.parse(cachedData);
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to retrieve laptops from localStorage:', error);
+  }
+  return undefined;
+};
 
 // Function to fetch laptops that can be used for prefetching
 const fetchLaptops = async (): Promise<Product[]> => {
-  // Return cached data if available
-  if (initialData) {
-    console.log('Using cached initial data:', initialData.length, 'laptops');
-    return initialData;
+  // Return in-memory cache if available
+  if (cachedData) {
+    console.log('Using in-memory cache:', cachedData.length, 'laptops');
+    return cachedData;
+  }
+
+  // Try to get data from localStorage
+  const localData = getFromLocalStorage();
+  if (localData) {
+    cachedData = localData; // Store in memory for faster subsequent access
+    return localData;
   }
 
   console.log('Fetching laptops from Supabase...');
@@ -93,12 +130,14 @@ const fetchLaptops = async (): Promise<Product[]> => {
     processedLaptops.push(...processed);
   }
 
-  // Cache the processed data
-  initialData = processedLaptops;
+  // Store the processed data in both caches
+  cachedData = processedLaptops;
+  storeInLocalStorage(processedLaptops);
+  
   return processedLaptops;
 };
 
-// Prefetch laptops data and store in cache immediately
+// Pre-fetch laptops data immediately
 console.log('Starting initial data prefetch...');
 fetchLaptops()
   .then(data => {
@@ -107,19 +146,26 @@ fetchLaptops()
   })
   .catch(console.error);
 
+// Function to clear cache (useful for debugging or forced refresh)
+export const clearLaptopsCache = () => {
+  cachedData = undefined;
+  localStorage.removeItem('laptops-cache');
+  localStorage.removeItem('laptops-cache-timestamp');
+  queryClient.removeQueries({ queryKey: ['laptops'] });
+};
+
 export const useLaptops = () => {
   const query = useQuery<Product[]>({
     queryKey: ['laptops'],
     queryFn: fetchLaptops,
-    // Use the shared QueryClient instance
     gcTime: queryClient.getDefaultOptions().queries?.gcTime,
     staleTime: queryClient.getDefaultOptions().queries?.staleTime,
     refetchOnMount: queryClient.getDefaultOptions().queries?.refetchOnMount,
     refetchOnWindowFocus: queryClient.getDefaultOptions().queries?.refetchOnWindowFocus,
     refetchInterval: queryClient.getDefaultOptions().queries?.refetchInterval,
-    // Always return initialData as placeholder if available
-    placeholderData: () => initialData || [],
-    initialData: () => initialData,
+    // Always return cached data as placeholder
+    placeholderData: () => cachedData || getFromLocalStorage() || [],
+    initialData: () => cachedData || getFromLocalStorage(),
   });
 
   return {
@@ -127,5 +173,7 @@ export const useLaptops = () => {
     collectLaptops,
     updateLaptops,
     refreshBrandModels,
+    clearCache: clearLaptopsCache,
   };
 };
+
