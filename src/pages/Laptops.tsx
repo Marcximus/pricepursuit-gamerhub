@@ -13,7 +13,7 @@ import { useLaptopFilters } from "@/hooks/useLaptopFilters";
 import { collectLaptops } from "@/utils/laptop/collectLaptops";
 
 const ComparePriceLaptops = () => {
-  const [sortBy, setSortBy] = useState<SortOption>("price-asc");
+  const [sortBy, setSortBy] = useState<SortOption>("rating-desc");
   const [filters, setFilters] = useState<FilterOptions>({
     priceRange: { min: 0, max: 10000 },
     processor: "all-processors",
@@ -137,3 +137,4 @@ const ComparePriceLaptops = () => {
 };
 
 export default ComparePriceLaptops;
+
