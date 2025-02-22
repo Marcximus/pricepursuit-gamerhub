@@ -9,6 +9,7 @@ const LAPTOP_BRANDS = [
 ];
 
 const BRANDS_PER_BATCH = 2;
+const DELAY_BETWEEN_BATCHES = 1000; // 1 second delay
 
 export async function collectLaptops() {
   console.log('collectLaptops function called');
@@ -79,6 +80,12 @@ export async function collectLaptops() {
     for (const [index, brands] of brandBatches.entries()) {
       console.log(`Processing batch ${index + 1}/${brandBatches.length}: ${brands.join(', ')}`);
       
+      // Add delay before processing each batch (except the first one)
+      if (index > 0) {
+        console.log(`Waiting ${DELAY_BETWEEN_BATCHES}ms before processing next batch...`);
+        await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+      }
+
       const { error: functionError } = await supabase.functions.invoke('collect-laptops', {
         body: {
           brands: brands,
@@ -94,11 +101,6 @@ export async function collectLaptops() {
       }
 
       console.log(`Successfully processed batch ${index + 1}`);
-
-      // Add delay between batches
-      if (index < brandBatches.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 5000));
-      }
     }
 
     console.log('Collection process initiated successfully');
@@ -120,4 +122,3 @@ export async function collectLaptops() {
     throw error;
   }
 }
-
