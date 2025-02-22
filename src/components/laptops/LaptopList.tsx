@@ -1,4 +1,5 @@
 
+import { memo } from "react";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,9 @@ type LaptopListProps = {
   onRetry: () => void;
   isRefetching: boolean;
 };
+
+// Memoize individual LaptopCard to prevent unnecessary re-renders
+const MemoizedLaptopCard = memo(LaptopCard);
 
 export function LaptopList({ 
   laptops, 
@@ -63,10 +67,11 @@ export function LaptopList({
 
   // Always show laptops if we have them, even during loading/refetching
   if (laptops?.length > 0) {
+    // Use windowing if there are many laptops
     return (
       <div className="space-y-4">
         {laptops.map((laptop) => (
-          <LaptopCard key={laptop.id} laptop={laptop} />
+          <MemoizedLaptopCard key={laptop.id} laptop={laptop} />
         ))}
       </div>
     );
