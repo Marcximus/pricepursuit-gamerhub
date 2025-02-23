@@ -85,6 +85,9 @@ export function LaptopFilters({
   screenSizes,
   brands,
 }: LaptopFiltersProps) {
+  // Create an array of all section titles to use as default expanded values
+  const allSections = ["Brand", "Processor", "RAM", "Storage", "Graphics", "Screen Size"];
+
   return (
     <div className="space-y-6">
       {/* Price Range */}
@@ -116,7 +119,7 @@ export function LaptopFilters({
       </div>
 
       {/* Filter Sections */}
-      <Accordion type="multiple" className="w-full">
+      <Accordion type="multiple" defaultValue={allSections} className="w-full">
         <FilterSection
           title="Brand"
           options={brands}
