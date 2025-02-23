@@ -1,7 +1,7 @@
 
 export interface Product {
   id: string;
-  asin: string;
+  asin: string; // Already exists but documenting for clarity
   title: string;
   current_price: number;
   original_price: number;
@@ -25,7 +25,7 @@ export interface Product {
   brand: string;
   total_reviews?: number;
   average_rating?: number;
-  wilson_score?: number; // Added this field
+  wilson_score?: number;
   review_data?: {
     rating_breakdown?: {
       [key: string]: number;
@@ -49,4 +49,3 @@ export interface PriceHistory {
   timestamp: string;
   created_at: string;
 }
-

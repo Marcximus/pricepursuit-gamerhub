@@ -5,7 +5,11 @@ export const processLaptopsAI = async () => {
   try {
     console.log('Starting AI processing for laptops...');
     
-    const { data, error: fetchError } = await supabase.functions.invoke('process-laptops-ai');
+    const { data, error: fetchError } = await supabase.functions.invoke('process-laptops-ai', {
+      body: {
+        include_asin: true // Signal to include ASIN in processing
+      }
+    });
     
     if (fetchError) {
       console.error('Error starting AI processing:', fetchError);

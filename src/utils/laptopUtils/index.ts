@@ -6,9 +6,9 @@ import { processScreenSize, processWeight, processBatteryLife } from './physical
 import type { Product } from "@/types/product";
 
 export const processLaptopData = (laptop: any): Product => {
-  // Add debug logging for review data
   console.log('Processing laptop data:', {
     id: laptop.id,
+    asin: laptop.asin, // Log ASIN for debugging
     title: laptop.title,
     rating: laptop.rating,
     averageRating: laptop.average_rating,
@@ -17,11 +17,9 @@ export const processLaptopData = (laptop: any): Product => {
     reviewData: laptop.review_data
   });
   
-  // Ensure prices are properly converted to numbers
   let current_price = null;
   let original_price = null;
 
-  // Handle current price
   if (laptop.current_price !== null && laptop.current_price !== undefined) {
     const parsedPrice = parseFloat(laptop.current_price);
     if (!isNaN(parsedPrice)) {
@@ -29,7 +27,6 @@ export const processLaptopData = (laptop: any): Product => {
     }
   }
 
-  // Handle original price
   if (laptop.original_price !== null && laptop.original_price !== undefined) {
     const parsedPrice = parseFloat(laptop.original_price);
     if (!isNaN(parsedPrice)) {
@@ -37,13 +34,11 @@ export const processLaptopData = (laptop: any): Product => {
     }
   }
 
-  // Process review data
   let review_data = laptop.review_data || {
     rating_breakdown: {},
     recent_reviews: []
   };
 
-  // Try to parse review_data if it's a string
   if (typeof review_data === 'string') {
     try {
       review_data = JSON.parse(review_data);
@@ -52,7 +47,6 @@ export const processLaptopData = (laptop: any): Product => {
     }
   }
 
-  // Ensure review_data has the correct structure
   if (!review_data.rating_breakdown) {
     review_data.rating_breakdown = {};
   }
@@ -60,20 +54,18 @@ export const processLaptopData = (laptop: any): Product => {
     review_data.recent_reviews = [];
   }
 
-  // Process rating and review metrics
   const rating = laptop.rating || laptop.average_rating || null;
   const total_reviews = laptop.total_reviews || review_data.recent_reviews.length || laptop.rating_count || null;
 
-  // Log processed review data
   console.log('Processed rating data:', {
     id: laptop.id,
+    asin: laptop.asin, // Log ASIN in processed data
     rating,
     totalReviews: total_reviews,
     reviewCount: review_data.recent_reviews?.length,
     hasRatingBreakdown: !!review_data.rating_breakdown
   });
 
-  // Ensure brand is never null/undefined/empty
   const brand = laptop.brand?.trim() || 'Unknown';
 
   return {
@@ -98,7 +90,7 @@ export const processLaptopData = (laptop: any): Product => {
     benchmark_score: laptop.benchmark_score || null,
     weight: processWeight(laptop.weight, laptop.title || ''),
     battery_life: processBatteryLife(laptop.battery_life, laptop.title || ''),
-    brand: brand, // Added the required brand property
+    brand: brand,
     total_reviews: total_reviews,
     average_rating: rating,
     review_data: review_data
@@ -109,4 +101,3 @@ export * from './titleProcessor';
 export * from './specsProcessor';
 export * from './graphicsProcessor';
 export * from './physicalSpecsProcessor';
-
