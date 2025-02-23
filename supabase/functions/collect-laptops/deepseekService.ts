@@ -79,8 +79,11 @@ Description: ${laptopData.description || 'No description available'}`;
       throw new Error('Invalid API response structure from DeepSeek');
     }
 
-    const content = data.choices[0].message.content.trim();
-    console.log('[DeepSeek] Processing content:', content);
+    // Clean up the content by removing markdown code block syntax
+    let content = data.choices[0].message.content.trim();
+    content = content.replace(/^```json\n/, '').replace(/\n```$/, '');
+    
+    console.log('[DeepSeek] Processing cleaned content:', content);
 
     try {
       const processedData = JSON.parse(content);
@@ -118,3 +121,4 @@ Description: ${laptopData.description || 'No description available'}`;
     throw error;
   }
 }
+
