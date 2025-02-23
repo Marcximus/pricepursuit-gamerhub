@@ -1,7 +1,7 @@
 
 export interface Product {
   id: string;
-  asin: string; // Already exists but documenting for clarity
+  asin: string;
   title: string;
   current_price: number;
   original_price: number;
@@ -18,11 +18,12 @@ export interface Product {
   storage?: string;
   screen_size?: string;
   screen_resolution?: string;
-  graphics?: string;
+  graphics?: string; // GPU information
   benchmark_score?: number;
   weight?: string;
   battery_life?: string;
-  brand: string;
+  brand: string; // Brand like Dell, HP, Apple
+  model?: string; // Model identifier
   total_reviews?: number;
   average_rating?: number;
   wilson_score?: number;
@@ -49,3 +50,4 @@ export interface PriceHistory {
   timestamp: string;
   created_at: string;
 }
+

@@ -8,7 +8,7 @@ import type { Product } from "@/types/product";
 export const processLaptopData = (laptop: any): Product => {
   console.log('Processing laptop data:', {
     id: laptop.id,
-    asin: laptop.asin, // Log ASIN for debugging
+    asin: laptop.asin,
     title: laptop.title,
     rating: laptop.rating,
     averageRating: laptop.average_rating,
@@ -59,7 +59,7 @@ export const processLaptopData = (laptop: any): Product => {
 
   console.log('Processed rating data:', {
     id: laptop.id,
-    asin: laptop.asin, // Log ASIN in processed data
+    asin: laptop.asin, // Log ASIN for debugging
     rating,
     totalReviews: total_reviews,
     reviewCount: review_data.recent_reviews?.length,
@@ -91,6 +91,7 @@ export const processLaptopData = (laptop: any): Product => {
     weight: processWeight(laptop.weight, laptop.title || ''),
     battery_life: processBatteryLife(laptop.battery_life, laptop.title || ''),
     brand: brand,
+    model: laptop.model || null,
     total_reviews: total_reviews,
     average_rating: rating,
     review_data: review_data
@@ -101,3 +102,4 @@ export * from './titleProcessor';
 export * from './specsProcessor';
 export * from './graphicsProcessor';
 export * from './physicalSpecsProcessor';
+

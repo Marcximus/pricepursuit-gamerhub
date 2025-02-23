@@ -83,3 +83,4 @@ export const processGraphics = (graphics: string | undefined, title: string): st
   console.log('No graphics found for:', title);
   return undefined;
 };
+

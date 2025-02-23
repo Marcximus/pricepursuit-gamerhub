@@ -1,3 +1,4 @@
+
 export const processScreenSize = (screenSize: string | undefined, title: string): string | undefined => {
   if (screenSize && typeof screenSize === 'string' && !screenSize.includes('undefined')) {
     // First clean up the input string
@@ -121,3 +122,4 @@ export const processBatteryLife = (batteryLife: string | undefined, title: strin
   
   return undefined;
 };
+
