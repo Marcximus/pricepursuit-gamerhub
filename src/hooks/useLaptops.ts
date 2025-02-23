@@ -57,6 +57,9 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
             brand,
             model,
             asin,
+            product_url,
+            last_checked,
+            created_at,
             product_reviews (
               id,
               rating,
@@ -74,23 +77,23 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
         switch (sortBy) {
           case 'price-asc':
             query = query
-              .order('current_price', { ascending: true, nullsLast: true })
-              .order('rating_count', { ascending: false }); // Secondary sort
+              .order('current_price', { ascending: true, nullsFirst: false })
+              .order('rating_count', { ascending: false, nullsFirst: false });
             break;
           case 'price-desc':
             query = query
-              .order('current_price', { ascending: false, nullsLast: true })
-              .order('rating_count', { ascending: false }); // Secondary sort
+              .order('current_price', { ascending: false, nullsFirst: false })
+              .order('rating_count', { ascending: false, nullsFirst: false });
             break;
           case 'rating-desc':
             query = query
-              .order('rating_count', { ascending: false, nullsLast: true })
-              .order('rating', { ascending: false, nullsLast: true });
+              .order('rating_count', { ascending: false, nullsFirst: false })
+              .order('rating', { ascending: false, nullsFirst: false });
             break;
           case 'performance-desc':
             query = query
-              .order('processor_score', { ascending: false, nullsLast: true })
-              .order('rating_count', { ascending: false }); // Secondary sort
+              .order('processor_score', { ascending: false, nullsFirst: false })
+              .order('rating_count', { ascending: false, nullsFirst: false });
             break;
         }
 
@@ -148,15 +151,19 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
             avgRating = totalRating / reviews.length;
           }
 
+          // Return a complete laptop object that matches the Product type
           return {
             ...laptop,
+            product_url: laptop.product_url || null,
+            last_checked: laptop.last_checked || null,
+            created_at: laptop.created_at || null,
             average_rating: avgRating,
             total_reviews: reviews.length,
             review_data: reviewData
           };
         });
 
-        const finalLaptops = processedLaptops.map(laptop => processLaptopData(laptop as Product));
+        const finalLaptops = processedLaptops.map(laptop => processLaptopData(laptop as unknown as Product));
         
         return {
           laptops: finalLaptops,
@@ -180,3 +187,4 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
     refreshBrandModels,
   };
 };
+
