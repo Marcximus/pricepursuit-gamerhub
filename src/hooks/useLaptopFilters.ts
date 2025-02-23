@@ -33,6 +33,7 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       return new Set(uniqueValues);
     };
 
+    // Always generate all possible filter options from the complete dataset
     const filterOptions = {
       processors: getUniqueValues('processor'),
       ramSizes: getUniqueValues('ram'),
@@ -54,5 +55,6 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
     });
 
     return filterOptions;
-  }, [laptops]);
+  }, [laptops]); // Only depend on the laptops array, not on any filters
 };
+

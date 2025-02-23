@@ -35,7 +35,7 @@ type FilterSectionProps = {
 };
 
 const FilterSection = ({ title, options, selectedOptions, onChange }: FilterSectionProps) => {
-  const optionsArray = Array.from(options);
+  const optionsArray = Array.from(options).sort();
 
   const handleCheckboxChange = useCallback((option: string, checked: boolean) => {
     const newSelected = new Set(selectedOptions);
