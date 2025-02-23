@@ -91,11 +91,6 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
               .order('wilson_score', { ascending: false, nullsFirst: false })
               .order('current_price', { ascending: true, nullsFirst: true });
             break;
-          case 'performance-desc':
-            query = query
-              .order('processor_score', { ascending: false, nullsFirst: false })
-              .order('wilson_score', { ascending: false, nullsFirst: false });
-            break;
         }
 
         // Apply pagination last
@@ -189,4 +184,3 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
     refreshBrandModels,
   };
 };
-

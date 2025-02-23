@@ -1,7 +1,7 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export type SortOption = "price-asc" | "price-desc" | "rating-desc" | "performance-desc";
+export type SortOption = "price-asc" | "price-desc" | "rating-desc";
 
 type LaptopSortProps = {
   sortBy: SortOption;
@@ -27,7 +27,6 @@ export function LaptopSort({ sortBy, onSortChange }: LaptopSortProps) {
         <SelectItem value="price-asc">Price: Low to High</SelectItem>
         <SelectItem value="price-desc">Price: High to Low</SelectItem>
         <SelectItem value="rating-desc">Best Rated</SelectItem>
-        <SelectItem value="performance-desc">Best Performance</SelectItem>
       </SelectContent>
     </Select>
   );
