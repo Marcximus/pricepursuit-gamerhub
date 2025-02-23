@@ -28,6 +28,7 @@ const ComparePriceLaptops = () => {
     isLoading: isLaptopsLoading, 
     error: laptopsError,
     isRefetching,
+    refetch
   } = useLaptops(currentPage, sortBy, filters);
 
   const laptops = data?.laptops ?? [];
@@ -49,7 +50,11 @@ const ComparePriceLaptops = () => {
 
   const handleFiltersChange = (newFilters: FilterOptions) => {
     setFilters(newFilters);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
+  };
+
+  const handleRetry = () => {
+    refetch();
   };
 
   return (
@@ -90,6 +95,7 @@ const ComparePriceLaptops = () => {
                 error={laptopsError}
                 isRefetching={isRefetching}
                 onPageChange={handlePageChange}
+                onRetry={handleRetry}
               />
             }
           />
@@ -100,4 +106,3 @@ const ComparePriceLaptops = () => {
 };
 
 export default ComparePriceLaptops;
-

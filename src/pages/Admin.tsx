@@ -2,7 +2,7 @@
 import { toast } from "@/components/ui/use-toast";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import { MagnifyingGlassIcon, UpdateIcon, BrainCircuit } from "lucide-react";
+import { Search, RefreshCw, BrainCircuit } from "lucide-react";
 import { collectLaptops, updateLaptops } from "@/utils/laptop";
 import { processLaptopsAI } from "@/utils/laptop/processLaptopsAI";
 
@@ -89,7 +89,7 @@ const Admin = () => {
                   variant="outline"
                   className="flex items-center gap-2"
                 >
-                  <UpdateIcon className="h-4 w-4" />
+                  <RefreshCw className="h-4 w-4" />
                   Update Prices
                 </Button>
               </div>
@@ -103,7 +103,7 @@ const Admin = () => {
                   onClick={handleCollectLaptops}
                   className="flex items-center gap-2"
                 >
-                  <MagnifyingGlassIcon className="h-4 w-4" />
+                  <Search className="h-4 w-4" />
                   Collect New
                 </Button>
               </div>
@@ -131,4 +131,3 @@ const Admin = () => {
 };
 
 export default Admin;
-
