@@ -5,11 +5,12 @@ import { filterLaptops } from "@/utils/laptopFilters";
 import { sortLaptops } from "@/utils/laptopSort";
 import { paginateLaptops } from "@/utils/laptopPagination";
 import { collectLaptops, updateLaptops, refreshBrandModels } from "@/utils/laptop";
+import { processLaptopsAI } from "@/utils/laptop/processLaptopsAI";
 import type { Product } from "@/types/product";
 import type { SortOption } from "@/components/laptops/LaptopSort";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 
-export { collectLaptops, updateLaptops, refreshBrandModels };
+export { collectLaptops, updateLaptops, refreshBrandModels, processLaptopsAI };
 
 export const ITEMS_PER_PAGE = 50;
 const BATCH_SIZE = 1000;

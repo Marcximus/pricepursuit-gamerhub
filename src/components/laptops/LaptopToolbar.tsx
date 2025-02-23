@@ -57,7 +57,7 @@ export function LaptopToolbar({
         <span className="text-sm text-muted-foreground">
           {totalLaptops} laptops found
         </span>
-        <LaptopSort value={sortBy} onValueChange={onSortChange} />
+        <LaptopSort sortBy={sortBy} onSortChange={onSortChange} />
       </div>
       
       <div className="flex flex-wrap gap-2">
