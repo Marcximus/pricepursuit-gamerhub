@@ -36,10 +36,11 @@ const ComparePriceLaptops = () => {
   const laptops = data?.laptops ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
+  const allFilteredLaptops = data?.allFilteredLaptops ?? [];
 
   const { toast } = useToast();
 
-  const filterOptions = useLaptopFilters(laptops);
+  const filterOptions = useLaptopFilters(laptops, allFilteredLaptops);
 
   const handleSortChange = (newSortBy: SortOption) => {
     setSortBy(newSortBy);
@@ -157,3 +158,4 @@ const ComparePriceLaptops = () => {
 };
 
 export default ComparePriceLaptops;
+

@@ -4,16 +4,19 @@ import type { Product } from "@/types/product";
 
 type FilterableProductKeys = 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size' | 'brand';
 
-export const useLaptopFilters = (laptops: Product[] | undefined) => {
+export const useLaptopFilters = (laptops: Product[] | undefined, allFilteredLaptops?: Product[]) => {
   return useMemo(() => {
+    // Use allFilteredLaptops for filter options if available, otherwise fall back to laptops
+    const datasetForFilters = allFilteredLaptops || laptops;
+
     const getUniqueValues = (key: FilterableProductKeys) => {
-      if (!laptops || laptops.length === 0) {
+      if (!datasetForFilters || datasetForFilters.length === 0) {
         console.log(`No laptops available for ${key} filter`);
         return new Set<string>();
       }
       
       // Filter out null/undefined/empty values and normalize strings
-      const validValues = laptops
+      const validValues = datasetForFilters
         .map(laptop => {
           const value = laptop[key];
           if (key === 'graphics') {
@@ -48,13 +51,14 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       
       console.log(`Generated ${key} filter options:`, {
         total: uniqueValues.length,
-        values: uniqueValues
+        values: uniqueValues,
+        datasetSize: datasetForFilters.length
       });
       
       return new Set(uniqueValues);
     };
 
-    // Generate all possible filter options from the complete dataset
+    // Generate all possible filter options from the complete filtered dataset
     const filterOptions = {
       processors: getUniqueValues('processor'),
       ramSizes: getUniqueValues('ram'),
@@ -65,7 +69,7 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
     };
 
     console.log('Generated all filter options:', {
-      totalLaptops: laptops?.length,
+      totalLaptops: datasetForFilters?.length,
       brands: Array.from(filterOptions.brands).length,
       processors: Array.from(filterOptions.processors).length,
       ram: Array.from(filterOptions.ramSizes).length,
@@ -75,5 +79,6 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
     });
 
     return filterOptions;
-  }, [laptops]);
+  }, [laptops, allFilteredLaptops]);
 };
+

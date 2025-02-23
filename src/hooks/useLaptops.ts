@@ -15,7 +15,6 @@ export { collectLaptops, updateLaptops, refreshBrandModels };
 export const ITEMS_PER_PAGE = 50;
 const BATCH_SIZE = 1000;
 
-// Fetch all laptops in batches to handle large datasets
 async function fetchAllLaptops() {
   let allLaptops: any[] = [];
   let lastId: string | null = null;
@@ -105,18 +104,7 @@ export const useLaptops = (
     staleTime: 1000 * 60 * 60, // 1 hour
     gcTime: 1000 * 60 * 60 * 24, // 24 hours
     select: (data) => {
-      console.log('Processing laptops with filters:', {
-        filtersApplied: {
-          brands: Array.from(filters.brands),
-          processors: Array.from(filters.processors),
-          ramSizes: Array.from(filters.ramSizes),
-          storageOptions: Array.from(filters.storageOptions),
-          graphicsCards: Array.from(filters.graphicsCards),
-          screenSizes: Array.from(filters.screenSizes),
-          priceRange: filters.priceRange
-        }
-      });
-
+      // First, process all laptops
       const processedLaptops = data.map(laptop => {
         const reviews = laptop.product_reviews || [];
         const reviewData = {
@@ -134,18 +122,28 @@ export const useLaptops = (
         return processLaptopData(laptop);
       });
 
+      // Then apply filters to the entire dataset
       const filteredLaptops = filterLaptops(processedLaptops, filters);
+      
+      // Sort the filtered results
       const sortedLaptops = sortLaptops(filteredLaptops, sortBy);
+      
+      // Finally, paginate the sorted and filtered results
       const paginatedResults = paginateLaptops(sortedLaptops, page, ITEMS_PER_PAGE);
 
       console.log('Filter/sort/pagination results:', {
         totalLaptops: processedLaptops.length,
-        filteredCount: filteredLaptops.length,
+        afterFiltering: filteredLaptops.length,
+        afterSorting: sortedLaptops.length,
         currentPage: page,
         laptopsOnPage: paginatedResults.laptops.length,
       });
 
-      return paginatedResults;
+      return {
+        ...paginatedResults,
+        // Add the complete filtered dataset for generating filter options
+        allFilteredLaptops: sortedLaptops
+      };
     },
   });
 
@@ -156,3 +154,4 @@ export const useLaptops = (
     refreshBrandModels,
   };
 };
+
