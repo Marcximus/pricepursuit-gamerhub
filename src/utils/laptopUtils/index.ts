@@ -73,6 +73,9 @@ export const processLaptopData = (laptop: any): Product => {
     hasRatingBreakdown: !!review_data.rating_breakdown
   });
 
+  // Ensure brand is never null/undefined/empty
+  const brand = laptop.brand?.trim() || 'Unknown';
+
   return {
     id: laptop.id,
     asin: laptop.asin,
@@ -95,6 +98,7 @@ export const processLaptopData = (laptop: any): Product => {
     benchmark_score: laptop.benchmark_score || null,
     weight: processWeight(laptop.weight, laptop.title || ''),
     battery_life: processBatteryLife(laptop.battery_life, laptop.title || ''),
+    brand: brand, // Added the required brand property
     total_reviews: total_reviews,
     average_rating: rating,
     review_data: review_data
@@ -105,3 +109,4 @@ export * from './titleProcessor';
 export * from './specsProcessor';
 export * from './graphicsProcessor';
 export * from './physicalSpecsProcessor';
+
