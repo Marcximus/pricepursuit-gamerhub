@@ -17,3 +17,7 @@ SUPABASE_URL = "vaulted"
 SUPABASE_SERVICE_ROLE_KEY = "vaulted"
 OXYLABS_USERNAME = "vaulted"
 OXYLABS_PASSWORD = "vaulted"
+
+[collect-laptops.test]
+command = "deno test --allow-net --allow-env"
+
