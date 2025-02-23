@@ -78,13 +78,13 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
         switch (sortBy) {
           case 'price-asc':
             query = query
-              .order('current_price', { ascending: true })
-              .order('current_price', { ascending: false, nullsLast: true });
+              .order('current_price', { ascending: true, nullsFirst: false })
+              .order('id', { ascending: true }); // Secondary sort for stability
             break;
           case 'price-desc':
             query = query
-              .order('current_price', { ascending: false })
-              .order('current_price', { ascending: true, nullsLast: true });
+              .order('current_price', { ascending: false, nullsFirst: false })
+              .order('id', { ascending: true }); // Secondary sort for stability
             break;
           case 'rating-desc':
             query = query
