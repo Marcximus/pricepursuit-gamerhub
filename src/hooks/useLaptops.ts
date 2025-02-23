@@ -47,10 +47,10 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
         // Apply sorting based on the sortBy parameter
         switch (sortBy) {
           case 'price-asc':
-            query = query.order('current_price', { ascending: true, nullsLast: true });
+            query = query.order('current_price', { ascending: true, nullsFirst: false });
             break;
           case 'price-desc':
-            query = query.order('current_price', { ascending: false, nullsLast: true });
+            query = query.order('current_price', { ascending: false, nullsFirst: false });
             break;
           case 'rating-desc':
             // First by rating count, then by rating
@@ -59,7 +59,7 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
               .order('rating', { ascending: false });
             break;
           case 'performance-desc':
-            query = query.order('processor_score', { ascending: false, nullsLast: true });
+            query = query.order('processor_score', { ascending: false, nullsFirst: false });
             break;
         }
 
