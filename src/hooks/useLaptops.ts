@@ -8,12 +8,14 @@ import type { Product } from "@/types/product";
 
 export { collectLaptops, updateLaptops, refreshBrandModels };
 
-export const useLaptops = () => {
+export const ITEMS_PER_PAGE = 20;
+
+export const useLaptops = (page: number = 1) => {
   const query = useQuery({
-    queryKey: ['laptops'],
+    queryKey: ['laptops', page],
     queryFn: async () => {
       try {
-        console.log('Fetching laptops from Supabase...');
+        console.log('Fetching laptops from Supabase for page:', page);
         
         // First get a count of all laptop products
         const { count: totalCount, error: countError } = await supabase
@@ -28,58 +30,44 @@ export const useLaptops = () => {
 
         console.log(`Total laptop count in database: ${totalCount}`);
 
-        // Fetch all laptops using pagination
-        const CHUNK_SIZE = 1000;
-        const allLaptops: any[] = [];
-        
-        for (let i = 0; i < Math.ceil((totalCount || 0) / CHUNK_SIZE); i++) {
-          console.log(`Fetching laptops chunk ${i + 1}`);
-          
-          const { data: laptopsChunk, error } = await supabase
-            .from('products')
-            .select(`
-              *,
-              product_reviews (*)
-            `)
-            .eq('is_laptop', true)
-            .order('last_checked', { ascending: false })
-            .range(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE - 1);
+        // Calculate pagination range
+        const start = (page - 1) * ITEMS_PER_PAGE;
+        const end = start + ITEMS_PER_PAGE - 1;
 
-          if (error) {
-            console.error('Error fetching laptops chunk:', error);
-            throw error;
-          }
+        // Fetch paginated laptops
+        const { data: laptops, error } = await supabase
+          .from('products')
+          .select(`
+            *,
+            product_reviews (*)
+          `)
+          .eq('is_laptop', true)
+          .order('last_checked', { ascending: false })
+          .range(start, end);
 
-          if (laptopsChunk) {
-            allLaptops.push(...laptopsChunk);
-          }
+        if (error) {
+          console.error('Error fetching laptops:', error);
+          throw error;
         }
 
-        if (!allLaptops || allLaptops.length === 0) {
-          console.log('No laptops found in database');
-          return [];
+        if (!laptops || laptops.length === 0) {
+          console.log('No laptops found for current page');
+          return { 
+            laptops: [], 
+            totalCount: totalCount || 0,
+            totalPages: Math.ceil((totalCount || 0) / ITEMS_PER_PAGE)
+          };
         }
 
         console.log('Laptops data fetched:', {
-          totalCount,
-          fetchedCount: allLaptops.length,
-          match: totalCount === allLaptops.length ? 'YES' : 'NO'
-        });
-
-        // Log count of laptops with prices for debugging
-        const laptopsWithPrices = allLaptops.filter(laptop => laptop.current_price != null && laptop.current_price > 0);
-        console.log('Laptop price analysis:', {
-          totalLaptops: allLaptops.length,
-          withPrices: laptopsWithPrices.length,
-          withoutPrices: allLaptops.length - laptopsWithPrices.length,
-          priceRange: laptopsWithPrices.length > 0 ? {
-            min: Math.min(...laptopsWithPrices.map(l => l.current_price || 0)),
-            max: Math.max(...laptopsWithPrices.map(l => l.current_price || 0))
-          } : 'no prices available'
+          page,
+          fetchedCount: laptops.length,
+          start,
+          end
         });
 
         // Process and return the laptops
-        const processedLaptops = allLaptops.map(laptop => {
+        const processedLaptops = laptops.map(laptop => {
           const reviews = laptop.product_reviews || [];
           
           const reviewData = {
@@ -111,12 +99,12 @@ export const useLaptops = () => {
         });
 
         const finalLaptops = processedLaptops.map(laptop => processLaptopData(laptop as Product));
-        console.log('Final processed laptops:', {
-          count: finalLaptops.length,
-          uniqueBrands: [...new Set(finalLaptops.map(l => l.brand))].length
-        });
-
-        return finalLaptops;
+        
+        return {
+          laptops: finalLaptops,
+          totalCount: totalCount || 0,
+          totalPages: Math.ceil((totalCount || 0) / ITEMS_PER_PAGE)
+        };
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
         throw error;

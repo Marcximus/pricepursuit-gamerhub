@@ -7,6 +7,7 @@ import type { Product } from "@/types/product";
 
 type LaptopListProps = {
   laptops: Product[];
+  totalCount: number;
   isLoading: boolean;
   error: Error | null;
   onRetry: () => void;
@@ -15,22 +16,18 @@ type LaptopListProps = {
 
 export function LaptopList({ 
   laptops, 
+  totalCount,
   isLoading, 
   error, 
   onRetry,
   isRefetching 
 }: LaptopListProps) {
-  // Add detailed logging for debugging
   console.log('LaptopList render state:', {
     laptopCount: laptops?.length || 0,
+    totalCount,
     isLoading,
     hasError: !!error,
-    isRefetching,
-    laptops: laptops?.map(l => ({
-      id: l.id,
-      title: l.title,
-      price: l.current_price
-    }))
+    isRefetching
   });
 
   if (isLoading) {
