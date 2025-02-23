@@ -78,15 +78,13 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
         switch (sortBy) {
           case 'price-asc':
             query = query
-              .not('current_price', 'is', null)
               .order('current_price', { ascending: true })
-              .or('current_price.is.null,current_price.eq.0');
+              .order('current_price', { ascending: false, nullsLast: true });
             break;
           case 'price-desc':
             query = query
-              .not('current_price', 'is', null)
               .order('current_price', { ascending: false })
-              .or('current_price.is.null,current_price.eq.0');
+              .order('current_price', { ascending: true, nullsLast: true });
             break;
           case 'rating-desc':
             query = query
@@ -191,3 +189,4 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
     refreshBrandModels,
   };
 };
+
