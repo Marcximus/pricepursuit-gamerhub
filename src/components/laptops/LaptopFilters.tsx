@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { Product } from "@/types/product";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export type FilterOptions = {
   priceRange: { min: number; max: number };
@@ -45,7 +45,7 @@ const FilterSection = ({ title, options, selectedOptions, onChange }: FilterSect
     } else {
       newSelected.delete(option);
     }
-    onChange(newSelected); // This will now trigger an immediate filter update
+    onChange(newSelected);
   };
 
   return (
@@ -94,20 +94,24 @@ export function LaptopFilters({
   screenSizes,
   brands,
 }: LaptopFiltersProps) {
-  const handlePriceChange = (value: number, type: 'min' | 'max') => {
-    // Debounce price changes to avoid too many updates
+  // State for price range debouncing
+  const [debouncedMin, setDebouncedMin] = useState(filters.priceRange.min);
+  const [debouncedMax, setDebouncedMax] = useState(filters.priceRange.max);
+
+  // Update filters when debounced values change
+  useEffect(() => {
     const timeoutId = setTimeout(() => {
       onFiltersChange({
         ...filters,
         priceRange: {
-          ...filters.priceRange,
-          [type]: value
+          min: debouncedMin,
+          max: debouncedMax
         }
       });
-    }, 500); // Wait 500ms after the user stops typing
+    }, 500);
 
     return () => clearTimeout(timeoutId);
-  };
+  }, [debouncedMin, debouncedMax, filters, onFiltersChange]);
 
   const allSections = ["Brand", "Processor", "RAM", "Storage", "Graphics", "Screen Size"];
 
@@ -121,16 +125,16 @@ export function LaptopFilters({
             <Input
               type="number"
               placeholder="Min"
-              value={filters.priceRange.min}
-              onChange={(e) => handlePriceChange(Number(e.target.value), 'min')}
+              value={debouncedMin}
+              onChange={(e) => setDebouncedMin(Number(e.target.value))}
               className="h-8 text-sm"
             />
             <span className="text-sm text-gray-500">to</span>
             <Input
               type="number"
               placeholder="Max"
-              value={filters.priceRange.max}
-              onChange={(e) => handlePriceChange(Number(e.target.value), 'max')}
+              value={debouncedMax}
+              onChange={(e) => setDebouncedMax(Number(e.target.value))}
               className="h-8 text-sm"
             />
           </div>
