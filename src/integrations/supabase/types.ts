@@ -225,12 +225,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      coalesce_price_for_sort: {
-        Args: {
-          price: number
-        }
-        Returns: number
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
