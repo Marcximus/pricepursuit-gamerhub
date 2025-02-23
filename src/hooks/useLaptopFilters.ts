@@ -1,35 +1,17 @@
 
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useAllLaptops } from "./useLaptops";
 import type { Product } from "@/types/product";
 
 type FilterableProductKeys = 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size' | 'brand';
 
-const fetchAllLaptopsForFilters = async () => {
-  const { data: laptops, error } = await supabase
-    .from('products')
-    .select('processor, ram, storage, graphics, screen_size, brand')
-    .eq('is_laptop', true);
-
-  if (error) {
-    console.error('Error fetching laptops for filters:', error);
-    throw error;
-  }
-
-  return laptops;
-};
-
-export const useLaptopFilters = (displayedLaptops: Product[] | undefined) => {
-  // Fetch all laptops for filter generation
-  const { data: allLaptops } = useQuery({
-    queryKey: ['laptops-filters'],
-    queryFn: fetchAllLaptopsForFilters,
-  });
+export const useLaptopFilters = () => {
+  // Use the same query as the main laptop list
+  const { data: allLaptops = [] } = useAllLaptops();
 
   return useMemo(() => {
     const getUniqueValues = (key: FilterableProductKeys) => {
-      if (!allLaptops || allLaptops.length === 0) {
+      if (allLaptops.length === 0) {
         console.log(`No laptops available for ${key} filter`);
         return new Set<string>();
       }
@@ -65,7 +47,7 @@ export const useLaptopFilters = (displayedLaptops: Product[] | undefined) => {
     };
 
     console.log('Generated all filter options:', {
-      totalLaptops: allLaptops?.length,
+      totalLaptops: allLaptops.length,
       brands: Array.from(filterOptions.brands),
       totalBrands: filterOptions.brands.size,
       processors: Array.from(filterOptions.processors).length,

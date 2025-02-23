@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
@@ -39,8 +38,7 @@ const ComparePriceLaptops = () => {
 
   const { toast } = useToast();
 
-  // We now pass undefined since we don't need the displayed laptops for filter generation
-  const filterOptions = useLaptopFilters(undefined);
+  const filterOptions = useLaptopFilters();
 
   const handleSortChange = (newSortBy: SortOption) => {
     setSortBy(newSortBy);
@@ -104,7 +102,7 @@ const ComparePriceLaptops = () => {
 
   const handleFiltersChange = (newFilters: FilterOptions) => {
     setFilters(newFilters);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   };
 
   return (
