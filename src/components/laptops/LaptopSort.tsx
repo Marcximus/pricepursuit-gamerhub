@@ -10,27 +10,25 @@ type LaptopSortProps = {
 
 export function LaptopSort({ sortBy, onSortChange }: LaptopSortProps) {
   return (
-    <div className="relative">
-      <Select
-        value={sortBy}
-        onValueChange={(value) => onSortChange(value as SortOption)}
+    <Select
+      value={sortBy}
+      onValueChange={(value) => onSortChange(value as SortOption)}
+    >
+      <SelectTrigger className="w-[180px]">
+        <SelectValue placeholder="Sort by..." />
+      </SelectTrigger>
+      <SelectContent
+        className="w-[180px] bg-popover shadow-md"
+        position="popper"
+        sideOffset={4}
+        align="end"
+        side="bottom"
       >
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Sort by..." />
-        </SelectTrigger>
-        <SelectContent
-          className="w-[180px] bg-popover"
-          position="popper"
-          sideOffset={4}
-          align="end"
-        >
-          <SelectItem value="price-asc">Price: Low to High</SelectItem>
-          <SelectItem value="price-desc">Price: High to Low</SelectItem>
-          <SelectItem value="rating-desc">Best Rated</SelectItem>
-          <SelectItem value="performance-desc">Best Performance</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+        <SelectItem value="price-asc">Price: Low to High</SelectItem>
+        <SelectItem value="price-desc">Price: High to Low</SelectItem>
+        <SelectItem value="rating-desc">Best Rated</SelectItem>
+        <SelectItem value="performance-desc">Best Performance</SelectItem>
+      </SelectContent>
+    </Select>
   );
 }
-

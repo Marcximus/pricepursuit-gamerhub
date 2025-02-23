@@ -25,7 +25,7 @@ export function LaptopLayout({ filters, toolbar, content }: LaptopLayoutProps) {
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="w-full sticky top-32 bg-gray-50/95 backdrop-blur-sm z-20 pb-4">
+        <div className="w-full sticky top-32 bg-white/95 backdrop-blur-sm z-20 pb-4 transform-gpu">
           {toolbar}
         </div>
         <div className="relative z-10">
@@ -35,4 +35,3 @@ export function LaptopLayout({ filters, toolbar, content }: LaptopLayoutProps) {
     </div>
   );
 }
-
