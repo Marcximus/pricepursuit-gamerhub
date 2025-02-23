@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { Product } from "@/types/product";
 
 export type FilterOptions = {
@@ -45,28 +46,32 @@ const FilterSection = ({ title, options, selectedOptions, onChange }: FilterSect
   };
 
   return (
-    <div className="space-y-2">
-      <Label className="text-sm font-medium">{title}</Label>
-      <ScrollArea className="h-[200px] rounded-md border p-2">
-        <div className="space-y-2">
-          {Array.from(options).map((option) => (
-            <div key={option} className="flex items-center space-x-2">
-              <Checkbox
-                id={`${title}-${option}`}
-                checked={selectedOptions.has(option)}
-                onCheckedChange={(checked) => handleCheckboxChange(option, checked === true)}
-              />
-              <label
-                htmlFor={`${title}-${option}`}
-                className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                {option}
-              </label>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
-    </div>
+    <AccordionItem value={title} className="border-b">
+      <AccordionTrigger className="text-sm font-medium hover:no-underline">
+        {title}
+      </AccordionTrigger>
+      <AccordionContent>
+        <ScrollArea className="h-[200px] rounded-md border">
+          <div className="p-4 space-y-2">
+            {Array.from(options).map((option) => (
+              <div key={option} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${title}-${option}`}
+                  checked={selectedOptions.has(option)}
+                  onCheckedChange={(checked) => handleCheckboxChange(option, checked === true)}
+                />
+                <label
+                  htmlFor={`${title}-${option}`}
+                  className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {option}
+                </label>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </AccordionContent>
+    </AccordionItem>
   );
 };
 
@@ -110,53 +115,45 @@ export function LaptopFilters({
         </div>
       </div>
 
-      {/* Brand Filter */}
-      <FilterSection
-        title="Brand"
-        options={brands}
-        selectedOptions={filters.brands}
-        onChange={(newBrands) => onFiltersChange({ ...filters, brands: newBrands })}
-      />
-
-      {/* Processor Filter */}
-      <FilterSection
-        title="Processor"
-        options={processors}
-        selectedOptions={filters.processors}
-        onChange={(newProcessors) => onFiltersChange({ ...filters, processors: newProcessors })}
-      />
-
-      {/* RAM Filter */}
-      <FilterSection
-        title="RAM"
-        options={ramSizes}
-        selectedOptions={filters.ramSizes}
-        onChange={(newRamSizes) => onFiltersChange({ ...filters, ramSizes: newRamSizes })}
-      />
-
-      {/* Storage Filter */}
-      <FilterSection
-        title="Storage"
-        options={storageOptions}
-        selectedOptions={filters.storageOptions}
-        onChange={(newStorageOptions) => onFiltersChange({ ...filters, storageOptions: newStorageOptions })}
-      />
-
-      {/* Graphics Filter */}
-      <FilterSection
-        title="Graphics"
-        options={graphicsCards}
-        selectedOptions={filters.graphicsCards}
-        onChange={(newGraphicsCards) => onFiltersChange({ ...filters, graphicsCards: newGraphicsCards })}
-      />
-
-      {/* Screen Size Filter */}
-      <FilterSection
-        title="Screen Size"
-        options={screenSizes}
-        selectedOptions={filters.screenSizes}
-        onChange={(newScreenSizes) => onFiltersChange({ ...filters, screenSizes: newScreenSizes })}
-      />
+      {/* Filter Sections */}
+      <Accordion type="multiple" className="w-full">
+        <FilterSection
+          title="Brand"
+          options={brands}
+          selectedOptions={filters.brands}
+          onChange={(newBrands) => onFiltersChange({ ...filters, brands: newBrands })}
+        />
+        <FilterSection
+          title="Processor"
+          options={processors}
+          selectedOptions={filters.processors}
+          onChange={(newProcessors) => onFiltersChange({ ...filters, processors: newProcessors })}
+        />
+        <FilterSection
+          title="RAM"
+          options={ramSizes}
+          selectedOptions={filters.ramSizes}
+          onChange={(newRamSizes) => onFiltersChange({ ...filters, ramSizes: newRamSizes })}
+        />
+        <FilterSection
+          title="Storage"
+          options={storageOptions}
+          selectedOptions={filters.storageOptions}
+          onChange={(newStorageOptions) => onFiltersChange({ ...filters, storageOptions: newStorageOptions })}
+        />
+        <FilterSection
+          title="Graphics"
+          options={graphicsCards}
+          selectedOptions={filters.graphicsCards}
+          onChange={(newGraphicsCards) => onFiltersChange({ ...filters, graphicsCards: newGraphicsCards })}
+        />
+        <FilterSection
+          title="Screen Size"
+          options={screenSizes}
+          selectedOptions={filters.screenSizes}
+          onChange={(newScreenSizes) => onFiltersChange({ ...filters, screenSizes: newScreenSizes })}
+        />
+      </Accordion>
     </div>
   );
 }
