@@ -39,7 +39,8 @@ const ComparePriceLaptops = () => {
 
   const { toast } = useToast();
 
-  const filterOptions = useLaptopFilters(laptops);
+  // We now pass undefined since we don't need the displayed laptops for filter generation
+  const filterOptions = useLaptopFilters(undefined);
 
   const handleSortChange = (newSortBy: SortOption) => {
     setSortBy(newSortBy);

@@ -1,19 +1,41 @@
 
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/types/product";
 
 type FilterableProductKeys = 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size' | 'brand';
 
-export const useLaptopFilters = (laptops: Product[] | undefined) => {
+const fetchAllLaptopsForFilters = async () => {
+  const { data: laptops, error } = await supabase
+    .from('products')
+    .select('processor, ram, storage, graphics, screen_size, brand')
+    .eq('is_laptop', true);
+
+  if (error) {
+    console.error('Error fetching laptops for filters:', error);
+    throw error;
+  }
+
+  return laptops;
+};
+
+export const useLaptopFilters = (displayedLaptops: Product[] | undefined) => {
+  // Fetch all laptops for filter generation
+  const { data: allLaptops } = useQuery({
+    queryKey: ['laptops-filters'],
+    queryFn: fetchAllLaptopsForFilters,
+  });
+
   return useMemo(() => {
     const getUniqueValues = (key: FilterableProductKeys) => {
-      if (!laptops || laptops.length === 0) {
+      if (!allLaptops || allLaptops.length === 0) {
         console.log(`No laptops available for ${key} filter`);
         return new Set<string>();
       }
       
       // Filter out null/undefined/empty values and normalize strings
-      const validValues = laptops
+      const validValues = allLaptops
         .map(laptop => laptop[key])
         .filter((value): value is string => 
           value != null && 
@@ -43,7 +65,7 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
     };
 
     console.log('Generated all filter options:', {
-      totalLaptops: laptops?.length,
+      totalLaptops: allLaptops?.length,
       brands: Array.from(filterOptions.brands),
       totalBrands: filterOptions.brands.size,
       processors: Array.from(filterOptions.processors).length,
@@ -54,5 +76,5 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
     });
 
     return filterOptions;
-  }, [laptops]);
+  }, [allLaptops]);
 };
