@@ -3,13 +3,17 @@ import { toast } from "@/components/ui/use-toast";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Search, RefreshCw, BrainCircuit } from "lucide-react";
-import { collectLaptops, updateLaptops } from "@/utils/laptop";
-import { processLaptopsAI } from "@/utils/laptop/processLaptopsAI";
+import { useLaptops } from "@/hooks/useLaptops";
 
 const Admin = () => {
+  const { collectLaptops, updateLaptops, processLaptopsAI } = useLaptops();
+
   const handleCollectLaptops = async () => {
     try {
-      await collectLaptops();
+      console.log('Starting laptop collection process...');
+      const result = await collectLaptops();
+      console.log('Collection process result:', result);
+      
       toast({
         title: "Collection Started",
         description: "Started collecting new laptops. This may take a few minutes.",

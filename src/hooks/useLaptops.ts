@@ -5,7 +5,9 @@ import { processLaptopData } from "@/utils/laptopUtils";
 import { filterLaptops } from "@/utils/laptopFilters";
 import { sortLaptops } from "@/utils/laptopSort";
 import { paginateLaptops } from "@/utils/laptopPagination";
-import { collectLaptops, updateLaptops, refreshBrandModels } from "@/utils/laptop";
+import { collectLaptops } from "@/utils/laptop/collectLaptops";
+import { updateLaptops } from "@/utils/laptop/updateLaptops";
+import { refreshBrandModels } from "@/utils/laptop/refreshBrandModels";
 import { processLaptopsAI } from "@/utils/laptop/processLaptopsAI";
 import type { Product } from "@/types/product";
 import type { SortOption } from "@/components/laptops/LaptopSort";
@@ -97,7 +99,7 @@ async function fetchAllLaptops() {
 export const useLaptops = (
   page: number = 1, 
   sortBy: SortOption = 'rating-desc',
-  filters: FilterOptions
+  filters: FilterOptions = {}
 ) => {
   const query = useQuery({
     queryKey: ['all-laptops'],
@@ -136,7 +138,11 @@ export const useLaptops = (
 
       return {
         ...paginatedResults,
-        allLaptops: processedLaptops
+        allLaptops: processedLaptops,
+        collectLaptops,
+        updateLaptops,
+        refreshBrandModels,
+        processLaptopsAI
       };
     },
   });
