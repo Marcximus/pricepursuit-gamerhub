@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!userId) {
       console.log('❌ No user ID provided');
       setIsAdmin(false);
-      return false;
+      return;
     }
 
     try {
@@ -43,16 +43,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           variant: "destructive"
         });
         setIsAdmin(false);
-        return false;
+        return;
       }
 
       console.log('✅ Admin role check result:', data);
       setIsAdmin(data ?? false);
-      return data ?? false;
     } catch (error) {
       console.error('❌ Error checking admin role:', error);
       setIsAdmin(false);
-      return false;
     }
   };
 
@@ -62,6 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const initializeAuth = async () => {
       try {
+        setIsLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
         console.log('📍 Current session:', session?.user?.email);
         
@@ -70,31 +69,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (session?.user) {
             await checkAdminRole(session.user.id);
           }
-          setIsLoading(false);
         }
       } catch (error) {
         console.error('❌ Error initializing auth:', error);
+      } finally {
         if (mounted) {
           setIsLoading(false);
         }
       }
     };
 
-    initializeAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔔 Auth state changed:', event, session?.user?.email);
-      
-      if (mounted) {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await checkAdminRole(session.user.id);
-        } else {
-          setIsAdmin(false);
+    const setupAuthListener = () => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log('🔔 Auth state changed:', event, session?.user?.email);
+        
+        if (mounted) {
+          setIsLoading(true);
+          setUser(session?.user ?? null);
+          if (session?.user) {
+            await checkAdminRole(session.user.id);
+          } else {
+            setIsAdmin(false);
+          }
+          setIsLoading(false);
         }
-        setIsLoading(false);
-      }
-    });
+      });
+
+      return subscription;
+    };
+
+    initializeAuth();
+    const subscription = setupAuthListener();
 
     return () => {
       mounted = false;
@@ -116,4 +121,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
