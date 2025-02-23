@@ -27,12 +27,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!userId) {
       console.log('❌ No user ID provided');
       setIsAdmin(false);
-      setIsLoading(false);
-      return;
+      return false;
     }
 
     try {
-      // Call the has_role function directly with the user ID and 'admin' role
+      console.log('🔄 Calling has_role RPC for user:', userId);
       const { data, error } = await supabase
         .rpc('has_role', { _role: 'admin' });
 
@@ -44,35 +43,63 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           variant: "destructive"
         });
         setIsAdmin(false);
-      } else {
-        console.log('✅ Admin role check result:', data);
-        setIsAdmin(data ?? false);
+        return false;
       }
+
+      console.log('✅ Admin role check result:', data);
+      setIsAdmin(data ?? false);
+      return data ?? false;
     } catch (error) {
       console.error('❌ Error checking admin role:', error);
       setIsAdmin(false);
+      return false;
     }
-    setIsLoading(false);
   };
 
   useEffect(() => {
     console.log('🔄 Auth context initialized');
-    
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('📍 Current session:', session?.user?.email);
-      setUser(session?.user ?? null);
-      checkAdminRole(session?.user?.id);
-    });
+    let mounted = true;
 
-    // Listen for auth changes
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('📍 Current session:', session?.user?.email);
+        
+        if (mounted) {
+          setUser(session?.user ?? null);
+          if (session?.user) {
+            await checkAdminRole(session.user.id);
+          }
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('❌ Error initializing auth:', error);
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('🔔 Auth state changed:', event, session?.user?.email);
-      setUser(session?.user ?? null);
-      checkAdminRole(session?.user?.id);
+      
+      if (mounted) {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await checkAdminRole(session.user.id);
+        } else {
+          setIsAdmin(false);
+        }
+        setIsLoading(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (
@@ -89,3 +116,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
