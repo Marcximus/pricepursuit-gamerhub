@@ -18,6 +18,16 @@ export { collectLaptops, updateLaptops, refreshBrandModels, processLaptopsAI };
 export const ITEMS_PER_PAGE = 50;
 const BATCH_SIZE = 1000;
 
+const defaultFilters: FilterOptions = {
+  priceRange: { min: 0, max: 10000 },
+  processors: new Set<string>(),
+  ramSizes: new Set<string>(),
+  storageOptions: new Set<string>(),
+  graphicsCards: new Set<string>(),
+  screenSizes: new Set<string>(),
+  brands: new Set<string>()
+};
+
 async function fetchAllLaptops() {
   let allLaptops: any[] = [];
   let lastId: string | null = null;
@@ -99,7 +109,7 @@ async function fetchAllLaptops() {
 export const useLaptops = (
   page: number = 1, 
   sortBy: SortOption = 'rating-desc',
-  filters: FilterOptions = {}
+  filters: FilterOptions = defaultFilters
 ) => {
   const query = useQuery({
     queryKey: ['all-laptops'],
