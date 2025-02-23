@@ -12,55 +12,61 @@ export async function processTitleWithAI(title: string, description: string | nu
   try {
     const openai = createDeepSeekClient(deepseekApiKey);
     
-    // Enhanced prompt with more explicit instructions
-    const prompt = `Extract laptop specifications from this product information. If a value is not clearly stated, make an educated guess based on context or leave as null only if completely uncertain.
+    const prompt = `You MUST respond with ONLY a JSON object and NO additional text or explanation.
 
+Given this product information:
 Title: ${title}
 Description: ${description || 'Not available'}
 
-Required fields (DO NOT return null for these):
-- brand: Extract from title or description. This is the manufacturer name (e.g., Lenovo, HP, Dell).
-- model: Extract model name/number from title. If not explicit, use identifying series/product line.
-- processor: CPU model in standardized format
-- ram: Memory amount in GB (convert if in other units)
-- storage: Storage capacity and type
-
-Optional fields (can be null if uncertain):
-- screen_size: Screen size in inches
-- graphics: GPU model in standardized format
-- current_price: Current price as numeric value only
-- original_price: Original price as numeric value only
-
-Return a JSON object with these fields. Example:
+Return a valid JSON object with these exact fields in this format:
 {
-  "brand": "Lenovo",
-  "model": "IdeaPad 3",
-  "screen_size": "15.6",
-  "processor": "Intel Core i5-1235U",
-  "graphics": "Intel Iris Xe",
-  "ram": "8",
-  "storage": "512GB SSD",
-  "current_price": 699.99,
-  "original_price": 899.99
-}`;
+  "brand": string,       // Company name (e.g., "Lenovo", "HP", "Dell")
+  "model": string,       // Model identifier (e.g., "IdeaPad 3", "Pavilion 15")
+  "processor": string,   // CPU model (e.g., "Intel Core i5-1235U")
+  "ram": string,        // Memory in GB, numbers only (e.g., "8", "16")
+  "storage": string,    // Storage spec (e.g., "512GB SSD", "1TB HDD")
+  "screen_size": string | null,    // Display size in inches (e.g., "15.6")
+  "graphics": string | null,       // GPU model (e.g., "Intel Iris Xe", "NVIDIA RTX 3060")
+  "current_price": number | null,  // Current price as number (e.g., 699.99)
+  "original_price": number | null  // Original price as number (e.g., 899.99)
+}
+
+CRITICAL REQUIREMENTS:
+1. Response MUST be a valid JSON object
+2. NO explanatory text before or after the JSON
+3. brand, model, processor, ram, and storage are REQUIRED - make educated guesses if needed
+4. Use null for missing optional fields
+5. Format must match the example EXACTLY`;
 
     const completion = await openai.chat.completions.create({
       model: "deepseek-chat",
       messages: [
         {
           role: "system",
-          content: "You are a specialized AI trained to extract laptop specifications with high accuracy. Always provide values for required fields, make educated guesses if needed."
+          content: "You are a JSON formatting machine. You ONLY output valid JSON objects, nothing else. No explanations, no text, just JSON."
         },
         {
           role: "user",
           content: prompt
         }
       ],
-      temperature: 0.3 // Lower temperature for more consistent outputs
+      temperature: 0.1 // Very low temperature for more consistent outputs
     });
 
     try {
-      const extractedData = JSON.parse(completion.choices[0].message.content);
+      // Log the raw response for debugging
+      console.log('Raw AI response:', completion.choices[0].message.content);
+      
+      // Try to clean the response in case there's any extra text
+      let jsonString = completion.choices[0].message.content.trim();
+      if (jsonString.includes('{')) {
+        jsonString = jsonString.substring(jsonString.indexOf('{'));
+        if (jsonString.includes('}')) {
+          jsonString = jsonString.substring(0, jsonString.lastIndexOf('}') + 1);
+        }
+      }
+      
+      const extractedData = JSON.parse(jsonString);
       
       // Validate required fields
       const requiredFields = ['brand', 'model', 'processor', 'ram', 'storage'];
@@ -71,7 +77,7 @@ Return a JSON object with these fields. Example:
         throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
       }
 
-      // Ensure numeric fields are properly formatted
+      // Normalize numeric fields
       if (extractedData.current_price) {
         extractedData.current_price = parseFloat(extractedData.current_price);
       }
@@ -79,7 +85,7 @@ Return a JSON object with these fields. Example:
         extractedData.original_price = parseFloat(extractedData.original_price);
       }
 
-      // Normalize RAM value to always be a number
+      // Normalize RAM value to always be a number string without units
       extractedData.ram = extractedData.ram.toString().replace(/GB|gb|gigabytes?/i, '').trim();
 
       console.log('Successfully extracted data:', extractedData);
@@ -94,3 +100,4 @@ Return a JSON object with these fields. Example:
     throw error;
   }
 }
+
