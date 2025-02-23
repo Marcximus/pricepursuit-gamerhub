@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
@@ -16,12 +17,12 @@ const ComparePriceLaptops = () => {
   const [sortBy, setSortBy] = useState<SortOption>("rating-desc");
   const [filters, setFilters] = useState<FilterOptions>({
     priceRange: { min: 0, max: 10000 },
-    processor: "all-processors",
-    ram: "all-ram",
-    storage: "all-storage",
-    graphics: "all-graphics",
-    screenSize: "all-screens",
-    brand: "all-brands",
+    processors: new Set<string>(),
+    ramSizes: new Set<string>(),
+    storageOptions: new Set<string>(),
+    graphicsCards: new Set<string>(),
+    screenSizes: new Set<string>(),
+    brands: new Set<string>(),
   });
 
   const { 
