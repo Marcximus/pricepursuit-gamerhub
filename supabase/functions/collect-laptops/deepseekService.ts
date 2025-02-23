@@ -29,8 +29,7 @@ Requirements:
 - Extract specific numeric values where possible (e.g., "16GB" for RAM, "512GB" for storage)
 - Standardize formats (e.g., "15.6 inches" for screen size)
 - If a value cannot be determined, use null
-- Ensure consistent formatting for each field
-- The output MUST be valid JSON without any additional text or explanation`;
+- Ensure consistent formatting for each field`;
 
   const userPrompt = `Process this laptop data and return standardized specifications:
 Title: ${laptopData.title}
@@ -79,11 +78,12 @@ Description: ${laptopData.description || 'No description available'}`;
       throw new Error('Invalid API response structure from DeepSeek');
     }
 
-    // Clean up the content by removing markdown code block syntax
+    // Clean up the content by removing markdown code block syntax and any potential whitespace
     let content = data.choices[0].message.content.trim();
-    content = content.replace(/^```json\n/, '').replace(/\n```$/, '');
+    content = content.replace(/^```json\s*/, '').replace(/```\s*$/, '');
     
-    console.log('[DeepSeek] Processing cleaned content:', content);
+    // Log the cleaned content for debugging
+    console.log('[DeepSeek] Cleaned content:', content);
 
     try {
       const processedData = JSON.parse(content);
@@ -110,7 +110,7 @@ Description: ${laptopData.description || 'No description available'}`;
       return processedData;
 
     } catch (parseError) {
-      console.error('[DeepSeek] Error parsing response:', {
+      console.error('[DeepSeek] Error parsing cleaned content:', {
         error: parseError,
         content: content
       });
@@ -121,4 +121,3 @@ Description: ${laptopData.description || 'No description available'}`;
     throw error;
   }
 }
-
