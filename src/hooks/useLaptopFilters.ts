@@ -135,10 +135,21 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
         })
         .filter((value): value is string => value !== null);
 
+      // For RAM specifically, log the values and their numeric equivalents
+      if (key === 'ram') {
+        console.log('RAM values before sorting:', validValues.map(v => ({
+          original: v,
+          numericValue: getRamValue(v)
+        })));
+      }
+
       // Create a unique set of normalized values and sort them
       const uniqueValues = Array.from(new Set(validValues)).sort((a, b) => {
         if (key === 'ram') {
-          return getRamValue(a) - getRamValue(b);
+          const valueA = getRamValue(a);
+          const valueB = getRamValue(b);
+          console.log(`Comparing ${a} (${valueA}) with ${b} (${valueB})`);
+          return valueA - valueB;
         }
         if (key === 'storage') {
           // Extract numeric values for proper storage sorting
@@ -152,12 +163,14 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
         }
         return a.localeCompare(b);
       });
-      
-      console.log(`Generated ${key} filter options:`, {
-        total: uniqueValues.length,
-        values: uniqueValues,
-        datasetSize: laptops.length
-      });
+
+      // For RAM specifically, log the final sorted values
+      if (key === 'ram') {
+        console.log('RAM values after sorting:', uniqueValues.map(v => ({
+          value: v,
+          numericValue: getRamValue(v)
+        })));
+      }
       
       return new Set(uniqueValues);
     };
@@ -170,16 +183,6 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       screenSizes: getUniqueValues('screen_size'),
       brands: getUniqueValues('brand'),
     };
-
-    console.log('Generated all filter options:', {
-      totalLaptops: laptops.length,
-      brands: Array.from(filterOptions.brands).length,
-      processors: Array.from(filterOptions.processors).length,
-      ram: Array.from(filterOptions.ramSizes).length,
-      storage: Array.from(filterOptions.storageOptions).length,
-      graphics: Array.from(filterOptions.graphicsCards).length,
-      screenSizes: Array.from(filterOptions.screenSizes).length
-    });
 
     return filterOptions;
   }, [laptops]);
