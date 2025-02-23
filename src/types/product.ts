@@ -22,9 +22,10 @@ export interface Product {
   benchmark_score?: number;
   weight?: string;
   battery_life?: string;
-  brand: string; // Changed from optional to required
+  brand: string;
   total_reviews?: number;
   average_rating?: number;
+  wilson_score?: number; // Added this field
   review_data?: {
     rating_breakdown?: {
       [key: string]: number;
@@ -48,3 +49,4 @@ export interface PriceHistory {
   timestamp: string;
   created_at: string;
 }
+
