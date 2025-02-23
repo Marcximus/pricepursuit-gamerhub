@@ -13,6 +13,7 @@ import { useLaptopFilters } from "@/hooks/useLaptopFilters";
 import { collectLaptops } from "@/utils/laptop/collectLaptops";
 
 const ComparePriceLaptops = () => {
+  const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortOption>("rating-desc");
   const [filters, setFilters] = useState<FilterOptions>({
     priceRange: { min: 0, max: 10000 },
@@ -25,13 +26,18 @@ const ComparePriceLaptops = () => {
   });
 
   const { 
-    data: laptops, 
+    data, 
     isLoading: isLaptopsLoading, 
     error: laptopsError,
     refetch: refetchLaptops,
     isRefetching,
     updateLaptops
-  } = useLaptops();
+  } = useLaptops(currentPage);
+
+  const laptops = data?.laptops ?? [];
+  const totalCount = data?.totalCount ?? 0;
+  const totalPages = data?.totalPages ?? 1;
+
   const { toast } = useToast();
 
   const filteredAndSortedLaptops = useFilteredLaptops(laptops, filters, sortBy);
@@ -52,11 +58,11 @@ const ComparePriceLaptops = () => {
         // Poll for updates
         const pollInterval = setInterval(async () => {
           const { data: newData } = await refetchLaptops();
-          if (newData && newData.length > 0) {
+          if (newData && newData.laptops.length > 0) {
             clearInterval(pollInterval);
             toast({
               title: "Collection Complete",
-              description: `Found ${newData.length} laptops`,
+              description: `Found ${newData.laptops.length} laptops`,
             });
           }
         }, 10000);
@@ -90,6 +96,10 @@ const ComparePriceLaptops = () => {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -112,10 +122,13 @@ const ComparePriceLaptops = () => {
             toolbar={
               <LaptopToolbar
                 totalLaptops={filteredAndSortedLaptops.length}
+                currentPage={currentPage}
+                totalPages={totalPages}
                 sortBy={sortBy}
                 onSortChange={setSortBy}
                 onCollectLaptops={handleCollectLaptops}
                 onUpdateLaptops={handleUpdateLaptops}
+                onPageChange={handlePageChange}
                 isLoading={isLaptopsLoading}
                 isRefetching={isRefetching}
               />
@@ -123,6 +136,7 @@ const ComparePriceLaptops = () => {
             content={
               <LaptopList
                 laptops={filteredAndSortedLaptops}
+                totalCount={totalCount}
                 isLoading={isLaptopsLoading}
                 error={laptopsError}
                 onRetry={handleCollectLaptops}
