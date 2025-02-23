@@ -1,7 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
 import { processLaptopData } from "@/utils/laptopUtils";
 import { collectLaptops, updateLaptops, refreshBrandModels } from "@/utils/laptop";
 import type { Product } from "@/types/product";
@@ -18,59 +17,11 @@ export const useLaptops = (
   filters: FilterOptions
 ) => {
   const query = useQuery({
-    queryKey: ['laptops', page, sortBy, filters],
+    queryKey: ['all-laptops'], // Changed to not depend on filters/pagination
     queryFn: async () => {
       try {
-        console.log('Fetching laptops with filters:', filters);
-        
-        // Start building the base query
-        const baseQuery = supabase
-          .from('products')
-          .select('*', { count: 'exact' })
-          .eq('is_laptop', true);
-
-        // Apply filters
-        let query = baseQuery;
-        if (filters.brands.size > 0) {
-          query = query.in('brand', Array.from(filters.brands));
-        }
-        if (filters.processors.size > 0) {
-          query = query.in('processor', Array.from(filters.processors));
-        }
-        if (filters.ramSizes.size > 0) {
-          query = query.in('ram', Array.from(filters.ramSizes));
-        }
-        if (filters.storageOptions.size > 0) {
-          query = query.in('storage', Array.from(filters.storageOptions));
-        }
-        if (filters.graphicsCards.size > 0) {
-          query = query.in('graphics', Array.from(filters.graphicsCards));
-        }
-        if (filters.screenSizes.size > 0) {
-          query = query.in('screen_size', Array.from(filters.screenSizes));
-        }
-        if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
-          if (filters.priceRange.min > 0) {
-            query = query.gte('current_price', filters.priceRange.min);
-          }
-          if (filters.priceRange.max < 10000) {
-            query = query.lte('current_price', filters.priceRange.max);
-          }
-        }
-
-        // Get the total count first
-        const { count, error: countError } = await query;
-        
-        if (countError) {
-          console.error('Error getting filtered laptop count:', countError);
-          throw countError;
-        }
-
-        const totalCount = count || 0;
-        console.log(`Total filtered laptop count: ${totalCount}`);
-
-        // Now modify the query for the actual data fetch with full details
-        const dataQuery = supabase
+        // Fetch all laptops in one go
+        const { data: laptops, error } = await supabase
           .from('products')
           .select(`
             id,
@@ -108,79 +59,21 @@ export const useLaptops = (
           `)
           .eq('is_laptop', true);
 
-        // Reapply filters to the data query
-        let finalQuery = dataQuery;
-        if (filters.brands.size > 0) {
-          finalQuery = finalQuery.in('brand', Array.from(filters.brands));
-        }
-        if (filters.processors.size > 0) {
-          finalQuery = finalQuery.in('processor', Array.from(filters.processors));
-        }
-        if (filters.ramSizes.size > 0) {
-          finalQuery = finalQuery.in('ram', Array.from(filters.ramSizes));
-        }
-        if (filters.storageOptions.size > 0) {
-          finalQuery = finalQuery.in('storage', Array.from(filters.storageOptions));
-        }
-        if (filters.graphicsCards.size > 0) {
-          finalQuery = finalQuery.in('graphics', Array.from(filters.graphicsCards));
-        }
-        if (filters.screenSizes.size > 0) {
-          finalQuery = finalQuery.in('screen_size', Array.from(filters.screenSizes));
-        }
-        if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
-          if (filters.priceRange.min > 0) {
-            finalQuery = finalQuery.gte('current_price', filters.priceRange.min);
-          }
-          if (filters.priceRange.max < 10000) {
-            finalQuery = finalQuery.lte('current_price', filters.priceRange.max);
-          }
-        }
-
-        // Calculate pagination range
-        const start = (page - 1) * ITEMS_PER_PAGE;
-        const end = start + ITEMS_PER_PAGE - 1;
-
-        // Apply sorting based on the sortBy parameter
-        switch (sortBy) {
-          case 'price-asc':
-            finalQuery = finalQuery
-              .order('current_price', { ascending: true, nullsFirst: false })
-              .order('id', { ascending: true }); // Secondary sort for stability
-            break;
-          case 'price-desc':
-            finalQuery = finalQuery
-              .order('current_price', { ascending: false, nullsFirst: false })
-              .order('id', { ascending: true }); // Secondary sort for stability
-            break;
-          case 'rating-desc':
-            finalQuery = finalQuery
-              .order('wilson_score', { ascending: false, nullsFirst: false })
-              .order('current_price', { ascending: true, nullsFirst: true });
-            break;
-        }
-
-        // Apply pagination
-        finalQuery = finalQuery.range(start, end);
-
-        // Execute the query
-        const { data: laptops, error } = await finalQuery;
-
         if (error) {
           console.error('Error fetching laptops:', error);
           throw error;
         }
 
         if (!laptops || laptops.length === 0) {
-          console.log('No laptops found for current filters and page');
+          console.log('No laptops found in database');
           return { 
             laptops: [], 
-            totalCount,
-            totalPages: Math.ceil(totalCount / ITEMS_PER_PAGE)
+            totalCount: 0,
+            totalPages: 0
           };
         }
 
-        // Process laptops
+        // Process all laptops
         const processedLaptops = laptops.map(laptop => {
           const reviews = laptop.product_reviews || [];
           
@@ -198,21 +91,57 @@ export const useLaptops = (
             }))
           };
 
-          // Calculate average rating if needed
-          let avgRating = laptop.rating;
-          if (!avgRating && reviews.length > 0) {
-            const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-            avgRating = totalRating / reviews.length;
-          }
-
-          // Return a complete laptop object
           return processLaptopData(laptop);
         });
 
+        // Apply filters in memory
+        let filteredLaptops = processedLaptops.filter(laptop => {
+          if (filters.brands.size > 0 && !filters.brands.has(laptop.brand)) return false;
+          if (filters.processors.size > 0 && !filters.processors.has(laptop.processor || '')) return false;
+          if (filters.ramSizes.size > 0 && !filters.ramSizes.has(laptop.ram || '')) return false;
+          if (filters.storageOptions.size > 0 && !filters.storageOptions.has(laptop.storage || '')) return false;
+          if (filters.graphicsCards.size > 0 && !filters.graphicsCards.has(laptop.graphics || '')) return false;
+          if (filters.screenSizes.size > 0 && !filters.screenSizes.has(laptop.screen_size || '')) return false;
+          
+          const price = laptop.current_price || 0;
+          if (filters.priceRange.min > 0 && price < filters.priceRange.min) return false;
+          if (filters.priceRange.max < 10000 && price > filters.priceRange.max) return false;
+          
+          return true;
+        });
+
+        // Apply sorting in memory
+        filteredLaptops.sort((a, b) => {
+          switch (sortBy) {
+            case 'price-asc':
+              return (a.current_price || 999999) - (b.current_price || 999999);
+            case 'price-desc':
+              return (b.current_price || 0) - (a.current_price || 0);
+            case 'rating-desc':
+              return (b.wilson_score || 0) - (a.wilson_score || 0);
+            default:
+              return 0;
+          }
+        });
+
+        // Calculate pagination
+        const totalCount = filteredLaptops.length;
+        const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+        const start = (page - 1) * ITEMS_PER_PAGE;
+        const end = start + ITEMS_PER_PAGE;
+        const paginatedLaptops = filteredLaptops.slice(start, end);
+
+        console.log('Client-side filtering/pagination results:', {
+          totalLaptops: processedLaptops.length,
+          filteredCount: filteredLaptops.length,
+          currentPage: page,
+          laptopsOnPage: paginatedLaptops.length
+        });
+
         return {
-          laptops: processedLaptops,
+          laptops: paginatedLaptops,
           totalCount,
-          totalPages: Math.ceil(totalCount / ITEMS_PER_PAGE)
+          totalPages
         };
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
