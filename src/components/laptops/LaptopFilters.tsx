@@ -4,8 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import type { Product } from "@/types/product";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export type FilterOptions = {
   priceRange: { min: number; max: number };
@@ -38,7 +37,7 @@ type FilterSectionProps = {
 const FilterSection = ({ title, options, selectedOptions, onChange }: FilterSectionProps) => {
   const optionsArray = Array.from(options);
 
-  const handleCheckboxChange = (option: string, checked: boolean) => {
+  const handleCheckboxChange = useCallback((option: string, checked: boolean) => {
     const newSelected = new Set(selectedOptions);
     if (checked) {
       newSelected.add(option);
@@ -46,7 +45,7 @@ const FilterSection = ({ title, options, selectedOptions, onChange }: FilterSect
       newSelected.delete(option);
     }
     onChange(newSelected);
-  };
+  }, [selectedOptions, onChange]);
 
   return (
     <AccordionItem value={title} className="border-b">
@@ -94,20 +93,20 @@ export function LaptopFilters({
   screenSizes,
   brands,
 }: LaptopFiltersProps) {
-  // State for price range debouncing
   const [debouncedMin, setDebouncedMin] = useState(filters.priceRange.min);
   const [debouncedMax, setDebouncedMax] = useState(filters.priceRange.max);
 
-  // Update filters when debounced values change
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      onFiltersChange({
-        ...filters,
-        priceRange: {
-          min: debouncedMin,
-          max: debouncedMax
-        }
-      });
+      if (debouncedMin !== filters.priceRange.min || debouncedMax !== filters.priceRange.max) {
+        onFiltersChange({
+          ...filters,
+          priceRange: {
+            min: debouncedMin,
+            max: debouncedMax
+          }
+        });
+      }
     }, 500);
 
     return () => clearTimeout(timeoutId);
@@ -118,7 +117,6 @@ export function LaptopFilters({
   return (
     <ScrollArea className="h-[calc(100vh-8rem)] pr-4">
       <div className="space-y-6">
-        {/* Price Range */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Price Range</Label>
           <div className="flex gap-2 items-center">
@@ -140,7 +138,6 @@ export function LaptopFilters({
           </div>
         </div>
 
-        {/* Filter Sections */}
         <Accordion type="multiple" defaultValue={allSections} className="w-full">
           <FilterSection
             title="Brand"

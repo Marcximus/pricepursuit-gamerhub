@@ -100,68 +100,53 @@ export const useLaptops = (
   filters: FilterOptions
 ) => {
   const query = useQuery({
-    queryKey: ['all-laptops', sortBy, page, JSON.stringify(filters)],
-    queryFn: async () => {
-      try {
-        const laptops = await fetchAllLaptops();
-
-        if (!laptops || laptops.length === 0) {
-          console.log('No laptops found in database');
-          return { 
-            laptops: [], 
-            totalCount: 0,
-            totalPages: 0
-          };
-        }
-
-        const processedLaptops = laptops.map(laptop => {
-          const reviews = laptop.product_reviews || [];
-          const reviewData = {
-            rating_breakdown: {},
-            recent_reviews: reviews.map(review => ({
-              rating: review.rating,
-              title: review.title || '',
-              content: review.content || '',
-              reviewer_name: review.reviewer_name || 'Anonymous',
-              review_date: review.review_date,
-              verified_purchase: review.verified_purchase || false,
-              helpful_votes: review.helpful_votes || 0
-            }))
-          };
-
-          return processLaptopData(laptop);
-        });
-
-        const filteredLaptops = filterLaptops(processedLaptops, filters);
-        const sortedLaptops = sortLaptops(filteredLaptops, sortBy);
-        const paginatedResults = paginateLaptops(sortedLaptops, page, ITEMS_PER_PAGE);
-
-        console.log('Filter/sort/pagination results:', {
-          totalLaptops: processedLaptops.length,
-          filteredCount: filteredLaptops.length,
-          currentPage: page,
-          laptopsOnPage: paginatedResults.laptops.length,
-          sortBy,
-          filters: {
-            brands: Array.from(filters.brands),
-            priceRange: filters.priceRange,
-          }
-        });
-
-        return paginatedResults;
-      } catch (error) {
-        console.error('Error in useLaptops hook:', error);
-        throw error;
-      }
-    },
-    // Set a very long stale time to prevent unnecessary refetches
+    queryKey: ['all-laptops'],
+    queryFn: fetchAllLaptops,
     staleTime: 1000 * 60 * 60, // 1 hour
-    // Cache the data for a long time
     gcTime: 1000 * 60 * 60 * 24, // 24 hours
-    // Only refetch when explicitly invalidated (e.g., after update-laptops completes)
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    select: (data) => {
+      console.log('Processing laptops with filters:', {
+        filtersApplied: {
+          brands: Array.from(filters.brands),
+          processors: Array.from(filters.processors),
+          ramSizes: Array.from(filters.ramSizes),
+          storageOptions: Array.from(filters.storageOptions),
+          graphicsCards: Array.from(filters.graphicsCards),
+          screenSizes: Array.from(filters.screenSizes),
+          priceRange: filters.priceRange
+        }
+      });
+
+      const processedLaptops = data.map(laptop => {
+        const reviews = laptop.product_reviews || [];
+        const reviewData = {
+          rating_breakdown: {},
+          recent_reviews: reviews.map(review => ({
+            rating: review.rating,
+            title: review.title || '',
+            content: review.content || '',
+            reviewer_name: review.reviewer_name || 'Anonymous',
+            review_date: review.review_date,
+            verified_purchase: review.verified_purchase || false,
+            helpful_votes: review.helpful_votes || 0
+          }))
+        };
+        return processLaptopData(laptop);
+      });
+
+      const filteredLaptops = filterLaptops(processedLaptops, filters);
+      const sortedLaptops = sortLaptops(filteredLaptops, sortBy);
+      const paginatedResults = paginateLaptops(sortedLaptops, page, ITEMS_PER_PAGE);
+
+      console.log('Filter/sort/pagination results:', {
+        totalLaptops: processedLaptops.length,
+        filteredCount: filteredLaptops.length,
+        currentPage: page,
+        laptopsOnPage: paginatedResults.laptops.length,
+      });
+
+      return paginatedResults;
+    },
   });
 
   return {
