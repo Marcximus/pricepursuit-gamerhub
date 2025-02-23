@@ -10,6 +10,7 @@ const LAPTOP_BRANDS = [
 
 const PARALLEL_BATCHES = 5; // Process 5 brands concurrently
 const DELAY_BETWEEN_BATCHES = 2000; // 2 second delay between batch groups
+const PAGES_PER_BRAND = 5; // Increased from 1 to 5 pages per brand
 
 export async function collectLaptops() {
   console.log('collectLaptops function called');
@@ -59,7 +60,7 @@ export async function collectLaptops() {
       brandBatches.push(LAPTOP_BRANDS.slice(i, Math.min(i + PARALLEL_BATCHES, LAPTOP_BRANDS.length)));
     }
 
-    console.log(`Processing ${brandBatches.length} batch groups with ${PARALLEL_BATCHES} brands per group`);
+    console.log(`Processing ${brandBatches.length} batch groups with ${PARALLEL_BATCHES} brands per group, ${PAGES_PER_BRAND} pages per brand`);
 
     // Process each batch group
     for (const [groupIndex, batchGroup] of brandBatches.entries()) {
@@ -84,7 +85,7 @@ export async function collectLaptops() {
           const { error: functionError } = await supabase.functions.invoke('collect-laptops', {
             body: {
               brands: [brand],
-              pages_per_brand: 1,
+              pages_per_brand: PAGES_PER_BRAND, // Updated to use 5 pages
               batch_number: groupIndex * PARALLEL_BATCHES + brandIndex + 1,
               total_batches: LAPTOP_BRANDS.length
             }
@@ -136,9 +137,9 @@ export async function collectLaptops() {
       .eq('collection_status', 'in_progress');
       
     toast({
-      title: "Collection failed",
-      description: error.message,
-      variant: "destructive"
+        title: "Collection failed",
+        description: error.message,
+        variant: "destructive"
     });
     throw error;
   }
