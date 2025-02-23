@@ -1,23 +1,19 @@
 
 import { useMemo } from "react";
-import { useAllProducts } from "./useLaptops";
 import type { Product } from "@/types/product";
 
 type FilterableProductKeys = 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size' | 'brand';
 
-export const useLaptopFilters = () => {
-  const { data } = useAllProducts();
-  const allLaptops = data?.laptops || [];
-
+export const useLaptopFilters = (laptops: Product[] | undefined) => {
   return useMemo(() => {
     const getUniqueValues = (key: FilterableProductKeys) => {
-      if (allLaptops.length === 0) {
+      if (!laptops || laptops.length === 0) {
         console.log(`No laptops available for ${key} filter`);
         return new Set<string>();
       }
       
       // Filter out null/undefined/empty values and normalize strings
-      const validValues = allLaptops
+      const validValues = laptops
         .map(laptop => laptop[key])
         .filter((value): value is string => 
           value != null && 
@@ -47,7 +43,7 @@ export const useLaptopFilters = () => {
     };
 
     console.log('Generated all filter options:', {
-      totalLaptops: allLaptops.length,
+      totalLaptops: laptops?.length,
       brands: Array.from(filterOptions.brands),
       totalBrands: filterOptions.brands.size,
       processors: Array.from(filterOptions.processors).length,
@@ -58,6 +54,5 @@ export const useLaptopFilters = () => {
     });
 
     return filterOptions;
-  }, [allLaptops]);
+  }, [laptops]);
 };
-

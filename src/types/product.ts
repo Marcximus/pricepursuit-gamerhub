@@ -11,7 +11,7 @@ export interface Product {
   product_url: string;
   last_checked: string;
   created_at: string;
-  update_status?: 'pending' | 'in_progress' | 'completed' | 'error' | null;
+  update_status?: 'pending' | 'in_progress' | 'completed' | 'error';
   processor?: string;
   processor_score?: number;
   ram?: string;
@@ -25,7 +25,7 @@ export interface Product {
   brand: string;
   total_reviews?: number;
   average_rating?: number;
-  wilson_score?: number;
+  wilson_score?: number; // Added this field
   review_data?: {
     rating_breakdown?: {
       [key: string]: number;
@@ -40,18 +40,6 @@ export interface Product {
       helpful_votes?: number;
     }>;
   };
-  product_reviews?: Array<{
-    id: string;
-    product_id: string;
-    rating: number;
-    title?: string;
-    content?: string;
-    reviewer_name?: string;
-    review_date?: string;
-    verified_purchase?: boolean;
-    helpful_votes?: number;
-    created_at?: string;
-  }>;
 }
 
 export interface PriceHistory {

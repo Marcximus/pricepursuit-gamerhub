@@ -21,105 +21,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      checkAdminRole(session?.user?.id);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setUser(session?.user ?? null);
+      checkAdminRole(session?.user?.id);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const checkAdminRole = async (userId: string | undefined) => {
-    console.log('🔍 Checking admin role for user:', userId);
-    
     if (!userId) {
-      console.log('❌ No user ID provided');
       setIsAdmin(false);
-      return false;
+      setIsLoading(false);
+      return;
     }
 
     try {
-      console.log('🔄 Calling has_role RPC for user:', userId);
       const { data, error } = await supabase
         .rpc('has_role', { _role: 'admin' });
 
       if (error) {
-        console.error('❌ Error checking admin role:', error);
+        console.error('Error checking admin role:', error);
         toast({
           title: "Error",
           description: "Failed to check admin permissions",
           variant: "destructive"
         });
         setIsAdmin(false);
-        return false;
+      } else {
+        setIsAdmin(data ?? false);
       }
-
-      console.log('✅ Admin role check result:', data);
-      setIsAdmin(data ?? false);
-      return data ?? false;
     } catch (error) {
-      console.error('❌ Error checking admin role:', error);
+      console.error('Error checking admin role:', error);
       setIsAdmin(false);
-      return false;
     }
+    setIsLoading(false);
   };
-
-  useEffect(() => {
-    console.log('🔄 Auth context initialized');
-    let mounted = true;
-
-    const initializeAuth = async () => {
-      try {
-        console.log('🔄 Initializing auth...');
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('📍 Current session:', session?.user?.email);
-        
-        if (mounted) {
-          setUser(session?.user ?? null);
-          if (session?.user) {
-            await checkAdminRole(session.user.id);
-          }
-        }
-      } catch (error) {
-        console.error('❌ Error initializing auth:', error);
-      } finally {
-        if (mounted) {
-          console.log('✅ Auth initialization complete');
-          setIsLoading(false);
-        }
-      }
-    };
-
-    const setupAuthListener = () => {
-      console.log('🔄 Setting up auth listener...');
-      return supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log('🔔 Auth state changed:', event, session?.user?.email);
-        
-        if (mounted) {
-          setIsLoading(true);
-          setUser(session?.user ?? null);
-          
-          if (session?.user) {
-            await checkAdminRole(session.user.id);
-          } else {
-            setIsAdmin(false);
-          }
-          
-          console.log('✅ Auth state update complete');
-          setIsLoading(false);
-        }
-      });
-    };
-
-    initializeAuth();
-    const { data: { subscription } } = setupAuthListener();
-
-    return () => {
-      console.log('🧹 Cleaning up auth context');
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    console.log('🔄 Auth context state updated:', {
-      userEmail: user?.email,
-      isAdmin,
-      isLoading
-    });
-  }, [user, isAdmin, isLoading]);
 
   return (
     <AuthContext.Provider value={{ user, isAdmin, isLoading }}>
