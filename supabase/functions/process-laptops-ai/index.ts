@@ -2,11 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.21.0';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { OpenAI } from "https://esm.sh/openai@4.24.1";
 
 const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -14,7 +10,17 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
+const openai = new OpenAI({
+  baseURL: 'https://api.deepseek.com/v1',
+  apiKey: DEEPSEEK_API_KEY,
+});
+
 const BATCH_SIZE = 10;
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 async function processTitleWithAI(title: string, description: string | null) {
   try {
@@ -30,7 +36,9 @@ Please extract and standardize these key features in the following format:
   "processor": "CPU model (standardized format)",
   "graphics": "GPU model (standardized format)",
   "ram": "Memory amount in GB",
-  "storage": "Storage capacity and type"
+  "storage": "Storage capacity and type",
+  "current_price": "Current price in numeric format (e.g., 999.99)",
+  "original_price": "Original/previous price in numeric format (e.g., 1299.99)"
 }
 
 Notes:
@@ -39,34 +47,29 @@ Notes:
 - Standardize names (e.g., "Intel Core i7-1165G7" instead of "i7 1165G7")
 - Remove marketing terms and stick to technical specifications
 - Ensure RAM is in GB (convert if in another unit)
-- For storage, combine type and capacity (e.g., "512GB SSD")`;
+- For storage, combine type and capacity (e.g., "512GB SSD")
+- For prices, only extract numeric values (e.g., 999.99 instead of "$999.99")
+- Original price should be higher than current price if both are present`;
 
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          { role: 'system', content: 'You are a specialized AI trained to extract and standardize laptop specifications.' },
-          { role: 'user', content: prompt }
-        ],
-      }),
+    const completion = await openai.chat.completions.create({
+      model: "deepseek-chat",
+      messages: [
+        {
+          role: "system",
+          content: "You are a specialized AI trained to extract and standardize laptop specifications."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ]
     });
 
-    const data = await response.json();
-    if (!response.ok) {
-      console.error('DeepSeek API error:', data);
-      throw new Error('Failed to process with DeepSeek AI');
-    }
-
     try {
-      const extractedData = JSON.parse(data.choices[0].message.content);
+      const extractedData = JSON.parse(completion.choices[0].message.content);
       return extractedData;
     } catch (parseError) {
-      console.error('Failed to parse AI response:', data.choices[0].message.content);
+      console.error('Failed to parse AI response:', completion.choices[0].message.content);
       throw new Error('Failed to parse AI response');
     }
   } catch (error) {
@@ -119,6 +122,8 @@ serve(async (req) => {
             graphics: aiResult.graphics,
             ram: aiResult.ram,
             storage: aiResult.storage,
+            current_price: aiResult.current_price,
+            original_price: aiResult.original_price,
             ai_processing_status: 'completed',
             ai_processed_at: new Date().toISOString()
           })
