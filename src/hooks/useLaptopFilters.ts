@@ -5,8 +5,6 @@ import type { Product } from "@/types/product";
 type FilterableProductKeys = 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size' | 'brand';
 
 export const useLaptopFilters = (laptops: Product[] | undefined) => {
-  // Split this into two parts: one for getting all available options,
-  // and another for the current filter state
   return useMemo(() => {
     const getUniqueValues = (key: FilterableProductKeys) => {
       if (!laptops || laptops.length === 0) {
@@ -17,10 +15,11 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       // Filter out null/undefined/empty values and normalize strings
       const validValues = laptops
         .map(laptop => {
+          const value = laptop[key];
           if (key === 'graphics') {
-            console.log('Raw graphics value:', laptop[key], 'from laptop:', laptop.title);
+            console.log('Raw graphics value:', value, 'from laptop:', laptop.title);
           }
-          return laptop[key];
+          return value;
         })
         .filter((value): value is string => {
           const isValid = value != null && 
@@ -33,18 +32,29 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
         })
         .map(value => value.trim());
 
-      // Create a unique set of values
-      const uniqueValues = Array.from(new Set(validValues)).sort();
+      // Create a unique set of values and sort them
+      const uniqueValues = Array.from(new Set(validValues)).sort((a, b) => {
+        // Custom sort for graphics cards to group by manufacturer
+        if (key === 'graphics') {
+          const manufacturers = ['NVIDIA', 'AMD', 'Intel'];
+          const aManuf = manufacturers.find(m => a.includes(m)) || '';
+          const bManuf = manufacturers.find(m => b.includes(m)) || '';
+          if (aManuf !== bManuf) {
+            return manufacturers.indexOf(aManuf) - manufacturers.indexOf(bManuf);
+          }
+        }
+        return a.localeCompare(b);
+      });
       
       console.log(`Generated ${key} filter options:`, {
         total: uniqueValues.length,
-        values: uniqueValues.slice(0, 20) // Show first 20 values for debugging
+        values: uniqueValues
       });
       
       return new Set(uniqueValues);
     };
 
-    // Always generate all possible filter options from the complete dataset
+    // Generate all possible filter options from the complete dataset
     const filterOptions = {
       processors: getUniqueValues('processor'),
       ramSizes: getUniqueValues('ram'),
@@ -65,5 +75,5 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
     });
 
     return filterOptions;
-  }, [laptops]); // Only depend on the laptops array, not on any filters
+  }, [laptops]);
 };

@@ -13,8 +13,16 @@ export const processGraphics = (graphics: string | undefined, title: string): st
     }
     
     // Add NVIDIA prefix if missing for RTX/GTX cards
-    if (cleanedGraphics.match(/^(RTX|GTX)/)) {
-      cleanedGraphics = 'NVIDIA GeForce ' + cleanedGraphics;
+    if ((cleanedGraphics.match(/^(RTX|GTX)/) || cleanedGraphics.includes('GeForce')) && !cleanedGraphics.includes('NVIDIA')) {
+      cleanedGraphics = 'NVIDIA ' + cleanedGraphics;
+    }
+
+    // Special handling for Intel graphics to standardize naming
+    if (cleanedGraphics.toLowerCase().includes('intel') && 
+        (cleanedGraphics.includes('UHD') || 
+         cleanedGraphics.includes('Iris') || 
+         cleanedGraphics.includes('HD'))) {
+      cleanedGraphics = cleanedGraphics.replace(/Intel\s+(UHD|Iris Xe|HD)\s*Graphics?/i, 'Intel $1 Graphics');
     }
     
     console.log('Processed existing graphics:', { original: graphics, cleaned: cleanedGraphics });
@@ -24,43 +32,37 @@ export const processGraphics = (graphics: string | undefined, title: string): st
   // Look for graphics in the title (more specific patterns first)
   const graphicsPatterns = [
     // NVIDIA RTX/GTX Cards (including mobile variants)
-    /\b(?:NVIDIA GeForce RTX \d{4}(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-Q)?)\b/i,
-    /\b(?:NVIDIA GeForce GTX \d{3,4}(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-Q)?)\b/i,
-    /\bRTX\s*(\d{4})(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-Q)?\b/i,
-    /\bGTX\s*(\d{3,4})(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-Q)?\b/i,
+    /\b(?:NVIDIA\s+)?(?:GeForce\s+)?(?:RTX|GTX)\s*\d{3,4}(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-Q)?\b/i,
     
     // AMD Graphics (discrete and integrated)
-    /\b(?:AMD Radeon RX \d{3,4}[A-Z]*(?:\s*XT)?)\b/i,
-    /\b(?:Radeon RX \d{3,4}[A-Z]*(?:\s*XT)?)\b/i,
-    /\b(?:AMD Radeon(?:\s*\w*\d*)?)\s*Graphics?\b/i,
-    /\b(?:Radeon\s*RX\s*Vega\s*\d+)\s*Graphics\b/i,
+    /\b(?:AMD\s+)?Radeon(?:\s+RX)?\s*\d{3,4}[A-Z]*(?:\s*XT)?\s*(?:Graphics)?\b/i,
+    /\b(?:AMD\s+)?Radeon(?:\s+Graphics)?\b/i,
     
     // Intel Graphics
-    /\b(?:Intel (?:UHD|Iris Xe|Iris Plus) Graphics(?:\s*\d*)?)\b/i,
-    /\b(?:Intel Iris Xe MAX)\b/i,
+    /\b(?:Intel\s+)?(?:UHD|Iris\s+Xe|Iris\s+Plus|HD)\s*Graphics(?:\s*\d*)?\b/i,
     
-    // Generic patterns
+    // Generic patterns (as fallback)
     /\b(?:NVIDIA|AMD|Intel)\s+(?:Graphics|GPU)\b/i,
   ];
   
   for (const pattern of graphicsPatterns) {
     const match = title.match(pattern);
     if (match) {
-      let gpu = match[0];
+      let gpu = match[0].trim();
       
-      // Clean up NVIDIA shorthand
-      if (gpu.startsWith('RTX')) {
-        gpu = 'NVIDIA GeForce ' + gpu;
-      } else if (gpu.startsWith('GTX')) {
-        gpu = 'NVIDIA GeForce ' + gpu;
+      // Standardize NVIDIA naming
+      if (gpu.match(/^(?:GeForce\s+)?(?:RTX|GTX)/i)) {
+        gpu = `NVIDIA GeForce ${gpu.replace(/^GeForce\s+/i, '')}`;
       }
       
-      // Clean up formatting
-      gpu = gpu.replace(/\s+/g, ' ').trim();
-      
-      // Add "Graphics" suffix for AMD integrated GPUs if not present
+      // Standardize AMD naming
       if (gpu.includes('Radeon') && !gpu.toLowerCase().includes('graphics')) {
         gpu += ' Graphics';
+      }
+      
+      // Standardize Intel naming
+      if (gpu.toLowerCase().includes('intel')) {
+        gpu = gpu.replace(/Intel\s+(UHD|Iris Xe|HD)\s*Graphics?/i, 'Intel $1 Graphics');
       }
       
       console.log('Extracted graphics from title:', { title, gpu });
