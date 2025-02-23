@@ -30,7 +30,7 @@ Requirements:
 - Standardize formats (e.g., "15.6 inches" for screen size)
 - If a value cannot be determined, use null
 - Ensure consistent formatting for each field
-- The output MUST be valid JSON`;
+- The output MUST be valid JSON without any additional text or explanation`;
 
   const userPrompt = `Process this laptop data and return standardized specifications:
 Title: ${laptopData.title}
@@ -38,6 +38,12 @@ ASIN: ${laptopData.asin}
 Description: ${laptopData.description || 'No description available'}`;
 
   try {
+    console.log('[DeepSeek] Sending request with prompts:', {
+      systemPrompt,
+      userPrompt,
+      model: 'deepseek-chat'
+    });
+
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -56,15 +62,38 @@ Description: ${laptopData.description || 'No description available'}`;
     });
 
     if (!response.ok) {
-      throw new Error(`[DeepSeek] API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('[DeepSeek] API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      });
+      throw new Error(`DeepSeek API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
-    
+    console.log('[DeepSeek] Raw API response:', data);
+
+    if (!data.choices?.[0]?.message?.content) {
+      console.error('[DeepSeek] Unexpected API response structure:', data);
+      throw new Error('Invalid API response structure from DeepSeek');
+    }
+
+    const content = data.choices[0].message.content.trim();
+    console.log('[DeepSeek] Processing content:', content);
+
     try {
       const processedData = JSON.parse(content);
       
+      // Validate required fields and data structure
+      const requiredFields = ['asin', 'processor', 'ram', 'storage', 'screen_size', 'brand', 'model'];
+      for (const field of requiredFields) {
+        if (!processedData.hasOwnProperty(field)) {
+          console.error(`[DeepSeek] Missing required field: ${field}`);
+          throw new Error(`Invalid JSON structure: missing ${field}`);
+        }
+      }
+
       // Validate ASIN matches
       if (processedData.asin !== laptopData.asin) {
         console.error('[DeepSeek] ASIN mismatch:', {
@@ -74,9 +103,14 @@ Description: ${laptopData.description || 'No description available'}`;
         processedData.asin = laptopData.asin;
       }
 
+      console.log('[DeepSeek] Successfully processed data:', processedData);
       return processedData;
+
     } catch (parseError) {
-      console.error('[DeepSeek] Error parsing response:', parseError);
+      console.error('[DeepSeek] Error parsing response:', {
+        error: parseError,
+        content: content
+      });
       throw new Error('Invalid JSON response from DeepSeek');
     }
   } catch (error) {
