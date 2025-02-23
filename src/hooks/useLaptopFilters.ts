@@ -5,6 +5,8 @@ import type { Product } from "@/types/product";
 type FilterableProductKeys = 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size' | 'brand';
 
 export const useLaptopFilters = (laptops: Product[] | undefined) => {
+  // Split this into two parts: one for getting all available options,
+  // and another for the current filter state
   return useMemo(() => {
     const getUniqueValues = (key: FilterableProductKeys) => {
       if (!laptops || laptops.length === 0) {
@@ -57,4 +59,3 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
     return filterOptions;
   }, [laptops]); // Only depend on the laptops array, not on any filters
 };
-
