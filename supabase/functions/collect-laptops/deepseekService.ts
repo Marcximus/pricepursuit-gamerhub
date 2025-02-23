@@ -25,7 +25,31 @@ Return ONLY valid JSON with the following structure:
   "weight": "string",
   "battery_life": "string",
   "brand": "string",
-  "model": "string"
+  "model": "string",
+  "rating": number | null,
+  "rating_count": number | null,
+  "average_rating": number | null,
+  "total_reviews": number | null,
+  "review_data": {
+    "rating_breakdown": {
+      "5": number,
+      "4": number,
+      "3": number,
+      "2": number,
+      "1": number
+    },
+    "recent_reviews": [
+      {
+        "rating": number,
+        "title": string,
+        "content": string,
+        "reviewer_name": string,
+        "review_date": string,
+        "verified_purchase": boolean,
+        "helpful_votes": number
+      }
+    ]
+  }
 }
 
 Use these rules when extracting data:
@@ -40,6 +64,9 @@ Use these rules when extracting data:
 9. Battery Life: Use hours (e.g., "10 hours", "6 hours")
 10. Brand: Use official names (e.g., "Lenovo", "HP", "Dell", "ASUS")
 11. Model: Extract specific model name/number (e.g., "ThinkPad X1 Carbon", "Pavilion 15")
+12. Rating: Extract overall rating (e.g., 4.5)
+13. Review Data: Include rating breakdown and recent reviews if available
+14. Review Counts: Include total reviews and rating counts
 
 If you cannot determine a value with high confidence, use null. Always format consistently.`;
 
@@ -52,6 +79,7 @@ Manufacturer: ${laptopData.manufacturer || 'Unknown'}
 Price: ${laptopData.price || 'Not available'}
 Rating: ${laptopData.rating || 'Not available'}
 Reviews Count: ${laptopData.reviews_count || 'Not available'}
+Reviews: ${JSON.stringify(laptopData.reviews || [], null, 2)}
 
 Raw Product Data:
 ${JSON.stringify(laptopData, null, 2)}`;
@@ -76,7 +104,7 @@ ${JSON.stringify(laptopData, null, 2)}`;
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.1,
-        max_tokens: 500
+        max_tokens: 1000
       })
     });
 
@@ -109,7 +137,11 @@ ${JSON.stringify(laptopData, null, 2)}`;
       const processedData = JSON.parse(content);
       
       // Validate required fields and data structure
-      const requiredFields = ['asin', 'processor', 'ram', 'storage', 'screen_size', 'brand', 'model'];
+      const requiredFields = [
+        'asin', 'processor', 'ram', 'storage', 'screen_size', 
+        'brand', 'model', 'rating', 'rating_count', 'total_reviews'
+      ];
+      
       for (const field of requiredFields) {
         if (!processedData.hasOwnProperty(field)) {
           console.error(`[DeepSeek] Missing required field: ${field}`);
@@ -124,6 +156,33 @@ ${JSON.stringify(laptopData, null, 2)}`;
           processed: processedData.asin
         });
         processedData.asin = laptopData.asin;
+      }
+
+      // Ensure review_data structure exists
+      if (!processedData.review_data) {
+        processedData.review_data = {
+          rating_breakdown: {
+            "5": 0,
+            "4": 0,
+            "3": 0,
+            "2": 0,
+            "1": 0
+          },
+          recent_reviews: []
+        };
+      }
+
+      // Process any available reviews from laptopData
+      if (laptopData.reviews && laptopData.reviews.length > 0) {
+        processedData.review_data.recent_reviews = laptopData.reviews.map(review => ({
+          rating: review.rating || 0,
+          title: review.title || '',
+          content: review.content || '',
+          reviewer_name: review.reviewer_name || 'Anonymous',
+          review_date: review.review_date || new Date().toISOString(),
+          verified_purchase: review.verified_purchase || false,
+          helpful_votes: review.helpful_votes || 0
+        }));
       }
 
       console.log('[DeepSeek] Successfully processed data:', processedData);
@@ -141,3 +200,4 @@ ${JSON.stringify(laptopData, null, 2)}`;
     throw error;
   }
 }
+

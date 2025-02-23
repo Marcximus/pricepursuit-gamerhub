@@ -1,29 +1,25 @@
 
-export interface OxylabsResult {
+export type OxylabsResult = {
   asin: string;
-  title: string;
+  title?: string;
+  description?: string;
   price?: number;
-  price_strikethrough?: number;
   rating?: number;
   reviews_count?: number;
-  url_image?: string;
-  url?: string;
   manufacturer?: string;
-  description?: string;
-}
-
-export interface OxylabsResponse {
-  results: Array<{
-    content: {
-      results: {
-        paid?: OxylabsResult[];
-        organic?: OxylabsResult[];
-      };
-    };
+  reviews?: Array<{
+    rating: number;
+    title?: string;
+    content?: string;
+    reviewer_name?: string;
+    review_date?: string;
+    verified_purchase?: boolean;
+    helpful_votes?: number;
   }>;
-}
+  [key: string]: any; // Allow for additional fields from Oxylabs
+};
 
-export interface ProcessedLaptopData {
+export type ProcessedLaptopData = {
   asin: string;
   processor: string | null;
   ram: string | null;
@@ -35,4 +31,22 @@ export interface ProcessedLaptopData {
   battery_life: string | null;
   brand: string | null;
   model: string | null;
-}
+  rating: number | null;
+  rating_count: number | null;
+  average_rating: number | null;
+  total_reviews: number | null;
+  review_data: {
+    rating_breakdown: {
+      [key: string]: number;
+    };
+    recent_reviews: Array<{
+      rating: number;
+      title?: string;
+      content?: string;
+      reviewer_name?: string;
+      review_date?: string;
+      verified_purchase?: boolean;
+      helpful_votes?: number;
+    }>;
+  };
+};
