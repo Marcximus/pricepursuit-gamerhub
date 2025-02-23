@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
@@ -122,13 +121,10 @@ const ComparePriceLaptops = () => {
             toolbar={
               <LaptopToolbar
                 totalLaptops={filteredAndSortedLaptops.length}
-                currentPage={currentPage}
-                totalPages={totalPages}
                 sortBy={sortBy}
                 onSortChange={setSortBy}
                 onCollectLaptops={handleCollectLaptops}
                 onUpdateLaptops={handleUpdateLaptops}
-                onPageChange={handlePageChange}
                 isLoading={isLaptopsLoading}
                 isRefetching={isRefetching}
               />
@@ -137,10 +133,13 @@ const ComparePriceLaptops = () => {
               <LaptopList
                 laptops={filteredAndSortedLaptops}
                 totalCount={totalCount}
+                currentPage={currentPage}
+                totalPages={totalPages}
                 isLoading={isLaptopsLoading}
                 error={laptopsError}
                 onRetry={handleCollectLaptops}
                 isRefetching={isRefetching}
+                onPageChange={handlePageChange}
               />
             }
           />
@@ -151,4 +150,3 @@ const ComparePriceLaptops = () => {
 };
 
 export default ComparePriceLaptops;
-

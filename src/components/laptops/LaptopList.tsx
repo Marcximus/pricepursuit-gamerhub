@@ -1,5 +1,5 @@
 
-import { ReloadIcon } from "@radix-ui/react-icons";
+import { ReloadIcon, ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LaptopCard } from "@/components/laptops/LaptopCard";
@@ -8,19 +8,25 @@ import type { Product } from "@/types/product";
 type LaptopListProps = {
   laptops: Product[];
   totalCount: number;
+  currentPage: number;
+  totalPages: number;
   isLoading: boolean;
   error: Error | null;
   onRetry: () => void;
   isRefetching: boolean;
+  onPageChange: (page: number) => void;
 };
 
 export function LaptopList({ 
   laptops, 
   totalCount,
+  currentPage,
+  totalPages,
   isLoading, 
   error, 
   onRetry,
-  isRefetching 
+  isRefetching,
+  onPageChange
 }: LaptopListProps) {
   console.log('LaptopList render state:', {
     laptopCount: laptops?.length || 0,
@@ -93,10 +99,37 @@ export function LaptopList({
   }
 
   return (
-    <div className="space-y-4">
-      {laptops.map((laptop) => (
-        <LaptopCard key={laptop.id} laptop={laptop} />
-      ))}
+    <div className="space-y-8">
+      <div className="space-y-4">
+        {laptops.map((laptop) => (
+          <LaptopCard key={laptop.id} laptop={laptop} />
+        ))}
+      </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 py-8">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage <= 1 || isLoading}
+          >
+            <ChevronLeftIcon className="h-4 w-4" />
+          </Button>
+          <span className="text-sm">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage >= totalPages || isLoading}
+          >
+            <ChevronRightIcon className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

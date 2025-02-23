@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -8,7 +7,7 @@ import type { Product } from "@/types/product";
 
 export { collectLaptops, updateLaptops, refreshBrandModels };
 
-export const ITEMS_PER_PAGE = 20;
+export const ITEMS_PER_PAGE = 50;
 
 export const useLaptops = (page: number = 1) => {
   const query = useQuery({
