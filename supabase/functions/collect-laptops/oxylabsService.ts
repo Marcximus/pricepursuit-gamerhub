@@ -13,7 +13,7 @@ export async function fetchBrandData(brand: string, pagesPerBrand: number): Prom
     source: "amazon_search",
     domain: "com",
     query: sanitizedQuery,
-    start_page: 6,
+    start_page: 1,
     pages: pagesPerBrand,
     geo_location: "90210",
     user_agent_type: "desktop",
@@ -30,7 +30,7 @@ export async function fetchBrandData(brand: string, pagesPerBrand: number): Prom
     brand,
     query: sanitizedQuery,
     pages: pagesPerBrand,
-    start_page: 6
+    start_page: 1
   });
 
   try {
