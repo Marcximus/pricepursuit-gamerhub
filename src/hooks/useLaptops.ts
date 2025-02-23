@@ -140,10 +140,13 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
             avgRating = totalRating / reviews.length;
           }
 
+          // Ensure brand is never null/undefined/empty
+          const brand = laptop.brand?.trim() || 'Unknown';
+
           // Return a complete laptop object that matches the Product type
-          return {
+          const processedLaptop = {
             ...laptop,
-            brand: laptop.brand || 'Unknown', // Ensure brand is never null/undefined
+            brand,  // Use the processed brand value
             product_url: laptop.product_url || null,
             last_checked: laptop.last_checked || null,
             created_at: laptop.created_at || null,
@@ -151,12 +154,15 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
             total_reviews: reviews.length,
             review_data: reviewData
           };
+
+          return processedLaptop;
         });
 
         const finalLaptops = processedLaptops.map(laptop => processLaptopData(laptop as unknown as Product));
         
         // Log processed laptops brands
-        console.log('Processed laptops brands:', finalLaptops.map(l => l.brand));
+        console.log('Processed laptops brands:', finalLaptops.map(l => ({ id: l.id, brand: l.brand })));
+        console.log('Unique brands:', new Set(finalLaptops.map(l => l.brand)));
 
         return {
           laptops: finalLaptops,
@@ -180,3 +186,4 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
     refreshBrandModels,
   };
 };
+
