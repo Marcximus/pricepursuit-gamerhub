@@ -1,52 +1,98 @@
 
-import { ReloadIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
-import { LaptopSort, type SortOption } from "@/components/laptops/LaptopSort";
+import { LaptopSort, type SortOption } from "./LaptopSort";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { processLaptopsAI } from "@/utils/laptop/processLaptopsAI";
 
-type LaptopToolbarProps = {
+interface LaptopToolbarProps {
   totalLaptops: number;
   sortBy: SortOption;
-  onSortChange: (value: SortOption) => void;
-  onCollectLaptops: () => void;
-  onUpdateLaptops: () => void;
+  onSortChange: (sort: SortOption) => void;
+  onCollectLaptops: () => Promise<void>;
+  onUpdateLaptops: () => Promise<void>;
   isLoading: boolean;
   isRefetching: boolean;
-};
+}
 
 export function LaptopToolbar({
   totalLaptops,
   sortBy,
   onSortChange,
+  onCollectLaptops,
+  onUpdateLaptops,
   isLoading,
-  isRefetching
+  isRefetching,
 }: LaptopToolbarProps) {
-  console.log('LaptopToolbar render:', { 
-    isLoading, 
-    isRefetching, 
-    totalLaptops,
-  });
+  const { toast } = useToast();
+
+  const handleAIProcess = async () => {
+    try {
+      const result = await processLaptopsAI();
+      if (result.success) {
+        toast({
+          title: "AI Processing Started",
+          description: `Processing initiated for ${result.processed} laptops`,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to start AI processing",
+        });
+      }
+    } catch (error) {
+      console.error('Error processing laptops with AI:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to process laptops with AI",
+      });
+    }
+  };
 
   return (
-    <div className="isolate">
-      <div className="flex justify-between items-start gap-4">
-        <div className="text-sm text-gray-600 py-2">
-          {!isLoading && (
-            <>
-              <div>Showing {totalLaptops} laptops</div>
-              {totalLaptops === 0 && (
-                <div className="text-xs text-gray-400 mt-1">
-                  (No laptops match current filters)
-                </div>
-              )}
-            </>
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 bg-background">
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">
+          {totalLaptops} laptops found
+        </span>
+        <LaptopSort value={sortBy} onValueChange={onSortChange} />
+      </div>
+      
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant="outline"
+          onClick={onCollectLaptops}
+          disabled={isLoading || isRefetching}
+        >
+          {(isLoading || isRefetching) && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           )}
-        </div>
-        <div className="z-30">
-          <LaptopSort
-            sortBy={sortBy}
-            onSortChange={onSortChange}
-          />
-        </div>
+          Collect New
+        </Button>
+        
+        <Button
+          variant="outline"
+          onClick={onUpdateLaptops}
+          disabled={isLoading || isRefetching}
+        >
+          {(isLoading || isRefetching) && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          Update Prices
+        </Button>
+
+        <Button
+          variant="outline"
+          onClick={handleAIProcess}
+          disabled={isLoading || isRefetching}
+        >
+          {(isLoading || isRefetching) && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          Process with AI
+        </Button>
       </div>
     </div>
   );

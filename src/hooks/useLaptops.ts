@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { processLaptopData } from "@/utils/laptopUtils";
@@ -104,7 +103,6 @@ export const useLaptops = (
     staleTime: 1000 * 60 * 60, // 1 hour
     gcTime: 1000 * 60 * 60 * 24, // 24 hours
     select: (data) => {
-      // First, process all laptops
       const processedLaptops = data.map(laptop => {
         const reviews = laptop.product_reviews || [];
         const reviewData = {
@@ -122,13 +120,10 @@ export const useLaptops = (
         return processLaptopData(laptop);
       });
 
-      // Then apply filters to the entire dataset
       const filteredLaptops = filterLaptops(processedLaptops, filters);
       
-      // Sort the filtered results
       const sortedLaptops = sortLaptops(filteredLaptops, sortBy);
       
-      // Finally, paginate the sorted and filtered results
       const paginatedResults = paginateLaptops(sortedLaptops, page, ITEMS_PER_PAGE);
 
       console.log('Filter/sort/pagination results:', {
@@ -141,7 +136,6 @@ export const useLaptops = (
 
       return {
         ...paginatedResults,
-        // Pass the complete processed dataset for generating filter options
         allLaptops: processedLaptops
       };
     },
@@ -152,5 +146,6 @@ export const useLaptops = (
     collectLaptops,
     updateLaptops,
     refreshBrandModels,
+    processLaptopsAI
   };
 };
