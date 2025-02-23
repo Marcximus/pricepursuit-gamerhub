@@ -78,14 +78,12 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
         switch (sortBy) {
           case 'price-asc':
             query = query
-              .not('current_price', 'is', null)
-              .order('current_price', { ascending: true })
+              .order('current_price', { ascending: true, nullsLast: true })
               .order('wilson_score', { ascending: false });
             break;
           case 'price-desc':
             query = query
-              .not('current_price', 'is', null)
-              .order('current_price', { ascending: false })
+              .order('current_price', { ascending: false, nullsLast: true })
               .order('wilson_score', { ascending: false });
             break;
           case 'rating-desc':
@@ -191,3 +189,4 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
     refreshBrandModels,
   };
 };
+
