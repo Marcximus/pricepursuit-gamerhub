@@ -1,6 +1,6 @@
 
 import { Link, useNavigate } from "react-router-dom";
-import { Monitor, Laptop, Computer, Gamepad, Keyboard, Mouse, Headphones, Settings, LogOut, LogIn } from "lucide-react";
+import { Monitor, Laptop, Computer, Gamepad, Keyboard, Mouse, Headphones, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -75,7 +75,7 @@ const Navigation = () => {
                   <span>Admin</span>
                 </Link>
               )}
-              {user ? (
+              {user && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -85,11 +85,6 @@ const Navigation = () => {
                   <LogOut className="w-4 h-4" />
                   <span>Logout</span>
                 </Button>
-              ) : (
-                <Link to="/login" className="nav-link flex items-center space-x-1">
-                  <LogIn className="w-4 h-4" />
-                  <span>Login</span>
-                </Link>
               )}
             </div>
           </div>
