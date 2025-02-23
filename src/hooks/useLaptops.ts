@@ -80,7 +80,6 @@ async function fetchAllLaptops() {
     allLaptops = [...allLaptops, ...laptops];
     lastId = laptops[laptops.length - 1].id;
 
-    // If we got less than the batch size, we've reached the end
     if (laptops.length < BATCH_SIZE) {
       hasMore = false;
     }
@@ -111,7 +110,6 @@ export const useLaptops = (
           };
         }
 
-        // Process all laptops
         const processedLaptops = laptops.map(laptop => {
           const reviews = laptop.product_reviews || [];
           const reviewData = {
@@ -130,25 +128,20 @@ export const useLaptops = (
           return processLaptopData(laptop);
         });
 
-        // Apply filters, sorting, and pagination using utility functions
         const filteredLaptops = filterLaptops(processedLaptops, filters);
-        console.log('Before sorting:', { 
-          sortBy, 
-          laptopCount: filteredLaptops.length 
-        });
         const sortedLaptops = sortLaptops(filteredLaptops, sortBy);
-        console.log('After sorting:', { 
-          sortBy, 
-          laptopCount: sortedLaptops.length 
-        });
         const paginatedResults = paginateLaptops(sortedLaptops, page, ITEMS_PER_PAGE);
 
-        console.log('Client-side filtering/pagination results:', {
+        console.log('Filter/sort/pagination results:', {
           totalLaptops: processedLaptops.length,
           filteredCount: filteredLaptops.length,
           currentPage: page,
           laptopsOnPage: paginatedResults.laptops.length,
-          sortBy
+          sortBy,
+          filters: {
+            brands: Array.from(filters.brands),
+            priceRange: filters.priceRange,
+          }
         });
 
         return paginatedResults;

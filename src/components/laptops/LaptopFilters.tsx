@@ -37,17 +37,6 @@ type FilterSectionProps = {
 
 const FilterSection = ({ title, options, selectedOptions, onChange }: FilterSectionProps) => {
   const optionsArray = Array.from(options);
-  
-  useEffect(() => {
-    if (title === "Brand") {
-      console.log('Brand FilterSection:', {
-        optionsCount: optionsArray.length,
-        options: optionsArray,
-        selectedCount: selectedOptions.size,
-        selected: Array.from(selectedOptions)
-      });
-    }
-  }, [title, options, selectedOptions]);
 
   const handleCheckboxChange = (option: string, checked: boolean) => {
     const newSelected = new Set(selectedOptions);
@@ -73,7 +62,9 @@ const FilterSection = ({ title, options, selectedOptions, onChange }: FilterSect
                   <Checkbox
                     id={`${title}-${option}`}
                     checked={selectedOptions.has(option)}
-                    onCheckedChange={(checked) => handleCheckboxChange(option, checked === true)}
+                    onCheckedChange={(checked) => {
+                      handleCheckboxChange(option, checked === true);
+                    }}
                   />
                   <label
                     htmlFor={`${title}-${option}`}
@@ -103,14 +94,15 @@ export function LaptopFilters({
   screenSizes,
   brands,
 }: LaptopFiltersProps) {
-  useEffect(() => {
-    console.log('LaptopFilters props:', {
-      brandsSize: brands.size,
-      brandsArray: Array.from(brands),
-      filtersSize: filters.brands.size,
-      filtersArray: Array.from(filters.brands)
+  const handlePriceChange = (value: number, type: 'min' | 'max') => {
+    onFiltersChange({
+      ...filters,
+      priceRange: {
+        ...filters.priceRange,
+        [type]: value
+      }
     });
-  }, [brands, filters.brands]);
+  };
 
   const allSections = ["Brand", "Processor", "RAM", "Storage", "Graphics", "Screen Size"];
 
@@ -125,10 +117,7 @@ export function LaptopFilters({
               type="number"
               placeholder="Min"
               value={filters.priceRange.min}
-              onChange={(e) => onFiltersChange({
-                ...filters,
-                priceRange: { ...filters.priceRange, min: Number(e.target.value) }
-              })}
+              onChange={(e) => handlePriceChange(Number(e.target.value), 'min')}
               className="h-8 text-sm"
             />
             <span className="text-sm text-gray-500">to</span>
@@ -136,10 +125,7 @@ export function LaptopFilters({
               type="number"
               placeholder="Max"
               value={filters.priceRange.max}
-              onChange={(e) => onFiltersChange({
-                ...filters,
-                priceRange: { ...filters.priceRange, max: Number(e.target.value) }
-              })}
+              onChange={(e) => handlePriceChange(Number(e.target.value), 'max')}
               className="h-8 text-sm"
             />
           </div>
