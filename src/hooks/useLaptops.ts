@@ -5,17 +5,18 @@ import { toast } from "@/components/ui/use-toast";
 import { processLaptopData } from "@/utils/laptopUtils";
 import { collectLaptops, updateLaptops, refreshBrandModels } from "@/utils/laptop";
 import type { Product } from "@/types/product";
+import type { SortOption } from "@/components/laptops/LaptopSort";
 
 export { collectLaptops, updateLaptops, refreshBrandModels };
 
 export const ITEMS_PER_PAGE = 50;
 
-export const useLaptops = (page: number = 1) => {
+export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc') => {
   const query = useQuery({
-    queryKey: ['laptops', page],
+    queryKey: ['laptops', page, sortBy],
     queryFn: async () => {
       try {
-        console.log('Fetching laptops from Supabase for page:', page);
+        console.log('Fetching laptops from Supabase for page:', page, 'with sort:', sortBy);
         
         // First get a count of all laptop products
         const { count: totalCount, error: countError } = await supabase
@@ -34,18 +35,39 @@ export const useLaptops = (page: number = 1) => {
         const start = (page - 1) * ITEMS_PER_PAGE;
         const end = start + ITEMS_PER_PAGE - 1;
 
-        // Fetch paginated laptops with review count-based sorting
-        const { data: laptops, error } = await supabase
+        // Start building the query
+        let query = supabase
           .from('products')
           .select(`
             *,
             product_reviews (*)
           `)
-          .eq('is_laptop', true)
-          // Order by number of ratings first, then by rating
-          .order('rating_count', { ascending: false })
-          .order('rating', { ascending: false })
-          .range(start, end);
+          .eq('is_laptop', true);
+
+        // Apply sorting based on the sortBy parameter
+        switch (sortBy) {
+          case 'price-asc':
+            query = query.order('current_price', { ascending: true, nullsLast: true });
+            break;
+          case 'price-desc':
+            query = query.order('current_price', { ascending: false, nullsLast: true });
+            break;
+          case 'rating-desc':
+            // First by rating count, then by rating
+            query = query
+              .order('rating_count', { ascending: false })
+              .order('rating', { ascending: false });
+            break;
+          case 'performance-desc':
+            query = query.order('processor_score', { ascending: false, nullsLast: true });
+            break;
+        }
+
+        // Apply pagination
+        query = query.range(start, end);
+
+        // Execute the query
+        const { data: laptops, error } = await query;
 
         if (error) {
           console.error('Error fetching laptops:', error);
@@ -63,6 +85,7 @@ export const useLaptops = (page: number = 1) => {
 
         console.log('Laptops data fetched:', {
           page,
+          sortBy,
           fetchedCount: laptops.length,
           start,
           end
