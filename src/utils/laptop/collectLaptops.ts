@@ -52,7 +52,7 @@ export async function collectLaptops() {
       toast({
         title: "Collection already in progress",
         description: `A collection is already running (started ${Math.round(timeElapsed / 60)} minutes ago). Please wait for it to complete or try again in a few minutes.`,
-        variant: "warning",
+        variant: "default"
       });
       return null;
     }
@@ -147,3 +147,4 @@ export async function collectLaptops() {
     throw error;
   }
 }
+
