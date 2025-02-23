@@ -22,7 +22,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const checkAdminRole = async (userId: string | undefined) => {
+    console.log('🔍 Checking admin role for user:', userId);
+    
     if (!userId) {
+      console.log('❌ No user ID provided');
       setIsAdmin(false);
       setIsLoading(false);
       return;
@@ -34,7 +37,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .rpc('has_role', { _role: 'admin' });
 
       if (error) {
-        console.error('Error checking admin role:', error);
+        console.error('❌ Error checking admin role:', error);
         toast({
           title: "Error",
           description: "Failed to check admin permissions",
@@ -42,25 +45,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
         setIsAdmin(false);
       } else {
-        console.log('Admin role check result:', data);
+        console.log('✅ Admin role check result:', data);
         setIsAdmin(data ?? false);
       }
     } catch (error) {
-      console.error('Error checking admin role:', error);
+      console.error('❌ Error checking admin role:', error);
       setIsAdmin(false);
     }
     setIsLoading(false);
   };
 
   useEffect(() => {
+    console.log('🔄 Auth context initialized');
+    
     // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('📍 Current session:', session?.user?.email);
       setUser(session?.user ?? null);
       checkAdminRole(session?.user?.id);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔔 Auth state changed:', event, session?.user?.email);
       setUser(session?.user ?? null);
       checkAdminRole(session?.user?.id);
     });
