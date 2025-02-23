@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { Product } from "@/types/product";
+import { useEffect } from "react";
 
 export type FilterOptions = {
   priceRange: { min: number; max: number };
@@ -35,6 +36,19 @@ type FilterSectionProps = {
 };
 
 const FilterSection = ({ title, options, selectedOptions, onChange }: FilterSectionProps) => {
+  const optionsArray = Array.from(options);
+  
+  useEffect(() => {
+    if (title === "Brand") {
+      console.log('Brand FilterSection:', {
+        optionsCount: optionsArray.length,
+        options: optionsArray,
+        selectedCount: selectedOptions.size,
+        selected: Array.from(selectedOptions)
+      });
+    }
+  }, [title, options, selectedOptions]);
+
   const handleCheckboxChange = (option: string, checked: boolean) => {
     const newSelected = new Set(selectedOptions);
     if (checked) {
@@ -53,21 +67,25 @@ const FilterSection = ({ title, options, selectedOptions, onChange }: FilterSect
       <AccordionContent>
         <ScrollArea className="h-[200px] rounded-md border">
           <div className="p-4 space-y-2">
-            {Array.from(options).map((option) => (
-              <div key={option} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`${title}-${option}`}
-                  checked={selectedOptions.has(option)}
-                  onCheckedChange={(checked) => handleCheckboxChange(option, checked === true)}
-                />
-                <label
-                  htmlFor={`${title}-${option}`}
-                  className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {option}
-                </label>
-              </div>
-            ))}
+            {optionsArray.length > 0 ? (
+              optionsArray.map((option) => (
+                <div key={option} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`${title}-${option}`}
+                    checked={selectedOptions.has(option)}
+                    onCheckedChange={(checked) => handleCheckboxChange(option, checked === true)}
+                  />
+                  <label
+                    htmlFor={`${title}-${option}`}
+                    className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {option}
+                  </label>
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-muted-foreground">No options available</div>
+            )}
           </div>
         </ScrollArea>
       </AccordionContent>
@@ -85,6 +103,15 @@ export function LaptopFilters({
   screenSizes,
   brands,
 }: LaptopFiltersProps) {
+  useEffect(() => {
+    console.log('LaptopFilters props:', {
+      brandsSize: brands.size,
+      brandsArray: Array.from(brands),
+      filtersSize: filters.brands.size,
+      filtersArray: Array.from(filters.brands)
+    });
+  }, [brands, filters.brands]);
+
   const allSections = ["Brand", "Processor", "RAM", "Storage", "Graphics", "Screen Size"];
 
   return (
