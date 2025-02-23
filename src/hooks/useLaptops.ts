@@ -113,16 +113,8 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
           };
         }
 
-        console.log('Laptops data fetched:', {
-          page,
-          sortBy,
-          fetchedCount: laptops.length,
-          start,
-          end,
-          firstLaptopPrice: laptops[0]?.current_price,
-          lastLaptopPrice: laptops[laptops.length - 1]?.current_price,
-          firstLaptopWilsonScore: laptops[0]?.wilson_score
-        });
+        // Log the raw data to verify brand values
+        console.log('Raw laptops data:', laptops.map(l => ({ id: l.id, brand: l.brand })));
 
         // Process and return the laptops
         const processedLaptops = laptops.map(laptop => {
@@ -151,6 +143,7 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
           // Return a complete laptop object that matches the Product type
           return {
             ...laptop,
+            brand: laptop.brand || 'Unknown', // Ensure brand is never null/undefined
             product_url: laptop.product_url || null,
             last_checked: laptop.last_checked || null,
             created_at: laptop.created_at || null,
@@ -162,6 +155,9 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
 
         const finalLaptops = processedLaptops.map(laptop => processLaptopData(laptop as unknown as Product));
         
+        // Log processed laptops brands
+        console.log('Processed laptops brands:', finalLaptops.map(l => l.brand));
+
         return {
           laptops: finalLaptops,
           totalCount: totalCount || 0,
