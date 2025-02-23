@@ -1,5 +1,5 @@
 
-import { ReloadIcon, UpdateIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import { ReloadIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { LaptopSort, type SortOption } from "@/components/laptops/LaptopSort";
 
@@ -17,8 +17,6 @@ export function LaptopToolbar({
   totalLaptops,
   sortBy,
   onSortChange,
-  onCollectLaptops,
-  onUpdateLaptops,
   isLoading,
   isRefetching
 }: LaptopToolbarProps) {
@@ -27,12 +25,6 @@ export function LaptopToolbar({
     isRefetching, 
     totalLaptops,
   });
-
-  const handleCollectClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    if (isLoading || isRefetching) return;
-    onCollectLaptops();
-  };
 
   return (
     <div className="mb-8 space-y-4">
@@ -47,32 +39,10 @@ export function LaptopToolbar({
             </>
           )}
         </div>
-        <div className="flex gap-4 items-center">
-          <LaptopSort
-            sortBy={sortBy}
-            onSortChange={onSortChange}
-          />
-          <div className="flex gap-2">
-            <Button
-              onClick={onUpdateLaptops}
-              disabled={isLoading || isRefetching}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <UpdateIcon className="h-4 w-4" />
-              Update Laptops
-            </Button>
-            <Button
-              onClick={handleCollectClick}
-              disabled={isLoading || isRefetching}
-              className="flex items-center gap-2"
-              type="button"
-            >
-              <MagnifyingGlassIcon className="h-4 w-4" />
-              Discover Laptops
-            </Button>
-          </div>
-        </div>
+        <LaptopSort
+          sortBy={sortBy}
+          onSortChange={onSortChange}
+        />
       </div>
     </div>
   );
