@@ -85,78 +85,79 @@ export function LaptopFilters({
   screenSizes,
   brands,
 }: LaptopFiltersProps) {
-  // Create an array of all section titles to use as default expanded values
   const allSections = ["Brand", "Processor", "RAM", "Storage", "Graphics", "Screen Size"];
 
   return (
-    <div className="space-y-6">
-      {/* Price Range */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Price Range</Label>
-        <div className="flex gap-2 items-center">
-          <Input
-            type="number"
-            placeholder="Min"
-            value={filters.priceRange.min}
-            onChange={(e) => onFiltersChange({
-              ...filters,
-              priceRange: { ...filters.priceRange, min: Number(e.target.value) }
-            })}
-            className="h-8 text-sm"
-          />
-          <span className="text-sm text-gray-500">to</span>
-          <Input
-            type="number"
-            placeholder="Max"
-            value={filters.priceRange.max}
-            onChange={(e) => onFiltersChange({
-              ...filters,
-              priceRange: { ...filters.priceRange, max: Number(e.target.value) }
-            })}
-            className="h-8 text-sm"
-          />
+    <ScrollArea className="h-[calc(100vh-8rem)] pr-4">
+      <div className="space-y-6">
+        {/* Price Range */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Price Range</Label>
+          <div className="flex gap-2 items-center">
+            <Input
+              type="number"
+              placeholder="Min"
+              value={filters.priceRange.min}
+              onChange={(e) => onFiltersChange({
+                ...filters,
+                priceRange: { ...filters.priceRange, min: Number(e.target.value) }
+              })}
+              className="h-8 text-sm"
+            />
+            <span className="text-sm text-gray-500">to</span>
+            <Input
+              type="number"
+              placeholder="Max"
+              value={filters.priceRange.max}
+              onChange={(e) => onFiltersChange({
+                ...filters,
+                priceRange: { ...filters.priceRange, max: Number(e.target.value) }
+              })}
+              className="h-8 text-sm"
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Filter Sections */}
-      <Accordion type="multiple" defaultValue={allSections} className="w-full">
-        <FilterSection
-          title="Brand"
-          options={brands}
-          selectedOptions={filters.brands}
-          onChange={(newBrands) => onFiltersChange({ ...filters, brands: newBrands })}
-        />
-        <FilterSection
-          title="Processor"
-          options={processors}
-          selectedOptions={filters.processors}
-          onChange={(newProcessors) => onFiltersChange({ ...filters, processors: newProcessors })}
-        />
-        <FilterSection
-          title="RAM"
-          options={ramSizes}
-          selectedOptions={filters.ramSizes}
-          onChange={(newRamSizes) => onFiltersChange({ ...filters, ramSizes: newRamSizes })}
-        />
-        <FilterSection
-          title="Storage"
-          options={storageOptions}
-          selectedOptions={filters.storageOptions}
-          onChange={(newStorageOptions) => onFiltersChange({ ...filters, storageOptions: newStorageOptions })}
-        />
-        <FilterSection
-          title="Graphics"
-          options={graphicsCards}
-          selectedOptions={filters.graphicsCards}
-          onChange={(newGraphicsCards) => onFiltersChange({ ...filters, graphicsCards: newGraphicsCards })}
-        />
-        <FilterSection
-          title="Screen Size"
-          options={screenSizes}
-          selectedOptions={filters.screenSizes}
-          onChange={(newScreenSizes) => onFiltersChange({ ...filters, screenSizes: newScreenSizes })}
-        />
-      </Accordion>
-    </div>
+        {/* Filter Sections */}
+        <Accordion type="multiple" defaultValue={allSections} className="w-full">
+          <FilterSection
+            title="Brand"
+            options={brands}
+            selectedOptions={filters.brands}
+            onChange={(newBrands) => onFiltersChange({ ...filters, brands: newBrands })}
+          />
+          <FilterSection
+            title="Processor"
+            options={processors}
+            selectedOptions={filters.processors}
+            onChange={(newProcessors) => onFiltersChange({ ...filters, processors: newProcessors })}
+          />
+          <FilterSection
+            title="RAM"
+            options={ramSizes}
+            selectedOptions={filters.ramSizes}
+            onChange={(newRamSizes) => onFiltersChange({ ...filters, ramSizes: newRamSizes })}
+          />
+          <FilterSection
+            title="Storage"
+            options={storageOptions}
+            selectedOptions={filters.storageOptions}
+            onChange={(newStorageOptions) => onFiltersChange({ ...filters, storageOptions: newStorageOptions })}
+          />
+          <FilterSection
+            title="Graphics"
+            options={graphicsCards}
+            selectedOptions={filters.graphicsCards}
+            onChange={(newGraphicsCards) => onFiltersChange({ ...filters, graphicsCards: newGraphicsCards })}
+          />
+          <FilterSection
+            title="Screen Size"
+            options={screenSizes}
+            selectedOptions={filters.screenSizes}
+            onChange={(newScreenSizes) => onFiltersChange({ ...filters, screenSizes: newScreenSizes })}
+          />
+        </Accordion>
+      </div>
+    </ScrollArea>
   );
 }
