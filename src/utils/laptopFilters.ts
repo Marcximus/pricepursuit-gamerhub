@@ -32,35 +32,39 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
 
     // Processor Filter
     if (filters.processors.size > 0 && laptop.processor) {
-      if (!Array.from(filters.processors).some(p => laptop.processor?.includes(p))) {
+      if (!Array.from(filters.processors).some(p => laptop.processor?.toLowerCase().includes(p.toLowerCase()))) {
         return false;
       }
     }
 
     // RAM Filter
     if (filters.ramSizes.size > 0 && laptop.ram) {
-      if (!Array.from(filters.ramSizes).some(r => laptop.ram?.includes(r))) {
+      const normalizedLaptopRam = laptop.ram.toLowerCase();
+      if (!Array.from(filters.ramSizes).some(r => normalizedLaptopRam.includes(r.toLowerCase()))) {
         return false;
       }
     }
 
     // Storage Filter
     if (filters.storageOptions.size > 0 && laptop.storage) {
-      if (!Array.from(filters.storageOptions).some(s => laptop.storage?.includes(s))) {
+      const normalizedLaptopStorage = laptop.storage.toLowerCase();
+      if (!Array.from(filters.storageOptions).some(s => normalizedLaptopStorage.includes(s.toLowerCase()))) {
         return false;
       }
     }
 
     // Graphics Filter
     if (filters.graphicsCards.size > 0 && laptop.graphics) {
-      if (!Array.from(filters.graphicsCards).some(g => laptop.graphics?.includes(g))) {
+      const normalizedLaptopGraphics = laptop.graphics.toLowerCase();
+      if (!Array.from(filters.graphicsCards).some(g => normalizedLaptopGraphics.includes(g.toLowerCase()))) {
         return false;
       }
     }
 
     // Screen Size Filter
     if (filters.screenSizes.size > 0 && laptop.screen_size) {
-      if (!Array.from(filters.screenSizes).some(s => laptop.screen_size?.includes(s))) {
+      const normalizedLaptopScreenSize = laptop.screen_size.toLowerCase();
+      if (!Array.from(filters.screenSizes).some(s => normalizedLaptopScreenSize.includes(s.toLowerCase()))) {
         return false;
       }
     }

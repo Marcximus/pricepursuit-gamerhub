@@ -77,7 +77,7 @@ const normalizeProcessor = (processor: string): string => {
 
 export const useLaptopFilters = (laptops: Product[] | undefined, allFilteredLaptops?: Product[]) => {
   return useMemo(() => {
-    const datasetForFilters = allFilteredLaptops || laptops;
+    const datasetForFilters = laptops; // Use original laptops dataset for generating filter options
 
     const getUniqueValues = (key: FilterableProductKeys) => {
       if (!datasetForFilters || datasetForFilters.length === 0) {
@@ -112,10 +112,20 @@ export const useLaptopFilters = (laptops: Product[] | undefined, allFilteredLapt
 
       // Create a unique set of normalized values and sort them
       const uniqueValues = Array.from(new Set(validValues)).sort((a, b) => {
-        if (key === 'ram' || key === 'storage') {
-          // Extract numeric values for proper sorting
-          const getNumber = (str: string) => parseInt(str.match(/\d+/)?.[0] || '0');
-          return getNumber(a) - getNumber(b);
+        if (key === 'ram') {
+          // Extract numeric values for proper RAM sorting
+          const getRAMValue = (str: string) => parseInt(str.match(/\d+/)?.[0] || '0');
+          return getRAMValue(a) - getRAMValue(b);
+        }
+        if (key === 'storage') {
+          // Extract numeric values for proper storage sorting
+          const getStorageValue = (str: string) => {
+            const match = str.match(/(\d+)\s*(TB|GB)/i);
+            if (!match) return 0;
+            const [, value, unit] = match;
+            return parseInt(value) * (unit.toLowerCase() === 'tb' ? 1024 : 1);
+          };
+          return getStorageValue(a) - getStorageValue(b);
         }
         return a.localeCompare(b);
       });
@@ -149,6 +159,5 @@ export const useLaptopFilters = (laptops: Product[] | undefined, allFilteredLapt
     });
 
     return filterOptions;
-  }, [laptops, allFilteredLaptops]);
+  }, [laptops]);
 };
-
