@@ -9,12 +9,18 @@ export const processLaptopsAI = async () => {
   try {
     console.log('Starting AI processing for laptops...');
     
-    // Get laptops that need AI processing
+    // Get laptops that need AI processing, prioritizing:
+    // 1. Never processed ones (ai_processing_status = 'pending')
+    // 2. Failed ones (ai_processing_status = 'error')
+    // 3. Interrupted ones (ai_processing_status = 'processing')
+    // Order by created_at to process oldest first
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
-      .select('id, asin')
-      .eq('ai_processing_status', 'pending')
-      .order('created_at', { ascending: true });
+      .select('id, asin, ai_processing_status')
+      .in('ai_processing_status', ['pending', 'error', 'processing'])
+      .order('ai_processing_status', { ascending: true, nullsFirst: true }) // pending first
+      .order('created_at', { ascending: true }) // oldest first
+      .limit(100); // Process in batches to avoid overloading
 
     if (fetchError) {
       console.error('Error fetching laptops:', fetchError);
@@ -37,17 +43,27 @@ export const processLaptopsAI = async () => {
     }
 
     console.log(`Found ${laptops.length} laptops to process`);
+    let processedCount = 0;
+    let errorCount = 0;
 
     // Process laptops one at a time
     for (const laptop of laptops) {
       try {
-        // Update status to in_progress
-        await supabase
+        console.log(`Processing laptop ${laptop.asin} (current status: ${laptop.ai_processing_status})...`);
+
+        // Update status to in_progress with timestamp
+        const { error: updateError } = await supabase
           .from('products')
-          .update({ ai_processing_status: 'processing' })
+          .update({ 
+            ai_processing_status: 'processing',
+            ai_processed_at: new Date().toISOString() 
+          })
           .eq('id', laptop.id);
 
-        console.log(`Processing laptop ${laptop.asin}...`);
+        if (updateError) {
+          console.error(`Error updating status for laptop ${laptop.asin}:`, updateError);
+          continue;
+        }
 
         // Call the process-laptops-ai edge function
         const { error: processError } = await supabase.functions.invoke('process-laptops-ai', {
@@ -56,8 +72,9 @@ export const processLaptopsAI = async () => {
 
         if (processError) {
           console.error('Error processing laptop:', processError);
+          errorCount++;
           
-          // Update status to error
+          // Update status to error with timestamp
           await supabase
             .from('products')
             .update({
@@ -74,11 +91,15 @@ export const processLaptopsAI = async () => {
           continue;
         }
 
+        processedCount++;
+        console.log(`Successfully processed laptop ${laptop.asin}`);
+
         // Add delay between requests
         await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
 
       } catch (error) {
         console.error(`Error processing laptop ${laptop.asin}:`, error);
+        errorCount++;
         
         // Update status to error
         await supabase
@@ -91,13 +112,20 @@ export const processLaptopsAI = async () => {
       }
     }
 
+    const summary = `Processed ${processedCount} laptops (${errorCount} errors)`;
+    console.log(summary);
+
     toast({
       title: "Processing Complete",
-      description: `Completed processing ${laptops.length} laptops`,
-      variant: "default"
+      description: summary,
+      variant: errorCount > 0 ? "destructive" : "default"
     });
 
-    return { success: true, processed: laptops.length };
+    return { 
+      success: true, 
+      processed: processedCount,
+      errors: errorCount 
+    };
 
   } catch (error) {
     console.error('Failed to start AI processing:', error);
