@@ -78,13 +78,15 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
         switch (sortBy) {
           case 'price-asc':
             query = query
-              .order('current_price', { ascending: true, nullsFirst: false })
-              .order('wilson_score', { ascending: false });
+              .not('current_price', 'is', null)
+              .order('current_price', { ascending: true })
+              .or('current_price.is.null,current_price.eq.0');
             break;
           case 'price-desc':
             query = query
-              .order('current_price', { ascending: false, nullsFirst: false })
-              .order('wilson_score', { ascending: false });
+              .not('current_price', 'is', null)
+              .order('current_price', { ascending: false })
+              .or('current_price.is.null,current_price.eq.0');
             break;
           case 'rating-desc':
             query = query
