@@ -13,7 +13,6 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -23,38 +22,24 @@ const Login = () => {
     return null;
   }
 
-  const handleAuthSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      if (isSignUp) {
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-        });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-        if (signUpError) throw signUpError;
+      if (error) throw error;
 
-        toast({
-          title: "Success",
-          description: "Account created successfully. Please check your email for verification.",
-        });
-      } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signInError) throw signInError;
-
-        navigate('/', { replace: true });
-      }
+      navigate('/', { replace: true });
     } catch (error: any) {
-      console.error('Auth error:', error);
+      console.error('Login error:', error);
       toast({
-        title: isSignUp ? "Sign up failed" : "Login failed",
-        description: error.message || `An error occurred during ${isSignUp ? 'sign up' : 'login'}`,
+        title: "Login failed",
+        description: error.message || "Invalid login credentials",
         variant: "destructive",
       });
     } finally {
@@ -67,10 +52,10 @@ const Login = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            {isSignUp ? 'Create an account' : 'Sign in to your account'}
+            Sign in to your account
           </h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleAuthSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <Label htmlFor="email">Email address</Label>
@@ -90,7 +75,7 @@ const Login = () => {
                 id="password"
                 name="password"
                 type="password"
-                autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -98,34 +83,20 @@ const Login = () => {
             </div>
           </div>
 
-          <div className="flex flex-col space-y-4">
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isSignUp ? 'Creating account...' : 'Signing in...'}
-                </>
-              ) : (
-                isSignUp ? 'Create account' : 'Sign in'
-              )}
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={() => setIsSignUp(!isSignUp)}
-              disabled={isLoading}
-            >
-              {isSignUp 
-                ? 'Already have an account? Sign in' 
-                : "Don't have an account? Sign up"}
-            </Button>
-          </div>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              'Sign in'
+            )}
+          </Button>
         </form>
       </div>
     </div>
@@ -133,3 +104,4 @@ const Login = () => {
 };
 
 export default Login;
+
