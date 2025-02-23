@@ -1,6 +1,11 @@
 
 project_id = "kkebyebrhdpcwqnxhjcx"
 
+[process-laptops-ai.secrets]
+SUPABASE_URL = "vaulted"
+SUPABASE_SERVICE_ROLE_KEY = "vaulted"
+DEEPSEEK_API_KEY = "vaulted"
+
 [scheduled-update.secrets]
 SUPABASE_URL = "vaulted"
 SUPABASE_SERVICE_ROLE_KEY = "vaulted"
@@ -12,4 +17,3 @@ SUPABASE_URL = "vaulted"
 SUPABASE_SERVICE_ROLE_KEY = "vaulted"
 OXYLABS_USERNAME = "vaulted"
 OXYLABS_PASSWORD = "vaulted"
-

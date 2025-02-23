@@ -90,6 +90,8 @@ export type Database = {
       }
       products: {
         Row: {
+          ai_processed_at: string | null
+          ai_processing_status: string | null
           asin: string
           average_rating: number | null
           battery_life: string | null
@@ -126,6 +128,8 @@ export type Database = {
           wilson_score: number | null
         }
         Insert: {
+          ai_processed_at?: string | null
+          ai_processing_status?: string | null
           asin: string
           average_rating?: number | null
           battery_life?: string | null
@@ -162,6 +166,8 @@ export type Database = {
           wilson_score?: number | null
         }
         Update: {
+          ai_processed_at?: string | null
+          ai_processing_status?: string | null
           asin?: string
           average_rating?: number | null
           battery_life?: string | null
