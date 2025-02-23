@@ -22,8 +22,8 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
     return `$${Math.round(price).toLocaleString()}`;
   };
 
-  // Handle case where price is null/undefined
-  if (!currentPrice) {
+  // Handle case where price is null/undefined/0
+  if (!currentPrice || currentPrice === 0) {
     return (
       <a 
         href={productUrl}
@@ -32,23 +32,7 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
         className="block text-center"
       >
         <div className="text-sm text-blue-600 hover:text-blue-800">
-          Click to check price
-        </div>
-      </a>
-    );
-  }
-
-  // Handle case where price is 0
-  if (currentPrice === 0) {
-    return (
-      <a 
-        href={productUrl}
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="block text-center"
-      >
-        <div className="text-sm text-blue-600 hover:text-blue-800">
-          Click to check price
+          Click for current price
         </div>
       </a>
     );
@@ -72,3 +56,4 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
     </a>
   );
 }
+
