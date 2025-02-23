@@ -8,10 +8,10 @@ const LAPTOP_BRANDS = [
   'Alienware', 'Vaio', 'Fsjun', 'Jumper', 'Xiaomi', 'ACEMAGIC'
 ];
 
-const PARALLEL_BATCHES = 5;
-const DELAY_BETWEEN_BATCHES = 2000;
+const PARALLEL_BATCHES = 3; // Reduced from 5 to 3 for better stability
+const DELAY_BETWEEN_BATCHES = 3000; // Increased from 2000 to 3000ms
 const PAGES_PER_BRAND = 5;
-const STALE_COLLECTION_MINUTES = 15; // Reduced from 30 to 15 minutes
+const STALE_COLLECTION_MINUTES = 30; // Increased back to 30 minutes since we'll handle timeouts better
 
 export async function collectLaptops() {
   console.log('collectLaptops function called');
@@ -19,7 +19,7 @@ export async function collectLaptops() {
   try {
     console.log('Checking collection status...');
 
-    // Reset any stale collection statuses (older than 15 minutes)
+    // Reset any stale collection statuses
     const staleTimeout = new Date(Date.now() - STALE_COLLECTION_MINUTES * 60 * 1000).toISOString();
     const { error: cleanupError } = await supabase
       .from('products')
@@ -32,7 +32,7 @@ export async function collectLaptops() {
       throw cleanupError;
     }
 
-    // Get current in-progress collections that aren't stale
+    // Check for active collections
     const { data: activeCollections, error: statusError } = await supabase
       .from('products')
       .select('collection_status, last_collection_attempt')
@@ -63,7 +63,14 @@ export async function collectLaptops() {
       brandBatches.push(LAPTOP_BRANDS.slice(i, Math.min(i + PARALLEL_BATCHES, LAPTOP_BRANDS.length)));
     }
 
-    console.log(`Processing ${brandBatches.length} batch groups with ${PARALLEL_BATCHES} brands per group, ${PAGES_PER_BRAND} pages per brand`);
+    console.log(`Processing ${brandBatches.length} batch groups with ${PARALLEL_BATCHES} brands per group`);
+
+    // Show initial toast
+    toast({
+      title: "Collection Started",
+      description: `Starting collection for ${LAPTOP_BRANDS.length} brands in ${brandBatches.length} batches. This may take a while.`,
+      variant: "default"
+    });
 
     // Process each batch group
     for (const [groupIndex, batchGroup] of brandBatches.entries()) {
@@ -85,27 +92,46 @@ export async function collectLaptops() {
         console.log(`Starting collection for ${brand} (${brandIndex + 1}/${batchGroup.length})`);
         
         try {
-          const { error: functionError } = await supabase.functions.invoke('collect-laptops', {
-            body: {
-              brands: [brand],
-              pages_per_brand: PAGES_PER_BRAND,
-              batch_number: groupIndex * PARALLEL_BATCHES + brandIndex + 1,
-              total_batches: LAPTOP_BRANDS.length
-            }
-          });
+          // Process one page at a time to avoid timeouts
+          for (let page = 1; page <= PAGES_PER_BRAND; page++) {
+            console.log(`Processing ${brand} page ${page}/${PAGES_PER_BRAND}`);
+            
+            const { error: functionError } = await supabase.functions.invoke('collect-laptops', {
+              body: {
+                brands: [brand],
+                pages_per_brand: 1, // Process only one page per call
+                current_page: page,
+                batch_number: groupIndex * PARALLEL_BATCHES + brandIndex + 1,
+                total_batches: LAPTOP_BRANDS.length
+              }
+            });
 
-          if (functionError) {
-            console.error(`Edge function error for ${brand}:`, functionError);
-            throw functionError;
+            if (functionError) {
+              console.error(`Edge function error for ${brand} page ${page}:`, functionError);
+              // Continue to next page even if this one fails
+              continue;
+            }
+
+            // Add small delay between pages
+            if (page < PAGES_PER_BRAND) {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
           }
 
-          // Update status to completed
+          // Update status to completed after all pages are processed
           await supabase
             .from('products')
             .update({ collection_status: 'completed' })
             .eq('brand', brand);
 
-          console.log(`Successfully processed ${brand}`);
+          console.log(`Successfully processed all pages for ${brand}`);
+          
+          // Show progress toast
+          toast({
+            title: "Brand Completed",
+            description: `Finished collecting data for ${brand}`,
+            variant: "default"
+          });
         } catch (brandError) {
           console.error(`Error processing ${brand}:`, brandError);
           
@@ -114,6 +140,12 @@ export async function collectLaptops() {
             .from('products')
             .update({ collection_status: 'pending' })
             .eq('brand', brand);
+            
+          toast({
+            title: "Brand Failed",
+            description: `Failed to collect data for ${brand}: ${brandError.message}`,
+            variant: "destructive"
+          });
         }
       });
 
@@ -128,6 +160,13 @@ export async function collectLaptops() {
     }
 
     console.log('Collection process completed successfully');
+    
+    toast({
+      title: "Collection Complete",
+      description: `Successfully processed ${LAPTOP_BRANDS.length} brands`,
+      variant: "default"
+    });
+    
     return { batches: brandBatches.length };
 
   } catch (error) {

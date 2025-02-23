@@ -17,55 +17,46 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const { brands, pages_per_brand } = await req.json();
+    const { brands, current_page } = await req.json();
 
-    console.log(`[Function] Processing brands: ${brands.join(', ')}`);
+    console.log(`[Function] Processing page ${current_page} for brands: ${brands.join(', ')}`);
 
-    // Process each brand in the background
+    // Process brands in the background
     const processAllBrands = async () => {
       for (const brand of brands) {
-        console.log(`[Function] Processing brand: ${brand}`);
-        
         try {
-          for (let page = 1; page <= pages_per_brand; page++) {
-            // Step 1: Fetch data from Oxylabs
-            const oxylabsData = await fetchLaptopData(brand, page);
-            
-            if (!oxylabsData.results?.[0]?.content?.results) {
-              console.warn(`[Oxylabs] No results found for ${brand} on page ${page}`);
+          // Fetch data for this specific page
+          const oxylabsData = await fetchLaptopData(brand, current_page);
+          
+          if (!oxylabsData.results?.[0]?.content?.results) {
+            console.warn(`[Oxylabs] No results found for ${brand} on page ${current_page}`);
+            continue;
+          }
+
+          const results = [
+            ...(oxylabsData.results[0].content.results.paid || []),
+            ...(oxylabsData.results[0].content.results.organic || [])
+          ];
+
+          console.log(`[Function] Processing ${results.length} results for ${brand} page ${current_page}`);
+
+          for (const result of results) {
+            if (!result.asin) {
+              console.warn('[Validation] Skipping result without ASIN');
               continue;
             }
 
-            const results = [
-              ...(oxylabsData.results[0].content.results.paid || []),
-              ...(oxylabsData.results[0].content.results.organic || [])
-            ];
-
-            for (const result of results) {
-              if (!result.asin) {
-                console.warn('[Validation] Skipping result without ASIN');
-                continue;
-              }
-
-              try {
-                // Step 2: Process with DeepSeek
-                const processedData = await processWithDeepseek(result);
-                
-                // Step 3: Update database
-                await upsertProduct(supabase, result, processedData);
-              } catch (productError) {
-                console.error(`[Error] Processing product ${result.asin}:`, productError);
-                continue;
-              }
-            }
-
-            // Add a small delay between pages to prevent rate limiting
-            if (page < pages_per_brand) {
-              await new Promise(resolve => setTimeout(resolve, 1000));
+            try {
+              const processedData = await processWithDeepseek(result);
+              await upsertProduct(supabase, result, processedData);
+            } catch (productError) {
+              console.error(`[Error] Processing product ${result.asin}:`, productError);
+              continue;
             }
           }
+
         } catch (brandError) {
-          console.error(`[Error] Processing brand ${brand}:`, brandError);
+          console.error(`[Error] Processing brand ${brand} page ${current_page}:`, brandError);
           continue;
         }
       }
@@ -74,8 +65,12 @@ serve(async (req) => {
     // Start processing in the background
     EdgeRuntime.waitUntil(processAllBrands());
 
+    // Return immediate response
     return new Response(
-      JSON.stringify({ success: true, message: 'Collection process started' }),
+      JSON.stringify({ 
+        success: true, 
+        message: `Started processing page ${current_page} for brands: ${brands.join(', ')}` 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
@@ -90,3 +85,4 @@ serve(async (req) => {
     );
   }
 });
+
