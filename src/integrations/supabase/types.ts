@@ -123,6 +123,7 @@ export type Database = {
           total_reviews: number | null
           update_status: string | null
           weight: string | null
+          wilson_score: number | null
         }
         Insert: {
           asin: string
@@ -158,6 +159,7 @@ export type Database = {
           total_reviews?: number | null
           update_status?: string | null
           weight?: string | null
+          wilson_score?: number | null
         }
         Update: {
           asin?: string
@@ -193,6 +195,7 @@ export type Database = {
           total_reviews?: number | null
           update_status?: string | null
           weight?: string | null
+          wilson_score?: number | null
         }
         Relationships: []
       }
