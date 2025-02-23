@@ -23,6 +23,7 @@ export const useLaptops = (
     queryKey: ['all-laptops', sortBy, page, JSON.stringify(filters)],
     queryFn: async () => {
       try {
+        // Set a very high limit to get all laptops
         const { data: laptops, error } = await supabase
           .from('products')
           .select(`
@@ -59,7 +60,8 @@ export const useLaptops = (
               helpful_votes
             )
           `)
-          .eq('is_laptop', true);
+          .eq('is_laptop', true)
+          .limit(100000); // Set a high limit to ensure we get all laptops
 
         if (error) {
           console.error('Error fetching laptops:', error);
@@ -96,9 +98,15 @@ export const useLaptops = (
 
         // Apply filters, sorting, and pagination using utility functions
         const filteredLaptops = filterLaptops(processedLaptops, filters);
-        console.log('Before sorting:', { sortBy, laptopCount: filteredLaptops.length });
+        console.log('Before sorting:', { 
+          sortBy, 
+          laptopCount: filteredLaptops.length 
+        });
         const sortedLaptops = sortLaptops(filteredLaptops, sortBy);
-        console.log('After sorting:', { sortBy, laptopCount: sortedLaptops.length });
+        console.log('After sorting:', { 
+          sortBy, 
+          laptopCount: sortedLaptops.length 
+        });
         const paginatedResults = paginateLaptops(sortedLaptops, page, ITEMS_PER_PAGE);
 
         console.log('Client-side filtering/pagination results:', {
@@ -127,3 +135,4 @@ export const useLaptops = (
     refreshBrandModels,
   };
 };
+
