@@ -16,12 +16,21 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       
       // Filter out null/undefined/empty values and normalize strings
       const validValues = laptops
-        .map(laptop => laptop[key])
-        .filter((value): value is string => 
-          value != null && 
-          typeof value === 'string' && 
-          value.trim() !== ''
-        )
+        .map(laptop => {
+          if (key === 'graphics') {
+            console.log('Raw graphics value:', laptop[key], 'from laptop:', laptop.title);
+          }
+          return laptop[key];
+        })
+        .filter((value): value is string => {
+          const isValid = value != null && 
+            typeof value === 'string' && 
+            value.trim() !== '';
+          if (key === 'graphics' && !isValid) {
+            console.log('Filtered out invalid graphics value:', value);
+          }
+          return isValid;
+        })
         .map(value => value.trim());
 
       // Create a unique set of values
@@ -29,7 +38,7 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       
       console.log(`Generated ${key} filter options:`, {
         total: uniqueValues.length,
-        values: uniqueValues
+        values: uniqueValues.slice(0, 20) // Show first 20 values for debugging
       });
       
       return new Set(uniqueValues);
@@ -47,8 +56,7 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
 
     console.log('Generated all filter options:', {
       totalLaptops: laptops?.length,
-      brands: Array.from(filterOptions.brands),
-      totalBrands: filterOptions.brands.size,
+      brands: Array.from(filterOptions.brands).length,
       processors: Array.from(filterOptions.processors).length,
       ram: Array.from(filterOptions.ramSizes).length,
       storage: Array.from(filterOptions.storageOptions).length,

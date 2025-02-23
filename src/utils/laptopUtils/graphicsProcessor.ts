@@ -17,6 +17,7 @@ export const processGraphics = (graphics: string | undefined, title: string): st
       cleanedGraphics = 'NVIDIA GeForce ' + cleanedGraphics;
     }
     
+    console.log('Processed existing graphics:', { original: graphics, cleaned: cleanedGraphics });
     return cleanedGraphics;
   }
   
@@ -62,17 +63,21 @@ export const processGraphics = (graphics: string | undefined, title: string): st
         gpu += ' Graphics';
       }
       
+      console.log('Extracted graphics from title:', { title, gpu });
       return gpu;
     }
   }
   
   // Default integrated graphics detection based on processor
   if (title.toLowerCase().includes('ryzen')) {
+    console.log('Detected AMD integrated graphics from Ryzen processor:', title);
     return 'AMD Radeon Graphics';
   } else if (title.includes('Intel')) {
+    console.log('Detected Intel integrated graphics:', title);
     return 'Intel UHD Graphics';
   }
   
   // If no GPU is found, return undefined
+  console.log('No graphics found for:', title);
   return undefined;
 };
