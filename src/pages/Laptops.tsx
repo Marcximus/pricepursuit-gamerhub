@@ -31,7 +31,7 @@ const ComparePriceLaptops = () => {
     refetch: refetchLaptops,
     isRefetching,
     updateLaptops
-  } = useLaptops(currentPage);
+  } = useLaptops(currentPage, sortBy);
 
   const laptops = data?.laptops ?? [];
   const totalCount = data?.totalCount ?? 0;
@@ -39,8 +39,14 @@ const ComparePriceLaptops = () => {
 
   const { toast } = useToast();
 
-  const filteredAndSortedLaptops = useFilteredLaptops(laptops, filters, sortBy);
+  const filteredLaptops = useFilteredLaptops(laptops, filters, 'rating-desc');
+
   const filterOptions = useLaptopFilters(laptops);
+
+  const handleSortChange = (newSortBy: SortOption) => {
+    setSortBy(newSortBy);
+    setCurrentPage(1);
+  };
 
   const handleCollectLaptops = async () => {
     console.log('handleCollectLaptops called in Laptops.tsx');
@@ -54,7 +60,6 @@ const ComparePriceLaptops = () => {
           description: `Started collection process in ${result.batches} batches`,
         });
 
-        // Poll for updates
         const pollInterval = setInterval(async () => {
           const { data: newData } = await refetchLaptops();
           if (newData && newData.laptops.length > 0) {
@@ -66,7 +71,6 @@ const ComparePriceLaptops = () => {
           }
         }, 10000);
 
-        // Clear interval after 5 minutes
         setTimeout(() => clearInterval(pollInterval), 300000);
       }
     } catch (error) {
@@ -120,9 +124,9 @@ const ComparePriceLaptops = () => {
             }
             toolbar={
               <LaptopToolbar
-                totalLaptops={filteredAndSortedLaptops.length}
+                totalLaptops={filteredLaptops.length}
                 sortBy={sortBy}
-                onSortChange={setSortBy}
+                onSortChange={handleSortChange}
                 onCollectLaptops={handleCollectLaptops}
                 onUpdateLaptops={handleUpdateLaptops}
                 isLoading={isLaptopsLoading}
@@ -131,7 +135,7 @@ const ComparePriceLaptops = () => {
             }
             content={
               <LaptopList
-                laptops={filteredAndSortedLaptops}
+                laptops={filteredLaptops}
                 totalCount={totalCount}
                 currentPage={currentPage}
                 totalPages={totalPages}
