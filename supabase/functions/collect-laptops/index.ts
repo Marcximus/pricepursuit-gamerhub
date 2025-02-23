@@ -61,11 +61,19 @@ serve(async (req) => {
 
             for (const product of products) {
               try {
-                // Process with DeepSeek AI
+                // Process with DeepSeek AI using the full OxyLabs response
                 console.log(`Processing product ${product.asin} with DeepSeek AI`);
+                const rawProduct = pageResult.content.results.find(
+                  (r: any) => r.asin === product.asin
+                );
+                
+                if (!rawProduct) {
+                  console.error(`Could not find raw product data for ASIN ${product.asin}`);
+                  continue;
+                }
+
                 const aiProcessedData = await processTitleWithAI(
-                  product.title,
-                  product.description,
+                  rawProduct,
                   DEEPSEEK_API_KEY!
                 );
 

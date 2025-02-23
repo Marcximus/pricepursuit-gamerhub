@@ -8,15 +8,19 @@ export function createDeepSeekClient(apiKey: string) {
   });
 }
 
-export async function processTitleWithAI(title: string, description: string | null, deepseekApiKey: string) {
+export async function processTitleWithAI(productData: any, deepseekApiKey: string) {
   try {
     const openai = createDeepSeekClient(deepseekApiKey);
     
     const prompt = `You MUST respond with ONLY a JSON object and NO additional text or explanation.
 
 Given this product information:
-Title: ${title}
-Description: ${description || 'Not available'}
+Title: ${productData.title || 'Not available'}
+Description: ${productData.description || 'Not available'}
+Features: ${JSON.stringify(productData.feature_bullets || [])}
+Specifications: ${JSON.stringify(productData.specifications || {})}
+Current Price: ${productData.price?.current_price || 'Not available'}
+Original Price: ${productData.price?.original_price || 'Not available'}
 
 Return a valid JSON object with these exact fields in this format:
 {
