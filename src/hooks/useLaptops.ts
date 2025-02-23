@@ -6,36 +6,24 @@ import { processLaptopData } from "@/utils/laptopUtils";
 import { collectLaptops, updateLaptops, refreshBrandModels } from "@/utils/laptop";
 import type { Product } from "@/types/product";
 import type { SortOption } from "@/components/laptops/LaptopSort";
+import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 
 export { collectLaptops, updateLaptops, refreshBrandModels };
 
 export const ITEMS_PER_PAGE = 50;
 
-export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc') => {
+export const useLaptops = (
+  page: number = 1, 
+  sortBy: SortOption = 'rating-desc',
+  filters: FilterOptions
+) => {
   const query = useQuery({
-    queryKey: ['laptops', page, sortBy],
+    queryKey: ['laptops', page, sortBy, filters],
     queryFn: async () => {
       try {
-        console.log('Fetching laptops from Supabase for page:', page, 'with sort:', sortBy);
+        console.log('Fetching laptops with filters:', filters);
         
-        // First get a count of all laptop products
-        const { count: totalCount, error: countError } = await supabase
-          .from('products')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_laptop', true);
-
-        if (countError) {
-          console.error('Error getting laptop count:', countError);
-          throw countError;
-        }
-
-        console.log(`Total laptop count in database: ${totalCount}`);
-
-        // Calculate pagination range
-        const start = (page - 1) * ITEMS_PER_PAGE;
-        const end = start + ITEMS_PER_PAGE - 1;
-
-        // Build the base query
+        // Start building the query
         let query = supabase
           .from('products')
           .select(`
@@ -74,6 +62,48 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
           `)
           .eq('is_laptop', true);
 
+        // Apply filters
+        if (filters.brands.size > 0) {
+          query = query.in('brand', Array.from(filters.brands));
+        }
+        if (filters.processors.size > 0) {
+          query = query.in('processor', Array.from(filters.processors));
+        }
+        if (filters.ramSizes.size > 0) {
+          query = query.in('ram', Array.from(filters.ramSizes));
+        }
+        if (filters.storageOptions.size > 0) {
+          query = query.in('storage', Array.from(filters.storageOptions));
+        }
+        if (filters.graphicsCards.size > 0) {
+          query = query.in('graphics', Array.from(filters.graphicsCards));
+        }
+        if (filters.screenSizes.size > 0) {
+          query = query.in('screen_size', Array.from(filters.screenSizes));
+        }
+        if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
+          if (filters.priceRange.min > 0) {
+            query = query.gte('current_price', filters.priceRange.min);
+          }
+          if (filters.priceRange.max < 10000) {
+            query = query.lte('current_price', filters.priceRange.max);
+          }
+        }
+
+        // First get count of filtered results
+        const { count: totalCount, error: countError } = await query.count();
+        
+        if (countError) {
+          console.error('Error getting filtered laptop count:', countError);
+          throw countError;
+        }
+
+        console.log(`Total filtered laptop count: ${totalCount}`);
+
+        // Calculate pagination range
+        const start = (page - 1) * ITEMS_PER_PAGE;
+        const end = start + ITEMS_PER_PAGE - 1;
+
         // Apply sorting based on the sortBy parameter
         switch (sortBy) {
           case 'price-asc':
@@ -105,7 +135,7 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
         }
 
         if (!laptops || laptops.length === 0) {
-          console.log('No laptops found for current page');
+          console.log('No laptops found for current filters and page');
           return { 
             laptops: [], 
             totalCount: totalCount || 0,
@@ -113,7 +143,7 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
           };
         }
 
-        // Process laptops and ensure brand values
+        // Process laptops
         const processedLaptops = laptops.map(laptop => {
           const reviews = laptop.product_reviews || [];
           
@@ -138,35 +168,12 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
             avgRating = totalRating / reviews.length;
           }
 
-          // Ensure brand is never null/undefined/empty and is properly typed
-          const brand: string = (laptop.brand?.trim() || 'Unknown') as string;
-
-          // Return a complete laptop object that matches the Product type
-          const processedLaptop = {
-            ...laptop,
-            brand, // Use the processed brand value - now properly typed as non-optional string
-            product_url: laptop.product_url || null,
-            last_checked: laptop.last_checked || null,
-            created_at: laptop.created_at || null,
-            average_rating: avgRating,
-            total_reviews: reviews.length,
-            review_data: reviewData
-          } as unknown as Product;
-
-          return processedLaptop;
+          // Return a complete laptop object
+          return processLaptopData(laptop);
         });
 
-        // Apply final processing and log brand information
-        const finalLaptops = processedLaptops.map(laptop => processLaptopData(laptop));
-        
-        // Log processed laptops brands for debugging
-        console.log('Raw laptops data:', laptops.map(l => ({ id: l.id, brand: l.brand })));
-        console.log('Processed laptops brands:', processedLaptops.map(l => ({ id: l.id, brand: l.brand })));
-        console.log('Final laptops brands:', finalLaptops.map(l => ({ id: l.id, brand: l.brand })));
-        console.log('Unique brands:', Array.from(new Set(finalLaptops.map(l => l.brand))));
-
         return {
-          laptops: finalLaptops,
+          laptops: processedLaptops,
           totalCount: totalCount || 0,
           totalPages: Math.ceil((totalCount || 0) / ITEMS_PER_PAGE)
         };

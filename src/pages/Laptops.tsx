@@ -8,7 +8,6 @@ import type { SortOption } from "@/components/laptops/LaptopSort";
 import { LaptopList } from "@/components/laptops/LaptopList";
 import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
-import { useFilteredLaptops } from "@/hooks/useFilteredLaptops";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
 import { collectLaptops } from "@/utils/laptop/collectLaptops";
 
@@ -32,15 +31,13 @@ const ComparePriceLaptops = () => {
     refetch: refetchLaptops,
     isRefetching,
     updateLaptops
-  } = useLaptops(currentPage, sortBy);
+  } = useLaptops(currentPage, sortBy, filters);
 
   const laptops = data?.laptops ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
   const { toast } = useToast();
-
-  const filteredLaptops = useFilteredLaptops(laptops, filters, 'rating-desc');
 
   const filterOptions = useLaptopFilters(laptops);
 
@@ -104,6 +101,11 @@ const ComparePriceLaptops = () => {
     setCurrentPage(page);
   };
 
+  const handleFiltersChange = (newFilters: FilterOptions) => {
+    setFilters(newFilters);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -114,7 +116,7 @@ const ComparePriceLaptops = () => {
             filters={
               <LaptopFilters
                 filters={filters}
-                onFiltersChange={setFilters}
+                onFiltersChange={handleFiltersChange}
                 processors={filterOptions.processors}
                 ramSizes={filterOptions.ramSizes}
                 storageOptions={filterOptions.storageOptions}
@@ -125,7 +127,7 @@ const ComparePriceLaptops = () => {
             }
             toolbar={
               <LaptopToolbar
-                totalLaptops={filteredLaptops.length}
+                totalLaptops={totalCount}
                 sortBy={sortBy}
                 onSortChange={handleSortChange}
                 onCollectLaptops={handleCollectLaptops}
@@ -136,7 +138,7 @@ const ComparePriceLaptops = () => {
             }
             content={
               <LaptopList
-                laptops={filteredLaptops}
+                laptops={laptops}
                 totalCount={totalCount}
                 currentPage={currentPage}
                 totalPages={totalPages}
