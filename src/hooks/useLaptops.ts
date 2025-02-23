@@ -113,13 +113,11 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
           };
         }
 
-        // Log the raw data to verify brand values
-        console.log('Raw laptops data:', laptops.map(l => ({ id: l.id, brand: l.brand })));
-
-        // Process and return the laptops
+        // Process laptops and ensure brand values
         const processedLaptops = laptops.map(laptop => {
           const reviews = laptop.product_reviews || [];
           
+          // Process reviews
           const reviewData = {
             rating_breakdown: {},
             recent_reviews: reviews.map(review => ({
@@ -140,29 +138,32 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
             avgRating = totalRating / reviews.length;
           }
 
-          // Ensure brand is never null/undefined/empty
-          const brand = laptop.brand?.trim() || 'Unknown';
+          // Ensure brand is never null/undefined/empty and is properly typed
+          const brand: string = (laptop.brand?.trim() || 'Unknown') as string;
 
           // Return a complete laptop object that matches the Product type
           const processedLaptop = {
             ...laptop,
-            brand,  // Use the processed brand value
+            brand, // Use the processed brand value - now properly typed as non-optional string
             product_url: laptop.product_url || null,
             last_checked: laptop.last_checked || null,
             created_at: laptop.created_at || null,
             average_rating: avgRating,
             total_reviews: reviews.length,
             review_data: reviewData
-          };
+          } as unknown as Product;
 
           return processedLaptop;
         });
 
-        const finalLaptops = processedLaptops.map(laptop => processLaptopData(laptop as unknown as Product));
+        // Apply final processing and log brand information
+        const finalLaptops = processedLaptops.map(laptop => processLaptopData(laptop));
         
-        // Log processed laptops brands
-        console.log('Processed laptops brands:', finalLaptops.map(l => ({ id: l.id, brand: l.brand })));
-        console.log('Unique brands:', new Set(finalLaptops.map(l => l.brand)));
+        // Log processed laptops brands for debugging
+        console.log('Raw laptops data:', laptops.map(l => ({ id: l.id, brand: l.brand })));
+        console.log('Processed laptops brands:', processedLaptops.map(l => ({ id: l.id, brand: l.brand })));
+        console.log('Final laptops brands:', finalLaptops.map(l => ({ id: l.id, brand: l.brand })));
+        console.log('Unique brands:', Array.from(new Set(finalLaptops.map(l => l.brand))));
 
         return {
           laptops: finalLaptops,
@@ -186,4 +187,3 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
     refreshBrandModels,
   };
 };
-
