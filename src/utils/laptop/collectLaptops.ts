@@ -8,9 +8,10 @@ const LAPTOP_BRANDS = [
   'Alienware', 'Vaio', 'Fsjun', 'Jumper', 'Xiaomi', 'ACEMAGIC'
 ];
 
-const PARALLEL_BATCHES = 5; // Process 5 brands concurrently
-const DELAY_BETWEEN_BATCHES = 2000; // 2 second delay between batch groups
-const PAGES_PER_BRAND = 5; // Increased from 1 to 5 pages per brand
+const PARALLEL_BATCHES = 5;
+const DELAY_BETWEEN_BATCHES = 2000;
+const PAGES_PER_BRAND = 5;
+const STALE_COLLECTION_MINUTES = 15; // Reduced from 30 to 15 minutes
 
 export async function collectLaptops() {
   console.log('collectLaptops function called');
@@ -18,12 +19,13 @@ export async function collectLaptops() {
   try {
     console.log('Checking collection status...');
 
-    // First, reset any stale collection statuses (older than 30 minutes)
+    // Reset any stale collection statuses (older than 15 minutes)
+    const staleTimeout = new Date(Date.now() - STALE_COLLECTION_MINUTES * 60 * 1000).toISOString();
     const { error: cleanupError } = await supabase
       .from('products')
       .update({ collection_status: 'pending' })
       .eq('collection_status', 'in_progress')
-      .lt('last_collection_attempt', new Date(Date.now() - 30 * 60 * 1000).toISOString());
+      .lt('last_collection_attempt', staleTimeout);
 
     if (cleanupError) {
       console.error('Error cleaning up stale statuses:', cleanupError);
@@ -35,7 +37,7 @@ export async function collectLaptops() {
       .from('products')
       .select('collection_status, last_collection_attempt')
       .eq('collection_status', 'in_progress')
-      .gt('last_collection_attempt', new Date(Date.now() - 30 * 60 * 1000).toISOString())
+      .gt('last_collection_attempt', staleTimeout)
       .limit(1);
 
     if (statusError) {
@@ -44,12 +46,13 @@ export async function collectLaptops() {
     }
 
     if (activeCollections && activeCollections.length > 0) {
-      const timeElapsed = new Date().getTime() - new Date(activeCollections[0].last_collection_attempt).getTime();
-      console.log(`Collection in progress, started ${timeElapsed / 1000} seconds ago`);
+      const timeElapsed = Math.round((new Date().getTime() - new Date(activeCollections[0].last_collection_attempt).getTime()) / 1000);
+      console.log(`Collection in progress, started ${timeElapsed} seconds ago`);
       
       toast({
-        title: "Collection in progress",
-        description: "Please wait for the current collection to complete",
+        title: "Collection already in progress",
+        description: `A collection is already running (started ${Math.round(timeElapsed / 60)} minutes ago). Please wait for it to complete or try again in a few minutes.`,
+        variant: "warning",
       });
       return null;
     }
@@ -85,7 +88,7 @@ export async function collectLaptops() {
           const { error: functionError } = await supabase.functions.invoke('collect-laptops', {
             body: {
               brands: [brand],
-              pages_per_brand: PAGES_PER_BRAND, // Updated to use 5 pages
+              pages_per_brand: PAGES_PER_BRAND,
               batch_number: groupIndex * PARALLEL_BATCHES + brandIndex + 1,
               total_batches: LAPTOP_BRANDS.length
             }
