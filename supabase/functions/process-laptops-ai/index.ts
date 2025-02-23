@@ -30,7 +30,11 @@ Return ONLY valid JSON with the following structure:
   "weight": "string",
   "battery_life": "string",
   "brand": "string",
-  "model": "string"
+  "model": "string",
+  "current_price": number,
+  "original_price": number,
+  "rating": number,
+  "rating_count": number
 }
 
 Use these rules when extracting data:
@@ -45,7 +49,10 @@ Use these rules when extracting data:
 9. Battery Life: Use hours (e.g., "10 hours", "6 hours")
 10. Brand: Use official names (e.g., "Lenovo", "HP", "Dell", "ASUS")
 11. Model: Extract specific model name/number (e.g., "ThinkPad X1 Carbon", "Pavilion 15")
-12. Reviews & Ratings
+12. Current Price: Use numeric value without currency symbol (e.g., 999.99)
+13. Original Price: Use numeric value without currency symbol (e.g., 1299.99)
+14. Rating: Use numeric value between 0-5 with one decimal (e.g., 4.5)
+15. Rating Count: Use integer value (e.g., 1234)
 
 If you cannot determine a value with high confidence, use null. Always format consistently.`;
 
