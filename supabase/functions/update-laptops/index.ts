@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.21.0';
 import { processTitleWithAI } from '../_shared/deepseekUtils.ts';
-import { fetchProductData } from './oxylabsService.ts';
+import { fetchLaptopData } from './oxylabsService.ts';
 import { saveProductUpdate } from './databaseService.ts';
 import { UpdateLaptopsRequest } from './types.ts';
 
@@ -32,7 +32,7 @@ serve(async (req) => {
       for (const laptop of laptops) {
         try {
           console.log(`Fetching data for laptop ${laptop.id}`);
-          const productData = await fetchProductData(laptop.asin);
+          const productData = await fetchLaptopData(laptop.asin);
           
           if (!productData) {
             console.log(`No data found for laptop ${laptop.id}`);
@@ -90,3 +90,4 @@ serve(async (req) => {
     );
   }
 });
+
