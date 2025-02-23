@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
 const PARALLEL_PROCESSING = 1; // Process one at a time
-const DELAY_BETWEEN_REQUESTS = 1000; // 1 second delay between requests
+const DELAY_BETWEEN_REQUESTS = 250; // 250ms delay between requests
+const BATCH_SIZE = 5; // Process max 5 laptops at a time
 
 export const processLaptopsAI = async () => {
   try {
@@ -20,7 +21,7 @@ export const processLaptopsAI = async () => {
       .in('ai_processing_status', ['pending', 'error', 'processing'])
       .order('ai_processing_status', { ascending: true, nullsFirst: true }) // pending first
       .order('created_at', { ascending: true }) // oldest first
-      .limit(100); // Process in batches to avoid overloading
+      .limit(BATCH_SIZE); // Process in smaller batches of 5
 
     if (fetchError) {
       console.error('Error fetching laptops:', fetchError);
