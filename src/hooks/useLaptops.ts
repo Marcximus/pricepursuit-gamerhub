@@ -13,7 +13,7 @@ import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 export { collectLaptops, updateLaptops, refreshBrandModels };
 
 export const ITEMS_PER_PAGE = 50;
-const BATCH_SIZE = 1000; // Supabase's maximum limit
+const BATCH_SIZE = 1000;
 
 async function fetchAllLaptops() {
   let allLaptops: any[] = [];
