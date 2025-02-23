@@ -20,7 +20,7 @@ export const useLaptops = (
   filters: FilterOptions
 ) => {
   const query = useQuery({
-    queryKey: ['all-laptops'],
+    queryKey: ['all-laptops', sortBy, page, JSON.stringify(filters)],
     queryFn: async () => {
       try {
         const { data: laptops, error } = await supabase
@@ -96,14 +96,17 @@ export const useLaptops = (
 
         // Apply filters, sorting, and pagination using utility functions
         const filteredLaptops = filterLaptops(processedLaptops, filters);
+        console.log('Before sorting:', { sortBy, laptopCount: filteredLaptops.length });
         const sortedLaptops = sortLaptops(filteredLaptops, sortBy);
+        console.log('After sorting:', { sortBy, laptopCount: sortedLaptops.length });
         const paginatedResults = paginateLaptops(sortedLaptops, page, ITEMS_PER_PAGE);
 
         console.log('Client-side filtering/pagination results:', {
           totalLaptops: processedLaptops.length,
           filteredCount: filteredLaptops.length,
           currentPage: page,
-          laptopsOnPage: paginatedResults.laptops.length
+          laptopsOnPage: paginatedResults.laptops.length,
+          sortBy
         });
 
         return paginatedResults;
