@@ -1,144 +1,169 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { corsHeaders } from './cors.ts';
-import { CollectLaptopsRequest } from './types.ts';
-import { fetchBrandData } from './oxylabsService.ts';
-import { saveProduct } from './databaseService.ts';
-import { processProducts } from './productProcessor.ts';
-import { processTitleWithAI } from '../_shared/deepseekUtils.ts';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+import { corsHeaders } from '../_shared/cors.ts'
 
-const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
+interface CollectLaptopsRequest {
+  brands: string[];
+  pages_per_brand: number;
+  batch_number: number;
+  total_batches: number;
+}
+
+interface OxylabsResult {
+  results: {
+    content: {
+      results?: {
+        paid?: any[];
+        organic?: any[];
+      };
+    };
+  }[];
+}
+
+const OXYLABS_USERNAME = Deno.env.get('OXYLABS_USERNAME')!;
+const OXYLABS_PASSWORD = Deno.env.get('OXYLABS_PASSWORD')!;
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
 serve(async (req) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const requestData = await req.json();
-    const { 
-      brands, 
-      pages_per_brand = 2,
-      batch_number,
-      total_batches 
-    } = requestData as CollectLaptopsRequest;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { brands, pages_per_brand, batch_number, total_batches } = await req.json() as CollectLaptopsRequest;
 
-    if (!brands || !Array.isArray(brands) || brands.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid or missing brands parameter' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
+    console.log(`Processing batch ${batch_number}/${total_batches} for brands:`, brands);
 
-    console.log(`Starting batch ${batch_number}/${total_batches} for brands: ${brands.join(', ')}`);
+    for (const brand of brands) {
+      console.log(`Collecting data for brand: ${brand}`);
+      
+      try {
+        // Fetch laptop data from Oxylabs
+        const laptopData = [];
+        const collectionErrors = [];
 
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
-
-    await supabaseClient
-      .from('products')
-      .update({ collection_status: 'in_progress' })
-      .eq('is_laptop', true)
-      .in('brand', brands);
-
-    const collectionTask = async () => {
-      let totalProcessed = 0;
-      let totalSaved = 0;
-      const errors = [];
-
-      for (const brand of brands) {
-        console.log(`\n=== Processing brand: ${brand} ===`);
-        
-        try {
-          const results = await fetchBrandData(brand, pages_per_brand);
+        for (let page = 1; page <= pages_per_brand; page++) {
+          console.log(`Fetching page ${page} for ${brand}`);
           
-          for (const pageResult of results) {
-            const products = processProducts(pageResult, brand);
-            console.log(`Processing ${products.length} products from page ${pageResult.content.page}`);
+          const payload = {
+            source: "amazon_search",
+            domain: "com",
+            query: `${brand} laptop`,
+            start_page: page,
+            pages: 1,
+            parse: true,
+          };
 
-            for (const product of products) {
-              try {
-                // Process with DeepSeek AI using the full OxyLabs response
-                console.log(`Processing product ${product.asin} with DeepSeek AI`);
-                const rawProduct = pageResult.content.results.find(
-                  (r: any) => r.asin === product.asin
-                );
-                
-                if (!rawProduct) {
-                  console.error(`Could not find raw product data for ASIN ${product.asin}`);
-                  continue;
-                }
+          const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Basic ' + btoa(`${OXYLABS_USERNAME}:${OXYLABS_PASSWORD}`)
+            },
+            body: JSON.stringify(payload)
+          });
 
-                const aiProcessedData = await processTitleWithAI(
-                  rawProduct,
-                  DEEPSEEK_API_KEY!
-                );
-
-                // Merge AI processed data with product data
-                const enrichedProduct = {
-                  ...product,
-                  ...aiProcessedData,
-                  ai_processing_status: 'completed',
-                  ai_processed_at: new Date().toISOString()
-                };
-
-                await saveProduct(enrichedProduct);
-                totalSaved++;
-                totalProcessed++;
-              } catch (error) {
-                console.error(`Failed to save product ${product.asin}:`, error);
-                errors.push({ brand, asin: product.asin, error: error.message });
-                continue;
-              }
-            }
-
-            await new Promise(resolve => setTimeout(resolve, 1000));
+          if (!response.ok) {
+            throw new Error(`Oxylabs API error: ${response.status} ${response.statusText}`);
           }
 
-        } catch (brandError) {
-          console.error(`Error processing brand ${brand}:`, brandError);
-          errors.push({ brand, error: brandError.message });
-          continue;
+          const data: OxylabsResult = await response.json();
+          
+          console.log(`Response structure for ${brand} page ${page}:`, {
+            hasResults: !!data.results,
+            firstResultContent: data.results?.[0]?.content,
+            resultsStructure: data.results?.[0]?.content?.results ? Object.keys(data.results[0].content.results) : 'no results'
+          });
+
+          // Process results if they exist
+          if (data.results?.[0]?.content?.results) {
+            const pageResults = [
+              ...(data.results[0].content.results.paid || []),
+              ...(data.results[0].content.results.organic || [])
+            ];
+
+            // Process each result
+            for (const result of pageResults) {
+              if (!result.asin) continue;
+
+              try {
+                const productData = {
+                  asin: result.asin,
+                  title: result.title || '',
+                  current_price: typeof result.price === 'number' ? result.price : null,
+                  original_price: typeof result.price_strikethrough === 'number' ? result.price_strikethrough : null,
+                  rating: typeof result.rating === 'number' ? result.rating : null,
+                  rating_count: typeof result.reviews_count === 'number' ? result.reviews_count : null,
+                  image_url: result.url_image || '',
+                  product_url: result.url || '',
+                  is_laptop: true,
+                  brand: brand,
+                  collection_status: 'completed',
+                  last_checked: new Date().toISOString(),
+                  last_collection_attempt: new Date().toISOString()
+                };
+
+                laptopData.push(productData);
+              } catch (resultError) {
+                console.error(`Error processing result for ${brand} ASIN ${result.asin}:`, resultError);
+                collectionErrors.push({
+                  brand,
+                  asin: result.asin,
+                  error: resultError.message
+                });
+              }
+            }
+          } else {
+            console.warn(`No results found for ${brand} on page ${page}`);
+          }
         }
 
-        await supabaseClient
-          .from('products')
-          .update({ collection_status: 'completed' })
-          .eq('brand', brand);
+        // Upsert collected data
+        if (laptopData.length > 0) {
+          const { error: upsertError } = await supabase
+            .from('products')
+            .upsert(laptopData, {
+              onConflict: 'asin',
+              ignoreDuplicates: false
+            });
+
+          if (upsertError) {
+            throw upsertError;
+          }
+
+          console.log(`Successfully saved ${laptopData.length} products for ${brand}`);
+        } else {
+          console.warn(`No valid products found for brand ${brand}`);
+        }
+
+        // Log collection errors if any
+        if (collectionErrors.length > 0) {
+          console.error(`Collection errors:`, collectionErrors);
+        }
+
+      } catch (brandError) {
+        console.error(`Error processing brand ${brand}:`, brandError);
+        throw brandError;
       }
-
-      console.log(`\n=== Batch ${batch_number}/${total_batches} Complete ===`);
-      console.log({
-        totalProcessed,
-        totalSaved,
-        errorCount: errors.length,
-        brandsProcessed: brands.length
-      });
-
-      if (errors.length > 0) {
-        console.error('Collection errors:', errors);
-      }
-    };
-
-    EdgeRuntime.waitUntil(collectionTask());
+    }
 
     return new Response(
-      JSON.stringify({ 
-        message: `Started collection for batch ${batch_number}/${total_batches}`,
-        brands: brands.length,
-        pages_per_brand
-      }),
+      JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Critical error in collect-laptops:', error);
+    console.error('Function error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
     );
   }
-});
+})
