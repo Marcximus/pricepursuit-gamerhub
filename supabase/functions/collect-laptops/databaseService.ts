@@ -7,9 +7,12 @@ export async function upsertProduct(
   rawData: OxylabsResult,
   processedData: ProcessedLaptopData
 ) {
-  console.log('[Database] Upserting product:', {
-    asin: rawData.asin,
-    title: rawData.title
+  console.log(`[Database] Upserting product for ASIN: ${rawData.asin}`);
+  console.log('[Database] Processed specifications:', {
+    processor: processedData.processor,
+    ram: processedData.ram,
+    storage: processedData.storage,
+    graphics: processedData.graphics
   });
 
   const productData = {
@@ -35,10 +38,11 @@ export async function upsertProduct(
     graphics: processedData.graphics,
     weight: processedData.weight,
     battery_life: processedData.battery_life,
-    model: processedData.model
+    model: processedData.model,
+    review_data: processedData.review_data
   };
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('products')
     .upsert([productData], {
       onConflict: 'asin',
@@ -51,4 +55,6 @@ export async function upsertProduct(
   }
 
   console.log(`[Database] Successfully upserted product with ASIN: ${rawData.asin}`);
+  return data;
 }
+
