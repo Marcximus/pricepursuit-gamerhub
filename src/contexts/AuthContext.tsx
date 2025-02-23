@@ -103,11 +103,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
     };
 
-    // Initialize auth and set up listener
     initializeAuth();
     const { data: { subscription } } = setupAuthListener();
 
-    // Cleanup function
     return () => {
       console.log('🧹 Cleaning up auth context');
       mounted = false;
@@ -115,7 +113,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  // Log state changes
   useEffect(() => {
     console.log('🔄 Auth context state updated:', {
       userEmail: user?.email,

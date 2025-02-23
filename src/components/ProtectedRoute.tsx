@@ -11,7 +11,6 @@ type ProtectedRouteProps = {
 const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
   const { user, isAdmin, isLoading } = useAuth();
 
-  // Enhanced debugging logs with emojis for better visibility
   console.log('🛡️ Protected Route State:', {
     path: window.location.pathname,
     isUserLoggedIn: !!user,
