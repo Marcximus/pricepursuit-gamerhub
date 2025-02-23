@@ -1,4 +1,3 @@
-
 import { useMemo } from "react";
 import type { Product } from "@/types/product";
 
@@ -18,6 +17,11 @@ const normalizeRam = (ram: string): string => {
     return `${numValue} GB`;
   }
   return ram;
+};
+
+const getRamValue = (ram: string): number => {
+  const match = ram.match(/(\d+)\s*GB/i);
+  return match ? parseInt(match[1]) : 0;
 };
 
 const normalizeStorage = (storage: string): string => {
@@ -118,9 +122,7 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       // Create a unique set of normalized values and sort them
       const uniqueValues = Array.from(new Set(validValues)).sort((a, b) => {
         if (key === 'ram') {
-          // Extract numeric values for proper RAM sorting
-          const getRAMValue = (str: string) => parseInt(str.match(/\d+/)?.[0] || '0');
-          return getRAMValue(a) - getRAMValue(b);
+          return getRamValue(a) - getRamValue(b);
         }
         if (key === 'storage') {
           // Extract numeric values for proper storage sorting
