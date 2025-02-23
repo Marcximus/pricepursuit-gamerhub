@@ -6,6 +6,9 @@ import { CollectLaptopsRequest } from './types.ts';
 import { fetchBrandData } from './oxylabsService.ts';
 import { saveProduct } from './databaseService.ts';
 import { processProducts } from './productProcessor.ts';
+import { processTitleWithAI } from '../_shared/deepseekUtils.ts';
+
+const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -30,7 +33,6 @@ serve(async (req) => {
 
     console.log(`Starting batch ${batch_number}/${total_batches} for brands: ${brands.join(', ')}`);
 
-    // Update status for brands being processed
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -42,7 +44,6 @@ serve(async (req) => {
       .eq('is_laptop', true)
       .in('brand', brands);
 
-    // Define the collection task
     const collectionTask = async () => {
       let totalProcessed = 0;
       let totalSaved = 0;
@@ -60,7 +61,23 @@ serve(async (req) => {
 
             for (const product of products) {
               try {
-                await saveProduct(product);
+                // Process with DeepSeek AI
+                console.log(`Processing product ${product.asin} with DeepSeek AI`);
+                const aiProcessedData = await processTitleWithAI(
+                  product.title,
+                  product.description,
+                  DEEPSEEK_API_KEY!
+                );
+
+                // Merge AI processed data with product data
+                const enrichedProduct = {
+                  ...product,
+                  ...aiProcessedData,
+                  ai_processing_status: 'completed',
+                  ai_processed_at: new Date().toISOString()
+                };
+
+                await saveProduct(enrichedProduct);
                 totalSaved++;
                 totalProcessed++;
               } catch (error) {
@@ -70,7 +87,6 @@ serve(async (req) => {
               }
             }
 
-            // Small delay between pages
             await new Promise(resolve => setTimeout(resolve, 1000));
           }
 
@@ -80,7 +96,6 @@ serve(async (req) => {
           continue;
         }
 
-        // Update status for completed brand
         await supabaseClient
           .from('products')
           .update({ collection_status: 'completed' })
@@ -100,10 +115,8 @@ serve(async (req) => {
       }
     };
 
-    // Use waitUntil to ensure the function runs to completion
     EdgeRuntime.waitUntil(collectionTask());
 
-    // Return immediate response while collection continues
     return new Response(
       JSON.stringify({ 
         message: `Started collection for batch ${batch_number}/${total_batches}`,
