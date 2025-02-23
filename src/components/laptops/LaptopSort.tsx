@@ -10,7 +10,7 @@ type LaptopSortProps = {
 
 export function LaptopSort({ sortBy, onSortChange }: LaptopSortProps) {
   return (
-    <div className="flex justify-end mb-8">
+    <div className="flex justify-end mb-8 min-h-[40px]">
       <Select
         value={sortBy}
         onValueChange={(value) => onSortChange(value as SortOption)}
@@ -18,7 +18,7 @@ export function LaptopSort({ sortBy, onSortChange }: LaptopSortProps) {
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Sort by..." />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="w-[180px]">
           <SelectItem value="price-asc">Price: Low to High</SelectItem>
           <SelectItem value="price-desc">Price: High to Low</SelectItem>
           <SelectItem value="rating-desc">Best Rated</SelectItem>

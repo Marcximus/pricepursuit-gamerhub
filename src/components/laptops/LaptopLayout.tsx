@@ -24,11 +24,12 @@ export function LaptopLayout({ filters, toolbar, content }: LaptopLayoutProps) {
         </div>
       </div>
 
-      <div className="flex-1">
-        {toolbar}
+      <div className="flex-1 min-w-0">
+        <div className="w-full">
+          {toolbar}
+        </div>
         {content}
       </div>
     </div>
   );
 }
-
