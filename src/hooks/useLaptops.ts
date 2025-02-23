@@ -8,7 +8,7 @@ export const ITEMS_PER_PAGE = 50;
 export const useAllProducts = () => {
   const { data = [], isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['products'],
-    queryFn: async () => {
+    queryFn: async (): Promise<Product[]> => {
       console.log('Fetching all products...');
       const { data: products, error } = await supabase
         .from('products')
@@ -23,7 +23,7 @@ export const useAllProducts = () => {
         throw error;
       }
 
-      return products || [];
+      return (products as Product[]) || [];
     },
   });
 
@@ -42,4 +42,7 @@ export const useAllProducts = () => {
     isRefetching
   };
 };
+
+// Alias for backward compatibility
+export const useAllLaptops = useAllProducts;
 

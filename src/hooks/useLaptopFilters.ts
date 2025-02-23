@@ -1,12 +1,13 @@
 
 import { useMemo } from "react";
-import { useAllLaptops } from "./useLaptops";
+import { useAllProducts } from "./useLaptops";
 import type { Product } from "@/types/product";
 
 type FilterableProductKeys = 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size' | 'brand';
 
 export const useLaptopFilters = () => {
-  const { data: allLaptops = [] } = useAllLaptops();
+  const { data } = useAllProducts();
+  const allLaptops = data?.laptops || [];
 
   return useMemo(() => {
     const getUniqueValues = (key: FilterableProductKeys) => {
@@ -59,3 +60,4 @@ export const useLaptopFilters = () => {
     return filterOptions;
   }, [allLaptops]);
 };
+
