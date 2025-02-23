@@ -34,7 +34,7 @@ export const useLaptops = (page: number = 1) => {
         const start = (page - 1) * ITEMS_PER_PAGE;
         const end = start + ITEMS_PER_PAGE - 1;
 
-        // Fetch paginated laptops with rating-based sorting
+        // Fetch paginated laptops with review count-based sorting
         const { data: laptops, error } = await supabase
           .from('products')
           .select(`
@@ -42,9 +42,9 @@ export const useLaptops = (page: number = 1) => {
             product_reviews (*)
           `)
           .eq('is_laptop', true)
-          // Order by rating * rating_count for better relevance
-          .order('rating', { ascending: false })
+          // Order by number of ratings first, then by rating
           .order('rating_count', { ascending: false })
+          .order('rating', { ascending: false })
           .range(start, end);
 
         if (error) {
