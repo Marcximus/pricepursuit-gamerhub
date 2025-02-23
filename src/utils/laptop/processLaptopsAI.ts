@@ -10,18 +10,14 @@ export const processLaptopsAI = async () => {
   try {
     console.log('Starting AI processing for laptops...');
     
-    // Get laptops that need AI processing, prioritizing:
-    // 1. Never processed ones (ai_processing_status = 'pending')
-    // 2. Failed ones (ai_processing_status = 'error')
-    // 3. Interrupted ones (ai_processing_status = 'processing')
-    // Order by created_at to process oldest first
+    // Get laptops that need AI processing
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
       .select('id, asin, ai_processing_status')
       .in('ai_processing_status', ['pending', 'error', 'processing'])
       .order('ai_processing_status', { ascending: true, nullsFirst: true }) // pending first
       .order('created_at', { ascending: true }) // oldest first
-      .limit(BATCH_SIZE); // Process in smaller batches of 5
+      .limit(BATCH_SIZE);
 
     if (fetchError) {
       console.error('Error fetching laptops:', fetchError);
@@ -44,6 +40,11 @@ export const processLaptopsAI = async () => {
     }
 
     console.log(`Found ${laptops.length} laptops to process`);
+    toast({
+      title: "Processing Started",
+      description: `Starting to process ${laptops.length} laptops...`,
+    });
+
     let processedCount = 0;
     let errorCount = 0;
 
@@ -52,7 +53,7 @@ export const processLaptopsAI = async () => {
       try {
         console.log(`Processing laptop ${laptop.asin} (current status: ${laptop.ai_processing_status})...`);
 
-        // Update status to in_progress with timestamp
+        // Update status to processing
         const { error: updateError } = await supabase
           .from('products')
           .update({ 
@@ -63,19 +64,40 @@ export const processLaptopsAI = async () => {
 
         if (updateError) {
           console.error(`Error updating status for laptop ${laptop.asin}:`, updateError);
+          errorCount++;
           continue;
         }
 
-        // Call the process-laptops-ai edge function
-        const { error: processError } = await supabase.functions.invoke('process-laptops-ai', {
-          body: { asin: laptop.asin }
-        });
+        // Call the process-laptops-ai edge function with a timeout
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-        if (processError) {
-          console.error('Error processing laptop:', processError);
+          const response = await supabase.functions.invoke('process-laptops-ai', {
+            body: { asin: laptop.asin },
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+
+          if (response.error) throw response.error;
+          
+          processedCount++;
+          console.log(`Successfully processed laptop ${laptop.asin}`);
+
+          // Show progress toast every few laptops
+          if (processedCount % 2 === 0 || processedCount === laptops.length) {
+            toast({
+              title: "Processing Progress",
+              description: `Processed ${processedCount} of ${laptops.length} laptops`,
+            });
+          }
+
+        } catch (edgeFunctionError) {
+          console.error('Edge function error:', edgeFunctionError);
           errorCount++;
           
-          // Update status to error with timestamp
+          // Update status to error
           await supabase
             .from('products')
             .update({
@@ -83,17 +105,13 @@ export const processLaptopsAI = async () => {
               ai_processed_at: new Date().toISOString()
             })
             .eq('id', laptop.id);
-            
+
           toast({
             title: "Processing Error",
-            description: `Failed to process laptop ${laptop.asin}: ${processError.message}`,
+            description: `Failed to process laptop ${laptop.asin}. Will retry later.`,
             variant: "destructive"
           });
-          continue;
         }
-
-        processedCount++;
-        console.log(`Successfully processed laptop ${laptop.asin}`);
 
         // Add delay between requests
         await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
