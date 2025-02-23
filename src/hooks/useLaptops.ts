@@ -60,6 +60,7 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
             product_url,
             last_checked,
             created_at,
+            wilson_score,
             product_reviews (
               id,
               rating,
@@ -79,27 +80,23 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
             query = query
               .not('current_price', 'is', null)
               .order('current_price', { ascending: true })
-              .order('rating', { ascending: false })
-              .order('rating_count', { ascending: false });
+              .order('wilson_score', { ascending: false });
             break;
           case 'price-desc':
             query = query
               .not('current_price', 'is', null)
               .order('current_price', { ascending: false })
-              .order('rating', { ascending: false })
-              .order('rating_count', { ascending: false });
+              .order('wilson_score', { ascending: false });
             break;
           case 'rating-desc':
             query = query
-              .order('rating', { ascending: false, nullsFirst: false })
-              .order('rating_count', { ascending: false, nullsFirst: false })
+              .order('wilson_score', { ascending: false, nullsFirst: false })
               .order('current_price', { ascending: true, nullsFirst: true });
             break;
           case 'performance-desc':
             query = query
               .order('processor_score', { ascending: false, nullsFirst: false })
-              .order('rating', { ascending: false, nullsFirst: false })
-              .order('rating_count', { ascending: false, nullsFirst: false });
+              .order('wilson_score', { ascending: false, nullsFirst: false });
             break;
         }
 
@@ -130,7 +127,8 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
           start,
           end,
           firstLaptopPrice: laptops[0]?.current_price,
-          lastLaptopPrice: laptops[laptops.length - 1]?.current_price
+          lastLaptopPrice: laptops[laptops.length - 1]?.current_price,
+          firstLaptopWilsonScore: laptops[0]?.wilson_score
         });
 
         // Process and return the laptops
