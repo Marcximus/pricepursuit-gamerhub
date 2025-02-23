@@ -21,6 +21,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  const checkAdminRole = async (userId: string | undefined) => {
+    if (!userId) {
+      setIsAdmin(false);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Call the has_role function directly with the user ID and 'admin' role
+      const { data, error } = await supabase
+        .rpc('has_role', { _role: 'admin' });
+
+      if (error) {
+        console.error('Error checking admin role:', error);
+        toast({
+          title: "Error",
+          description: "Failed to check admin permissions",
+          variant: "destructive"
+        });
+        setIsAdmin(false);
+      } else {
+        console.log('Admin role check result:', data);
+        setIsAdmin(data ?? false);
+      }
+    } catch (error) {
+      console.error('Error checking admin role:', error);
+      setIsAdmin(false);
+    }
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -36,35 +67,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const checkAdminRole = async (userId: string | undefined) => {
-    if (!userId) {
-      setIsAdmin(false);
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .rpc('has_role', { _role: 'admin' });
-
-      if (error) {
-        console.error('Error checking admin role:', error);
-        toast({
-          title: "Error",
-          description: "Failed to check admin permissions",
-          variant: "destructive"
-        });
-        setIsAdmin(false);
-      } else {
-        setIsAdmin(data ?? false);
-      }
-    } catch (error) {
-      console.error('Error checking admin role:', error);
-      setIsAdmin(false);
-    }
-    setIsLoading(false);
-  };
 
   return (
     <AuthContext.Provider value={{ user, isAdmin, isLoading }}>
