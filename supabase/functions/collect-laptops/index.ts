@@ -1,134 +1,123 @@
 
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-import { corsHeaders } from '../_shared/cors.ts';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-
-const OXYLABS_USERNAME = Deno.env.get('OXYLABS_USERNAME');
-const OXYLABS_PASSWORD = Deno.env.get('OXYLABS_PASSWORD');
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
+import { corsHeaders } from './cors.ts';
+import { CollectLaptopsRequest } from './types.ts';
+import { fetchBrandData } from './oxylabsService.ts';
+import { saveProduct } from './databaseService.ts';
+import { processProducts } from './productProcessor.ts';
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { brands, pages_per_brand, batch_number, total_batches } = await req.json();
-    console.log('Processing batch', batch_number, 'of', total_batches, 'for brands:', brands);
+    const requestData = await req.json();
+    const { 
+      brands, 
+      pages_per_brand = 2,
+      batch_number,
+      total_batches 
+    } = requestData as CollectLaptopsRequest;
 
-    if (!Array.isArray(brands) || brands.length === 0) {
-      throw new Error('Invalid brands array');
+    if (!brands || !Array.isArray(brands) || brands.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid or missing brands parameter' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
 
-    const supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!);
-    const results = [];
+    console.log(`Starting batch ${batch_number}/${total_batches} for brands: ${brands.join(', ')}`);
 
-    for (const brand of brands) {
-      const sanitizedQuery = encodeURIComponent(`${brand} laptop`).replace(/%20/g, '+');
+    // Update status for brands being processed
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
 
-      const body = {
-        source: "amazon_search",
-        domain: "com",
-        query: sanitizedQuery,
-        start_page: 1, // Changed from 6 to 1 to improve initial data loading
-        pages: pages_per_brand,
-        geo_location: "90210",
-        user_agent_type: "desktop",
-        parse: true,
-        context: [
-          {
-            key: "category",
-            value: "Electronics>Computers & Accessories>Laptops"
-          }
-        ]
-      };
+    await supabaseClient
+      .from('products')
+      .update({ collection_status: 'in_progress' })
+      .eq('is_laptop', true)
+      .in('brand', brands);
 
-      console.log('Sending request to Oxylabs:', {
-        brand,
-        query: sanitizedQuery,
-        pages: pages_per_brand,
-        start_page: 1
-      });
+    // Define the collection task
+    const collectionTask = async () => {
+      let totalProcessed = 0;
+      let totalSaved = 0;
+      const errors = [];
 
-      const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Basic ' + btoa(`${OXYLABS_USERNAME}:${OXYLABS_PASSWORD}`)
-        },
-        body: JSON.stringify(body)
-      });
-
-      if (!response.ok) {
-        console.error(`Oxylabs API error for ${brand}:`, {
-          status: response.status,
-          statusText: response.statusText
-        });
-        throw new Error(`Oxylabs API error: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log(`Successfully fetched ${data.results?.length || 0} results for ${brand}`);
-
-      if (data.results) {
-        results.push(...data.results);
-      }
-    }
-
-    // Process and save results to Supabase
-    for (const result of results) {
-      if (!result.content?.results?.organic) continue;
-
-      const products = result.content.results.organic;
-      for (const product of products) {
-        if (!product.asin) continue;
-
+      for (const brand of brands) {
+        console.log(`\n=== Processing brand: ${brand} ===`);
+        
         try {
-          const productData = {
-            asin: product.asin,
-            title: product.title || '',
-            current_price: typeof product.price === 'number' ? product.price : null,
-            original_price: typeof product.price_strikethrough === 'number' ? product.price_strikethrough : null,
-            rating: typeof product.rating === 'number' ? product.rating : null,
-            rating_count: typeof product.reviews_count === 'number' ? product.reviews_count : null,
-            image_url: product.url_image || '',
-            product_url: product.url || '',
-            brand: brands[0],
-            collection_status: 'completed',
-            last_checked: new Date().toISOString(),
-            last_collection_attempt: new Date().toISOString()
-          };
+          const results = await fetchBrandData(brand, pages_per_brand);
+          
+          for (const pageResult of results) {
+            const products = processProducts(pageResult, brand);
+            console.log(`Processing ${products.length} products from page ${pageResult.content.page}`);
 
-          const { error } = await supabase
-            .from('products')
-            .upsert(productData, { 
-              onConflict: 'asin',
-              ignoreDuplicates: false 
-            });
+            for (const product of products) {
+              try {
+                await saveProduct(product);
+                totalSaved++;
+                totalProcessed++;
+              } catch (error) {
+                console.error(`Failed to save product ${product.asin}:`, error);
+                errors.push({ brand, asin: product.asin, error: error.message });
+                continue;
+              }
+            }
 
-          if (error) {
-            console.error('Error saving product:', error);
-            continue;
+            // Small delay between pages
+            await new Promise(resolve => setTimeout(resolve, 1000));
           }
-        } catch (error) {
-          console.error('Error processing product:', error);
+
+        } catch (brandError) {
+          console.error(`Error processing brand ${brand}:`, brandError);
+          errors.push({ brand, error: brandError.message });
           continue;
         }
-      }
-    }
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
+        // Update status for completed brand
+        await supabaseClient
+          .from('products')
+          .update({ collection_status: 'completed' })
+          .eq('brand', brand);
+      }
+
+      console.log(`\n=== Batch ${batch_number}/${total_batches} Complete ===`);
+      console.log({
+        totalProcessed,
+        totalSaved,
+        errorCount: errors.length,
+        brandsProcessed: brands.length
+      });
+
+      if (errors.length > 0) {
+        console.error('Collection errors:', errors);
+      }
+    };
+
+    // Use waitUntil to ensure the function runs to completion
+    EdgeRuntime.waitUntil(collectionTask());
+
+    // Return immediate response while collection continues
+    return new Response(
+      JSON.stringify({ 
+        message: `Started collection for batch ${batch_number}/${total_batches}`,
+        brands: brands.length,
+        pages_per_brand
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
-    console.error('Error:', error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
-    });
+    console.error('Critical error in collect-laptops:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    );
   }
 });
