@@ -1,5 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react"; // Add missing import
 import { supabase } from "@/integrations/supabase/client";
 import { processLaptopData } from "@/utils/laptopUtils";
 import { filterLaptops } from "@/utils/laptopFilters";
@@ -87,9 +88,15 @@ export const useAllLaptops = () => {
       });
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    cacheTime: 1000 * 60 * 10, // Keep in cache for 10 minutes
+    gcTime: 1000 * 60 * 10, // Keep in cache for 10 minutes (renamed from cacheTime)
   });
 };
+
+interface ProcessedData {
+  laptops: Product[];
+  totalCount: number;
+  totalPages: number;
+}
 
 export const useLaptops = (
   page: number = 1, 
@@ -98,7 +105,7 @@ export const useLaptops = (
 ) => {
   const { data: allLaptops = [], isLoading, error: fetchError, refetch, isRefetching } = useAllLaptops();
 
-  const processedData = useMemo(() => {
+  const processedData = useMemo<ProcessedData>(() => {
     console.log('Processing laptops with filters and sort...', {
       totalLaptops: allLaptops.length,
       currentPage: page,
