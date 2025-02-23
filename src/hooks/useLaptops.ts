@@ -23,8 +23,54 @@ export const useLaptops = (
       try {
         console.log('Fetching laptops with filters:', filters);
         
-        // Start building the query
-        let query = supabase
+        // Start building the base query
+        const baseQuery = supabase
+          .from('products')
+          .select('*', { count: 'exact' })
+          .eq('is_laptop', true);
+
+        // Apply filters
+        let query = baseQuery;
+        if (filters.brands.size > 0) {
+          query = query.in('brand', Array.from(filters.brands));
+        }
+        if (filters.processors.size > 0) {
+          query = query.in('processor', Array.from(filters.processors));
+        }
+        if (filters.ramSizes.size > 0) {
+          query = query.in('ram', Array.from(filters.ramSizes));
+        }
+        if (filters.storageOptions.size > 0) {
+          query = query.in('storage', Array.from(filters.storageOptions));
+        }
+        if (filters.graphicsCards.size > 0) {
+          query = query.in('graphics', Array.from(filters.graphicsCards));
+        }
+        if (filters.screenSizes.size > 0) {
+          query = query.in('screen_size', Array.from(filters.screenSizes));
+        }
+        if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
+          if (filters.priceRange.min > 0) {
+            query = query.gte('current_price', filters.priceRange.min);
+          }
+          if (filters.priceRange.max < 10000) {
+            query = query.lte('current_price', filters.priceRange.max);
+          }
+        }
+
+        // Get the total count first
+        const { count, error: countError } = await query;
+        
+        if (countError) {
+          console.error('Error getting filtered laptop count:', countError);
+          throw countError;
+        }
+
+        const totalCount = count || 0;
+        console.log(`Total filtered laptop count: ${totalCount}`);
+
+        // Now modify the query for the actual data fetch with full details
+        const dataQuery = supabase
           .from('products')
           .select(`
             id,
@@ -62,43 +108,34 @@ export const useLaptops = (
           `)
           .eq('is_laptop', true);
 
-        // Apply filters
+        // Reapply filters to the data query
+        let finalQuery = dataQuery;
         if (filters.brands.size > 0) {
-          query = query.in('brand', Array.from(filters.brands));
+          finalQuery = finalQuery.in('brand', Array.from(filters.brands));
         }
         if (filters.processors.size > 0) {
-          query = query.in('processor', Array.from(filters.processors));
+          finalQuery = finalQuery.in('processor', Array.from(filters.processors));
         }
         if (filters.ramSizes.size > 0) {
-          query = query.in('ram', Array.from(filters.ramSizes));
+          finalQuery = finalQuery.in('ram', Array.from(filters.ramSizes));
         }
         if (filters.storageOptions.size > 0) {
-          query = query.in('storage', Array.from(filters.storageOptions));
+          finalQuery = finalQuery.in('storage', Array.from(filters.storageOptions));
         }
         if (filters.graphicsCards.size > 0) {
-          query = query.in('graphics', Array.from(filters.graphicsCards));
+          finalQuery = finalQuery.in('graphics', Array.from(filters.graphicsCards));
         }
         if (filters.screenSizes.size > 0) {
-          query = query.in('screen_size', Array.from(filters.screenSizes));
+          finalQuery = finalQuery.in('screen_size', Array.from(filters.screenSizes));
         }
         if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
           if (filters.priceRange.min > 0) {
-            query = query.gte('current_price', filters.priceRange.min);
+            finalQuery = finalQuery.gte('current_price', filters.priceRange.min);
           }
           if (filters.priceRange.max < 10000) {
-            query = query.lte('current_price', filters.priceRange.max);
+            finalQuery = finalQuery.lte('current_price', filters.priceRange.max);
           }
         }
-
-        // First get count of filtered results
-        const { count: totalCount, error: countError } = await query.count();
-        
-        if (countError) {
-          console.error('Error getting filtered laptop count:', countError);
-          throw countError;
-        }
-
-        console.log(`Total filtered laptop count: ${totalCount}`);
 
         // Calculate pagination range
         const start = (page - 1) * ITEMS_PER_PAGE;
@@ -107,27 +144,27 @@ export const useLaptops = (
         // Apply sorting based on the sortBy parameter
         switch (sortBy) {
           case 'price-asc':
-            query = query
+            finalQuery = finalQuery
               .order('current_price', { ascending: true, nullsFirst: false })
               .order('id', { ascending: true }); // Secondary sort for stability
             break;
           case 'price-desc':
-            query = query
+            finalQuery = finalQuery
               .order('current_price', { ascending: false, nullsFirst: false })
               .order('id', { ascending: true }); // Secondary sort for stability
             break;
           case 'rating-desc':
-            query = query
+            finalQuery = finalQuery
               .order('wilson_score', { ascending: false, nullsFirst: false })
               .order('current_price', { ascending: true, nullsFirst: true });
             break;
         }
 
-        // Apply pagination last
-        query = query.range(start, end);
+        // Apply pagination
+        finalQuery = finalQuery.range(start, end);
 
         // Execute the query
-        const { data: laptops, error } = await query;
+        const { data: laptops, error } = await finalQuery;
 
         if (error) {
           console.error('Error fetching laptops:', error);
@@ -138,8 +175,8 @@ export const useLaptops = (
           console.log('No laptops found for current filters and page');
           return { 
             laptops: [], 
-            totalCount: totalCount || 0,
-            totalPages: Math.ceil((totalCount || 0) / ITEMS_PER_PAGE)
+            totalCount,
+            totalPages: Math.ceil(totalCount / ITEMS_PER_PAGE)
           };
         }
 
@@ -174,8 +211,8 @@ export const useLaptops = (
 
         return {
           laptops: processedLaptops,
-          totalCount: totalCount || 0,
-          totalPages: Math.ceil((totalCount || 0) / ITEMS_PER_PAGE)
+          totalCount,
+          totalPages: Math.ceil(totalCount / ITEMS_PER_PAGE)
         };
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
@@ -194,3 +231,4 @@ export const useLaptops = (
     refreshBrandModels,
   };
 };
+
