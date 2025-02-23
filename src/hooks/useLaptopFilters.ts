@@ -4,22 +4,6 @@ import type { Product } from "@/types/product";
 
 type FilterableProductKeys = 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size' | 'brand';
 
-const normalizeRam = (ram: string): string => {
-  // Extract the numeric value and standardize to GB
-  const match = ram.match(/(\d+)\s*(GB|TB|MB)/i);
-  if (match) {
-    const [, value, unit] = match;
-    const numValue = parseInt(value);
-    if (unit.toLowerCase() === 'tb') {
-      return `${numValue * 1024} GB`;
-    } else if (unit.toLowerCase() === 'mb') {
-      return `${Math.round(numValue / 1024)} GB`;
-    }
-    return `${numValue} GB`;
-  }
-  return ram;
-};
-
 const getRamValue = (ram: string): number => {
   // Convert all RAM values to GB for comparison
   const match = ram.match(/(\d+)\s*(GB|TB|MB)/i);
@@ -38,6 +22,12 @@ const getRamValue = (ram: string): number => {
     default:
       return 0;
   }
+};
+
+const normalizeRam = (ram: string): string => {
+  const gbValue = getRamValue(ram);
+  if (gbValue === 0) return ram;
+  return `${gbValue} GB`;
 };
 
 const normalizeStorage = (storage: string): string => {
@@ -135,24 +125,18 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
         })
         .filter((value): value is string => value !== null);
 
-      // For RAM specifically, log the values and their numeric equivalents
-      if (key === 'ram') {
-        console.log('RAM values before sorting:', validValues.map(v => ({
-          original: v,
-          numericValue: getRamValue(v)
-        })));
-      }
+      // Create a unique set of normalized values
+      const uniqueValues = Array.from(new Set(validValues));
 
-      // Create a unique set of normalized values and sort them
-      const uniqueValues = Array.from(new Set(validValues)).sort((a, b) => {
-        if (key === 'ram') {
-          const valueA = getRamValue(a);
-          const valueB = getRamValue(b);
-          console.log(`Comparing ${a} (${valueA}) with ${b} (${valueB})`);
+      // Sort based on the field type
+      if (key === 'ram') {
+        uniqueValues.sort((a, b) => {
+          const valueA = parseInt(a.split(' ')[0]); // Since we normalized to "X GB" format
+          const valueB = parseInt(b.split(' ')[0]);
           return valueA - valueB;
-        }
-        if (key === 'storage') {
-          // Extract numeric values for proper storage sorting
+        });
+      } else if (key === 'storage') {
+        uniqueValues.sort((a, b) => {
           const getStorageValue = (str: string) => {
             const match = str.match(/(\d+)\s*(TB|GB)/i);
             if (!match) return 0;
@@ -160,22 +144,15 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
             return parseInt(value) * (unit.toLowerCase() === 'tb' ? 1024 : 1);
           };
           return getStorageValue(a) - getStorageValue(b);
-        }
-        return a.localeCompare(b);
-      });
-
-      // For RAM specifically, log the final sorted values
-      if (key === 'ram') {
-        console.log('RAM values after sorting:', uniqueValues.map(v => ({
-          value: v,
-          numericValue: getRamValue(v)
-        })));
+        });
+      } else {
+        uniqueValues.sort((a, b) => a.localeCompare(b));
       }
-      
+
       return new Set(uniqueValues);
     };
 
-    const filterOptions = {
+    return {
       processors: getUniqueValues('processor'),
       ramSizes: getUniqueValues('ram'),
       storageOptions: getUniqueValues('storage'),
@@ -183,7 +160,5 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       screenSizes: getUniqueValues('screen_size'),
       brands: getUniqueValues('brand'),
     };
-
-    return filterOptions;
   }, [laptops]);
 };
