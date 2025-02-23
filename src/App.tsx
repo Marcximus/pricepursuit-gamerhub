@@ -1,15 +1,13 @@
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Laptops from './pages/Laptops';
-import Admin from './pages/Admin';
-import NotFound from './pages/NotFound';
-import Login from './pages/Login';
-import { Toaster } from "@/components/ui/toaster";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Login from "@/pages/Login";
+import Admin from "@/pages/Admin";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from './contexts/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
+import { Toaster } from "@/components/ui/toaster";
+import ComparePriceLaptops from "./pages/Laptops";
+import NotFound from "./pages/NotFound";
 
-// Create a new QueryClient instance
 const queryClient = new QueryClient();
 
 function App() {
@@ -18,21 +16,13 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<Laptops />} />
             <Route path="/login" element={<Login />} />
-            <Route 
-              path="/admin" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <Admin />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="/ComparePrice/Laptops" element={<Navigate to="/" replace />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/" element={<ComparePriceLaptops />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <Toaster />
         </Router>
+        <Toaster />
       </AuthProvider>
     </QueryClientProvider>
   );

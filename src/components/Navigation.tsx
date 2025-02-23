@@ -7,7 +7,7 @@ import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 
 const Navigation = () => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -35,7 +35,6 @@ const Navigation = () => {
         </div>
       </div>
 
-      {/* All Navigation Items in One Row */}
       <div className="border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-3">
@@ -53,7 +52,7 @@ const Navigation = () => {
                 <span>Monitors</span>
               </Link>
               <Link to="/ComparePrice/Keyboards" className="nav-link flex items-center space-x-1">
-                <Keyboard className="w-4 h-4" />
+                <Keyboard className="w-4 w-4" />
                 <span>Keyboards</span>
               </Link>
               <Link to="/ComparePrice/Mouse" className="nav-link flex items-center space-x-1">
@@ -69,12 +68,10 @@ const Navigation = () => {
               <Link to="/ComparePrice" className="nav-link">Compare</Link>
               <Link to="/blog" className="nav-link">Blog</Link>
               <Link to="/about" className="nav-link">About</Link>
-              {isAdmin && (
-                <Link to="/admin" className="nav-link flex items-center space-x-1">
-                  <Settings className="w-4 h-4" />
-                  <span>Admin</span>
-                </Link>
-              )}
+              <Link to="/admin" className="nav-link flex items-center space-x-1">
+                <Settings className="w-4 h-4" />
+                <span>Admin</span>
+              </Link>
               {user && (
                 <Button
                   variant="ghost"
