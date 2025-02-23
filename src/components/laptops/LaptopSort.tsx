@@ -10,7 +10,7 @@ type LaptopSortProps = {
 
 export function LaptopSort({ sortBy, onSortChange }: LaptopSortProps) {
   return (
-    <div className="flex justify-end mb-8 min-h-[40px] relative">
+    <div className="relative flex-shrink-0">
       <Select
         value={sortBy}
         onValueChange={(value) => onSortChange(value as SortOption)}

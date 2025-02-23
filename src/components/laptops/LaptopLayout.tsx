@@ -25,7 +25,7 @@ export function LaptopLayout({ filters, toolbar, content }: LaptopLayoutProps) {
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="w-full relative z-10">
+        <div className="w-full sticky top-32 bg-gray-50 z-10 pb-4">
           {toolbar}
         </div>
         <div className="relative z-0">
