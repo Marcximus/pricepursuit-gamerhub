@@ -1,17 +1,16 @@
 
 import { OxylabsResponse } from './types.ts';
 
-export async function fetchLaptopData(query: string, page: number = 1, username: string, password: string): Promise<OxylabsResponse> {
-  console.log(`Fetching data for query: ${query}, page: ${page}`);
+export async function fetchLaptopData(brand: string, page: number): Promise<OxylabsResponse> {
+  console.log(`[Oxylabs] Fetching data for ${brand} - page ${page}`);
   
   const payload = {
-    source: 'amazon_search',
-    query: query,
-    domain: 'com',
-    geo_location: '90210',
-    start_page: page.toString(),
-    pages: '1', // We'll make one request per page for better control
-    parse: true
+    source: "amazon_search",
+    domain: "com",
+    query: `${brand} laptop`,
+    start_page: page,
+    pages: 1,
+    parse: true,
   };
 
   try {
@@ -19,21 +18,19 @@ export async function fetchLaptopData(query: string, page: number = 1, username:
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa(`${username}:${password}`)
+        'Authorization': 'Basic ' + btoa(`${Deno.env.get('OXYLABS_USERNAME')}:${Deno.env.get('OXYLABS_PASSWORD')}`)
       },
       body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`[Oxylabs] API error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    console.log('Oxylabs response:', JSON.stringify(data, null, 2));
     return data;
   } catch (error) {
-    console.error('Error fetching laptop data:', error);
+    console.error('[Oxylabs] Error fetching data:', error);
     throw error;
   }
 }
-

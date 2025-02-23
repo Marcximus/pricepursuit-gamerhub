@@ -1,24 +1,54 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { ProductData } from './types.ts';
+import { OxylabsResult, ProcessedLaptopData } from './types.ts';
+import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+export async function upsertProduct(
+  supabase: SupabaseClient,
+  rawData: OxylabsResult,
+  processedData: ProcessedLaptopData
+) {
+  console.log('[Database] Upserting product:', {
+    asin: rawData.asin,
+    title: rawData.title
+  });
 
-const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+  const productData = {
+    asin: rawData.asin,
+    title: rawData.title,
+    current_price: typeof rawData.price === 'number' ? rawData.price : null,
+    original_price: typeof rawData.price_strikethrough === 'number' ? rawData.price_strikethrough : null,
+    rating: typeof rawData.rating === 'number' ? rawData.rating : null,
+    rating_count: typeof rawData.reviews_count === 'number' ? rawData.reviews_count : null,
+    image_url: rawData.url_image || null,
+    product_url: rawData.url || null,
+    is_laptop: true,
+    brand: processedData.brand || rawData.manufacturer || '',
+    collection_status: 'completed',
+    last_checked: new Date().toISOString(),
+    last_collection_attempt: new Date().toISOString(),
+    // Add processed specifications
+    processor: processedData.processor,
+    ram: processedData.ram,
+    storage: processedData.storage,
+    screen_size: processedData.screen_size,
+    screen_resolution: processedData.screen_resolution,
+    graphics: processedData.graphics,
+    weight: processedData.weight,
+    battery_life: processedData.battery_life,
+    model: processedData.model
+  };
 
-export async function saveProduct(productData: ProductData): Promise<void> {
-  const { error: upsertError } = await supabase
+  const { error } = await supabase
     .from('products')
-    .upsert(productData, {
+    .upsert([productData], {
       onConflict: 'asin',
       ignoreDuplicates: false
     });
 
-  if (upsertError) {
-    console.error(`Error saving product ${productData.asin}:`, upsertError);
-    throw upsertError;
+  if (error) {
+    console.error('[Database] Error upserting product:', error);
+    throw error;
   }
-  
-  console.log(`Successfully saved/updated product ${productData.asin}`);
+
+  console.log(`[Database] Successfully upserted product with ASIN: ${rawData.asin}`);
 }
