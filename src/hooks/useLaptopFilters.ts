@@ -75,17 +75,22 @@ const normalizeProcessor = (processor: string): string => {
   return processor;
 };
 
-export const useLaptopFilters = (laptops: Product[] | undefined, allFilteredLaptops?: Product[]) => {
+export const useLaptopFilters = (laptops: Product[] | undefined) => {
   return useMemo(() => {
-    const datasetForFilters = laptops; // Use original laptops dataset for generating filter options
+    if (!laptops || laptops.length === 0) {
+      console.log('No laptops available for generating filter options');
+      return {
+        processors: new Set<string>(),
+        ramSizes: new Set<string>(),
+        storageOptions: new Set<string>(),
+        graphicsCards: new Set<string>(),
+        screenSizes: new Set<string>(),
+        brands: new Set<string>(),
+      };
+    }
 
     const getUniqueValues = (key: FilterableProductKeys) => {
-      if (!datasetForFilters || datasetForFilters.length === 0) {
-        console.log(`No laptops available for ${key} filter`);
-        return new Set<string>();
-      }
-      
-      const validValues = datasetForFilters
+      const validValues = laptops
         .map(laptop => {
           const value = laptop[key];
           if (!value || typeof value !== 'string' || value.trim() === '') {
@@ -133,7 +138,7 @@ export const useLaptopFilters = (laptops: Product[] | undefined, allFilteredLapt
       console.log(`Generated ${key} filter options:`, {
         total: uniqueValues.length,
         values: uniqueValues,
-        datasetSize: datasetForFilters.length
+        datasetSize: laptops.length
       });
       
       return new Set(uniqueValues);
@@ -149,7 +154,7 @@ export const useLaptopFilters = (laptops: Product[] | undefined, allFilteredLapt
     };
 
     console.log('Generated all filter options:', {
-      totalLaptops: datasetForFilters?.length,
+      totalLaptops: laptops.length,
       brands: Array.from(filterOptions.brands).length,
       processors: Array.from(filterOptions.processors).length,
       ram: Array.from(filterOptions.ramSizes).length,

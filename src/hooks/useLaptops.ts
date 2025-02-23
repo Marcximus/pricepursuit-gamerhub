@@ -141,8 +141,8 @@ export const useLaptops = (
 
       return {
         ...paginatedResults,
-        // Add the complete filtered dataset for generating filter options
-        allFilteredLaptops: sortedLaptops
+        // Pass the complete processed dataset for generating filter options
+        allLaptops: processedLaptops
       };
     },
   });
@@ -154,4 +154,3 @@ export const useLaptops = (
     refreshBrandModels,
   };
 };
-
