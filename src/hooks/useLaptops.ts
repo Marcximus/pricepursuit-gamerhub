@@ -77,27 +77,27 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
         switch (sortBy) {
           case 'price-asc':
             query = query
-              .order('current_price', { ascending: true, nullsLast: true })
-              .order('rating', { ascending: false, nullsLast: true })
-              .order('rating_count', { ascending: false, nullsLast: true });
+              .order('current_price', { ascending: true, nullsFirst: false })
+              .order('rating', { ascending: false, nullsFirst: false })
+              .order('rating_count', { ascending: false, nullsFirst: false });
             break;
           case 'price-desc':
             query = query
-              .order('current_price', { ascending: false, nullsLast: true })
-              .order('rating', { ascending: false, nullsLast: true })
-              .order('rating_count', { ascending: false, nullsLast: true });
+              .order('current_price', { ascending: false, nullsFirst: false })
+              .order('rating', { ascending: false, nullsFirst: false })
+              .order('rating_count', { ascending: false, nullsFirst: false });
             break;
           case 'rating-desc':
             query = query
-              .order('rating', { ascending: false, nullsLast: true })
-              .order('rating_count', { ascending: false, nullsLast: true })
-              .order('current_price', { ascending: true, nullsLast: true });
+              .order('rating', { ascending: false, nullsFirst: false })
+              .order('rating_count', { ascending: false, nullsFirst: false })
+              .order('current_price', { ascending: true, nullsFirst: false });
             break;
           case 'performance-desc':
             query = query
-              .order('processor_score', { ascending: false, nullsLast: true })
-              .order('rating', { ascending: false, nullsLast: true })
-              .order('rating_count', { ascending: false, nullsLast: true });
+              .order('processor_score', { ascending: false, nullsFirst: false })
+              .order('rating', { ascending: false, nullsFirst: false })
+              .order('rating_count', { ascending: false, nullsFirst: false });
             break;
         }
 
@@ -191,4 +191,3 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
     refreshBrandModels,
   };
 };
-
