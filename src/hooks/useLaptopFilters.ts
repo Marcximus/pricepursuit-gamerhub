@@ -1,3 +1,4 @@
+
 import { useMemo } from "react";
 import type { Product } from "@/types/product";
 
@@ -20,8 +21,23 @@ const normalizeRam = (ram: string): string => {
 };
 
 const getRamValue = (ram: string): number => {
-  const match = ram.match(/(\d+)\s*GB/i);
-  return match ? parseInt(match[1]) : 0;
+  // Convert all RAM values to GB for comparison
+  const match = ram.match(/(\d+)\s*(GB|TB|MB)/i);
+  if (!match) return 0;
+  
+  const [, value, unit] = match;
+  const numValue = parseInt(value);
+  
+  switch (unit.toLowerCase()) {
+    case 'tb':
+      return numValue * 1024;
+    case 'mb':
+      return Math.round(numValue / 1024);
+    case 'gb':
+      return numValue;
+    default:
+      return 0;
+  }
 };
 
 const normalizeStorage = (storage: string): string => {
