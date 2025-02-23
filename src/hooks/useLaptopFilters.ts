@@ -7,9 +7,12 @@ type FilterableProductKeys = 'processor' | 'ram' | 'storage' | 'graphics' | 'scr
 export const useLaptopFilters = (laptops: Product[] | undefined) => {
   return useMemo(() => {
     const getUniqueValues = (key: FilterableProductKeys) => {
-      if (!laptops) return new Set<string>();
+      if (!laptops || laptops.length === 0) {
+        console.log(`No laptops available for ${key} filter`);
+        return new Set<string>();
+      }
       
-      // Filter out null/undefined values, normalize strings, and ensure unique values
+      // Filter out null/undefined/empty values and normalize strings
       const validValues = laptops
         .map(laptop => laptop[key])
         .filter((value): value is string => 
@@ -17,11 +20,17 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
           typeof value === 'string' && 
           value.trim() !== ''
         )
-        .map(value => value.trim())
-        .filter((value, index, self) => self.indexOf(value) === index)
-        .sort();
+        .map(value => value.trim());
+
+      // Create a unique set of values
+      const uniqueValues = Array.from(new Set(validValues)).sort();
       
-      return new Set(validValues);
+      console.log(`Generated ${key} filter options:`, {
+        total: uniqueValues.length,
+        values: uniqueValues
+      });
+      
+      return new Set(uniqueValues);
     };
 
     const filterOptions = {
@@ -33,7 +42,7 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       brands: getUniqueValues('brand'),
     };
 
-    console.log('Generated filter options:', {
+    console.log('Generated all filter options:', {
       totalLaptops: laptops?.length,
       brands: Array.from(filterOptions.brands),
       totalBrands: filterOptions.brands.size,
