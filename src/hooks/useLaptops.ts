@@ -35,35 +35,66 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
         const start = (page - 1) * ITEMS_PER_PAGE;
         const end = start + ITEMS_PER_PAGE - 1;
 
-        // Start building the query
+        // Build the base query
         let query = supabase
           .from('products')
           .select(`
-            *,
-            product_reviews (*)
+            id,
+            title,
+            current_price,
+            original_price,
+            rating,
+            rating_count,
+            image_url,
+            processor,
+            ram,
+            storage,
+            graphics,
+            screen_size,
+            screen_resolution,
+            weight,
+            processor_score,
+            brand,
+            model,
+            asin,
+            product_reviews (
+              id,
+              rating,
+              title,
+              content,
+              reviewer_name,
+              review_date,
+              verified_purchase,
+              helpful_votes
+            )
           `)
           .eq('is_laptop', true);
 
         // Apply sorting based on the sortBy parameter
         switch (sortBy) {
           case 'price-asc':
-            query = query.order('current_price', { ascending: true, nullsFirst: false });
+            query = query
+              .order('current_price', { ascending: true, nullsLast: true })
+              .order('rating_count', { ascending: false }); // Secondary sort
             break;
           case 'price-desc':
-            query = query.order('current_price', { ascending: false, nullsFirst: false });
+            query = query
+              .order('current_price', { ascending: false, nullsLast: true })
+              .order('rating_count', { ascending: false }); // Secondary sort
             break;
           case 'rating-desc':
-            // First by rating count, then by rating
             query = query
-              .order('rating_count', { ascending: false })
-              .order('rating', { ascending: false });
+              .order('rating_count', { ascending: false, nullsLast: true })
+              .order('rating', { ascending: false, nullsLast: true });
             break;
           case 'performance-desc':
-            query = query.order('processor_score', { ascending: false, nullsFirst: false });
+            query = query
+              .order('processor_score', { ascending: false, nullsLast: true })
+              .order('rating_count', { ascending: false }); // Secondary sort
             break;
         }
 
-        // Apply pagination
+        // Apply pagination last
         query = query.range(start, end);
 
         // Execute the query
@@ -88,7 +119,9 @@ export const useLaptops = (page: number = 1, sortBy: SortOption = 'rating-desc')
           sortBy,
           fetchedCount: laptops.length,
           start,
-          end
+          end,
+          firstLaptopPrice: laptops[0]?.current_price,
+          lastLaptopPrice: laptops[laptops.length - 1]?.current_price
         });
 
         // Process and return the laptops
