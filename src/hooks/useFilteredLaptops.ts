@@ -32,36 +32,45 @@ export const useFilteredLaptops = (
         }
 
         // Brand filter
-        if (filters.brand !== "all-brands") {
-          if (!laptop.brand) return false;
-          const laptopBrand = laptop.brand.toLowerCase().trim();
-          const selectedBrand = filters.brand.toLowerCase().trim();
-          if (laptopBrand !== selectedBrand) return false;
+        if (filters.brands.size > 0) {
+          if (!laptop.brand || !filters.brands.has(laptop.brand)) {
+            return false;
+          }
         }
         
         // Processor filter
-        if (filters.processor !== "all-processors" && laptop.processor) {
-          if (laptop.processor.toLowerCase() !== filters.processor.toLowerCase()) return false;
+        if (filters.processors.size > 0) {
+          if (!laptop.processor || !filters.processors.has(laptop.processor)) {
+            return false;
+          }
         }
         
         // RAM filter
-        if (filters.ram !== "all-ram" && laptop.ram) {
-          if (laptop.ram.toLowerCase() !== filters.ram.toLowerCase()) return false;
+        if (filters.ramSizes.size > 0) {
+          if (!laptop.ram || !filters.ramSizes.has(laptop.ram)) {
+            return false;
+          }
         }
         
         // Storage filter
-        if (filters.storage !== "all-storage" && laptop.storage) {
-          if (laptop.storage.toLowerCase() !== filters.storage.toLowerCase()) return false;
+        if (filters.storageOptions.size > 0) {
+          if (!laptop.storage || !filters.storageOptions.has(laptop.storage)) {
+            return false;
+          }
         }
         
         // Graphics filter
-        if (filters.graphics !== "all-graphics" && laptop.graphics) {
-          if (laptop.graphics.toLowerCase() !== filters.graphics.toLowerCase()) return false;
+        if (filters.graphicsCards.size > 0) {
+          if (!laptop.graphics || !filters.graphicsCards.has(laptop.graphics)) {
+            return false;
+          }
         }
         
         // Screen size filter
-        if (filters.screenSize !== "all-screens" && laptop.screen_size) {
-          if (laptop.screen_size.toLowerCase() !== filters.screenSize.toLowerCase()) return false;
+        if (filters.screenSizes.size > 0) {
+          if (!laptop.screen_size || !filters.screenSizes.has(laptop.screen_size)) {
+            return false;
+          }
         }
         
         return true;

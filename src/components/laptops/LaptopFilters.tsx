@@ -1,17 +1,18 @@
 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Product } from "@/types/product";
 
 export type FilterOptions = {
   priceRange: { min: number; max: number };
-  processor: string;
-  ram: string;
-  storage: string;
-  graphics: string;
-  screenSize: string;
-  brand: string;
+  processors: Set<string>;
+  ramSizes: Set<string>;
+  storageOptions: Set<string>;
+  graphicsCards: Set<string>;
+  screenSizes: Set<string>;
+  brands: Set<string>;
 };
 
 type LaptopFiltersProps = {
@@ -25,6 +26,50 @@ type LaptopFiltersProps = {
   brands: Set<string>;
 };
 
+type FilterSectionProps = {
+  title: string;
+  options: Set<string>;
+  selectedOptions: Set<string>;
+  onChange: (options: Set<string>) => void;
+};
+
+const FilterSection = ({ title, options, selectedOptions, onChange }: FilterSectionProps) => {
+  const handleCheckboxChange = (option: string, checked: boolean) => {
+    const newSelected = new Set(selectedOptions);
+    if (checked) {
+      newSelected.add(option);
+    } else {
+      newSelected.delete(option);
+    }
+    onChange(newSelected);
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm font-medium">{title}</Label>
+      <ScrollArea className="h-[200px] rounded-md border p-2">
+        <div className="space-y-2">
+          {Array.from(options).map((option) => (
+            <div key={option} className="flex items-center space-x-2">
+              <Checkbox
+                id={`${title}-${option}`}
+                checked={selectedOptions.has(option)}
+                onCheckedChange={(checked) => handleCheckboxChange(option, checked === true)}
+              />
+              <label
+                htmlFor={`${title}-${option}`}
+                className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {option}
+              </label>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+};
+
 export function LaptopFilters({
   filters,
   onFiltersChange,
@@ -36,26 +81,7 @@ export function LaptopFilters({
   brands,
 }: LaptopFiltersProps) {
   return (
-    <div className="space-y-4">
-      {/* Brand Filter */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Brand</Label>
-        <Select
-          value={filters.brand}
-          onValueChange={(value) => onFiltersChange({ ...filters, brand: value })}
-        >
-          <SelectTrigger className="h-8 text-sm">
-            <SelectValue placeholder="Select brand" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all-brands">All Brands</SelectItem>
-            {Array.from(brands).map((brand) => (
-              brand && <SelectItem key={String(brand)} value={String(brand)}>{String(brand)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
+    <div className="space-y-6">
       {/* Price Range */}
       <div className="space-y-2">
         <Label className="text-sm font-medium">Price Range</Label>
@@ -84,100 +110,53 @@ export function LaptopFilters({
         </div>
       </div>
 
+      {/* Brand Filter */}
+      <FilterSection
+        title="Brand"
+        options={brands}
+        selectedOptions={filters.brands}
+        onChange={(newBrands) => onFiltersChange({ ...filters, brands: newBrands })}
+      />
+
       {/* Processor Filter */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Processor</Label>
-        <Select
-          value={filters.processor}
-          onValueChange={(value) => onFiltersChange({ ...filters, processor: value })}
-        >
-          <SelectTrigger className="h-8 text-sm">
-            <SelectValue placeholder="Select processor" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all-processors">All Processors</SelectItem>
-            {Array.from(processors).map((processor) => (
-              processor && <SelectItem key={String(processor)} value={String(processor)}>{String(processor)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <FilterSection
+        title="Processor"
+        options={processors}
+        selectedOptions={filters.processors}
+        onChange={(newProcessors) => onFiltersChange({ ...filters, processors: newProcessors })}
+      />
 
       {/* RAM Filter */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">RAM</Label>
-        <Select
-          value={filters.ram}
-          onValueChange={(value) => onFiltersChange({ ...filters, ram: value })}
-        >
-          <SelectTrigger className="h-8 text-sm">
-            <SelectValue placeholder="Select RAM" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all-ram">All RAM sizes</SelectItem>
-            {Array.from(ramSizes).map((ram) => (
-              ram && <SelectItem key={String(ram)} value={String(ram)}>{String(ram)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <FilterSection
+        title="RAM"
+        options={ramSizes}
+        selectedOptions={filters.ramSizes}
+        onChange={(newRamSizes) => onFiltersChange({ ...filters, ramSizes: newRamSizes })}
+      />
 
       {/* Storage Filter */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Storage</Label>
-        <Select
-          value={filters.storage}
-          onValueChange={(value) => onFiltersChange({ ...filters, storage: value })}
-        >
-          <SelectTrigger className="h-8 text-sm">
-            <SelectValue placeholder="Select storage" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all-storage">All storage options</SelectItem>
-            {Array.from(storageOptions).map((storage) => (
-              storage && <SelectItem key={String(storage)} value={String(storage)}>{String(storage)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <FilterSection
+        title="Storage"
+        options={storageOptions}
+        selectedOptions={filters.storageOptions}
+        onChange={(newStorageOptions) => onFiltersChange({ ...filters, storageOptions: newStorageOptions })}
+      />
 
       {/* Graphics Filter */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Graphics</Label>
-        <Select
-          value={filters.graphics}
-          onValueChange={(value) => onFiltersChange({ ...filters, graphics: value })}
-        >
-          <SelectTrigger className="h-8 text-sm">
-            <SelectValue placeholder="Select graphics" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all-graphics">All graphics cards</SelectItem>
-            {Array.from(graphicsCards).map((graphics) => (
-              graphics && <SelectItem key={String(graphics)} value={String(graphics)}>{String(graphics)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <FilterSection
+        title="Graphics"
+        options={graphicsCards}
+        selectedOptions={filters.graphicsCards}
+        onChange={(newGraphicsCards) => onFiltersChange({ ...filters, graphicsCards: newGraphicsCards })}
+      />
 
       {/* Screen Size Filter */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Screen Size</Label>
-        <Select
-          value={filters.screenSize}
-          onValueChange={(value) => onFiltersChange({ ...filters, screenSize: value })}
-        >
-          <SelectTrigger className="h-8 text-sm">
-            <SelectValue placeholder="Select screen size" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all-screens">All screen sizes</SelectItem>
-            {Array.from(screenSizes).map((size) => (
-              size && <SelectItem key={String(size)} value={String(size)}>{String(size)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <FilterSection
+        title="Screen Size"
+        options={screenSizes}
+        selectedOptions={filters.screenSizes}
+        onChange={(newScreenSizes) => onFiltersChange({ ...filters, screenSizes: newScreenSizes })}
+      />
     </div>
   );
 }
