@@ -2,6 +2,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { processLaptopData } from "@/utils/laptopUtils";
+import { filterLaptops } from "@/utils/laptopFilters";
+import { sortLaptops } from "@/utils/laptopSort";
+import { paginateLaptops } from "@/utils/laptopPagination";
 import { collectLaptops, updateLaptops, refreshBrandModels } from "@/utils/laptop";
 import type { Product } from "@/types/product";
 import type { SortOption } from "@/components/laptops/LaptopSort";
@@ -17,10 +20,9 @@ export const useLaptops = (
   filters: FilterOptions
 ) => {
   const query = useQuery({
-    queryKey: ['all-laptops'], // Changed to not depend on filters/pagination
+    queryKey: ['all-laptops'],
     queryFn: async () => {
       try {
-        // Fetch all laptops in one go
         const { data: laptops, error } = await supabase
           .from('products')
           .select(`
@@ -76,8 +78,6 @@ export const useLaptops = (
         // Process all laptops
         const processedLaptops = laptops.map(laptop => {
           const reviews = laptop.product_reviews || [];
-          
-          // Process reviews
           const reviewData = {
             rating_breakdown: {},
             recent_reviews: reviews.map(review => ({
@@ -94,55 +94,19 @@ export const useLaptops = (
           return processLaptopData(laptop);
         });
 
-        // Apply filters in memory
-        let filteredLaptops = processedLaptops.filter(laptop => {
-          if (filters.brands.size > 0 && !filters.brands.has(laptop.brand)) return false;
-          if (filters.processors.size > 0 && !filters.processors.has(laptop.processor || '')) return false;
-          if (filters.ramSizes.size > 0 && !filters.ramSizes.has(laptop.ram || '')) return false;
-          if (filters.storageOptions.size > 0 && !filters.storageOptions.has(laptop.storage || '')) return false;
-          if (filters.graphicsCards.size > 0 && !filters.graphicsCards.has(laptop.graphics || '')) return false;
-          if (filters.screenSizes.size > 0 && !filters.screenSizes.has(laptop.screen_size || '')) return false;
-          
-          const price = laptop.current_price || 0;
-          if (filters.priceRange.min > 0 && price < filters.priceRange.min) return false;
-          if (filters.priceRange.max < 10000 && price > filters.priceRange.max) return false;
-          
-          return true;
-        });
-
-        // Apply sorting in memory
-        filteredLaptops.sort((a, b) => {
-          switch (sortBy) {
-            case 'price-asc':
-              return (a.current_price || 999999) - (b.current_price || 999999);
-            case 'price-desc':
-              return (b.current_price || 0) - (a.current_price || 0);
-            case 'rating-desc':
-              return (b.wilson_score || 0) - (a.wilson_score || 0);
-            default:
-              return 0;
-          }
-        });
-
-        // Calculate pagination
-        const totalCount = filteredLaptops.length;
-        const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
-        const start = (page - 1) * ITEMS_PER_PAGE;
-        const end = start + ITEMS_PER_PAGE;
-        const paginatedLaptops = filteredLaptops.slice(start, end);
+        // Apply filters, sorting, and pagination using utility functions
+        const filteredLaptops = filterLaptops(processedLaptops, filters);
+        const sortedLaptops = sortLaptops(filteredLaptops, sortBy);
+        const paginatedResults = paginateLaptops(sortedLaptops, page, ITEMS_PER_PAGE);
 
         console.log('Client-side filtering/pagination results:', {
           totalLaptops: processedLaptops.length,
           filteredCount: filteredLaptops.length,
           currentPage: page,
-          laptopsOnPage: paginatedLaptops.length
+          laptopsOnPage: paginatedResults.laptops.length
         });
 
-        return {
-          laptops: paginatedLaptops,
-          totalCount,
-          totalPages
-        };
+        return paginatedResults;
       } catch (error) {
         console.error('Error in useLaptops hook:', error);
         throw error;
@@ -160,4 +124,3 @@ export const useLaptops = (
     refreshBrandModels,
   };
 };
-
