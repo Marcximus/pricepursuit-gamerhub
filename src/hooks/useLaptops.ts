@@ -1,12 +1,12 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { processLaptopData } from "@/utils/laptopUtils";
 import { collectLaptops, updateLaptops, refreshBrandModels } from "@/utils/laptop";
+import { removeAccessories } from "@/utils/laptop/removeAccessories";
 import type { Product } from "@/types/product";
 
-export { collectLaptops, updateLaptops, refreshBrandModels };
+export { collectLaptops, updateLaptops, refreshBrandModels, removeAccessories };
 
 export const useLaptops = () => {
   const query = useQuery({

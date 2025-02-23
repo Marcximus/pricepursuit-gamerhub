@@ -1,7 +1,9 @@
 
-import { ReloadIcon, UpdateIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
-import { LaptopSort, type SortOption } from "@/components/laptops/LaptopSort";
+import { ReloadIcon } from "@radix-ui/react-icons";
+import { LaptopSort, type SortOption } from "./LaptopSort";
+import { removeAccessories } from "@/hooks/useLaptops";
+import { useToast } from "@/components/ui/use-toast";
 
 type LaptopToolbarProps = {
   totalLaptops: number;
@@ -22,61 +24,71 @@ export function LaptopToolbar({
   isLoading,
   isRefetching
 }: LaptopToolbarProps) {
-  console.log('LaptopToolbar render:', { isLoading, isRefetching, totalLaptops });
+  const { toast } = useToast();
 
-  const handleCollectClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    console.log('Collect button clicked');
-    console.log('Button states:', { isLoading, isRefetching });
-    
-    if (isLoading || isRefetching) {
-      console.log('Button is disabled due to loading states');
-      return;
+  const handleRemoveAccessories = async () => {
+    try {
+      const result = await removeAccessories();
+      toast({
+        title: "Accessories Removed",
+        description: `Successfully removed ${result.removedCount} accessories from the database.`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to remove accessories. Please try again.",
+      });
     }
-    
-    console.log('Calling onCollectLaptops from handleCollectClick');
-    onCollectLaptops();
   };
 
   return (
-    <div className="mb-8 flex justify-between items-center">
-      <div className="text-sm text-gray-600 space-y-1">
-        {!isLoading && (
-          <>
-            <div>Showing {totalLaptops} laptops</div>
-            <div className="text-xs text-gray-400">
-              {totalLaptops === 0 ? "(No laptops match current filters)" : ""}
-            </div>
-          </>
-        )}
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-gray-500">
+          {totalLaptops} laptop{totalLaptops === 1 ? '' : 's'} found
+        </span>
+        <LaptopSort value={sortBy} onValueChange={onSortChange} />
       </div>
-      <div className="flex gap-4 items-center">
-        <LaptopSort
-          sortBy={sortBy}
-          onSortChange={onSortChange}
-        />
-        <div className="flex gap-2">
-          <Button
-            onClick={onUpdateLaptops}
-            disabled={isLoading || isRefetching}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <UpdateIcon className="h-4 w-4" />
-            Update Laptops
-          </Button>
-          <Button
-            onClick={handleCollectClick}
-            disabled={isLoading || isRefetching}
-            className="flex items-center gap-2"
-            type="button"
-          >
-            <MagnifyingGlassIcon className="h-4 w-4" />
-            Discover Laptops
-          </Button>
-        </div>
+      <div className="flex flex-wrap gap-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleRemoveAccessories}
+        >
+          Remove Accessories
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onUpdateLaptops}
+          disabled={isLoading || isRefetching}
+        >
+          {isRefetching ? (
+            <>
+              <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+              Updating...
+            </>
+          ) : (
+            "Update Prices"
+          )}
+        </Button>
+        <Button
+          variant="default"
+          size="sm"
+          onClick={onCollectLaptops}
+          disabled={isLoading || isRefetching}
+        >
+          {isLoading ? (
+            <>
+              <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+              Collecting...
+            </>
+          ) : (
+            "Collect New"
+          )}
+        </Button>
       </div>
     </div>
   );
 }
-
