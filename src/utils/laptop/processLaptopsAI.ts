@@ -49,6 +49,7 @@ export const processLaptopsAI = async () => {
 
         console.log(`Processing laptop ${laptop.asin}...`);
 
+        // Call the process-laptops-ai edge function
         const { error: processError } = await supabase.functions.invoke('process-laptops-ai', {
           body: { asin: laptop.asin }
         });
@@ -78,6 +79,15 @@ export const processLaptopsAI = async () => {
 
       } catch (error) {
         console.error(`Error processing laptop ${laptop.asin}:`, error);
+        
+        // Update status to error
+        await supabase
+          .from('products')
+          .update({
+            ai_processing_status: 'error',
+            ai_processed_at: new Date().toISOString()
+          })
+          .eq('id', laptop.id);
       }
     }
 
