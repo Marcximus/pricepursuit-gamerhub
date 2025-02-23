@@ -87,7 +87,9 @@ export const updateLaptops = async () => {
     };
 
     // Start the background process without waiting for it to complete
-    EdgeRuntime.waitUntil(processChunks());
+    processChunks().catch(error => {
+      console.error('Background process error:', error);
+    });
     
     return { success: true };
 
