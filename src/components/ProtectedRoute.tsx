@@ -36,10 +36,9 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
   }
 
   if (requireAdmin && !isAdmin) {
-    console.log('⛔ Access denied: User is not admin', {
+    console.log('⛔ Access denied: Admin required but user is not admin', {
       userEmail: user.email,
       isAdmin,
-      requireAdmin
     });
     return <Navigate to="/" replace />;
   }

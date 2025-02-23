@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!userId) {
       console.log('❌ No user ID provided');
       setIsAdmin(false);
-      return;
+      return false;
     }
 
     try {
@@ -43,14 +43,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           variant: "destructive"
         });
         setIsAdmin(false);
-        return;
+        return false;
       }
 
       console.log('✅ Admin role check result:', data);
       setIsAdmin(data ?? false);
+      return data ?? false;
     } catch (error) {
       console.error('❌ Error checking admin role:', error);
       setIsAdmin(false);
+      return false;
     }
   };
 
@@ -60,7 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const initializeAuth = async () => {
       try {
-        setIsLoading(true);
+        console.log('🔄 Initializing auth...');
         const { data: { session } } = await supabase.auth.getSession();
         console.log('📍 Current session:', session?.user?.email);
         
@@ -74,38 +76,53 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.error('❌ Error initializing auth:', error);
       } finally {
         if (mounted) {
+          console.log('✅ Auth initialization complete');
           setIsLoading(false);
         }
       }
     };
 
     const setupAuthListener = () => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Setting up auth listener...');
+      return supabase.auth.onAuthStateChange(async (event, session) => {
         console.log('🔔 Auth state changed:', event, session?.user?.email);
         
         if (mounted) {
           setIsLoading(true);
           setUser(session?.user ?? null);
+          
           if (session?.user) {
             await checkAdminRole(session.user.id);
           } else {
             setIsAdmin(false);
           }
+          
+          console.log('✅ Auth state update complete');
           setIsLoading(false);
         }
       });
-
-      return subscription;
     };
 
+    // Initialize auth and set up listener
     initializeAuth();
-    const subscription = setupAuthListener();
+    const { data: { subscription } } = setupAuthListener();
 
+    // Cleanup function
     return () => {
+      console.log('🧹 Cleaning up auth context');
       mounted = false;
       subscription.unsubscribe();
     };
   }, []);
+
+  // Log state changes
+  useEffect(() => {
+    console.log('🔄 Auth context state updated:', {
+      userEmail: user?.email,
+      isAdmin,
+      isLoading
+    });
+  }, [user, isAdmin, isLoading]);
 
   return (
     <AuthContext.Provider value={{ user, isAdmin, isLoading }}>
