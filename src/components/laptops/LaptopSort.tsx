@@ -10,7 +10,7 @@ type LaptopSortProps = {
 
 export function LaptopSort({ sortBy, onSortChange }: LaptopSortProps) {
   return (
-    <div className="relative flex-shrink-0">
+    <div className="relative">
       <Select
         value={sortBy}
         onValueChange={(value) => onSortChange(value as SortOption)}
@@ -19,7 +19,7 @@ export function LaptopSort({ sortBy, onSortChange }: LaptopSortProps) {
           <SelectValue placeholder="Sort by..." />
         </SelectTrigger>
         <SelectContent
-          className="w-[180px]"
+          className="w-[180px] bg-popover"
           position="popper"
           sideOffset={4}
           align="end"
@@ -33,3 +33,4 @@ export function LaptopSort({ sortBy, onSortChange }: LaptopSortProps) {
     </div>
   );
 }
+

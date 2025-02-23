@@ -27,7 +27,7 @@ export function LaptopToolbar({
   });
 
   return (
-    <div className="mb-8">
+    <div className="relative isolate">
       <div className="flex justify-between items-start gap-4">
         <div className="text-sm text-gray-600 py-2">
           {!isLoading && (
@@ -41,11 +41,14 @@ export function LaptopToolbar({
             </>
           )}
         </div>
-        <LaptopSort
-          sortBy={sortBy}
-          onSortChange={onSortChange}
-        />
+        <div className="relative z-30">
+          <LaptopSort
+            sortBy={sortBy}
+            onSortChange={onSortChange}
+          />
+        </div>
       </div>
     </div>
   );
 }
+
