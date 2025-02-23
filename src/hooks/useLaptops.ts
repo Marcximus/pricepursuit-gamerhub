@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { processLaptopData } from "@/utils/laptopUtils";
@@ -122,9 +123,7 @@ export const useLaptops = (
       });
 
       const filteredLaptops = filterLaptops(processedLaptops, filters);
-      
       const sortedLaptops = sortLaptops(filteredLaptops, sortBy);
-      
       const paginatedResults = paginateLaptops(sortedLaptops, page, ITEMS_PER_PAGE);
 
       console.log('Filter/sort/pagination results:', {
