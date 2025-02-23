@@ -8,10 +8,10 @@ const LAPTOP_BRANDS = [
   'Alienware', 'Vaio', 'Fsjun', 'Jumper', 'Xiaomi', 'ACEMAGIC'
 ];
 
-const PARALLEL_BATCHES = 3; // Reduced from 5 to 3 for better stability
-const DELAY_BETWEEN_BATCHES = 3000; // Increased from 2000 to 3000ms
+const PARALLEL_BATCHES = 3;
+const DELAY_BETWEEN_BATCHES = 3000;
 const PAGES_PER_BRAND = 5;
-const STALE_COLLECTION_MINUTES = 30; // Increased back to 30 minutes since we'll handle timeouts better
+const STALE_COLLECTION_MINUTES = 30;
 
 export async function collectLaptops() {
   console.log('collectLaptops function called');
@@ -99,7 +99,7 @@ export async function collectLaptops() {
             const { error: functionError } = await supabase.functions.invoke('collect-laptops', {
               body: {
                 brands: [brand],
-                pages_per_brand: 1, // Process only one page per call
+                pages_per_brand: 1,
                 current_page: page,
                 batch_number: groupIndex * PARALLEL_BATCHES + brandIndex + 1,
                 total_batches: LAPTOP_BRANDS.length
@@ -108,7 +108,6 @@ export async function collectLaptops() {
 
             if (functionError) {
               console.error(`Edge function error for ${brand} page ${page}:`, functionError);
-              // Continue to next page even if this one fails
               continue;
             }
 
@@ -126,7 +125,6 @@ export async function collectLaptops() {
 
           console.log(`Successfully processed all pages for ${brand}`);
           
-          // Show progress toast
           toast({
             title: "Brand Completed",
             description: `Finished collecting data for ${brand}`,

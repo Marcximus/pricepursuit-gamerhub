@@ -2,7 +2,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { fetchLaptopData } from './oxylabsService.ts'
-import { processWithDeepseek } from './deepseekService.ts'
 import { upsertProduct } from './databaseService.ts'
 import { corsHeaders } from './cors.ts'
 
@@ -26,7 +25,12 @@ serve(async (req) => {
       for (const brand of brands) {
         try {
           // Fetch data for this specific page
-          const oxylabsData = await fetchLaptopData(brand, current_page);
+          const oxylabsData = await fetchLaptopData(
+            brand, 
+            current_page,
+            Deno.env.get('OXYLABS_USERNAME')!,
+            Deno.env.get('OXYLABS_PASSWORD')!
+          );
           
           if (!oxylabsData.results?.[0]?.content?.results) {
             console.warn(`[Oxylabs] No results found for ${brand} on page ${current_page}`);
@@ -47,7 +51,22 @@ serve(async (req) => {
             }
 
             try {
-              const processedData = await processWithDeepseek(result);
+              // Process laptop data directly from Oxylabs response
+              const processedData = {
+                asin: result.asin,
+                title: result.title || null,
+                current_price: result.price || null,
+                original_price: result.price_strikethrough || null,
+                rating: result.rating || null,
+                rating_count: result.reviews_count || null,
+                image_url: result.url_image || null,
+                product_url: result.url || null,
+                brand: brand,
+                collection_status: 'completed',
+                last_checked: new Date().toISOString(),
+                is_laptop: true
+              };
+
               await upsertProduct(supabase, result, processedData);
             } catch (productError) {
               console.error(`[Error] Processing product ${result.asin}:`, productError);
