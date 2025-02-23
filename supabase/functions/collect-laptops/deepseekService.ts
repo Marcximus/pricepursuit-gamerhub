@@ -4,7 +4,11 @@ import { OxylabsResult, ProcessedLaptopData } from './types.ts';
 export async function processWithDeepseek(laptopData: OxylabsResult): Promise<ProcessedLaptopData> {
   console.log('[DeepSeek] Processing laptop:', {
     title: laptopData.title,
-    asin: laptopData.asin
+    asin: laptopData.asin,
+    price: laptopData.price,
+    rating: laptopData.rating,
+    reviews_count: laptopData.reviews_count,
+    manufacturer: laptopData.manufacturer
   });
 
   const systemPrompt = `You are a laptop data processor. Extract and standardize laptop specifications from the provided data. 
@@ -29,12 +33,21 @@ Requirements:
 - Extract specific numeric values where possible (e.g., "16GB" for RAM, "512GB" for storage)
 - Standardize formats (e.g., "15.6 inches" for screen size)
 - If a value cannot be determined, use null
-- Ensure consistent formatting for each field`;
+- Ensure consistent formatting for each field
+- Look for specifications in both the title and detailed product information`;
 
   const userPrompt = `Process this laptop data and return standardized specifications:
-Title: ${laptopData.title}
+
 ASIN: ${laptopData.asin}
-Description: ${laptopData.description || 'No description available'}`;
+Title: ${laptopData.title}
+Description: ${laptopData.description || 'No description available'}
+Manufacturer: ${laptopData.manufacturer || 'Unknown'}
+Price: ${laptopData.price || 'Not available'}
+Rating: ${laptopData.rating || 'Not available'}
+Reviews Count: ${laptopData.reviews_count || 'Not available'}
+
+Raw Product Data:
+${JSON.stringify(laptopData, null, 2)}`;
 
   try {
     console.log('[DeepSeek] Sending request with prompts:', {
