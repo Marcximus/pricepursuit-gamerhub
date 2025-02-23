@@ -9,7 +9,6 @@ import { LaptopList } from "@/components/laptops/LaptopList";
 import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
-import { collectLaptops } from "@/utils/laptop/collectLaptops";
 
 const ComparePriceLaptops = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -28,9 +27,7 @@ const ComparePriceLaptops = () => {
     data, 
     isLoading: isLaptopsLoading, 
     error: laptopsError,
-    refetch: refetchLaptops,
     isRefetching,
-    updateLaptops
   } = useLaptops(currentPage, sortBy, filters);
 
   const laptops = data?.laptops ?? [];
@@ -44,57 +41,6 @@ const ComparePriceLaptops = () => {
   const handleSortChange = (newSortBy: SortOption) => {
     setSortBy(newSortBy);
     setCurrentPage(1);
-  };
-
-  const handleCollectLaptops = async () => {
-    console.log('handleCollectLaptops called in Laptops.tsx');
-    try {
-      const result = await collectLaptops();
-      console.log('Collection result:', result);
-      
-      if (result) {
-        toast({
-          title: "Collection Started",
-          description: `Started collection process in ${result.batches} batches`,
-        });
-
-        const pollInterval = setInterval(async () => {
-          const { data: newData } = await refetchLaptops();
-          if (newData && newData.laptops.length > 0) {
-            clearInterval(pollInterval);
-            toast({
-              title: "Collection Complete",
-              description: `Found ${newData.laptops.length} laptops`,
-            });
-          }
-        }, 10000);
-
-        setTimeout(() => clearInterval(pollInterval), 300000);
-      }
-    } catch (error) {
-      console.error('Error in handleCollectLaptops:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to start laptop collection. Please try again.",
-      });
-    }
-  };
-
-  const handleUpdateLaptops = async () => {
-    try {
-      await updateLaptops();
-      toast({
-        title: "Update Started",
-        description: "Started updating laptop information. This may take a few minutes.",
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to start laptop updates. Please try again.",
-      });
-    }
   };
 
   const handlePageChange = (page: number) => {
@@ -130,8 +76,6 @@ const ComparePriceLaptops = () => {
                 totalLaptops={totalCount}
                 sortBy={sortBy}
                 onSortChange={handleSortChange}
-                onCollectLaptops={handleCollectLaptops}
-                onUpdateLaptops={handleUpdateLaptops}
                 isLoading={isLaptopsLoading}
                 isRefetching={isRefetching}
               />
@@ -144,7 +88,6 @@ const ComparePriceLaptops = () => {
                 totalPages={totalPages}
                 isLoading={isLaptopsLoading}
                 error={laptopsError}
-                onRetry={handleCollectLaptops}
                 isRefetching={isRefetching}
                 onPageChange={handlePageChange}
               />
@@ -157,3 +100,4 @@ const ComparePriceLaptops = () => {
 };
 
 export default ComparePriceLaptops;
+

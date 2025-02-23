@@ -2,13 +2,18 @@
 import { toast } from "@/components/ui/use-toast";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import { MagnifyingGlassIcon, UpdateIcon } from "@radix-ui/react-icons";
-import { collectLaptops, updateLaptops, refreshBrandModels } from "@/utils/laptop";
+import { MagnifyingGlassIcon, UpdateIcon, BrainCircuit } from "lucide-react";
+import { collectLaptops, updateLaptops } from "@/utils/laptop";
+import { processLaptopsAI } from "@/utils/laptop/processLaptopsAI";
 
 const Admin = () => {
   const handleCollectLaptops = async () => {
     try {
       await collectLaptops();
+      toast({
+        title: "Collection Started",
+        description: "Started collecting new laptops. This may take a few minutes.",
+      });
     } catch (error) {
       console.error('Error collecting laptops:', error);
       toast({
@@ -22,6 +27,10 @@ const Admin = () => {
   const handleUpdateLaptops = async () => {
     try {
       await updateLaptops();
+      toast({
+        title: "Update Started",
+        description: "Started updating laptop information. This may take a few minutes.",
+      });
     } catch (error) {
       console.error('Error updating laptops:', error);
       toast({
@@ -32,19 +41,27 @@ const Admin = () => {
     }
   };
 
-  const handleRefreshBrandModels = async () => {
+  const handleAIProcess = async () => {
     try {
-      await refreshBrandModels();
-      toast({
-        title: "Success",
-        description: "Started refreshing brand models",
-      });
+      const result = await processLaptopsAI();
+      if (result.success) {
+        toast({
+          title: "AI Processing Started",
+          description: `Processing initiated for ${result.processed} laptops`,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to start AI processing",
+        });
+      }
     } catch (error) {
-      console.error('Error refreshing brand models:', error);
+      console.error('Error processing laptops with AI:', error);
       toast({
+        variant: "destructive",
         title: "Error",
-        description: "Failed to refresh brand models",
-        variant: "destructive"
+        description: "Failed to process laptops with AI",
       });
     }
   };
@@ -73,7 +90,7 @@ const Admin = () => {
                   className="flex items-center gap-2"
                 >
                   <UpdateIcon className="h-4 w-4" />
-                  Update Laptops
+                  Update Prices
                 </Button>
               </div>
 
@@ -87,22 +104,22 @@ const Admin = () => {
                   className="flex items-center gap-2"
                 >
                   <MagnifyingGlassIcon className="h-4 w-4" />
-                  Discover Laptops
+                  Collect New
                 </Button>
               </div>
 
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <h3 className="font-medium">Refresh Brand Models</h3>
-                  <p className="text-sm text-gray-500">Update brand and model information for laptops</p>
+                  <h3 className="font-medium">Process with AI</h3>
+                  <p className="text-sm text-gray-500">Use AI to standardize laptop specifications</p>
                 </div>
                 <Button
-                  onClick={handleRefreshBrandModels}
+                  onClick={handleAIProcess}
                   variant="outline"
                   className="flex items-center gap-2"
                 >
-                  <UpdateIcon className="h-4 w-4" />
-                  Refresh Models
+                  <BrainCircuit className="h-4 w-4" />
+                  Process with AI
                 </Button>
               </div>
             </div>
@@ -114,3 +131,4 @@ const Admin = () => {
 };
 
 export default Admin;
+
