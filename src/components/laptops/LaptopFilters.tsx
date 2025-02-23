@@ -45,7 +45,7 @@ const FilterSection = ({ title, options, selectedOptions, onChange }: FilterSect
     } else {
       newSelected.delete(option);
     }
-    onChange(newSelected);
+    onChange(newSelected); // This will now trigger an immediate filter update
   };
 
   return (
@@ -95,13 +95,18 @@ export function LaptopFilters({
   brands,
 }: LaptopFiltersProps) {
   const handlePriceChange = (value: number, type: 'min' | 'max') => {
-    onFiltersChange({
-      ...filters,
-      priceRange: {
-        ...filters.priceRange,
-        [type]: value
-      }
-    });
+    // Debounce price changes to avoid too many updates
+    const timeoutId = setTimeout(() => {
+      onFiltersChange({
+        ...filters,
+        priceRange: {
+          ...filters.priceRange,
+          [type]: value
+        }
+      });
+    }, 500); // Wait 500ms after the user stops typing
+
+    return () => clearTimeout(timeoutId);
   };
 
   const allSections = ["Brand", "Processor", "RAM", "Storage", "Graphics", "Screen Size"];
