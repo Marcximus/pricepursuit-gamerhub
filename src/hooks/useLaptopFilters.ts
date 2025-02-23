@@ -6,7 +6,6 @@ import type { Product } from "@/types/product";
 type FilterableProductKeys = 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size' | 'brand';
 
 export const useLaptopFilters = () => {
-  // Use the same query as the main laptop list
   const { data: allLaptops = [] } = useAllLaptops();
 
   return useMemo(() => {

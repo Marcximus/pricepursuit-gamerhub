@@ -1,6 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react"; // Add missing import
+import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { processLaptopData } from "@/utils/laptopUtils";
 import { filterLaptops } from "@/utils/laptopFilters";
@@ -92,7 +92,7 @@ export const useAllLaptops = () => {
   });
 };
 
-interface ProcessedData {
+export interface ProcessedData {
   laptops: Product[];
   totalCount: number;
   totalPages: number;
@@ -102,7 +102,14 @@ export const useLaptops = (
   page: number = 1, 
   sortBy: SortOption = 'rating-desc',
   filters: FilterOptions
-) => {
+): {
+  data: ProcessedData;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => Promise<any>;
+  isRefetching: boolean;
+  updateLaptops: typeof updateLaptops;
+} => {
   const { data: allLaptops = [], isLoading, error: fetchError, refetch, isRefetching } = useAllLaptops();
 
   const processedData = useMemo<ProcessedData>(() => {
@@ -118,7 +125,13 @@ export const useLaptops = (
 
     const filteredLaptops = filterLaptops(allLaptops, filters);
     const sortedLaptops = sortLaptops(filteredLaptops, sortBy);
-    return paginateLaptops(sortedLaptops, page, ITEMS_PER_PAGE);
+    const paginatedData = paginateLaptops(sortedLaptops, page, ITEMS_PER_PAGE);
+
+    return {
+      laptops: paginatedData.laptops,
+      totalCount: paginatedData.totalCount,
+      totalPages: paginatedData.totalPages
+    };
   }, [allLaptops, page, sortBy, filters]);
 
   return {
