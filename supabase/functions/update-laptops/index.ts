@@ -1,65 +1,88 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.21.0';
-import { processTitleWithAI } from '../_shared/deepseekUtils.ts';
-import { fetchLaptopData } from './oxylabsService.ts';
-import { saveProductUpdate } from './databaseService.ts';
-import { UpdateLaptopsRequest } from './types.ts';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { corsHeaders } from "../_shared/cors.ts"
+import { fetchProductPricing } from "./oxylabsService.ts"
 
-const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+interface UpdateRequest {
+  laptops: Array<{
+    id: string;
+    asin: string;
+  }>;
+}
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { laptops } = await req.json() as UpdateLaptopsRequest;
-    console.log(`Processing ${laptops.length} laptops for updates`);
+    const { laptops } = await req.json() as UpdateRequest;
+    console.log(`Processing update request for ${laptops.length} laptops`);
 
-    // Process laptops in parallel with AI
-    const updateProcess = async () => {
+    // Process each laptop update
+    const ctx = req.ctx as { waitUntil: (promise: Promise<any>) => void };
+    ctx.waitUntil((async () => {
       for (const laptop of laptops) {
         try {
-          console.log(`Fetching data for laptop ${laptop.id}`);
-          const productData = await fetchLaptopData(laptop.asin);
+          console.log(`Processing laptop ${laptop.id} (ASIN: ${laptop.asin})`);
           
+          // Set status to in_progress
+          await supabase
+            .from('products')
+            .update({ update_status: 'in_progress' })
+            .eq('id', laptop.id);
+
+          // Fetch latest pricing data
+          const response = await fetchProductPricing(laptop.asin);
+          const productData = response.results[0];
+
           if (!productData) {
-            console.log(`No data found for laptop ${laptop.id}`);
+            console.error(`No pricing data found for ASIN ${laptop.asin}`);
+            await supabase
+              .from('products')
+              .update({ 
+                update_status: 'error',
+                last_checked: new Date().toISOString()
+              })
+              .eq('id', laptop.id);
             continue;
           }
 
-          // Process with DeepSeek AI
-          console.log(`Processing laptop ${laptop.id} with DeepSeek AI`);
-          const aiProcessedData = await processTitleWithAI(
-            productData.title,
-            productData.description,
-            DEEPSEEK_API_KEY!
-          );
+          // Extract relevant pricing and review data
+          const currentPrice = productData.pricing?.current_price;
+          const originalPrice = productData.pricing?.original_price;
+          const rating = productData.rating?.rating;
+          const ratingCount = productData.rating?.rating_count;
+          const reviewData = productData.reviews;
 
-          // Merge AI processed data with product data
-          const updatedData = {
-            ...productData,
-            ...aiProcessedData,
-            ai_processing_status: 'completed',
-            ai_processed_at: new Date().toISOString()
+          // Update product with new data
+          const updateData = {
+            current_price: currentPrice || null,
+            original_price: originalPrice || null,
+            rating: rating || null,
+            rating_count: ratingCount || null,
+            review_data: reviewData || null,
+            update_status: 'completed',
+            last_checked: new Date().toISOString(),
+            last_updated: new Date().toISOString()
           };
 
-          await saveProductUpdate(laptop.id, updatedData);
-          console.log(`Successfully updated laptop ${laptop.id}`);
+          await supabase
+            .from('products')
+            .update(updateData)
+            .eq('id', laptop.id);
+
+          // Add delay between requests to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
         } catch (error) {
-          console.error(`Error updating laptop ${laptop.id}:`, error);
-          // Update status to error but continue with other laptops
+          console.error(`Error processing laptop ${laptop.id}:`, error);
           await supabase
             .from('products')
             .update({ 
@@ -69,25 +92,26 @@ serve(async (req) => {
             .eq('id', laptop.id);
         }
       }
-    };
 
-    // Use waitUntil to handle the updates in the background
-    EdgeRuntime.waitUntil(updateProcess());
+      console.log('Completed processing all laptops');
+    })());
 
     return new Response(
-      JSON.stringify({ message: 'Update process started' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      JSON.stringify({ message: 'Update process initiated' }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      },
+    )
 
   } catch (error) {
-    console.error('Error in update-laptops function:', error);
+    console.error('Error processing request:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+      },
+    )
   }
-});
-
+})
