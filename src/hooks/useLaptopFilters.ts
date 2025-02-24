@@ -24,6 +24,26 @@ const getRamValue = (ram: string): number => {
   }
 };
 
+const getStorageValue = (storage: string): number => {
+  // Extract numeric value and convert to GB for comparison
+  const match = storage.match(/(\d+)\s*(GB|TB|MB)/i);
+  if (!match) return 0;
+  
+  const [, value, unit] = match;
+  const numValue = parseInt(value);
+  
+  switch (unit.toLowerCase()) {
+    case 'tb':
+      return numValue * 1024;
+    case 'mb':
+      return Math.round(numValue / 1024);
+    case 'gb':
+      return numValue;
+    default:
+      return 0;
+  }
+};
+
 const normalizeRam = (ram: string): string => {
   const gbValue = getRamValue(ram);
   if (gbValue === 0) return ram;
@@ -31,19 +51,20 @@ const normalizeRam = (ram: string): string => {
 };
 
 const normalizeStorage = (storage: string): string => {
-  // Extract the numeric value and standardize to GB/TB
-  const match = storage.match(/(\d+)\s*(GB|TB|MB)/i);
-  if (match) {
-    const [, value, unit] = match;
-    const numValue = parseInt(value);
-    if (unit.toLowerCase() === 'tb') {
-      return `${numValue} TB`;
-    } else if (unit.toLowerCase() === 'gb' && numValue >= 1024) {
-      return `${Math.round(numValue / 1024)} TB`;
-    }
-    return `${numValue} GB`;
+  // Get storage value in GB
+  const gbValue = getStorageValue(storage);
+  
+  // Filter out invalid or unrealistic storage values (less than 32GB)
+  if (gbValue < 32) {
+    return '';
   }
-  return storage;
+  
+  // Convert to TB if >= 1024 GB
+  if (gbValue >= 1024) {
+    return `${Math.round(gbValue / 1024)} TB`;
+  }
+  
+  return `${gbValue} GB`;
 };
 
 const normalizeScreenSize = (size: string): string => {
@@ -123,7 +144,7 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
               return value.trim();
           }
         })
-        .filter((value): value is string => value !== null);
+        .filter((value): value is string => value !== null && value !== '');
 
       // Create a unique set of normalized values
       const uniqueValues = Array.from(new Set(validValues));
@@ -131,7 +152,7 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       // Sort based on the field type
       if (key === 'ram') {
         uniqueValues.sort((a, b) => {
-          const valueA = parseInt(a.split(' ')[0]); // Since we normalized to "X GB" format
+          const valueA = parseInt(a.split(' ')[0]);
           const valueB = parseInt(b.split(' ')[0]);
           return valueA - valueB;
         });
@@ -162,3 +183,4 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
     };
   }, [laptops]);
 };
+
