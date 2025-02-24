@@ -13,8 +13,22 @@ const DELAY_BETWEEN_BATCHES = 3000;
 const PAGES_PER_BRAND = 5;
 const STALE_COLLECTION_MINUTES = 30;
 
+interface CollectionStats {
+  processed: number;
+  updated: number;
+  added: number;
+  failed: number;
+}
+
 export async function collectLaptops() {
   console.log('collectLaptops function called');
+  
+  const totalStats: CollectionStats = {
+    processed: 0,
+    updated: 0,
+    added: 0,
+    failed: 0
+  };
   
   try {
     console.log('Checking collection status...');
@@ -51,7 +65,7 @@ export async function collectLaptops() {
       
       toast({
         title: "Collection already in progress",
-        description: `A collection is already running (started ${Math.round(timeElapsed / 60)} minutes ago). Please wait for it to complete or try again in a few minutes.`,
+        description: `A collection is already running (started ${Math.round(timeElapsed / 60)} minutes ago). Please wait for it to complete.`,
         variant: "default"
       });
       return null;
@@ -68,7 +82,7 @@ export async function collectLaptops() {
     // Show initial toast
     toast({
       title: "Collection Started",
-      description: `Starting collection for ${LAPTOP_BRANDS.length} brands in ${brandBatches.length} batches. This may take a while.`,
+      description: `Starting collection for ${LAPTOP_BRANDS.length} brands in ${brandBatches.length} batches`,
       variant: "default"
     });
 
@@ -96,7 +110,7 @@ export async function collectLaptops() {
           for (let page = 1; page <= PAGES_PER_BRAND; page++) {
             console.log(`Processing ${brand} page ${page}/${PAGES_PER_BRAND}`);
             
-            const { error: functionError } = await supabase.functions.invoke('collect-laptops', {
+            const { data: response, error: functionError } = await supabase.functions.invoke('collect-laptops', {
               body: {
                 brands: [brand],
                 pages_per_brand: 1,
@@ -109,6 +123,24 @@ export async function collectLaptops() {
             if (functionError) {
               console.error(`Edge function error for ${brand} page ${page}:`, functionError);
               continue;
+            }
+
+            // Update total stats
+            if (response?.stats) {
+              totalStats.processed += response.stats.processed || 0;
+              totalStats.updated += response.stats.updated || 0;
+              totalStats.added += response.stats.added || 0;
+              totalStats.failed += response.stats.failed || 0;
+
+              // Show progress toast
+              toast({
+                title: "Collection Progress",
+                description: `Page ${page}/${PAGES_PER_BRAND} for ${brand}:
+                  ${response.stats.processed} processed,
+                  ${response.stats.added} new,
+                  ${response.stats.updated} updated`,
+                variant: "default"
+              });
             }
 
             // Add small delay between pages
@@ -125,11 +157,6 @@ export async function collectLaptops() {
 
           console.log(`Successfully processed all pages for ${brand}`);
           
-          toast({
-            title: "Brand Completed",
-            description: `Finished collecting data for ${brand}`,
-            variant: "default"
-          });
         } catch (brandError) {
           console.error(`Error processing ${brand}:`, brandError);
           
@@ -157,15 +184,21 @@ export async function collectLaptops() {
       }
     }
 
-    console.log('Collection process completed successfully');
+    console.log('Collection process completed. Final statistics:', totalStats);
     
     toast({
       title: "Collection Complete",
-      description: `Successfully processed ${LAPTOP_BRANDS.length} brands`,
+      description: `Processed ${totalStats.processed} laptops:
+        ${totalStats.added} new,
+        ${totalStats.updated} updated,
+        ${totalStats.failed} failed`,
       variant: "default"
     });
     
-    return { batches: brandBatches.length };
+    return { 
+      batches: brandBatches.length,
+      stats: totalStats
+    };
 
   } catch (error) {
     console.error('Error in collectLaptops:', error);
@@ -184,4 +217,3 @@ export async function collectLaptops() {
     throw error;
   }
 }
-
