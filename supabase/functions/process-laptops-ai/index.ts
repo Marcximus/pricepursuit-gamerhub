@@ -18,9 +18,8 @@ const corsHeaders = {
 
 const systemPrompt = `You are a laptop data processor. Extract and standardize laptop specifications based on the provided data and your knowledge.
 
-Return ONLY valid JSON with the following structure:
+Return ONLY valid JSON with the following structure, ensuring all numbers are properly formatted as numbers not strings:
 {
-  "asin": "string",
   "processor": "string",
   "ram": "string",
   "storage": "string",
@@ -38,23 +37,23 @@ Return ONLY valid JSON with the following structure:
 }
 
 Use these rules when extracting data:
-1. ASIN: Use the exact provided ASIN
-2. Processor: Use official names (e.g., "Intel Core i7-12700H", "AMD Ryzen 7 7735U", "Apple M2 Pro")
-3. RAM: Include size and type if available (e.g., "16GB DDR4", "32GB DDR5")
-4. Storage: Include size and type (e.g., "512GB SSD", "1TB NVMe SSD")
-5. Screen Size: Use inches (e.g., "15.6 inches", "14 inches")
-6. Screen Resolution: Use standard formats (e.g., "1920x1080", "2560x1440", "3840x2160")
-7. Graphics: Use official names (e.g., "NVIDIA GeForce RTX 4060", "Intel Iris Xe Graphics")
-8. Weight: Use kg with one decimal (e.g., "1.8 kg", "2.3 kg")
-9. Battery Life: Use hours (e.g., "10 hours", "6 hours")
-10. Brand: Use official names (e.g., "Lenovo", "HP", "Dell", "ASUS")
-11. Model: Extract specific model name/number (e.g., "ThinkPad X1 Carbon", "Pavilion 15")
-12. Current Price: Use numeric value without currency symbol (e.g., 999.99)
-13. Original Price: Use numeric value without currency symbol (e.g., 1299.99)
-14. Rating: Use numeric value between 0-5 with one decimal (e.g., 4.5)
-15. Rating Count: Use integer value (e.g., 1234)
+1. Processor: Use official names (e.g., "Intel Core i7-12700H", "AMD Ryzen 7 7735U", "Apple M2 Pro")
+2. RAM: Include size and type if available (e.g., "16GB DDR4", "32GB DDR5")
+3. Storage: Include size and type (e.g., "512GB SSD", "1TB NVMe SSD")
+4. Screen Size: Use inches (e.g., "15.6 inches", "14 inches")
+5. Screen Resolution: Use standard formats (e.g., "1920x1080", "2560x1440", "3840x2160")
+6. Graphics: Use official names (e.g., "NVIDIA GeForce RTX 4060", "Intel Iris Xe Graphics")
+7. Weight: Use kg with one decimal (e.g., "1.8 kg", "2.3 kg")
+8. Battery Life: Use hours (e.g., "10 hours", "6 hours")
+9. Brand: Use official names (e.g., "Lenovo", "HP", "Dell", "ASUS")
+10. Model: Extract specific model name/number (e.g., "ThinkPad X1 Carbon", "Pavilion 15")
+11. Current Price: Use numeric value without currency symbol (e.g., 999.99)
+12. Original Price: Use numeric value without currency symbol (e.g., 1299.99)
+13. Rating: Use numeric value between 0-5 with one decimal (e.g., 4.5)
+14. Rating Count: Use integer value (e.g., 1234)
 
-If you cannot determine a value with high confidence, use null. Always format consistently.`;
+If you cannot determine a value with high confidence, use null.
+VERY IMPORTANT: Make sure ALL numeric values are proper numbers, not strings. For example: current_price should be 999.99, not "999.99"`;
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -124,13 +123,29 @@ serve(async (req) => {
     const deepseekData = await deepseekResponse.json();
     console.log('DeepSeek response:', JSON.stringify(deepseekData, null, 2));
 
+    // Extract the content from the DeepSeek response
+    const aiContent = deepseekData.choices[0]?.message?.content;
+    if (!aiContent) {
+      throw new Error('No content in DeepSeek response');
+    }
+
     // Clean up the content by removing markdown code block syntax
-    let processedData = deepseekData.choices[0].message.content.trim()
+    let cleanContent = aiContent.trim()
       .replace(/^```json\s*/, '')
-      .replace(/```\s*$/, '');
+      .replace(/\s*```$/, '');
+
+    console.log('Cleaned AI response:', cleanContent);
 
     try {
-      const specs = JSON.parse(processedData);
+      const specs = JSON.parse(cleanContent);
+
+      // Type validation for numeric fields
+      const numericFields = ['current_price', 'original_price', 'rating', 'rating_count'];
+      for (const field of numericFields) {
+        if (specs[field] && typeof specs[field] === 'string') {
+          specs[field] = parseFloat(specs[field]);
+        }
+      }
 
       // Update product with processed specifications
       const { error: updateError } = await supabase
@@ -153,11 +168,26 @@ serve(async (req) => {
 
     } catch (parseError) {
       console.error('Error parsing DeepSeek response:', parseError);
-      throw new Error('Invalid JSON response from DeepSeek');
+      throw new Error(`Invalid JSON response from DeepSeek: ${parseError.message}`);
     }
 
   } catch (error) {
     console.error('Error in process-laptops-ai function:', error);
+    
+    // Update product status to error if we have an ASIN
+    if (error.asin) {
+      try {
+        await supabase
+          .from('products')
+          .update({
+            ai_processing_status: 'error',
+            ai_processed_at: new Date().toISOString()
+          })
+          .eq('asin', error.asin);
+      } catch (updateError) {
+        console.error('Error updating product status:', updateError);
+      }
+    }
     
     return new Response(
       JSON.stringify({ error: error.message }),
