@@ -5,6 +5,7 @@ import { toast } from "@/components/ui/use-toast";
 const PARALLEL_PROCESSING = 1; // Process one at a time
 const DELAY_BETWEEN_REQUESTS = 250; // 250ms delay between requests
 const BATCH_SIZE = 5; // Process max 5 laptops at a time
+const TIMEOUT_DURATION = 30000; // 30 second timeout
 
 export const processLaptopsAI = async () => {
   try {
@@ -70,17 +71,17 @@ export const processLaptopsAI = async () => {
 
         // Call the process-laptops-ai edge function with a timeout
         try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-          const response = await supabase.functions.invoke('process-laptops-ai', {
-            body: { asin: laptop.asin },
-            signal: controller.signal
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Function timed out')), TIMEOUT_DURATION);
           });
 
-          clearTimeout(timeoutId);
+          const processingPromise = supabase.functions.invoke('process-laptops-ai', {
+            body: { asin: laptop.asin }
+          });
 
-          if (response.error) throw response.error;
+          const response = await Promise.race([processingPromise, timeoutPromise]);
+
+          if ('error' in response) throw response.error;
           
           processedCount++;
           console.log(`Successfully processed laptop ${laptop.asin}`);
