@@ -7,6 +7,12 @@ const DELAY_BETWEEN_REQUESTS = 250; // 250ms delay between requests
 const BATCH_SIZE = 5; // Process max 5 laptops at a time
 const TIMEOUT_DURATION = 30000; // 30 second timeout
 
+// Type for the edge function response
+type EdgeFunctionResponse = {
+  error?: any;
+  data?: any;
+};
+
 export const processLaptopsAI = async () => {
   try {
     console.log('Starting AI processing for laptops...');
@@ -71,17 +77,20 @@ export const processLaptopsAI = async () => {
 
         // Call the process-laptops-ai edge function with a timeout
         try {
-          const timeoutPromise = new Promise((_, reject) => {
+          const timeoutPromise = new Promise<never>((_, reject) => {
             setTimeout(() => reject(new Error('Function timed out')), TIMEOUT_DURATION);
           });
 
-          const processingPromise = supabase.functions.invoke('process-laptops-ai', {
+          const processingPromise = supabase.functions.invoke<EdgeFunctionResponse>('process-laptops-ai', {
             body: { asin: laptop.asin }
           });
 
           const response = await Promise.race([processingPromise, timeoutPromise]);
 
-          if ('error' in response) throw response.error;
+          // Type guard to ensure response is EdgeFunctionResponse
+          if (response && typeof response === 'object' && 'error' in response && response.error) {
+            throw response.error;
+          }
           
           processedCount++;
           console.log(`Successfully processed laptop ${laptop.asin}`);
