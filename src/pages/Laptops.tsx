@@ -1,8 +1,7 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
-import { useToast } from "@/components/ui/use-toast";
 import { LaptopFilters, type FilterOptions } from "@/components/laptops/LaptopFilters";
 import type { SortOption } from "@/components/laptops/LaptopSort";
 import { LaptopList } from "@/components/laptops/LaptopList";
@@ -23,6 +22,19 @@ const ComparePriceLaptops = () => {
     brands: new Set<string>(),
   });
 
+  // Add debugging useEffect to track filter changes
+  useEffect(() => {
+    console.log('Filter state updated:', {
+      processors: Array.from(filters.processors),
+      ramSizes: Array.from(filters.ramSizes),
+      storageOptions: Array.from(filters.storageOptions),
+      graphicsCards: Array.from(filters.graphicsCards),
+      screenSizes: Array.from(filters.screenSizes),
+      brands: Array.from(filters.brands),
+      priceRange: filters.priceRange,
+    });
+  }, [filters]);
+
   const { 
     data, 
     isLoading: isLaptopsLoading, 
@@ -35,13 +47,11 @@ const ComparePriceLaptops = () => {
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
-  const { toast } = useToast();
-
   const filterOptions = useLaptopFilters(data?.allLaptops);
 
   const handleSortChange = (newSortBy: SortOption) => {
     setSortBy(newSortBy);
-    setCurrentPage(1);
+    setCurrentPage(1); // Reset page when sort changes
   };
 
   const handlePageChange = (page: number) => {
@@ -49,8 +59,19 @@ const ComparePriceLaptops = () => {
   };
 
   const handleFiltersChange = (newFilters: FilterOptions) => {
-    setFilters(newFilters);
-    setCurrentPage(1);
+    // Create a deep copy of the filter sets to avoid reference issues
+    const updatedFilters: FilterOptions = {
+      priceRange: { ...newFilters.priceRange },
+      processors: new Set(newFilters.processors),
+      ramSizes: new Set(newFilters.ramSizes),
+      storageOptions: new Set(newFilters.storageOptions),
+      graphicsCards: new Set(newFilters.graphicsCards),
+      screenSizes: new Set(newFilters.screenSizes),
+      brands: new Set(newFilters.brands),
+    };
+    
+    setFilters(updatedFilters);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const handleRetry = () => {
@@ -106,3 +127,4 @@ const ComparePriceLaptops = () => {
 };
 
 export default ComparePriceLaptops;
+
