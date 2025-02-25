@@ -1,3 +1,4 @@
+
 import { useMemo } from "react";
 import type { Product } from "@/types/product";
 
@@ -174,3 +175,4 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
     };
   }, [laptops]);
 };
+
