@@ -1,4 +1,3 @@
-
 import { useMemo } from "react";
 import type { Product } from "@/types/product";
 
@@ -59,11 +58,7 @@ const normalizeStorage = (storage: string): string => {
     return '';
   }
   
-  // Convert to TB if >= 1024 GB
-  if (gbValue >= 1024) {
-    return `${Math.round(gbValue / 1024)} TB`;
-  }
-  
+  // Always return in GB format
   return `${gbValue} GB`;
 };
 
@@ -158,13 +153,9 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
         });
       } else if (key === 'storage') {
         uniqueValues.sort((a, b) => {
-          const getStorageValue = (str: string) => {
-            const match = str.match(/(\d+)\s*(TB|GB)/i);
-            if (!match) return 0;
-            const [, value, unit] = match;
-            return parseInt(value) * (unit.toLowerCase() === 'tb' ? 1024 : 1);
-          };
-          return getStorageValue(a) - getStorageValue(b);
+          const valueA = parseInt(a.split(' ')[0]);
+          const valueB = parseInt(b.split(' ')[0]);
+          return valueA - valueB;
         });
       } else {
         uniqueValues.sort((a, b) => a.localeCompare(b));
@@ -183,4 +174,3 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
     };
   }, [laptops]);
 };
-
