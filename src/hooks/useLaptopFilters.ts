@@ -44,6 +44,71 @@ const getStorageValue = (storage: string): number => {
   }
 };
 
+const getProcessorValue = (processor: string): number => {
+  // Higher value = better processor
+  let score = 0;
+  
+  // CPU generation detection
+  const genMatch = processor.match(/(\d+)(?:th|rd|nd|st)?\s+Gen/i);
+  if (genMatch) {
+    score += parseInt(genMatch[1]) * 1000;
+  }
+  
+  // CPU tier detection
+  if (processor.includes('i9')) score += 9000;
+  else if (processor.includes('i7')) score += 7000;
+  else if (processor.includes('i5')) score += 5000;
+  else if (processor.includes('i3')) score += 3000;
+  else if (processor.includes('Ryzen 9')) score += 9000;
+  else if (processor.includes('Ryzen 7')) score += 7000;
+  else if (processor.includes('Ryzen 5')) score += 5000;
+  else if (processor.includes('Ryzen 3')) score += 3000;
+  else if (processor.includes('M3')) score += 9500;
+  else if (processor.includes('M2')) score += 8500;
+  else if (processor.includes('M1')) score += 7500;
+  
+  // CPU manufacturer bonus
+  if (processor.includes('Apple')) score += 500;
+  
+  return score;
+};
+
+const getGraphicsValue = (graphics: string): number => {
+  // Higher value = better graphics
+  let score = 0;
+  
+  // GPU tier detection
+  if (graphics.includes('RTX 40')) score += 40000;
+  else if (graphics.includes('RTX 30')) score += 30000;
+  else if (graphics.includes('RTX 20')) score += 20000;
+  else if (graphics.includes('RTX')) score += 15000;
+  else if (graphics.includes('GTX 16')) score += 16000;
+  else if (graphics.includes('GTX 10')) score += 10000;
+  else if (graphics.includes('GTX')) score += 5000;
+  else if (graphics.includes('Radeon RX')) score += 8000;
+  else if (graphics.includes('Radeon')) score += 3000;
+  else if (graphics.includes('Iris Xe')) score += 2000;
+  else if (graphics.includes('UHD')) score += 1000;
+  else if (graphics.includes('HD')) score += 500;
+  
+  // Model number detection
+  const modelMatch = graphics.match(/\b(\d{4})\b/);
+  if (modelMatch) {
+    score += parseInt(modelMatch[1]);
+  }
+  
+  return score;
+};
+
+const getScreenSizeValue = (size: string): number => {
+  // Extract the numeric value and convert to inches
+  const match = size.match(/(\d+\.?\d*)/);
+  if (match) {
+    return parseFloat(match[1]);
+  }
+  return 0;
+};
+
 const normalizeRam = (ram: string): string => {
   const gbValue = getRamValue(ram);
   if (gbValue === 0) return ram;
@@ -145,19 +210,40 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       // Create a unique set of normalized values
       const uniqueValues = Array.from(new Set(validValues));
 
-      // Sort based on the field type
+      // Sort based on the field type (from best to worst)
       if (key === 'ram') {
         uniqueValues.sort((a, b) => {
-          const valueA = parseInt(a.split(' ')[0]);
-          const valueB = parseInt(b.split(' ')[0]);
-          return valueA - valueB;
+          const valueA = getRamValue(a);
+          const valueB = getRamValue(b);
+          return valueB - valueA; // Descending order (higher RAM is better)
         });
       } else if (key === 'storage') {
         uniqueValues.sort((a, b) => {
-          const valueA = parseInt(a.split(' ')[0]);
-          const valueB = parseInt(b.split(' ')[0]);
-          return valueA - valueB;
+          const valueA = getStorageValue(a);
+          const valueB = getStorageValue(b);
+          return valueB - valueA; // Descending order (higher storage is better)
         });
+      } else if (key === 'processor') {
+        uniqueValues.sort((a, b) => {
+          const valueA = getProcessorValue(a);
+          const valueB = getProcessorValue(b);
+          return valueB - valueA; // Descending order (higher score is better)
+        });
+      } else if (key === 'graphics') {
+        uniqueValues.sort((a, b) => {
+          const valueA = getGraphicsValue(a);
+          const valueB = getGraphicsValue(b);
+          return valueB - valueA; // Descending order (higher score is better)
+        });
+      } else if (key === 'screen_size') {
+        uniqueValues.sort((a, b) => {
+          const valueA = getScreenSizeValue(a);
+          const valueB = getScreenSizeValue(b);
+          return valueB - valueA; // Descending order (larger screens first)
+        });
+      } else if (key === 'brand') {
+        // Sort brands alphabetically
+        uniqueValues.sort((a, b) => a.localeCompare(b));
       } else {
         uniqueValues.sort((a, b) => a.localeCompare(b));
       }
