@@ -1,7 +1,4 @@
 
-import { detectBrandFromTitle } from "@/utils/laptopUtils/brandUtils";
-import { extractModelName } from "@/utils/laptopUtils/modelUtils";
-
 type LaptopSpecsProps = {
   title: string;
   productUrl: string;
@@ -19,12 +16,9 @@ type LaptopSpecsProps = {
 };
 
 export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSpecsProps) {
-  // Determine the correct brand - first try to detect from title (most reliable),
-  // then fall back to the provided brand with corrections
-  const correctedBrand = detectBrandFromTitle(title, brand);
-  
-  // Extract model name if not provided
-  const displayModel = model || extractModelName(title, correctedBrand, model);
+  // Use provided brand/model or extract from title if not available
+  const displayBrand = brand || 'Unknown Brand';
+  const displayModel = model || '';
   
   return (
     <div>
@@ -39,7 +33,7 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
       <ul className="space-y-1 text-sm">
         <li>
           <span className="font-bold">Brand:</span>{" "}
-          {correctedBrand}
+          {displayBrand}
         </li>
         {displayModel && (
           <li>
@@ -79,4 +73,3 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
     </div>
   );
 }
-
