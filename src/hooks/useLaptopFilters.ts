@@ -7,7 +7,8 @@ import {
   normalizeStorage,
   normalizeScreenSize,
   normalizeGraphics,
-  normalizeProcessor
+  normalizeProcessor,
+  normalizeBrand
 } from "@/utils/laptop/valueNormalizer";
 import { getRamValue, getStorageValue, getScreenSizeValue } from "@/utils/laptop/valueParser";
 
@@ -46,6 +47,8 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
               return normalizeGraphics(value);
             case 'processor':
               return normalizeProcessor(value);
+            case 'brand':
+              return normalizeBrand(value);
             default:
               return value.trim();
           }
@@ -68,6 +71,11 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
         uniqueValues.sort((a, b) => a.localeCompare(b));
       } else {
         uniqueValues.sort((a, b) => a.localeCompare(b));
+      }
+
+      // Log the sorted values for debugging
+      if (uniqueValues.length > 0) {
+        console.log(`Sorted ${key} filters:`, uniqueValues);
       }
 
       return new Set(uniqueValues);

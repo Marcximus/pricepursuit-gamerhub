@@ -1,21 +1,50 @@
-
 import { getRamValue, getStorageValue, getScreenSizeValue } from './valueParser';
+import { KNOWN_BRANDS } from './hardwareScoring';
 
+/**
+ * Normalizes RAM strings for consistent display
+ */
 export const normalizeRam = (ram: string): string => {
+  if (!ram) return '';
+  
   const gbValue = getRamValue(ram);
   if (gbValue === 0) return ram;
-  return `${gbValue} GB`;
+  
+  // Format as integer if it's a whole number, otherwise show decimal
+  const formattedGB = Number.isInteger(gbValue) ? gbValue.toString() : gbValue.toFixed(1);
+  return `${formattedGB} GB`;
 };
 
+/**
+ * Normalizes storage strings for consistent display
+ */
 export const normalizeStorage = (storage: string): string => {
+  if (!storage) return '';
+  
+  // Get storage value in GB
   const gbValue = getStorageValue(storage);
+  
+  // Filter out invalid or unrealistic storage values (less than 32GB)
   if (gbValue < 32) {
     return '';
   }
-  return `${gbValue} GB`;
+  
+  // Convert to TB if ≥ 1000 GB
+  if (gbValue >= 1000) {
+    const tbValue = gbValue / 1024;
+    return `${tbValue.toFixed(tbValue % 1 === 0 ? 0 : 1)} TB`;
+  }
+  
+  return `${Math.round(gbValue)} GB`;
 };
 
+/**
+ * Normalizes screen size strings for consistent display
+ */
 export const normalizeScreenSize = (size: string): string => {
+  if (!size) return '';
+  
+  // Extract the numeric value and standardize to inches
   const match = size.match(/(\d+\.?\d*)/);
   if (match) {
     return `${match[1]}"`;
@@ -23,30 +52,130 @@ export const normalizeScreenSize = (size: string): string => {
   return size;
 };
 
+/**
+ * Normalizes graphics card strings for consistent display
+ */
 export const normalizeGraphics = (graphics: string): string => {
-  const nvidia = graphics.match(/NVIDIA\s+(RTX|GTX)\s*(\d+)/i);
+  if (!graphics) return '';
+  
+  const normalizedGraphics = graphics.toLowerCase();
+  
+  // Skip extremely vague descriptions
+  if (normalizedGraphics === 'integrated' || 
+      normalizedGraphics === 'integrated graphics' ||
+      normalizedGraphics === 'graphics') {
+    return '';
+  }
+  
+  // NVIDIA GPUs
+  const nvidia = normalizedGraphics.match(/(?:nvidia\s+)?(?:geforce\s+)?(rtx|gtx)\s*(\d{4}|\d{3})(?:\s*(ti|super|max-q))?/i);
   if (nvidia) {
-    return `NVIDIA ${nvidia[1]} ${nvidia[2].charAt(0)}XXX`;
+    const [_, series, model, variant] = nvidia;
+    return `NVIDIA ${series.toUpperCase()} ${model}${variant ? ' ' + variant.charAt(0).toUpperCase() + variant.slice(1) : ''}`;
   }
-  const amd = graphics.match(/AMD\s+Radeon/i);
+  
+  // AMD GPUs
+  const amd = normalizedGraphics.match(/(?:amd\s+)?radeon(?:\s+(rx)\s*(\d{4}|\d{3}))?/i);
   if (amd) {
-    return "AMD Radeon";
+    if (amd[1] && amd[2]) {
+      return `AMD Radeon ${amd[1].toUpperCase()} ${amd[2]}`;
+    }
+    return "AMD Radeon Graphics";
   }
-  const intel = graphics.match(/Intel\s+(Iris|UHD|HD)/i);
+  
+  // Intel Graphics
+  const intel = normalizedGraphics.match(/intel\s+(iris\s+xe|iris|uhd|hd)(?:\s+graphics)?/i);
   if (intel) {
+    let intelModel = intel[1].toLowerCase();
+    if (intelModel === 'iris xe') return 'Intel Iris Xe Graphics';
+    if (intelModel === 'iris') return 'Intel Iris Graphics';
+    if (intelModel === 'uhd') return 'Intel UHD Graphics';
+    if (intelModel === 'hd') return 'Intel HD Graphics';
     return `Intel ${intel[1]} Graphics`;
   }
+  
+  // Apple Graphics
+  if (normalizedGraphics.includes('apple') && 
+      (normalizedGraphics.includes('m1') || normalizedGraphics.includes('m2') || normalizedGraphics.includes('m3'))) {
+    
+    if (normalizedGraphics.includes('m3')) {
+      return normalizedGraphics.includes('pro') ? 'Apple M3 Pro GPU' : 
+             normalizedGraphics.includes('max') ? 'Apple M3 Max GPU' : 'Apple M3 GPU';
+    } else if (normalizedGraphics.includes('m2')) {
+      return normalizedGraphics.includes('pro') ? 'Apple M2 Pro GPU' : 
+             normalizedGraphics.includes('max') ? 'Apple M2 Max GPU' : 'Apple M2 GPU';
+    } else {
+      return normalizedGraphics.includes('pro') ? 'Apple M1 Pro GPU' : 
+             normalizedGraphics.includes('max') ? 'Apple M1 Max GPU' : 'Apple M1 GPU';
+    }
+  }
+  
+  // Clean up if still has the word "graphics" missing
+  if (!normalizedGraphics.includes('graphics') && 
+      !normalizedGraphics.includes('gpu') &&
+      normalizedGraphics !== '') {
+    return graphics + ' Graphics';
+  }
+  
   return graphics;
 };
 
+/**
+ * Normalizes processor strings for consistent display
+ */
 export const normalizeProcessor = (processor: string): string => {
-  const intel = processor.match(/Intel\s+Core\s+(i\d)-(\d{4,5})/i);
+  if (!processor) return '';
+  
+  const normalizedProcessor = processor.toLowerCase();
+  
+  // Intel processors
+  const intel = normalizedProcessor.match(/(?:intel\s+)?(?:core\s+)?(i[3579])[\s-](\d{4,5}[a-z]*)/i);
   if (intel) {
-    return `Intel Core ${intel[1]} ${intel[2].charAt(0)}th Gen`;
+    const generation = intel[2][0]; // First digit of model number is generation
+    return `Intel Core ${intel[1].toUpperCase()}-${intel[2]} (${generation}th Gen)`;
   }
-  const amd = processor.match(/AMD\s+Ryzen\s+(\d)\s+(\d{4})/i);
+  
+  // AMD Ryzen processors
+  const amd = normalizedProcessor.match(/(?:amd\s+)?ryzen\s+([3579])\s+(\d{4}[a-z]*)/i);
   if (amd) {
-    return `AMD Ryzen ${amd[1]} ${amd[2].charAt(0)}XXX`;
+    return `AMD Ryzen ${amd[1]} ${amd[2]}`;
   }
+  
+  // Apple M-series processors
+  const apple = normalizedProcessor.match(/(?:apple\s+)?(m[123])(?:\s+(pro|max|ultra))?/i);
+  if (apple) {
+    return `Apple ${apple[1].toUpperCase()}${apple[2] ? ' ' + apple[2].charAt(0).toUpperCase() + apple[2].slice(1) : ''} Chip`;
+  }
+  
+  // If no specific format matched but contains keywords, standardize capitalization
+  if (normalizedProcessor.includes('intel')) {
+    return processor.replace(/intel/i, 'Intel').replace(/core/i, 'Core');
+  }
+  
+  if (normalizedProcessor.includes('amd')) {
+    return processor.replace(/amd/i, 'AMD').replace(/ryzen/i, 'Ryzen');
+  }
+  
+  if (normalizedProcessor.includes('apple')) {
+    return processor.replace(/apple/i, 'Apple');
+  }
+  
   return processor;
+};
+
+/**
+ * Normalizes brand names for consistent display
+ */
+export const normalizeBrand = (brand: string): string => {
+  if (!brand) return '';
+  
+  const lowerBrand = brand.toLowerCase().trim();
+  
+  // Check if it's a known brand and return proper capitalization
+  if (KNOWN_BRANDS[lowerBrand]) {
+    return KNOWN_BRANDS[lowerBrand];
+  }
+  
+  // For unknown brands, just capitalize the first letter
+  return brand.charAt(0).toUpperCase() + brand.slice(1).toLowerCase();
 };
