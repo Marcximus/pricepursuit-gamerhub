@@ -2,27 +2,43 @@
 import type { Product } from "@/types/product";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 
-// Helper functions to normalize values for comparison
-const normalizeProcessor = (value: string): string => {
-  return value.toLowerCase().trim();
+// Helper parsing functions for consistent value extraction
+const parseRamValue = (value: string | null | undefined): number => {
+  if (!value) return 0;
+  const match = value.match(/(\d+)\s*(GB|TB|MB)/i);
+  if (!match) return 0;
+  
+  const [, amount, unit] = match;
+  const numValue = parseInt(amount);
+  
+  switch (unit.toLowerCase()) {
+    case 'tb': return numValue * 1024;
+    case 'mb': return numValue / 1024;
+    case 'gb': return numValue;
+    default: return 0;
+  }
 };
 
-const normalizeRam = (value: string): string => {
-  return value.toLowerCase().trim();
+const parseStorageValue = (value: string | null | undefined): number => {
+  if (!value) return 0;
+  const match = value.match(/(\d+)\s*(GB|TB|MB)/i);
+  if (!match) return 0;
+  
+  const [, amount, unit] = match;
+  const numValue = parseInt(amount);
+  
+  switch (unit.toLowerCase()) {
+    case 'tb': return numValue * 1024;
+    case 'mb': return numValue / 1024;
+    case 'gb': return numValue;
+    default: return 0;
+  }
 };
 
-const normalizeStorage = (value: string): string => {
-  return value.toLowerCase().trim();
-};
-
-const normalizeGraphics = (value: string): string => {
-  return value.toLowerCase().trim();
-};
-
-const normalizeScreenSize = (value: string): string => {
-  // Extract just the numeric part for easier comparison
+const parseScreenSize = (value: string | null | undefined): number => {
+  if (!value) return 0;
   const match = value.match(/(\d+(\.\d+)?)/);
-  return match ? match[1] : value.toLowerCase().trim();
+  return match ? parseFloat(match[1]) : 0;
 };
 
 export const filterLaptops = (laptops: Product[], filters: FilterOptions): Product[] => {
@@ -39,86 +55,125 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     }
   });
 
-  return laptops.filter(laptop => {
+  const filteredLaptops = laptops.filter(laptop => {
+    // Track why each laptop is filtered out for debugging
+    const filterReasons: string[] = [];
+    
     // Price Range Filter
     const price = laptop.current_price || 0;
     if (price < filters.priceRange.min || price > filters.priceRange.max) {
+      filterReasons.push(`Price out of range: ${price} not in [${filters.priceRange.min}-${filters.priceRange.max}]`);
       return false;
     }
 
     // Brand Filter
-    if (filters.brands.size > 0 && laptop.brand) {
-      if (!filters.brands.has(laptop.brand)) {
+    if (filters.brands.size > 0) {
+      if (!laptop.brand || !filters.brands.has(laptop.brand)) {
+        filterReasons.push(`Brand mismatch: ${laptop.brand}`);
         return false;
       }
     }
 
     // Processor Filter
     if (filters.processors.size > 0 && laptop.processor) {
-      const normalizedLaptopProcessor = normalizeProcessor(laptop.processor);
-      const matchesProcessor = Array.from(filters.processors).some(selectedProcessor => {
-        const normalizedSelectedProcessor = normalizeProcessor(selectedProcessor);
-        return normalizedLaptopProcessor.includes(normalizedSelectedProcessor);
+      // Get all selected processors
+      const processorArray = Array.from(filters.processors);
+      
+      // Check if any of the selected processors match this laptop
+      const matchesProcessor = processorArray.some(selectedProcessor => {
+        return laptop.processor?.toLowerCase().includes(selectedProcessor.toLowerCase());
       });
       
       if (!matchesProcessor) {
+        filterReasons.push(`Processor mismatch: ${laptop.processor}`);
         return false;
       }
     }
 
-    // RAM Filter
+    // RAM Filter - Using numeric comparison
     if (filters.ramSizes.size > 0 && laptop.ram) {
-      const normalizedLaptopRam = normalizeRam(laptop.ram);
+      const laptopRamGB = parseRamValue(laptop.ram);
+      
+      // Check if any selected RAM size matches
       const matchesRam = Array.from(filters.ramSizes).some(selectedRam => {
-        const normalizedSelectedRam = normalizeRam(selectedRam);
-        return normalizedLaptopRam.includes(normalizedSelectedRam);
+        const selectedRamGB = parseRamValue(selectedRam);
+        // Allow exact match or approximately the same value (accounts for "16GB" vs "16 GB DDR4")
+        return Math.abs(laptopRamGB - selectedRamGB) < 0.5;
       });
       
       if (!matchesRam) {
+        filterReasons.push(`RAM mismatch: ${laptop.ram} (${laptopRamGB}GB)`);
         return false;
       }
     }
 
-    // Storage Filter
+    // Storage Filter - Using numeric comparison
     if (filters.storageOptions.size > 0 && laptop.storage) {
-      const normalizedLaptopStorage = normalizeStorage(laptop.storage);
+      const laptopStorageGB = parseStorageValue(laptop.storage);
+      
+      // Check if any selected storage size matches
       const matchesStorage = Array.from(filters.storageOptions).some(selectedStorage => {
-        const normalizedSelectedStorage = normalizeStorage(selectedStorage);
-        return normalizedLaptopStorage.includes(normalizedSelectedStorage);
+        const selectedStorageGB = parseStorageValue(selectedStorage);
+        // Allow matches that are close enough (accounts for "512GB" vs "512GB SSD")
+        return Math.abs(laptopStorageGB - selectedStorageGB) < 0.5;
       });
       
       if (!matchesStorage) {
+        filterReasons.push(`Storage mismatch: ${laptop.storage} (${laptopStorageGB}GB)`);
         return false;
       }
     }
 
     // Graphics Filter
     if (filters.graphicsCards.size > 0 && laptop.graphics) {
-      const normalizedLaptopGraphics = normalizeGraphics(laptop.graphics);
-      const matchesGraphics = Array.from(filters.graphicsCards).some(selectedGraphics => {
-        const normalizedSelectedGraphics = normalizeGraphics(selectedGraphics);
-        return normalizedLaptopGraphics.includes(normalizedSelectedGraphics);
+      // Get all selected graphics cards
+      const graphicsArray = Array.from(filters.graphicsCards);
+      
+      // Check if any of the selected graphics cards match
+      const matchesGraphics = graphicsArray.some(selectedGraphics => {
+        return laptop.graphics?.toLowerCase().includes(selectedGraphics.toLowerCase());
       });
       
       if (!matchesGraphics) {
+        filterReasons.push(`Graphics mismatch: ${laptop.graphics}`);
         return false;
       }
     }
 
-    // Screen Size Filter
+    // Screen Size Filter - Using numeric comparison
     if (filters.screenSizes.size > 0 && laptop.screen_size) {
-      const normalizedLaptopScreenSize = normalizeScreenSize(laptop.screen_size);
-      const matchesScreenSize = Array.from(filters.screenSizes).some(selectedScreenSize => {
-        const normalizedSelectedScreenSize = normalizeScreenSize(selectedScreenSize);
-        return normalizedLaptopScreenSize.includes(normalizedSelectedScreenSize);
+      const laptopScreenSize = parseScreenSize(laptop.screen_size);
+      
+      // Check if any selected screen size matches
+      const matchesScreenSize = Array.from(filters.screenSizes).some(selectedSize => {
+        const selectedScreenSize = parseScreenSize(selectedSize);
+        // Allow values that are very close (accounts for "15.6" vs "15.6 inches")
+        return Math.abs(laptopScreenSize - selectedScreenSize) < 0.1;
       });
       
       if (!matchesScreenSize) {
+        filterReasons.push(`Screen size mismatch: ${laptop.screen_size} (${laptopScreenSize}")`);
         return false;
       }
     }
 
+    // This laptop passed all filters
     return true;
   });
+
+  console.log(`Filtering complete: ${filteredLaptops.length} out of ${laptops.length} laptops matched filters`);
+  
+  // Log a sample of filtered laptops for debugging
+  if (filteredLaptops.length > 0) {
+    console.log('Sample of matching laptops:', filteredLaptops.slice(0, 3).map(l => ({
+      title: l.title,
+      price: l.current_price,
+      ram: l.ram,
+      storage: l.storage,
+      processor: l.processor
+    })));
+  }
+  
+  return filteredLaptops;
 };
 
