@@ -8,8 +8,8 @@ const LAPTOP_BRANDS = [
   'Alienware', 'Vaio', 'Fsjun', 'Jumper', 'Xiaomi', 'ACEMAGIC'
 ];
 
-const PARALLEL_BATCHES = 3;
-const DELAY_BETWEEN_BATCHES = 3000;
+const PARALLEL_BATCHES = 2; // Reduced from 3 to 2 to prevent overload
+const DELAY_BETWEEN_BATCHES = 5000; // Increased from 3000 to 5000 ms
 const PAGES_PER_BRAND = 5;
 const STALE_COLLECTION_MINUTES = 30;
 
