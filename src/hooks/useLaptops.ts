@@ -103,7 +103,80 @@ async function fetchAllLaptops() {
   }
 
   console.log(`Completed fetching all laptops. Total count: ${allLaptops.length}`);
+  
+  // Log some statistics about our data
+  const withPrice = allLaptops.filter(l => l.current_price !== null && l.current_price > 0).length;
+  const withProcessor = allLaptops.filter(l => l.processor !== null && l.processor !== '').length;
+  const withRAM = allLaptops.filter(l => l.ram !== null && l.ram !== '').length;
+  const withStorage = allLaptops.filter(l => l.storage !== null && l.storage !== '').length;
+  const withGraphics = allLaptops.filter(l => l.graphics !== null && l.graphics !== '').length;
+  const withScreenSize = allLaptops.filter(l => l.screen_size !== null && l.screen_size !== '').length;
+  
+  console.log('Laptop data statistics:', {
+    total: allLaptops.length,
+    withPrice: `${withPrice} (${Math.round(withPrice/allLaptops.length*100)}%)`,
+    withProcessor: `${withProcessor} (${Math.round(withProcessor/allLaptops.length*100)}%)`,
+    withRAM: `${withRAM} (${Math.round(withRAM/allLaptops.length*100)}%)`,
+    withStorage: `${withStorage} (${Math.round(withStorage/allLaptops.length*100)}%)`,
+    withGraphics: `${withGraphics} (${Math.round(withGraphics/allLaptops.length*100)}%)`,
+    withScreenSize: `${withScreenSize} (${Math.round(withScreenSize/allLaptops.length*100)}%)`
+  });
+  
   return allLaptops;
+}
+
+function analyzeFilteredResults(
+  original: Product[], 
+  filtered: Product[], 
+  filters: FilterOptions,
+  sortBy: SortOption
+) {
+  if (filtered.length === 0 && original.length > 0) {
+    console.warn('No laptops matched the filters! Analyzing first few original items:');
+    
+    // Check why the first 3 laptops didn't match
+    original.slice(0, 3).forEach(laptop => {
+      console.log('Analyzing why this laptop was filtered out:', {
+        id: laptop.id,
+        title: laptop.title,
+        price: laptop.current_price,
+        brand: laptop.brand,
+        processor: laptop.processor,
+        ram: laptop.ram,
+        storage: laptop.storage,
+        graphics: laptop.graphics,
+        screen_size: laptop.screen_size
+      });
+      
+      // Check each filter
+      if (filters.brands.size > 0) {
+        console.log(`- Brand filter (${Array.from(filters.brands).join(', ')}): ${laptop.brand ? 'Has brand' : 'Missing brand'} - ${filters.brands.has(laptop.brand || '') ? 'MATCH' : 'NO MATCH'}`);
+      }
+      
+      if (filters.processors.size > 0) {
+        console.log(`- Processor filter (${Array.from(filters.processors).join(', ')}): ${laptop.processor || 'Missing'} - NO MATCH`);
+      }
+      
+      if (filters.ramSizes.size > 0) {
+        console.log(`- RAM filter (${Array.from(filters.ramSizes).join(', ')}): ${laptop.ram || 'Missing'} - NO MATCH`);
+      }
+      
+      if (filters.storageOptions.size > 0) {
+        console.log(`- Storage filter (${Array.from(filters.storageOptions).join(', ')}): ${laptop.storage || 'Missing'} - NO MATCH`);
+      }
+      
+      if (filters.graphicsCards.size > 0) {
+        console.log(`- Graphics filter (${Array.from(filters.graphicsCards).join(', ')}): ${laptop.graphics || 'Missing'} - NO MATCH`);
+      }
+      
+      if (filters.screenSizes.size > 0) {
+        console.log(`- Screen size filter (${Array.from(filters.screenSizes).join(', ')}): ${laptop.screen_size || 'Missing'} - NO MATCH`);
+      }
+      
+      const price = laptop.current_price || 0;
+      console.log(`- Price filter (${filters.priceRange.min}-${filters.priceRange.max}): ${price} - ${price >= filters.priceRange.min && price <= filters.priceRange.max ? 'MATCH' : 'NO MATCH'}`);
+    });
+  }
 }
 
 export const useLaptops = (
@@ -117,6 +190,20 @@ export const useLaptops = (
     staleTime: 1000 * 60 * 60, // 1 hour
     gcTime: 1000 * 60 * 60 * 24, // 24 hours
     select: (data) => {
+      console.log('Processing query results with:', {
+        filtersApplied: {
+          priceRange: filters.priceRange,
+          processorCount: filters.processors.size,
+          ramCount: filters.ramSizes.size,
+          storageCount: filters.storageOptions.size,
+          graphicsCount: filters.graphicsCards.size,
+          screenSizeCount: filters.screenSizes.size,
+          brandCount: filters.brands.size
+        },
+        sortBy,
+        page
+      });
+      
       const processedLaptops = data.map(laptop => {
         const reviews = laptop.product_reviews || [];
         const reviewData = {
@@ -134,13 +221,16 @@ export const useLaptops = (
         return processLaptopData(laptop);
       });
 
+      // Apply filters, sort, and pagination
       const filteredLaptops = filterLaptops(processedLaptops, filters);
+      analyzeFilteredResults(processedLaptops, filteredLaptops, filters, sortBy);
+      
       const sortedLaptops = sortLaptops(filteredLaptops, sortBy);
       const paginatedResults = paginateLaptops(sortedLaptops, page, ITEMS_PER_PAGE);
 
       console.log('Filter/sort/pagination results:', {
         totalLaptops: processedLaptops.length,
-        afterFiltering: filteredLaptops.length,
+        afterFiltering: filteredLaptops.length, 
         afterSorting: sortedLaptops.length,
         currentPage: page,
         laptopsOnPage: paginatedResults.laptops.length,
