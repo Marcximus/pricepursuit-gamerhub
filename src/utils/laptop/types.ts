@@ -1,0 +1,15 @@
+
+export interface CollectionStats {
+  processed: number;
+  updated: number;
+  added: number;
+  failed: number;
+}
+
+export interface CollectionConfig {
+  LAPTOP_BRANDS: string[];
+  PARALLEL_BATCHES: number;
+  DELAY_BETWEEN_BATCHES: number;
+  PAGES_PER_BRAND: number;
+  STALE_COLLECTION_MINUTES: number;
+}
