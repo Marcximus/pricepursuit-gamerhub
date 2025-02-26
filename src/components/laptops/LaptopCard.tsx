@@ -18,16 +18,6 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
     return null;
   }
 
-  // Detailed logging for debugging
-  console.log('Rendering LaptopCard:', {
-    id: laptop.id,
-    title: laptop.title || 'No title',
-    hasPrice: Boolean(laptop.current_price),
-    hasImage: Boolean(laptop.image_url),
-    hasSpecs: Boolean(laptop.processor || laptop.ram || laptop.storage || laptop.graphics),
-    hasReviews: Boolean(laptop.review_data?.recent_reviews?.length)
-  });
-
   // Base product URL with affiliate tag
   const baseProductUrl = laptop.asin 
     ? `https://amazon.com/dp/${laptop.asin}?tag=with-laptop-discount-20`
@@ -53,10 +43,10 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
           productUrl={productUrl}
         />
 
-        {laptop.average_rating && laptop.average_rating > 0 && (
+        {laptop.rating && laptop.rating > 0 && (
           <LaptopRating 
-            rating={laptop.average_rating}
-            totalReviews={laptop.total_reviews}
+            rating={laptop.rating}
+            totalReviews={laptop.rating_count}
             reviewsUrl={reviewsUrl}
           />
         )}
@@ -76,6 +66,8 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
             storage: laptop.storage,
             weight: laptop.weight
           }}
+          brand={laptop.brand}
+          model={laptop.model}
         />
 
         {laptop.review_data?.recent_reviews && laptop.review_data.recent_reviews.length > 0 && (
