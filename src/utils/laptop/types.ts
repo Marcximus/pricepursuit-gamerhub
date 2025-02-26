@@ -4,6 +4,7 @@ export interface CollectionStats {
   updated: number;
   added: number;
   failed: number;
+  skipped?: number;
 }
 
 export interface CollectionConfig {

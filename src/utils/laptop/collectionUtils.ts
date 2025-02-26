@@ -54,15 +54,18 @@ function updateTotalStats(totalStats: CollectionStats, pageStats: CollectionStat
   totalStats.updated += pageStats.updated || 0;
   totalStats.added += pageStats.added || 0;
   totalStats.failed += pageStats.failed || 0;
+  totalStats.skipped = (totalStats.skipped || 0) + (pageStats.skipped || 0);
 }
 
 function showProgressToast(brand: string, page: number, stats: CollectionStats) {
+  const skippedMsg = stats.skipped ? `, ${stats.skipped} skipped` : '';
+  
   toast({
     title: "Collection Progress",
     description: `Page ${page}/${COLLECTION_CONFIG.PAGES_PER_BRAND} for ${brand}:
       ${stats.processed} processed,
       ${stats.added} new,
-      ${stats.updated} updated`,
+      ${stats.updated} updated${skippedMsg}`,
     variant: "default"
   });
 }

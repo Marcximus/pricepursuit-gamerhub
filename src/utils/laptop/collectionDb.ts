@@ -38,13 +38,20 @@ export async function updateBrandStatus(brand: string, status: 'in_progress' | '
     ...(status === 'in_progress' ? { last_collection_attempt: new Date().toISOString() } : {})
   };
 
-  await supabase
+  const { error } = await supabase
     .from('products')
     .update(updateData)
     .eq('brand', brand);
+
+  if (error) {
+    console.error(`Error updating brand status for ${brand}:`, error);
+    throw error;
+  }
 }
 
 export async function processPage(brand: string, page: number, groupIndex: number, brandIndex: number, totalBrands: number) {
+  console.log(`Processing ${brand} page ${page}, batch ${groupIndex * 2 + brandIndex + 1}/${totalBrands}`);
+  
   const { data: response, error: functionError } = await supabase.functions.invoke('collect-laptops', {
     body: {
       brands: [brand],
@@ -56,6 +63,19 @@ export async function processPage(brand: string, page: number, groupIndex: numbe
   });
 
   if (functionError) {
+    if (functionError.message?.includes('duplicate key value violates unique constraint')) {
+      console.warn(`Duplicate ASIN found for ${brand} page ${page}`, functionError);
+      return {
+        stats: {
+          processed: 0,
+          updated: 0,
+          added: 0,
+          failed: 0,
+          skipped: 1
+        }
+      };
+    }
+    
     console.error(`Edge function error for ${brand} page ${page}:`, functionError);
     return null;
   }
