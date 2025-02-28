@@ -1,49 +1,25 @@
 
-// Types for update-laptops function
-
-// Request Types
-export interface LaptopUpdateRequest {
-  laptops: Array<{
-    id: string;
-    asin: string;
-    current_price?: number;
-    title?: string;
-    last_checked?: string;
-  }>;
+export interface UpdateLaptopRequest {
+  asin: string;
+  force?: boolean;
 }
 
-// Response Types
-export interface UpdateResponse {
+export interface UpdateLaptopResponse {
   success: boolean;
   message: string;
-  updatedCount: number;
-  failedCount: number;
-  results: {
-    updated: Array<{
-      id: string;
-      asin: string;
-      success: boolean;
-      message?: string;
-    }>;
-    failed: Array<{
-      id: string;
-      asin: string;
-      error: string;
-    }>;
-  };
+  data?: any;
+  error?: string;
 }
 
-// Laptop Update Types
-export interface LaptopUpdate {
-  id: string;
-  asin: string;
+export interface LaptopUpdateData {
   title?: string;
-  current_price?: number | null;
-  original_price?: number | null;
-  rating?: number | null;
-  rating_count?: number | null;
-  total_reviews?: number | null;
+  description?: string;
+  current_price?: number;
+  original_price?: number;
+  rating?: number;
+  rating_count?: number;
   image_url?: string;
+  review_data?: any;
   processor?: string;
   ram?: string;
   storage?: string;
@@ -52,14 +28,7 @@ export interface LaptopUpdate {
   screen_resolution?: string;
   weight?: string;
   battery_life?: string;
-  brand?: string;
-  model?: string;
-}
-
-export interface LaptopUpdateResult {
-  id: string;
-  asin: string;
-  success: boolean;
-  message?: string;
-  error?: string;
+  update_status?: string;
+  last_checked?: string;
+  last_updated?: string;
 }

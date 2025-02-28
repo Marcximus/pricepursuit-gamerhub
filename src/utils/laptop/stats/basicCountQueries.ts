@@ -1,7 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { StatsCountResult } from './types';
 
-export const getTotalLaptopCount = async (): Promise<number> => {
+export const getTotalLaptopCount = async (): Promise<StatsCountResult> => {
   try {
     const { count, error } = await supabase
       .from('products')
@@ -10,17 +11,17 @@ export const getTotalLaptopCount = async (): Promise<number> => {
 
     if (error) {
       console.error('Error getting total laptop count:', error);
-      return 0;
+      return { count: 0, error };
     }
 
-    return count || 0;
+    return { count: count || 0, error: null };
   } catch (err) {
     console.error('Exception getting total laptop count:', err);
-    return 0;
+    return { count: 0, error: err instanceof Error ? err : new Error(String(err)) };
   }
 };
 
-export const getLaptopsWithPriceCount = async (): Promise<number> => {
+export const getLaptopsWithPriceCount = async (): Promise<StatsCountResult> => {
   try {
     const { count, error } = await supabase
       .from('products')
@@ -30,17 +31,17 @@ export const getLaptopsWithPriceCount = async (): Promise<number> => {
 
     if (error) {
       console.error('Error getting laptops with price count:', error);
-      return 0;
+      return { count: 0, error };
     }
 
-    return count || 0;
+    return { count: count || 0, error: null };
   } catch (err) {
     console.error('Exception getting laptops with price count:', err);
-    return 0;
+    return { count: 0, error: err instanceof Error ? err : new Error(String(err)) };
   }
 };
 
-export const getLaptopsWithProcessorCount = async (): Promise<number> => {
+export const getLaptopsWithProcessorCount = async (): Promise<StatsCountResult> => {
   try {
     const { count, error } = await supabase
       .from('products')
@@ -50,17 +51,17 @@ export const getLaptopsWithProcessorCount = async (): Promise<number> => {
 
     if (error) {
       console.error('Error getting laptops with processor count:', error);
-      return 0;
+      return { count: 0, error };
     }
 
-    return count || 0;
+    return { count: count || 0, error: null };
   } catch (err) {
     console.error('Exception getting laptops with processor count:', err);
-    return 0;
+    return { count: 0, error: err instanceof Error ? err : new Error(String(err)) };
   }
 };
 
-export const getLaptopsWithRamCount = async (): Promise<number> => {
+export const getLaptopsWithRamCount = async (): Promise<StatsCountResult> => {
   try {
     const { count, error } = await supabase
       .from('products')
@@ -70,17 +71,17 @@ export const getLaptopsWithRamCount = async (): Promise<number> => {
 
     if (error) {
       console.error('Error getting laptops with RAM count:', error);
-      return 0;
+      return { count: 0, error };
     }
 
-    return count || 0;
+    return { count: count || 0, error: null };
   } catch (err) {
     console.error('Exception getting laptops with RAM count:', err);
-    return 0;
+    return { count: 0, error: err instanceof Error ? err : new Error(String(err)) };
   }
 };
 
-export const getLaptopsWithStorageCount = async (): Promise<number> => {
+export const getLaptopsWithStorageCount = async (): Promise<StatsCountResult> => {
   try {
     const { count, error } = await supabase
       .from('products')
@@ -90,17 +91,17 @@ export const getLaptopsWithStorageCount = async (): Promise<number> => {
 
     if (error) {
       console.error('Error getting laptops with storage count:', error);
-      return 0;
+      return { count: 0, error };
     }
 
-    return count || 0;
+    return { count: count || 0, error: null };
   } catch (err) {
     console.error('Exception getting laptops with storage count:', err);
-    return 0;
+    return { count: 0, error: err instanceof Error ? err : new Error(String(err)) };
   }
 };
 
-export const getLaptopsWithGraphicsCount = async (): Promise<number> => {
+export const getLaptopsWithGraphicsCount = async (): Promise<StatsCountResult> => {
   try {
     const { count, error } = await supabase
       .from('products')
@@ -110,17 +111,17 @@ export const getLaptopsWithGraphicsCount = async (): Promise<number> => {
 
     if (error) {
       console.error('Error getting laptops with graphics count:', error);
-      return 0;
+      return { count: 0, error };
     }
 
-    return count || 0;
+    return { count: count || 0, error: null };
   } catch (err) {
     console.error('Exception getting laptops with graphics count:', err);
-    return 0;
+    return { count: 0, error: err instanceof Error ? err : new Error(String(err)) };
   }
 };
 
-export const getLaptopsWithScreenSizeCount = async (): Promise<number> => {
+export const getLaptopsWithScreenSizeCount = async (): Promise<StatsCountResult> => {
   try {
     const { count, error } = await supabase
       .from('products')
@@ -130,13 +131,13 @@ export const getLaptopsWithScreenSizeCount = async (): Promise<number> => {
 
     if (error) {
       console.error('Error getting laptops with screen size count:', error);
-      return 0;
+      return { count: 0, error };
     }
 
-    return count || 0;
+    return { count: count || 0, error: null };
   } catch (err) {
     console.error('Exception getting laptops with screen size count:', err);
-    return 0;
+    return { count: 0, error: err instanceof Error ? err : new Error(String(err)) };
   }
 };
 
