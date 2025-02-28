@@ -60,6 +60,13 @@ export function MissingDataOverview({
           count={stats.missingInformation.screenSize.count}
           total={stats.totalLaptops}
         />
+        
+        <MissingDataItem 
+          label="Missing Images"
+          percentage={stats.missingInformation.images.percentage}
+          count={stats.missingInformation.images.count}
+          total={stats.totalLaptops}
+        />
       </div>
       
       <div className="mt-6 p-4 bg-muted rounded-md">

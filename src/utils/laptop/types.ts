@@ -41,6 +41,6 @@ export interface SpecificationStats {
     storage: { count: number; percentage: number };
     graphics: { count: number; percentage: number };
     screenSize: { count: number; percentage: number };
-    images: { count: number; percentage: number }; // Added images tracking
+    images: { count: number; percentage: number }; 
   };
 }

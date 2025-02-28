@@ -24,5 +24,6 @@ export interface DatabaseStats {
     storage: { count: number; percentage: number };
     graphics: { count: number; percentage: number };
     screenSize: { count: number; percentage: number };
+    images: { count: number; percentage: number };
   };
 }
