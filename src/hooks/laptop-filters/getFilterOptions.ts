@@ -39,6 +39,7 @@ export const getUniqueFilterValues = (
 
 /**
  * Groups brands with fewer than the threshold occurrences into an "Other" category
+ * and returns only unique brand values
  */
 export const getGroupedBrandValues = (
   laptops: Product[] | undefined,

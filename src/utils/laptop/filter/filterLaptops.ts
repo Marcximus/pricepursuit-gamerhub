@@ -37,15 +37,15 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     return laptops;
   }
 
-  // Create a list of major brands for "Other" category filtering
-  const mainBrands = new Set<string>();
+  // Create a set of major brands to assist with "Other" category filtering
+  const mainBrandsSet = new Set<string>();
   const hasOtherBrandsFilter = filters.brands.has('Other');
   
-  // If "Other" category is selected, collect all other brand filters for exclusion
-  if (hasOtherBrandsFilter) {
+  // If filters contain brands, collect all non-Other brand filters for exclusion
+  if (filters.brands.size > 0) {
     filters.brands.forEach(brand => {
       if (brand !== 'Other') {
-        mainBrands.add(brand.toLowerCase());
+        mainBrandsSet.add(brand.toLowerCase());
       }
     });
   }
@@ -73,17 +73,26 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
       
       // Special handling for "Other" category
       if (hasOtherBrandsFilter) {
-        const isMainBrand = mainBrands.has(normalizedBrand.toLowerCase());
-        const matchesSpecificBrand = Array.from(filters.brands).some(selectedBrand => 
-          selectedBrand !== 'Other' && matchesFilter(selectedBrand, normalizedBrand, 'brand', laptop.title)
-        );
+        const isMainBrand = mainBrandsSet.has(normalizedBrand.toLowerCase());
         
-        // Include if:
-        // 1. It matches a specifically selected brand, OR
-        // 2. It's part of "Other" (not a main brand) and "Other" is selected
-        if (!(matchesSpecificBrand || (hasOtherBrandsFilter && !isMainBrand))) {
-          return false;
+        // Check if it matches a specifically selected brand
+        const matchesSpecificBrand = Array.from(filters.brands)
+          .filter(selectedBrand => selectedBrand !== 'Other')
+          .some(selectedBrand => 
+            matchesFilter(selectedBrand, normalizedBrand, 'brand', laptop.title)
+          );
+        
+        // For "Other" category, include if it's not a main brand
+        if (hasOtherBrandsFilter && !isMainBrand && !matchesSpecificBrand) {
+          return true;
         }
+        
+        // For specific brands, only include if it matches one of them
+        if (matchesSpecificBrand) {
+          return true;
+        }
+        
+        return false;
       } else {
         // Standard brand filtering without "Other" category
         const matchesBrand = Array.from(filters.brands).some(selectedBrand => 
