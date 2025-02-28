@@ -2,11 +2,12 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
-interface ErrorStateProps {
-  error: string;
+export interface ErrorStateProps {
+  message: string;
+  error?: Error | string;
 }
 
-export function ErrorState({ error }: ErrorStateProps) {
+export function ErrorState({ message, error }: ErrorStateProps) {
   return (
     <Card>
       <CardHeader>
@@ -14,7 +15,12 @@ export function ErrorState({ error }: ErrorStateProps) {
         <CardDescription>Error loading statistics</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="text-destructive">{error}</div>
+        <div className="text-destructive">{message}</div>
+        {error && (
+          <div className="mt-2 text-sm text-muted-foreground">
+            {typeof error === 'string' ? error : error.message}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
