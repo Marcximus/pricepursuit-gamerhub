@@ -1,14 +1,21 @@
 
 /**
- * Calculate percentage of count relative to total
+ * Calculate the percentage of a value relative to a total
+ * @param value The value to calculate the percentage of
+ * @param total The total value to calculate against
+ * @returns The percentage as a number
  */
-export function calculatePercentage(count: number, totalCount: number): number {
-  return totalCount ? Math.round((count / totalCount) * 100) : 0;
+export function calculatePercentage(value: number, total: number): number {
+  if (total === 0) return 0;
+  return (value / total) * 100;
 }
 
 /**
- * Calculate inverse percentage (percentage of items NOT in the count)
+ * Calculate the inverse percentage (100% - percentage)
+ * @param value The value to calculate the percentage of
+ * @param total The total value to calculate against
+ * @returns The inverse percentage as a number
  */
-export function calculateInversePercentage(count: number, totalCount: number): number {
-  return totalCount ? Math.round(((totalCount - count) / totalCount) * 100) : 0;
+export function calculateInversePercentage(value: number, total: number): number {
+  return 100 - calculatePercentage(value, total);
 }
