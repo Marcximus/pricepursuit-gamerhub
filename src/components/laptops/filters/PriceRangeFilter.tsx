@@ -1,9 +1,9 @@
+
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { DollarSign } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 
 type PriceRangeFilterProps = {
   minPrice: number;
@@ -14,26 +14,16 @@ type PriceRangeFilterProps = {
 export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRangeFilterProps) {
   const [localMin, setLocalMin] = useState(minPrice);
   const [localMax, setLocalMax] = useState(maxPrice);
-  const [extendedRange, setExtendedRange] = useState(maxPrice > 2000);
   
-  const DEFAULT_MAX = 2000;
-  const EXTENDED_MAX = 10000;
-  const MAX_POSSIBLE_PRICE = extendedRange ? EXTENDED_MAX : DEFAULT_MAX;
-  const isDefaultPriceRange = minPrice === 0 && (
-    (extendedRange && maxPrice === EXTENDED_MAX) || (!extendedRange && maxPrice === DEFAULT_MAX)
-  );
+  const MAX_POSSIBLE_PRICE = 10000;
+  const isDefaultPriceRange = minPrice === 0 && maxPrice === MAX_POSSIBLE_PRICE;
 
   // Create tick labels
   const generateTickLabels = () => {
     const labels = [];
-    const tickCount = extendedRange ? 6 : 5; // 0, 500, 1000, 1500, 2000, (10000 if extended)
+    const tickCount = 6; // 0, 2000, 4000, 6000, 8000, 10000
     for (let i = 0; i < tickCount; i++) {
-      let value;
-      if (extendedRange && i === tickCount - 1) {
-        value = EXTENDED_MAX;
-      } else {
-        value = Math.round(i * (DEFAULT_MAX / (tickCount - (extendedRange ? 2 : 1))));
-      }
+      const value = Math.round(i * (MAX_POSSIBLE_PRICE / (tickCount - 1)));
       labels.push(formatPrice(value, true));
     }
     return labels;
@@ -43,26 +33,7 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
   useEffect(() => {
     setLocalMin(minPrice);
     setLocalMax(maxPrice);
-    setExtendedRange(maxPrice > DEFAULT_MAX);
   }, [minPrice, maxPrice]);
-
-  // Handle extended range toggle
-  const handleRangeToggle = (checked: boolean) => {
-    setExtendedRange(checked);
-    
-    // Adjust max value when toggling the extended range
-    if (checked && localMax <= DEFAULT_MAX) {
-      // If enabling extended range and max is within default range, keep it the same
-      onPriceChange(localMin, localMax);
-    } else if (!checked && localMax > DEFAULT_MAX) {
-      // If disabling extended range and max is beyond default range, cap it
-      setLocalMax(DEFAULT_MAX);
-      onPriceChange(localMin, DEFAULT_MAX);
-    } else {
-      // Otherwise, keep the current values
-      onPriceChange(localMin, localMax);
-    }
-  };
 
   // Handle slider changes
   const handleSliderChange = (values: number[]) => {
@@ -92,18 +63,14 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
 
   const handleResetPrice = () => {
     setLocalMin(0);
-    const newMax = extendedRange ? EXTENDED_MAX : DEFAULT_MAX;
-    setLocalMax(newMax);
-    onPriceChange(0, newMax);
+    setLocalMax(MAX_POSSIBLE_PRICE);
+    onPriceChange(0, MAX_POSSIBLE_PRICE);
   };
 
   // Format price for display
   const formatPrice = (price: number, short: boolean = false) => {
-    if (price >= EXTENDED_MAX && short) {
-      return '10k+';
-    }
     if (short && price >= 1000) {
-      return `${Math.floor(price / 1000)}k${price === DEFAULT_MAX && extendedRange ? '+' : ''}`;
+      return `${Math.floor(price / 1000)}k`;
     }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -127,20 +94,6 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
             Reset
           </button>
         )}
-      </div>
-
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-xs text-slate-500">Show all prices</span>
-        <div className="flex items-center gap-2">
-          <Switch 
-            id="extended-range"
-            checked={extendedRange}
-            onCheckedChange={handleRangeToggle}
-          />
-          <Label htmlFor="extended-range" className="text-xs font-medium cursor-pointer">
-            {extendedRange ? '2k+ included' : 'Up to 2k'}
-          </Label>
-        </div>
       </div>
 
       <div className="pt-2">
