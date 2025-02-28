@@ -23,6 +23,9 @@ const FORBIDDEN_KEYWORDS = [
   "Over-ear", "Computer Keyboard", "Docking Station", "Webcam for PC",
   "External CD", "External DVD", "BDXL", "Printer Ink",
   
+  // New forbidden keywords added
+  "imac", "Laptop Hard Drive", "Subscription", "Redmi Pad", "Mini PC", "Desktop",
+  
   // Charger-related keywords (commonly mixed with laptops)
   "Charger fit", "Charger for", "Charger Fit For", "Adapter Laptop Charger",
   "Adapter Charger", "Laptop Super Charger", "Car Charger", "Charger Replacement",
