@@ -37,9 +37,9 @@ export const processAndFilterLaptops = (
   
   console.log(`Filtered out ${rawData.length - filteredRawData.length} products based on keywords and duplicate ASINs`);
   
-  // Process filtered laptop data with consistent normalization
+  // Process filtered laptop data
   const processedLaptops = filteredRawData.map(laptop => {
-    // Use the same normalizers from the filtering system for consistency
+    // Normalize brand and model before processing
     const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title);
     const normalizedModel = normalizeModel(laptop.model || '', laptop.title, normalizedBrand);
     

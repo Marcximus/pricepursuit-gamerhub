@@ -22,6 +22,7 @@ const ComparePriceLaptops = () => {
     brands: new Set<string>(),
   });
 
+  // Add debugging useEffect to track filter changes
   useEffect(() => {
     console.log('Filter state updated:', {
       processors: Array.from(filters.processors),
@@ -46,7 +47,7 @@ const ComparePriceLaptops = () => {
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
-  const filterOptions = useLaptopFilters(data?.allLaptops, filters);
+  const filterOptions = useLaptopFilters(data?.allLaptops);
 
   const handleSortChange = (newSortBy: SortOption) => {
     setSortBy(newSortBy);
@@ -58,6 +59,7 @@ const ComparePriceLaptops = () => {
   };
 
   const handleFiltersChange = (newFilters: FilterOptions) => {
+    // Create a deep copy of the filter sets to avoid reference issues
     const updatedFilters: FilterOptions = {
       priceRange: { ...newFilters.priceRange },
       processors: new Set(newFilters.processors),

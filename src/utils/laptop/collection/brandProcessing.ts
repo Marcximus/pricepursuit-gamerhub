@@ -44,7 +44,6 @@ export async function processBrand(
       console.log(`Processing ${brand} page ${page}/${COLLECTION_CONFIG.PAGES_PER_BRAND}`);
       
       try {
-        // Updated to match the new signature - brand first, then pageNumber
         const response = await processPage(brand, page, groupIndex, brandIndex, COLLECTION_CONFIG.LAPTOP_BRANDS.length);
         
         if (response?.stats) {
