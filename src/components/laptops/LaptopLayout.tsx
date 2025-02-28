@@ -11,7 +11,7 @@ type LaptopLayoutProps = {
 export function LaptopLayout({ filters, toolbar, content }: LaptopLayoutProps) {
   return (
     <div className="flex flex-col md:flex-row gap-8">
-      <div className="md:w-64 flex-shrink-0">
+      <div className="md:w-72 flex-shrink-0">
         <div className="sticky top-32">
           <Card className="shadow-sm">
             <CardHeader className="py-4">
