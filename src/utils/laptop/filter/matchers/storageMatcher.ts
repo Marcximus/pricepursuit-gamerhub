@@ -2,33 +2,23 @@
 import { parseValueWithUnit } from './commonMatchers';
 
 /**
- * Parses storage value from string to number in GB
+ * Matcher for storage filter values
  */
-export const parseStorageValue = (value: string | null | undefined): number => {
-  if (!value) return 0;
-  const parsed = parseValueWithUnit(value);
-  if (!parsed) return 0;
+export const matchesStorageFilter = (
+  filterValue: string,
+  productValue: string | null | undefined
+): boolean => {
+  if (!productValue) return false;
   
-  const { value: numValue, unit } = parsed;
+  const filterStorage = parseValueWithUnit(filterValue);
+  const productStorage = parseValueWithUnit(productValue);
   
-  switch (unit) {
-    case 'tb': return numValue * 1024;
-    case 'mb': return numValue / 1024;
-    case 'gb': return numValue;
-    default: return 0;
-  }
-};
-
-/**
- * Checks if a storage filter value matches a product storage value
- */
-export const matchesStorageFilter = (filterValue: string, productValue: string): boolean => {
-  const productStorageGB = parseStorageValue(productValue);
-  const filterStorageGB = parseStorageValue(filterValue);
+  if (!filterStorage || !productStorage) return false;
   
-  // Enforce realistic storage values and stricter matching
-  if (productStorageGB < 128 || filterStorageGB < 128) return false;
+  // Convert to consistent unit (GB)
+  const filterGB = filterStorage.unit === 'gb' ? filterStorage.value : filterStorage.value * 1024;
+  const productGB = productStorage.unit === 'gb' ? productStorage.value : productStorage.value * 1024;
   
-  // More precise matching for storage sizes (within 0.5GB)
-  return Math.abs(productStorageGB - filterStorageGB) < 0.5;
+  // Storage capacities should match precisely for filtering purposes
+  return Math.abs(filterGB - productGB) < 1; // Allow a small tolerance for rounding errors
 };

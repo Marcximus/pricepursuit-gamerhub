@@ -1,3 +1,3 @@
 
-// Re-export everything from the new normalizers directory
+// Re-export all normalizers from the new structure
 export * from './normalizers';

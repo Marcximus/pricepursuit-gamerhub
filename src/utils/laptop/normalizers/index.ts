@@ -6,3 +6,6 @@ export * from './graphicsNormalizer';
 export * from './processorNormalizer';
 export * from './brandNormalizer';
 export * from './modelNormalizer';
+
+// Type exports for backward compatibility
+export type { MatchResult } from '../types';
