@@ -1,7 +1,7 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { LaptopProductData } from './types';
-import { normalizeProductSpecs } from '@/utils/laptop/collectionUtils';
+import { supabase } from './supabaseClient.ts';
+import { LaptopProductData } from './types.ts';
+import { normalizeProductSpecs } from './utils/collectionUtils.ts';
 
 /**
  * Saves a product to the Supabase database
