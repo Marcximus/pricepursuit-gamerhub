@@ -1,5 +1,11 @@
 
 import type { FilterableProductKeys, MatcherFunction } from "../filterTypes";
+import { matchesBrandFilter } from './brandMatcher';
+import { matchesGraphicsFilter } from './graphicsMatcher';
+import { matchesProcessorFilter } from './processorMatcher';
+import { matchesRamFilter } from './ramMatcher';
+import { matchesScreenSizeFilter } from './screenSizeMatcher';
+import { matchesStorageFilter } from './storageMatcher';
 
 /**
  * Common utility to parse value with unit from a string
@@ -19,6 +25,16 @@ export const parseValueWithUnit = (
   };
 };
 
+// Define matchers mapping
+const matchers: Record<FilterableProductKeys, MatcherFunction> = {
+  brand: matchesBrandFilter,
+  graphics: matchesGraphicsFilter,
+  processor: matchesProcessorFilter,
+  ram: matchesRamFilter,
+  screen_size: matchesScreenSizeFilter,
+  storage: matchesStorageFilter
+};
+
 /**
  * Generic function to check if a product value matches a filter value
  * Delegates to specific matcher functions based on the filter type
@@ -29,44 +45,12 @@ export const matchesFilter = (
   filterType: FilterableProductKeys,
   productTitle?: string
 ): boolean => {
-  // We'll dynamically import the matcher to avoid circular dependencies
-  let matcherFn: MatcherFunction | undefined;
-  
-  switch (filterType) {
-    case 'brand':
-      // Using dynamic import to avoid circular dependency
-      const { matchesBrandFilter } = require('./brandMatcher');
-      matcherFn = matchesBrandFilter;
-      break;
-    case 'graphics':
-      const { matchesGraphicsFilter } = require('./graphicsMatcher');
-      matcherFn = matchesGraphicsFilter;
-      break;
-    case 'processor':
-      const { matchesProcessorFilter } = require('./processorMatcher');
-      matcherFn = matchesProcessorFilter;
-      break;
-    case 'ram':
-      const { matchesRamFilter } = require('./ramMatcher');
-      matcherFn = matchesRamFilter;
-      break;
-    case 'screen_size':
-      const { matchesScreenSizeFilter } = require('./screenSizeMatcher');
-      matcherFn = matchesScreenSizeFilter;
-      break;
-    case 'storage':
-      const { matchesStorageFilter } = require('./storageMatcher');
-      matcherFn = matchesStorageFilter;
-      break;
-    default:
-      console.warn(`No matcher found for filter type: ${filterType}`);
-      return false;
-  }
-
-  // Use the matcher function
-  if (!matcherFn) {
+  // If no matcher exists for this filter type, return false
+  if (!matchers[filterType]) {
+    console.warn(`No matcher found for filter type: ${filterType}`);
     return false;
   }
-  
-  return matcherFn(filterValue, productValue, productTitle);
+
+  // Delegate to the appropriate matcher function
+  return matchers[filterType](filterValue, productValue, productTitle);
 };
