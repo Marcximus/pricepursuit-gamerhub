@@ -25,12 +25,17 @@ export const matchesProcessorFilter = (
   if (productValue) {
     const normalizedProcessor = productValue.toLowerCase();
     
-    if (filterValue === 'Intel Celeron' && normalizedProcessor.includes('celeron')) {
-      // Match specific Celeron models like N9095
+    if (filterValue === 'Intel Celeron' && 
+        (normalizedProcessor.includes('celeron') || 
+         normalizedProcessor.match(/\d+(?:\.\d+)?\s*ghz.*celeron/i) ||
+         normalizedProcessor.match(/celeron.*\d+(?:\.\d+)?\s*ghz/i))) {
       return true;
     }
     
-    if (filterValue === 'Intel Pentium' && normalizedProcessor.includes('pentium')) {
+    if (filterValue === 'Intel Pentium' && 
+        (normalizedProcessor.includes('pentium') || 
+         normalizedProcessor.match(/\d+(?:\.\d+)?\s*ghz.*pentium/i) ||
+         normalizedProcessor.match(/pentium.*\d+(?:\.\d+)?\s*ghz/i))) {
       return true;
     }
     
@@ -43,57 +48,61 @@ export const matchesProcessorFilter = (
       return true;
     }
     
-    // Match Apple M4 variants
-    if (filterValue.startsWith('Apple M') && filterValue.length === 8) {
+    // Match Apple M-series (improved to catch more variations)
+    if (filterValue.startsWith('Apple M') && filterValue.length >= 8) {
       const mVersion = filterValue.charAt(7); // Get the number (1-4)
-      if (normalizedProcessor.includes(`m${mVersion}`) || normalizedProcessor.includes(`apple m${mVersion}`)) {
-        return true;
-      }
-    }
-    
-    // Match Apple M with variants (Pro/Max/Ultra)
-    if (filterValue.startsWith('Apple M') && filterValue.includes(' ')) {
-      const parts = filterValue.split(' ');
-      if (parts.length >= 3) { // Apple M1 Pro format
-        const mVersion = parts[1].charAt(1); // Get the number from M1, M2, etc.
-        const variant = parts[2].toLowerCase(); // pro, max, ultra
-        if (normalizedProcessor.includes(`m${mVersion} ${variant}`) || 
-            normalizedProcessor.includes(`apple m${mVersion} ${variant}`)) {
+      const regex = new RegExp(`\\bm${mVersion}\\b|\\bapple\\s*m${mVersion}\\b`, 'i');
+      
+      if (regex.test(normalizedProcessor)) {
+        // For base M-series, make sure it's not a Pro/Max/Ultra variant
+        if (filterValue.length === 8 && 
+            !normalizedProcessor.includes('pro') && 
+            !normalizedProcessor.includes('max') && 
+            !normalizedProcessor.includes('ultra')) {
           return true;
+        }
+        // For variants (Pro/Max/Ultra)
+        else if (filterValue.length > 8) {
+          const variant = filterValue.substring(9).toLowerCase().trim();
+          if (normalizedProcessor.includes(variant)) {
+            return true;
+          }
         }
       }
     }
     
     // Match Intel Core Ultra
-    if (filterValue.startsWith('Intel Core Ultra') && normalizedProcessor.includes('core ultra')) {
-      const ultraNumber = filterValue.split(' ').pop(); // Get the number (5,7,9)
-      if (normalizedProcessor.includes(`ultra ${ultraNumber}`) || 
-          normalizedProcessor.includes(`ultra${ultraNumber}`) ||
-          normalizedProcessor.includes(`core ultra ${ultraNumber}`)) {
-        return true;
-      }
-    }
-    
-    // Also look for numeric-core ultra patterns (e.g., "16-Core Ultra 7")
     if (filterValue.startsWith('Intel Core Ultra') && 
-        normalizedProcessor.match(/\d+-core\s+ultra\s+\d/i)) {
+        (normalizedProcessor.includes('core ultra') || 
+         normalizedProcessor.includes('intel ultra') ||
+         normalizedProcessor.match(/\d+-core\s+ultra/i))) {
       const ultraNumber = filterValue.split(' ').pop(); // Get the number (5,7,9)
-      if (normalizedProcessor.includes(`ultra ${ultraNumber}`)) {
+      if (ultraNumber && 
+          (normalizedProcessor.includes(`ultra ${ultraNumber}`) || 
+           normalizedProcessor.includes(`ultra${ultraNumber}`) ||
+           normalizedProcessor.match(new RegExp(`\\bultra\\s*${ultraNumber}\\b`, 'i')) ||
+           normalizedProcessor.match(new RegExp(`\\bcore\\s*ultra\\s*${ultraNumber}\\b`, 'i')))) {
         return true;
       }
     }
     
-    // Match specific Intel Core i-series regardless of generation prefix/suffix variations
+    // Match specific Intel Core i-series (improved to catch more variations)
     if (filterValue.includes('Intel Core i') && filterValue.length === 12) { // Basic Intel Core i# format
       const coreNumber = filterValue.charAt(filterValue.length - 1);
-      // Match patterns like i5, i5-1135G7, Core i5, Intel i5
-      if (normalizedProcessor.includes(`i${coreNumber}`) || 
-          normalizedProcessor.includes(`core i${coreNumber}`)) {
+      // Match patterns like i7, i7-xxxx, Core i7, Intel i7, core_i7
+      const coreRegex = new RegExp(`\\bi${coreNumber}\\b|\\bcore\\s*i${coreNumber}\\b|\\bcore_i${coreNumber}\\b`, 'i');
+      if (coreRegex.test(normalizedProcessor)) {
+        return true;
+      }
+      
+      // Match GHz Core i7 patterns
+      if (normalizedProcessor.match(new RegExp(`\\d+(?:\\.\\d+)?\\s*ghz.*(?:core\\s*)?i${coreNumber}\\b`, 'i')) ||
+          normalizedProcessor.match(new RegExp(`(?:core\\s*)?i${coreNumber}.*\\d+(?:\\.\\d+)?\\s*ghz`, 'i'))) {
         return true;
       }
     }
     
-    // Match Intel Core with generation info
+    // Match Intel Core with generation info (improved)
     if (filterValue.includes('Intel Core i') && filterValue.includes('Gen')) {
       const coreNumber = filterValue.match(/i([3579])/)?.[1];
       const genInfo = filterValue.includes('13th/14th') ? ['13th', '14th', '13', '14'] :
@@ -101,15 +110,24 @@ export const matchesProcessorFilter = (
                       filterValue.includes('10th') ? ['10th', '10'] : [];
                       
       if (coreNumber && genInfo.some(gen => normalizedProcessor.includes(gen))) {
-        return normalizedProcessor.includes(`i${coreNumber}`);
+        return normalizedProcessor.includes(`i${coreNumber}`) || 
+               normalizedProcessor.includes(`core i${coreNumber}`) ||
+               normalizedProcessor.includes(`core_i${coreNumber}`);
       }
     }
     
-    // Match AMD Ryzen
-    if (filterValue.startsWith('AMD Ryzen') && normalizedProcessor.includes('ryzen')) {
+    // Match AMD Ryzen (improved to catch ryzen_5_3500u style patterns)
+    if (filterValue.startsWith('AMD Ryzen') && 
+        (normalizedProcessor.includes('ryzen') || normalizedProcessor.includes('amd'))) {
       const ryzenNumber = filterValue.split(' ').pop(); // Get the number (3,5,7,9)
-      if (normalizedProcessor.includes(`ryzen ${ryzenNumber}`) || 
-          normalizedProcessor.includes(`ryzen${ryzenNumber}`)) {
+      // Match patterns like ryzen 5, ryzen5, ryzen_5, ryzen-5
+      const ryzenRegex = new RegExp(`\\bryzen[_\\s-]*${ryzenNumber}\\b`, 'i');
+      if (ryzenRegex.test(normalizedProcessor)) {
+        return true;
+      }
+      
+      // Match specific model numbers like 3500u
+      if (normalizedProcessor.match(new RegExp(`\\bryzen[_\\s-]*${ryzenNumber}[_\\s-]\\d{4}[a-z]?\\b`, 'i'))) {
         return true;
       }
     }
@@ -136,83 +154,94 @@ export const matchesProcessorFilter = (
   if (productTitle) {
     const normalizedTitle = productTitle.toLowerCase();
     
+    // Match Apple M-series in title
+    if (filterValue.startsWith('Apple M')) {
+      const mVersion = filterValue.charAt(7); // Get the number (1-4)
+      const regex = new RegExp(`\\bm${mVersion}\\b|\\bapple\\s*m${mVersion}\\b`, 'i');
+      
+      if (regex.test(normalizedTitle)) {
+        // For base M-series, make sure it's not a Pro/Max/Ultra variant
+        if (filterValue.length === 8 && 
+            !normalizedTitle.includes('pro') && 
+            !normalizedTitle.includes('max') && 
+            !normalizedTitle.includes('ultra')) {
+          return true;
+        }
+        // For variants (Pro/Max/Ultra)
+        else if (filterValue.length > 8) {
+          const variant = filterValue.substring(9).toLowerCase().trim();
+          if (normalizedTitle.includes(variant)) {
+            return true;
+          }
+        }
+      }
+    }
+    
     // Specific Intel Core Ultra matching in title
     if (filterValue.startsWith('Intel Core Ultra') && 
         (normalizedTitle.includes('core ultra') || normalizedTitle.includes('-core ultra'))) {
       const ultraNumber = filterValue.split(' ').pop(); // Get the number (5,7,9)
-      if (normalizedTitle.includes(`ultra ${ultraNumber}`) || 
-          normalizedTitle.includes(`core ultra ${ultraNumber}`)) {
+      if (ultraNumber && 
+          (normalizedTitle.includes(`ultra ${ultraNumber}`) || 
+           normalizedTitle.includes(`core ultra ${ultraNumber}`))) {
         return true;
       }
     }
     
-    // Intel Celeron specific model matching
+    // Intel Celeron specific model matching in title
     if (filterValue === 'Intel Celeron' && 
-        (normalizedTitle.includes('celeron') || normalizedTitle.match(/\bceleron\s+n\d{4}\b/i))) {
+        (normalizedTitle.includes('celeron') || 
+         normalizedTitle.match(/\bceleron\s+n\d{4}\b/i) ||
+         normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*celeron/i) ||
+         normalizedTitle.match(/celeron.*\d+(?:\.\d+)?\s*ghz/i))) {
+      return true;
+    }
+    
+    // Intel Pentium matching in title
+    if (filterValue === 'Intel Pentium' && 
+        (normalizedTitle.includes('pentium') ||
+         normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*pentium/i) ||
+         normalizedTitle.match(/pentium.*\d+(?:\.\d+)?\s*ghz/i))) {
       return true;
     }
     
     // Try to match model numbers in title
     if (filterValue.includes('Intel Core i')) {
       const coreNumber = filterValue.match(/i([3579])/)?.[1];
-      // Match patterns like "Intel Core i5-1135G7" or just "i5" in title
-      if (coreNumber && (normalizedTitle.match(new RegExp(`i${coreNumber}[- ]\\d{4,5}[a-z]*`, 'i')) || 
-                          normalizedTitle.match(new RegExp(`\\bi${coreNumber}\\b`, 'i')))) {
+      // Match patterns like "Intel Core i5-1135G7" or just "i5" or "core_i5" in title
+      if (coreNumber && 
+          (normalizedTitle.match(new RegExp(`i${coreNumber}[- ]\\d{4,5}[a-z]*`, 'i')) || 
+           normalizedTitle.match(new RegExp(`\\bi${coreNumber}\\b`, 'i')) ||
+           normalizedTitle.match(new RegExp(`\\bcore_i${coreNumber}\\b`, 'i')))) {
         return true;
       }
     }
     
     // Match GHz mentions with core numbers in title
-    if (normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*i([3579])/i) ||
-        normalizedTitle.match(/i([3579]).*\d+(?:\.\d+)?\s*ghz/i)) {
-      const coreNumber = normalizedTitle.match(/i([3579])/i)?.[1];
+    if (normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*(?:core\s*)?i([3579])/i) ||
+        normalizedTitle.match(/(?:core\s*)?i([3579]).*\d+(?:\.\d+)?\s*ghz/i) ||
+        normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*core_i([3579])/i) ||
+        normalizedTitle.match(/core_i([3579]).*\d+(?:\.\d+)?\s*ghz/i)) {
+      const coreNumber = normalizedTitle.match(/i([3579])/i)?.[1] || 
+                         normalizedTitle.match(/core_i([3579])/i)?.[1];
       if (coreNumber && filterValue === `Intel Core i${coreNumber}`) {
         return true;
       }
     }
     
-    // Check for Apple Silicon in title
-    if (filterValue.startsWith('Apple M') && 
-        (normalizedTitle.includes('m1') || normalizedTitle.includes('m2') || 
-         normalizedTitle.includes('m3') || normalizedTitle.includes('m4'))) {
-      const mVersion = filterValue.match(/Apple M(\d)/)?.[1];
-      if (mVersion && normalizedTitle.includes(`m${mVersion}`)) {
-        // Check for variants
-        if (filterValue.includes('Pro') && normalizedTitle.includes('pro')) return true;
-        if (filterValue.includes('Max') && normalizedTitle.includes('max')) return true;
-        if (filterValue.includes('Ultra') && normalizedTitle.includes('ultra')) return true;
-        if (!filterValue.includes('Pro') && !filterValue.includes('Max') && 
-            !filterValue.includes('Ultra') && 
-            !normalizedTitle.includes('pro') && !normalizedTitle.includes('max') && 
-            !normalizedTitle.includes('ultra')) {
-          return true;
-        }
-      }
-    }
-    
-    // Check for standard processor references in title
-    if (filterValue === 'Intel Celeron' && normalizedTitle.includes('celeron')) {
-      return true;
-    }
-    
-    if (filterValue === 'Intel Pentium' && normalizedTitle.includes('pentium')) {
-      return true;
-    }
-    
-    if (filterValue === 'Qualcomm Snapdragon' && 
-        (normalizedTitle.includes('snapdragon') || normalizedTitle.includes('qualcomm'))) {
-      return true;
-    }
-    
-    if (filterValue === 'MediaTek' && normalizedTitle.includes('mediatek')) {
-      return true;
-    }
-    
-    // Match AMD Ryzen in title
-    if (filterValue.startsWith('AMD Ryzen') && normalizedTitle.includes('ryzen')) {
+    // Match AMD Ryzen in title (improved to catch ryzen_5_3500u style patterns)
+    if (filterValue.startsWith('AMD Ryzen') && 
+        (normalizedTitle.includes('ryzen') || normalizedTitle.includes('amd'))) {
       const ryzenNumber = filterValue.split(' ').pop(); // Get the number (3,5,7,9)
-      if (normalizedTitle.includes(`ryzen ${ryzenNumber}`) || 
-          normalizedTitle.includes(`ryzen${ryzenNumber}`)) {
+      
+      // Match patterns like ryzen 5, ryzen5, ryzen_5, ryzen-5
+      const ryzenRegex = new RegExp(`\\bryzen[_\\s-]*${ryzenNumber}\\b`, 'i');
+      if (ryzenRegex.test(normalizedTitle)) {
+        return true;
+      }
+      
+      // Match specific model numbers like 3500u
+      if (normalizedTitle.match(new RegExp(`\\bryzen[_\\s-]*${ryzenNumber}[_\\s-]\\d{4}[a-z]?\\b`, 'i'))) {
         return true;
       }
     }
@@ -228,35 +257,110 @@ export const matchesProcessorFilter = (
     // Check against BOTH product value and title
     let belongsToMainCategory = false;
     
-    // Product value check
+    // Product value check with improved detections for "in-between" formats
     if (productValue) {
-      // Check if the processor includes any main category
+      const normalizedProcessor = productValue.toLowerCase();
+      
+      // Check if the processor includes any main category name
       belongsToMainCategory = mainProcessorCategories.some(category => 
-        productValue.toLowerCase().includes(category.toLowerCase())
-      );
-    }
-    
-    // If not found in product value, check title
-    if (!belongsToMainCategory && productTitle) {
-      belongsToMainCategory = mainProcessorCategories.some(category => 
-        productTitle.toLowerCase().includes(category.toLowerCase())
+        normalizedProcessor.includes(category.toLowerCase())
       );
       
-      // Specific checks for patterns in title that imply known processor types
+      // Additional checks for formats that might slip through
       if (!belongsToMainCategory) {
-        // Check for Celeron model numbers
-        if (productTitle.match(/celeron\s+n\d{4}/i)) {
-          return false; // This should match Intel Celeron
+        // Core i series without "Intel" prefix
+        if (normalizedProcessor.match(/\b(?:core\s*)?i[3579](?:[-\s]\d{4,5}[a-z]*)?/i) ||
+            normalizedProcessor.match(/\bcore_i[3579]\b/i)) {
+          return false; // Should match Intel Core i series
         }
         
-        // Check for "X-Core Ultra Y" pattern (Intel Core Ultra)
-        if (productTitle.match(/\d+-core\s+ultra\s+[579]/i)) {
-          return false; // This should match Intel Core Ultra
+        // Celeron with model number or GHz
+        if (normalizedProcessor.match(/\bceleron\s*n\d{4}/i) ||
+            normalizedProcessor.match(/\d+(?:\.\d+)?\s*ghz.*celeron/i) ||
+            normalizedProcessor.match(/celeron.*\d+(?:\.\d+)?\s*ghz/i)) {
+          return false; // Should match Intel Celeron
         }
         
-        // Check for GHz core_i patterns
-        if (productTitle.match(/\d+(?:\.\d+)?\s*ghz\s*core_i[3579]/i)) {
-          return false; // This should match Intel Core i series
+        // Pentium with model number or GHz
+        if (normalizedProcessor.match(/\bpentium\s*\w+/i) ||
+            normalizedProcessor.match(/\d+(?:\.\d+)?\s*ghz.*pentium/i) ||
+            normalizedProcessor.match(/pentium.*\d+(?:\.\d+)?\s*ghz/i)) {
+          return false; // Should match Intel Pentium
+        }
+        
+        // AMD Ryzen without "AMD" prefix
+        if (normalizedProcessor.match(/\bryzen[_\s-]*[3579](?:[_\s-]\d{4}[a-z]*)?\b/i)) {
+          return false; // Should match AMD Ryzen
+        }
+        
+        // M-series without "Apple" prefix
+        if (normalizedProcessor.match(/\bm[1234](?:\s*(?:pro|max|ultra))?\b/i) &&
+            !normalizedProcessor.includes('ram') && 
+            !normalizedProcessor.includes('memory')) {
+          return false; // Should match Apple M series
+        }
+        
+        // Ultra without "Core" prefix
+        if (normalizedProcessor.match(/\bultra\s*[579]\b/i) ||
+            normalizedProcessor.match(/\b\d+-core\s+ultra\b/i)) {
+          return false; // Should match Intel Core Ultra
+        }
+      }
+    }
+    
+    // If not found in product value, check title with similar improved checks
+    if (!belongsToMainCategory && productTitle) {
+      const normalizedTitle = productTitle.toLowerCase();
+      
+      // Check main categories in title
+      belongsToMainCategory = mainProcessorCategories.some(category => 
+        normalizedTitle.includes(category.toLowerCase())
+      );
+      
+      // If still not found, check for edge cases in title
+      if (!belongsToMainCategory) {
+        // Core i series without "Intel" prefix
+        if (normalizedTitle.match(/\b(?:core\s*)?i[3579](?:[-\s]\d{4,5}[a-z]*)?/i) ||
+            normalizedTitle.match(/\bcore_i[3579]\b/i)) {
+          return false; // Should match Intel Core i series
+        }
+        
+        // Celeron with model number or GHz
+        if (normalizedTitle.match(/\bceleron\s*n\d{4}/i) ||
+            normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*celeron/i) ||
+            normalizedTitle.match(/celeron.*\d+(?:\.\d+)?\s*ghz/i)) {
+          return false; // Should match Intel Celeron
+        }
+        
+        // Pentium with model number or GHz
+        if (normalizedTitle.match(/\bpentium\s*\w+/i) ||
+            normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*pentium/i) ||
+            normalizedTitle.match(/pentium.*\d+(?:\.\d+)?\s*ghz/i)) {
+          return false; // Should match Intel Pentium
+        }
+        
+        // AMD Ryzen without "AMD" prefix
+        if (normalizedTitle.match(/\bryzen[_\s-]*[3579](?:[_\s-]\d{4}[a-z]*)?\b/i)) {
+          return false; // Should match AMD Ryzen
+        }
+        
+        // M-series without "Apple" prefix
+        if (normalizedTitle.match(/\bm[1234](?:\s*(?:pro|max|ultra))?\b/i) &&
+            !normalizedTitle.includes('ram') && 
+            !normalizedTitle.includes('memory')) {
+          return false; // Should match Apple M series
+        }
+        
+        // Ultra without "Core" prefix
+        if (normalizedTitle.match(/\bultra\s*[579]\b/i) ||
+            normalizedTitle.match(/\b\d+-core\s+ultra\b/i)) {
+          return false; // Should match Intel Core Ultra
+        }
+        
+        // GHz with core_i patterns that should match Intel Core
+        if (normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*core_i[3579]/i) ||
+            normalizedTitle.match(/core_i[3579].*\d+(?:\.\d+)?\s*ghz/i)) {
+          return false; // Should match Intel Core i series
         }
       }
     }
@@ -267,3 +371,4 @@ export const matchesProcessorFilter = (
   
   return false;
 };
+

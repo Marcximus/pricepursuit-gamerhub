@@ -120,3 +120,4 @@ export const applyScreenSizeFilter = (
     matchesFilter(selectedSize, laptop.screen_size, 'screen_size', laptop.title)
   );
 };
+

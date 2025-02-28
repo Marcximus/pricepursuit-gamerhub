@@ -35,6 +35,7 @@ export const normalizeProcessor = (processor: string): string => {
     .replace(/intel\s+core\s+i([3579])/i, 'Intel Core i$1')
     .replace(/\bi([3579])[- ](\d{4,5})(H|U|HQ|K)?/i, 'Intel Core i$1-$2$3')
     .replace(/\bi([3579])\b/i, 'Intel Core i$1')
+    .replace(/\bcore_i([3579])\b/i, 'Intel Core i$1')
     .replace(/intel\s+celeron\s+(n\d{4})/i, 'Intel Celeron $1')
     .replace(/intel\s+celeron/i, 'Intel Celeron')
     .replace(/intel\s+pentium/i, 'Intel Pentium')
@@ -46,7 +47,8 @@ export const normalizeProcessor = (processor: string): string => {
     .replace(/amd\s+ryzen\s+([3579])[- ](\d{4,5}[A-Z]*(?:\s*HX)?)/i, 'AMD Ryzen $1-$2')
     .replace(/amd\s+ryzen\s+([3579])/i, 'AMD Ryzen $1')
     .replace(/ryzen\s+([3579])[- ](\d{4,5}[A-Z]*(?:\s*HX)?)/i, 'AMD Ryzen $1-$2')
-    .replace(/ryzen\s+([3579])/i, 'AMD Ryzen $1');
+    .replace(/ryzen\s+([3579])/i, 'AMD Ryzen $1')
+    .replace(/ryzen_([3579])_(\d{4}[a-z]*)/i, 'AMD Ryzen $1-$2');
     
   // Apple naming
   normalized = normalized
@@ -58,7 +60,12 @@ export const normalizeProcessor = (processor: string): string => {
   // Standardize GHz mentions with processor models
   normalized = normalized
     .replace(/(\d+(?:\.\d+)?\s*GHz).*?(Intel\s+Core\s+i[3579])/i, '$2 $1')
-    .replace(/(\d+(?:\.\d+)?\s*GHz).*?(i[3579])/i, 'Intel Core $2 $1');
+    .replace(/(\d+(?:\.\d+)?\s*GHz).*?(i[3579])/i, 'Intel Core $2 $1')
+    .replace(/(\d+(?:\.\d+)?\s*GHz).*?(core_i[3579])/i, 'Intel Core i$2 $1')
+    .replace(/(\d+(?:\.\d+)?\s*GHz).*?(Celeron)/i, 'Intel Celeron $1')
+    .replace(/(\d+(?:\.\d+)?\s*GHz).*?(Pentium)/i, 'Intel Pentium $1')
+    .replace(/(Celeron).*?(\d+(?:\.\d+)?\s*GHz)/i, 'Intel Celeron $2')
+    .replace(/(Pentium).*?(\d+(?:\.\d+)?\s*GHz)/i, 'Intel Pentium $2');
     
   // Make sure spaces are normalized
   normalized = normalized.replace(/\s+/g, ' ').trim();
@@ -105,6 +112,12 @@ export const getProcessorFilterValue = (processor: string): string => {
   }
   if (normalized.includes('core ultra')) return 'Intel Core Ultra';
   
+  // Check for core_i patterns
+  if (normalized.match(/core_i9/)) return 'Intel Core i9';
+  if (normalized.match(/core_i7/)) return 'Intel Core i7';
+  if (normalized.match(/core_i5/)) return 'Intel Core i5';
+  if (normalized.match(/core_i3/)) return 'Intel Core i3';
+  
   // Intel Core with generation info
   if (normalized.match(/13th|14th|i[3579]-13|i[3579]-14/)) {
     if (normalized.includes('i9')) return 'Intel Core i9 (13th/14th Gen)';
@@ -127,6 +140,22 @@ export const getProcessorFilterValue = (processor: string): string => {
     if (normalized.includes('i3')) return 'Intel Core i3 (10th Gen)';
   }
   
+  // GHz processor mentions
+  if (normalized.match(/\d+(?:\.\d+)?\s*ghz.*i[3579]/) || normalized.match(/i[3579].*\d+(?:\.\d+)?\s*ghz/)) {
+    if (normalized.includes('i9')) return 'Intel Core i9';
+    if (normalized.includes('i7')) return 'Intel Core i7';
+    if (normalized.includes('i5')) return 'Intel Core i5';
+    if (normalized.includes('i3')) return 'Intel Core i3';
+  }
+  
+  // GHz with Celeron or Pentium
+  if (normalized.match(/\d+(?:\.\d+)?\s*ghz.*celeron/) || normalized.match(/celeron.*\d+(?:\.\d+)?\s*ghz/)) {
+    return 'Intel Celeron';
+  }
+  if (normalized.match(/\d+(?:\.\d+)?\s*ghz.*pentium/) || normalized.match(/pentium.*\d+(?:\.\d+)?\s*ghz/)) {
+    return 'Intel Pentium';
+  }
+  
   // Generic Intel Core
   if (normalized.includes('i9')) return 'Intel Core i9';
   if (normalized.includes('i7')) return 'Intel Core i7';
@@ -137,11 +166,15 @@ export const getProcessorFilterValue = (processor: string): string => {
   if (normalized.includes('celeron')) return 'Intel Celeron';
   if (normalized.includes('pentium')) return 'Intel Pentium';
   
-  // AMD Ryzen
-  if (normalized.includes('ryzen 9')) return 'AMD Ryzen 9';
-  if (normalized.includes('ryzen 7')) return 'AMD Ryzen 7';
-  if (normalized.includes('ryzen 5')) return 'AMD Ryzen 5';
-  if (normalized.includes('ryzen 3')) return 'AMD Ryzen 3';
+  // AMD Ryzen (including underscore format)
+  if (normalized.includes('ryzen 9') || normalized.includes('ryzen_9') || 
+      normalized.match(/ryzen[_\s-]9[_\s-]\d{4}/)) return 'AMD Ryzen 9';
+  if (normalized.includes('ryzen 7') || normalized.includes('ryzen_7') || 
+      normalized.match(/ryzen[_\s-]7[_\s-]\d{4}/)) return 'AMD Ryzen 7';
+  if (normalized.includes('ryzen 5') || normalized.includes('ryzen_5') || 
+      normalized.match(/ryzen[_\s-]5[_\s-]\d{4}/)) return 'AMD Ryzen 5';
+  if (normalized.includes('ryzen 3') || normalized.includes('ryzen_3') || 
+      normalized.match(/ryzen[_\s-]3[_\s-]\d{4}/)) return 'AMD Ryzen 3';
   
   // Mobile
   if (normalized.includes('snapdragon')) return 'Qualcomm Snapdragon';
@@ -149,3 +182,4 @@ export const getProcessorFilterValue = (processor: string): string => {
   
   return 'Other Processor';
 };
+
