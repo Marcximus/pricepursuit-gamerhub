@@ -1,72 +1,31 @@
 
-export const processScreenSize = (screenSize: string | undefined, title: string): string | undefined => {
-  if (screenSize && typeof screenSize === 'string' && !screenSize.includes('undefined')) {
-    // First clean up the input string
-    const cleanScreenSize = screenSize.replace(/"+/g, '"').trim();
-    
-    // Check if it's a valid screen size (typically between 10" and 20" for laptops)
-    const numericValue = parseFloat(cleanScreenSize);
-    if (!isNaN(numericValue) && numericValue >= 10 && numericValue <= 20) {
-      return `${numericValue}"`;
-    }
+/**
+ * Process and extract screen size information from laptop text
+ */
+export const processScreenSize = (screenSize: string | undefined, title: string, description?: string): string | undefined => {
+  if (screenSize && typeof screenSize === 'string' && screenSize.length > 0) {
+    return screenSize;
   }
   
-  // Look for screen size in the title (more specific patterns first)
-  const screenPatterns = [
-    // Match patterns like "17.3" QHD 240Hz", "15.6" 240Hz IPS QHD Display"
-    /\b(1[0-9](?:\.[0-9])?)"?\s*(?:QHD|FHD|HD\+?|UHD|OLED|LED|IPS)?(?:\s+\d+Hz)?(?:\s+IPS)?(?:\s+(?:QHD|FHD|HD\+?|UHD|OLED|LED|Display|Screen|Monitor))?\b/i,
-    
-    // Match patterns like "15.6-inch FHD", "15.6" HD", "15.6-inch display"
-    /\b(1[0-9](?:\.[0-9])?)"?\s*(?:inch|"|inches)\s*(?:FHD|HD\+?|QHD|UHD|OLED|LED|IPS|touch\s*screen|display|monitor|screen|laptop)\b/i,
-    
-    // Match specifications after screen size
-    /\b(1[0-9](?:\.[0-9])?)"?\s*(?:\d+Hz\s*)?(?:QHD|FHD|HD\+?|UHD|OLED|LED|IPS)?(?:\s+Display|\s+Screen|\s+Monitor)?\b/i,
-    
-    // Match patterns like "15.6-inch", "15.6""
-    /\b(1[0-9](?:\.[0-9])?)"?\s*(?:inch|"|inches)\b/i,
-    
-    // Match just the number with inch
-    /\b(1[0-9](?:\.[0-9])?)-?(?:inch|"|inches)\b/i,
-    
-    // Match patterns like "15.6 laptop", "15.6 display"
-    /\b(1[0-9](?:\.[0-9])?)\s*(?:laptop|display|screen)\b/i,
+  // Combine title and description for better extraction chances if description is provided
+  const textToSearch = description ? `${title} ${description}` : title;
+  
+  // Look for screen size patterns
+  const screenSizePatterns = [
+    /\b(\d{1,2}(?:\.\d)?)\s*(?:inch|in|"|''|inches)\b/i,
+    /\b(\d{1,2}(?:\.\d)?)-inch\b/i,
+    /\b(\d{1,2}(?:\.\d)?)\s*in(?:ch)?\b/i,
+    /\b(\d{1,2}(?:\.\d)?)"\b/i
   ];
   
-  // Try to extract resolution and refresh rate if available
-  const resolutionPattern = /\b(QHD|FHD|HD\+?|UHD|4K)\b/i;
-  const refreshRatePattern = /\b(\d+)Hz\b/i;
-  const panelTypePattern = /\b(IPS|OLED|LED)\b/i;
-  
-  let screenSpec = '';
-  
-  // First try to find the screen size
-  for (const pattern of screenPatterns) {
-    const match = title.match(pattern);
+  for (const pattern of screenSizePatterns) {
+    const match = textToSearch.match(pattern);
     if (match && match[1]) {
       const size = parseFloat(match[1]);
-      // Validate the size is within reasonable bounds for laptop screens
-      if (size >= 10 && size <= 20) {
-        screenSpec = `${size}"`;
-        
-        // Try to add resolution
-        const resMatch = title.match(resolutionPattern);
-        if (resMatch) {
-          screenSpec += ` ${resMatch[1]}`;
-        }
-        
-        // Try to add refresh rate
-        const refreshMatch = title.match(refreshRatePattern);
-        if (refreshMatch) {
-          screenSpec += ` ${refreshMatch[1]}Hz`;
-        }
-        
-        // Try to add panel type
-        const panelMatch = title.match(panelTypePattern);
-        if (panelMatch) {
-          screenSpec += ` ${panelMatch[1]}`;
-        }
-        
-        return screenSpec;
+      
+      // Validate the size is a reasonable laptop screen size
+      if (size >= 10 && size <= 18) {
+        return `${size}"`;
       }
     }
   }
@@ -74,52 +33,76 @@ export const processScreenSize = (screenSize: string | undefined, title: string)
   return undefined;
 };
 
-export const processWeight = (weight: string | undefined, title: string): string | undefined => {
-  if (weight && typeof weight === 'string' && !weight.includes('undefined')) {
+/**
+ * Process and extract laptop weight information
+ */
+export const processWeight = (weight: string | undefined, title: string, description?: string): string | undefined => {
+  if (weight && typeof weight === 'string' && weight.length > 0) {
     return weight;
   }
   
-  // Look for weight in the title (more specific patterns first)
+  // Combine title and description for better extraction chances if description is provided
+  const textToSearch = description ? `${title} ${description}` : title;
+  
+  // Look for weight patterns
   const weightPatterns = [
-    /\b([\d.]+)\s*(?:kg|kilograms?)\b/i,
-    /\b([\d.]+)\s*(?:pounds?|lbs?)\b/i,
+    /\b(\d+(?:\.\d+)?)\s*(?:pounds|pound|lbs|lb)\b/i,
+    /\b(\d+(?:\.\d+)?)\s*(?:kg|kilograms|kilogram)\b/i,
+    /\bweight:?\s*(\d+(?:\.\d+)?)\s*(?:lbs|lb|kg)\b/i
   ];
   
   for (const pattern of weightPatterns) {
-    const match = title.match(pattern);
-    if (match) {
-      const value = parseFloat(match[1]);
-      if (pattern.source.includes('pound|lb')) {
-        // Convert pounds to kg
-        return `${(value * 0.453592).toFixed(2)} kg`;
+    const match = textToSearch.match(pattern);
+    if (match && match[1]) {
+      const weightValue = parseFloat(match[1]);
+      
+      // Check if the weight is in a reasonable range for laptops
+      // For pounds: typically 2-8 pounds
+      // For kg: typically 1-4 kg
+      if (match[0].toLowerCase().includes('kg') || match[0].toLowerCase().includes('kilogram')) {
+        if (weightValue >= 0.5 && weightValue <= 4) {
+          return `${weightValue} kg`;
+        }
+      } else {
+        if (weightValue >= 1 && weightValue <= 10) {
+          return `${weightValue} lbs`;
+        }
       }
-      return `${value} kg`;
     }
   }
   
   return undefined;
 };
 
-export const processBatteryLife = (batteryLife: string | undefined, title: string): string | undefined => {
-  if (batteryLife && typeof batteryLife === 'string' && !batteryLife.includes('undefined')) {
+/**
+ * Process and extract battery life information
+ */
+export const processBatteryLife = (batteryLife: string | undefined, title: string, description?: string): string | undefined => {
+  if (batteryLife && typeof batteryLife === 'string' && batteryLife.length > 0) {
     return batteryLife;
   }
   
-  // Look for battery life in the title (more specific patterns first)
+  // Combine title and description for better extraction chances if description is provided
+  const textToSearch = description ? `${title} ${description}` : title;
+  
+  // Look for battery life patterns
   const batteryPatterns = [
-    /\b(?:up to |(\d+)[+]?\s*(?:hour|hr)s?\s*(?:battery\s*life|battery|run\s*time))\b/i,
-    /\b(?:battery\s*life\s*(?:up\s*to\s*)?(\d+)[+]?\s*(?:hour|hr)s?)\b/i,
-    /\b(\d+)[+]?\s*(?:hour|hr)s?\s*(?:of\s*)?(?:battery|power)\b/i,
+    /\b(\d+(?:\.\d+)?)\s*(?:hour|hr|hours|hrs)(?:\s*battery\s*life)?\b/i,
+    /\bbattery\s*life:?\s*(?:up\s*to)?\s*(\d+(?:\.\d+)?)\s*(?:hour|hr|hours|hrs)\b/i,
+    /\b(?:up\s*to)?\s*(\d+(?:\.\d+)?)\s*(?:hour|hr|hours|hrs)(?:\s*of)?\s*battery\b/i
   ];
   
   for (const pattern of batteryPatterns) {
-    const match = title.match(pattern);
-    if (match) {
-      const hours = match[1];
-      return `${hours} hours`;
+    const match = textToSearch.match(pattern);
+    if (match && match[1]) {
+      const hours = parseFloat(match[1]);
+      
+      // Validate the hours is a reasonable battery life
+      if (hours >= 2 && hours <= 24) {
+        return `${hours} hours`;
+      }
     }
   }
   
   return undefined;
 };
-
