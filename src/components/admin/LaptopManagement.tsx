@@ -1,0 +1,202 @@
+
+import React, { useContext } from "react";
+import { toast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Search, RefreshCw, BrainCircuit, Filter } from "lucide-react";
+import { useLaptops } from "@/hooks/useLaptops";
+import { cleanupLaptopDatabase } from "@/utils/laptop/cleanupLaptops";
+import { StatsRefreshContext } from "@/components/admin/LaptopStats";
+import { CollectionProgress } from "@/components/admin/stats/CollectionProgress";
+import { useCollectionProgress } from "@/hooks/useCollectionProgress";
+
+const LaptopManagement: React.FC = () => {
+  const { collectLaptops, updateLaptops, processLaptopsAI } = useLaptops();
+  const { isCollecting, progress } = useCollectionProgress();
+  const refreshStats = useContext(StatsRefreshContext);
+
+  const handleCollectLaptops = async () => {
+    try {
+      console.log('Collect New button clicked');
+      console.log('Starting laptop collection process...');
+      
+      // Log what's available in the useLaptops hook
+      console.log('collectLaptops function from useLaptops:', typeof collectLaptops);
+      
+      const result = await collectLaptops();
+      console.log('Collection process result:', result);
+      
+      if (result) {
+        toast({
+          title: "Collection Started",
+          description: "Started collecting new laptops. This may take a few minutes.",
+        });
+        // Refresh stats immediately to show user progress has begun
+        await refreshStats();
+      } else {
+        console.log('Collection process returned null (possibly already in progress)');
+      }
+    } catch (error) {
+      console.error('Error collecting laptops:', error);
+      console.error('Error stack:', error.stack);
+      toast({
+        title: "Error",
+        description: "Failed to start laptop collection: " + (error.message || "Unknown error"),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUpdateLaptops = async () => {
+    try {
+      console.log('Update Prices button clicked');
+      console.log('Starting laptop update process...');
+      
+      const result = await updateLaptops();
+      console.log('Update result:', result);
+      
+      if (result && result.success) {
+        toast({
+          title: "Update Started",
+          description: result.message || "Started updating laptop information. This may take a few minutes.",
+        });
+      } else {
+        toast({
+          title: "Update Failed",
+          description: result?.error || "Failed to start laptop updates. Please check console for details.",
+          variant: "destructive"
+        });
+        console.error('Update failed with result:', result);
+      }
+      
+      // Refresh stats immediately after update request
+      await refreshStats();
+    } catch (error) {
+      console.error('Error updating laptops:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start laptop updates: " + (error.message || "Unknown error"),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAIProcess = async () => {
+    try {
+      const result = await processLaptopsAI();
+      if (result.success) {
+        toast({
+          title: "AI Processing Started",
+          description: `Processing initiated for ${result.processed} laptops`,
+        });
+        // Refresh stats immediately after AI processing request
+        await refreshStats();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to start AI processing",
+        });
+      }
+    } catch (error) {
+      console.error('Error processing laptops with AI:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to process laptops with AI",
+      });
+    }
+  };
+
+  const handleCleanup = async () => {
+    try {
+      const result = await cleanupLaptopDatabase();
+      if (result.success) {
+        toast({
+          title: "Cleanup Complete",
+          description: `Successfully cleaned up the laptop database. ${result.removedForbiddenKeywords} products with forbidden keywords were removed.`,
+        });
+        // Refresh stats immediately after cleanup
+        await refreshStats();
+      }
+    } catch (error) {
+      console.error('Error cleaning up laptop database:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to clean up laptop database",
+      });
+    }
+  };
+
+  return (
+    <div className="bg-white shadow rounded-lg p-6">
+      <h2 className="text-lg font-medium text-gray-900 mb-4">Laptop Management</h2>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div>
+            <h3 className="font-medium">Update Laptops</h3>
+            <p className="text-sm text-gray-500">Update prices and information for existing laptops</p>
+          </div>
+          <Button
+            onClick={handleUpdateLaptops}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Update Prices
+          </Button>
+        </div>
+
+        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div>
+            <h3 className="font-medium">Discover New Laptops</h3>
+            <p className="text-sm text-gray-500">Search and add new laptops to the database</p>
+          </div>
+          <Button
+            onClick={handleCollectLaptops}
+            disabled={isCollecting}
+            className="flex items-center gap-2"
+          >
+            <Search className="h-4 w-4" />
+            {isCollecting ? 'Collection in Progress...' : 'Collect New'}
+          </Button>
+        </div>
+        
+        {/* Collection Progress Component */}
+        <CollectionProgress isCollecting={isCollecting} progress={progress} />
+
+        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div>
+            <h3 className="font-medium">Process with AI</h3>
+            <p className="text-sm text-gray-500">Use AI to standardize laptop specifications</p>
+          </div>
+          <Button
+            onClick={handleAIProcess}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <BrainCircuit className="h-4 w-4" />
+            Process with AI
+          </Button>
+        </div>
+
+        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div>
+            <h3 className="font-medium">Clean Database</h3>
+            <p className="text-sm text-gray-500">Remove accessories, duplicates and non-laptop products</p>
+          </div>
+          <Button
+            onClick={handleCleanup}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Filter className="h-4 w-4" />
+            Clean Database
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LaptopManagement;
