@@ -13,7 +13,7 @@ const ComparePriceLaptops = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortOption>("rating-desc");
   const [filters, setFilters] = useState<FilterOptions>({
-    priceRange: { min: 0, max: 2000 },
+    priceRange: { min: 0, max: 10000 },
     processors: new Set<string>(),
     ramSizes: new Set<string>(),
     storageOptions: new Set<string>(),

@@ -14,19 +14,14 @@ type PriceRangeFilterProps = {
 export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRangeFilterProps) {
   const [localMin, setLocalMin] = useState(minPrice);
   const [localMax, setLocalMax] = useState(maxPrice);
-  const [showExtendedRange, setShowExtendedRange] = useState(maxPrice > 2000);
   
-  const STANDARD_MAX_PRICE = 2000;
-  const EXTENDED_MAX_PRICE = 10000;
-  const MAX_POSSIBLE_PRICE = showExtendedRange ? EXTENDED_MAX_PRICE : STANDARD_MAX_PRICE;
-  
-  // Update isDefaultPriceRange calculation based on current MAX_POSSIBLE_PRICE
+  const MAX_POSSIBLE_PRICE = 10000;
   const isDefaultPriceRange = minPrice === 0 && maxPrice === MAX_POSSIBLE_PRICE;
 
   // Create tick labels
   const generateTickLabels = () => {
     const labels = [];
-    const tickCount = 6;
+    const tickCount = 6; // 0, 2000, 4000, 6000, 8000, 10000
     for (let i = 0; i < tickCount; i++) {
       const value = Math.round(i * (MAX_POSSIBLE_PRICE / (tickCount - 1)));
       labels.push(formatPrice(value, true));
@@ -38,7 +33,6 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
   useEffect(() => {
     setLocalMin(minPrice);
     setLocalMax(maxPrice);
-    setShowExtendedRange(maxPrice > 2000);
   }, [minPrice, maxPrice]);
 
   // Handle slider changes
@@ -73,37 +67,6 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
     onPriceChange(0, MAX_POSSIBLE_PRICE);
   };
 
-  const togglePriceRange = () => {
-    const newExtendedState = !showExtendedRange;
-    setShowExtendedRange(newExtendedState);
-    
-    // Adjust the max value when switching ranges
-    const newMaxPrice = newExtendedState ? EXTENDED_MAX_PRICE : STANDARD_MAX_PRICE;
-    
-    // If current max is greater than new max, adjust it
-    if (localMax > newMaxPrice) {
-      setLocalMax(newMaxPrice);
-      onPriceChange(localMin, newMaxPrice);
-    } else if (localMax === STANDARD_MAX_PRICE && newExtendedState) {
-      // If at exactly 2000 and switching to extended, keep at 2000
-      onPriceChange(localMin, localMax);
-    } else if (localMax === EXTENDED_MAX_PRICE && !newExtendedState) {
-      // If at exactly 10000 and switching to standard, set to 2000
-      setLocalMax(STANDARD_MAX_PRICE);
-      onPriceChange(localMin, STANDARD_MAX_PRICE);
-    } else {
-      // In all other cases, just apply current values with new range
-      onPriceChange(localMin, localMax);
-    }
-    
-    console.log("Toggle price range:", {
-      newExtendedState,
-      newMaxPrice,
-      localMin,
-      localMax: newExtendedState && localMax < STANDARD_MAX_PRICE ? localMax : newMaxPrice
-    });
-  };
-
   // Format price for display
   const formatPrice = (price: number, short: boolean = false) => {
     if (short && price >= 1000) {
@@ -123,26 +86,14 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
           <DollarSign className="h-4 w-4" />
           <Label className="text-sm font-medium">Price Range</Label>
         </div>
-        <div className="flex items-center gap-2">
-          {!isDefaultPriceRange && (
-            <button
-              onClick={handleResetPrice}
-              className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Reset
-            </button>
-          )}
+        {!isDefaultPriceRange && (
           <button
-            onClick={togglePriceRange}
-            className={`text-xs px-2 py-0.5 rounded ${
-              showExtendedRange 
-                ? 'bg-blue-100 text-blue-800' 
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            } font-medium transition-colors`}
+            onClick={handleResetPrice}
+            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
           >
-            {showExtendedRange ? 'Standard' : '3+ K'}
+            Reset
           </button>
-        </div>
+        )}
       </div>
 
       <div className="pt-2">
