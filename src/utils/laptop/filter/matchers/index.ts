@@ -1,10 +1,11 @@
 
-export * from "./brandMatcher";
-export * from "./graphicsMatcher";
-export * from "./processorMatcher";
-export * from "./ramMatcher";
-export * from "./screenSizeMatcher";
-export * from "./storageMatcher";
-export * from "./commonMatchers";
+// Export all matchers from their respective files
+export { matchesBrandFilter } from './brandMatcher';
+export { matchesGraphicsFilter } from './graphicsMatcher';
+export { matchesProcessorFilter } from './processorMatcher';
+export { matchesRamFilter } from './ramMatcher';
+export { matchesScreenSizeFilter } from './screenSizeMatcher';
+export { matchesStorageFilter } from './storageMatcher';
 
-// This index file makes it easy to import all matchers from a single point
+// Export utility functions from commonMatchers
+export { parseValueWithUnit, matchesFilter } from './commonMatchers';
