@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { CollectionStats, CollectionProgressData } from "./types";
 import { Json } from "@/integrations/supabase/types";
+import { normalizeProductSpecs } from "./collectionUtils";
 
 export async function resetStaleCollections(staleTimeout: string) {
   const { error: cleanupError } = await supabase
@@ -59,7 +60,8 @@ export async function processPage(brand: string, page: number, groupIndex: numbe
       pages_per_brand: 1,
       current_page: page,
       batch_number: groupIndex * 2 + brandIndex + 1,
-      total_batches: totalBrands
+      total_batches: totalBrands,
+      normalize_specs: true // Signal to the edge function that we want to normalize specs
     }
   });
 
@@ -79,6 +81,70 @@ export async function processPage(brand: string, page: number, groupIndex: numbe
     
     console.error(`Edge function error for ${brand} page ${page}:`, functionError);
     return null;
+  }
+
+  // If we have products returned, ensure they're properly normalized
+  if (response && response.products && Array.isArray(response.products)) {
+    console.log(`Received ${response.products.length} products from edge function, ensuring correct normalization`);
+    
+    // Update any existing products with any missing specs
+    const existingAsins = response.products.map((p: any) => p.asin);
+    if (existingAsins.length > 0) {
+      const { data: existingProducts, error: fetchError } = await supabase
+        .from('products')
+        .select('*')
+        .in('asin', existingAsins);
+      
+      if (fetchError) {
+        console.error('Error fetching existing products for spec check:', fetchError);
+      } else if (existingProducts && existingProducts.length > 0) {
+        console.log(`Found ${existingProducts.length} existing products to update with normalized specs`);
+        
+        for (const product of existingProducts) {
+          // Re-normalize specs for any product missing important specs
+          if (!product.processor || !product.ram || !product.storage || !product.graphics || !product.screen_size) {
+            console.log(`Product ${product.asin} missing specs, normalizing from title: ${product.title?.substring(0, 30)}...`);
+            
+            const normalizedProduct = normalizeProductSpecs(product);
+            
+            // Only update if we managed to extract more info
+            const needsUpdate = 
+              (!product.processor && normalizedProduct.processor) ||
+              (!product.ram && normalizedProduct.ram) ||
+              (!product.storage && normalizedProduct.storage) ||
+              (!product.graphics && normalizedProduct.graphics) ||
+              (!product.screen_size && normalizedProduct.screen_size);
+            
+            if (needsUpdate) {
+              console.log(`Updating product ${product.asin} with newly extracted specs`);
+              const { error: updateError } = await supabase
+                .from('products')
+                .update({
+                  processor: normalizedProduct.processor || product.processor,
+                  ram: normalizedProduct.ram || product.ram,
+                  storage: normalizedProduct.storage || product.storage,
+                  graphics: normalizedProduct.graphics || product.graphics,
+                  screen_size: normalizedProduct.screen_size || product.screen_size,
+                  brand: normalizedProduct.brand || product.brand,
+                  model: normalizedProduct.model || product.model
+                })
+                .eq('id', product.id);
+              
+              if (updateError) {
+                console.error(`Error updating product ${product.asin} with normalized specs:`, updateError);
+              } else {
+                console.log(`Successfully updated product ${product.asin} with normalized specs`);
+                
+                // Update stats to reflect our manual updates
+                if (response.stats) {
+                  response.stats.updated = (response.stats.updated || 0) + 1;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   return response;

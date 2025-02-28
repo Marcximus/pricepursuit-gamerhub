@@ -15,7 +15,7 @@ export interface CollectionConfig {
   STALE_COLLECTION_MINUTES: number;
 }
 
-// Add the missing MatchResult type
+// Define the MatchResult type for pattern matching
 export interface MatchResult {
   matched: boolean;
   value?: string;
