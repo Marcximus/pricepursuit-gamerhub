@@ -1,8 +1,7 @@
 
-// Re-export all functions from the individual modules
-export * from './statusUpdates';
-export * from './collectionProgress';
-export * from './processingLogs';
-export * from './pageProcessing';
-export * from './extractionLogs';
+// Re-export everything from specific modules for backward compatibility
 export * from './collectionLogs';
+export * from './collectionProgress';
+export * from './extractionLogs';
+export * from './processingLogs';
+export * from './statusUpdates';
