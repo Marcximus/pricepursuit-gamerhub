@@ -8,8 +8,15 @@ import { collectLaptops } from "@/utils/laptop/collectLaptops";
 import { updateLaptops } from "@/utils/laptop/updateLaptops";
 import { refreshBrandModels } from "@/utils/laptop/refreshBrandModels";
 import { processLaptopsAI } from "@/utils/laptop/processLaptopsAI";
+import { getDatabaseStats } from "@/utils/laptop/getDatabaseStats";
 
-export { collectLaptops, updateLaptops, refreshBrandModels, processLaptopsAI };
+export { 
+  collectLaptops, 
+  updateLaptops, 
+  refreshBrandModels, 
+  processLaptopsAI,
+  getDatabaseStats
+};
 
 export const ITEMS_PER_PAGE = 50;
 
@@ -40,7 +47,8 @@ export const useLaptops = (
         collectLaptops,
         updateLaptops,
         refreshBrandModels,
-        processLaptopsAI
+        processLaptopsAI,
+        getDatabaseStats
       };
     },
   });
@@ -50,6 +58,7 @@ export const useLaptops = (
     collectLaptops,
     updateLaptops,
     refreshBrandModels,
-    processLaptopsAI
+    processLaptopsAI,
+    getDatabaseStats
   };
 };

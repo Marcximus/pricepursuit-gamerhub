@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Search, RefreshCw, BrainCircuit, Filter } from "lucide-react";
 import { useLaptops } from "@/hooks/useLaptops";
 import { cleanupLaptopDatabase } from "@/utils/laptop/cleanupLaptops";
+import { LaptopStats } from "@/components/admin/LaptopStats";
 
 const Admin = () => {
   const { collectLaptops, updateLaptops, processLaptopsAI } = useLaptops();
@@ -98,6 +99,11 @@ const Admin = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          </div>
+          
+          {/* Database Statistics */}
+          <div className="bg-white shadow rounded-lg p-6 mb-6">
+            <LaptopStats />
           </div>
 
           <div className="bg-white shadow rounded-lg p-6">
