@@ -1,8 +1,12 @@
 
 import { processTitle } from './titleProcessor';
-import { processProcessor, processRam, processStorage } from './specsProcessor';
+import { processProcessor, processRam, processStorage, processScreenResolution, 
+         processRefreshRate, processTouchscreen, processOperatingSystem, 
+         processColor, processWarranty, processOfficeIncluded,
+         processBacklitKeyboard, processPorts, processFingerprint } from './specsProcessor';
 import { processGraphics } from './graphicsProcessor';
 import { processScreenSize, processWeight, processBatteryLife } from './physicalSpecsProcessor';
+import { processLaptopDescription, hasPremiumFeatures } from './descriptionProcessor';
 import { normalizeBrand } from '@/utils/laptop/normalizers/brandNormalizer';
 import { normalizeModel } from '@/utils/laptop/normalizers/modelNormalizer';
 import type { Product } from "@/types/product";
@@ -71,11 +75,32 @@ export const processLaptopData = (laptop: any): Product => {
   // Extract model from title if not provided
   const detectedModel = normalizeModel(laptop.model || '', laptop.title || '', detectedBrand);
 
+  // Extract primary specifications from title and any existing stored data
+  const processedTitle = processTitle(laptop.title || '');
+  
+  // Create initial specs object with basic information
+  let specs = {
+    processor: processProcessor(laptop.processor, processedTitle, laptop.description),
+    processor_score: laptop.processor_score || null,
+    ram: processRam(laptop.ram, processedTitle, laptop.description),
+    storage: processStorage(laptop.storage, processedTitle, laptop.description),
+    screen_size: processScreenSize(laptop.screen_size, processedTitle, laptop.description),
+    screen_resolution: processScreenResolution(laptop.screen_resolution, processedTitle, laptop.description),
+    graphics: processGraphics(laptop.graphics, processedTitle + ' ' + (laptop.description || '')),
+    weight: processWeight(laptop.weight, processedTitle, laptop.description),
+    battery_life: processBatteryLife(laptop.battery_life, processedTitle, laptop.description),
+  };
+  
+  // Enhance with additional specs from description if available
+  if (laptop.description) {
+    specs = processLaptopDescription(laptop.description, processedTitle, specs);
+  }
+  
   // Process and create the laptop product object
   return {
     id: laptop.id,
     asin: laptop.asin,
-    title: processTitle(laptop.title || ''),
+    title: processedTitle,
     current_price: current_price,
     original_price: original_price,
     rating: rating,
@@ -84,16 +109,16 @@ export const processLaptopData = (laptop: any): Product => {
     product_url: laptop.product_url || null,
     last_checked: laptop.last_checked || null,
     created_at: laptop.created_at || null,
-    processor: processProcessor(laptop.processor, laptop.title || ''),
-    processor_score: laptop.processor_score || null,
-    ram: processRam(laptop.ram, laptop.title || ''),
-    storage: processStorage(laptop.storage, laptop.title || ''),
-    screen_size: processScreenSize(laptop.screen_size, laptop.title || ''),
-    screen_resolution: laptop.screen_resolution || null,
-    graphics: processGraphics(laptop.graphics, laptop.title || ''),
+    processor: specs.processor,
+    processor_score: specs.processor_score,
+    ram: specs.ram,
+    storage: specs.storage,
+    screen_size: specs.screen_size,
+    screen_resolution: specs.screen_resolution,
+    graphics: specs.graphics,
     benchmark_score: laptop.benchmark_score || null,
-    weight: processWeight(laptop.weight, laptop.title || ''),
-    battery_life: processBatteryLife(laptop.battery_life, laptop.title || ''),
+    weight: specs.weight,
+    battery_life: specs.battery_life,
     brand: detectedBrand,
     model: detectedModel,
     total_reviews: total_reviews,
@@ -109,3 +134,4 @@ export * from './titleProcessor';
 export * from './specsProcessor';
 export * from './graphicsProcessor';
 export * from './physicalSpecsProcessor';
+export * from './descriptionProcessor';
