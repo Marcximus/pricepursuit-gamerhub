@@ -1,11 +1,5 @@
 
 import type { FilterableProductKeys, MatcherFunction } from "../filterTypes";
-import { matchesBrandFilter } from './brandMatcher';
-import { matchesGraphicsFilter } from './graphicsMatcher';
-import { matchesProcessorFilter } from './processorMatcher';
-import { matchesRamFilter } from './ramMatcher';
-import { matchesScreenSizeFilter } from './screenSizeMatcher';
-import { matchesStorageFilter } from './storageMatcher';
 
 /**
  * Common utility to parse value with unit from a string
@@ -25,16 +19,6 @@ export const parseValueWithUnit = (
   };
 };
 
-// Define matchers mapping
-const matchers: Record<FilterableProductKeys, MatcherFunction> = {
-  brand: matchesBrandFilter,
-  graphics: matchesGraphicsFilter,
-  processor: matchesProcessorFilter,
-  ram: matchesRamFilter,
-  screen_size: matchesScreenSizeFilter,
-  storage: matchesStorageFilter
-};
-
 /**
  * Generic function to check if a product value matches a filter value
  * Delegates to specific matcher functions based on the filter type
@@ -45,12 +29,35 @@ export const matchesFilter = (
   filterType: FilterableProductKeys,
   productTitle?: string
 ): boolean => {
-  // If no matcher exists for this filter type, return false
-  if (!matchers[filterType]) {
-    console.warn(`No matcher found for filter type: ${filterType}`);
+  try {
+    // Dynamically import the correct matcher based on filter type
+    let matcherModule;
+    
+    switch (filterType) {
+      case 'brand':
+        matcherModule = require('./brandMatcher');
+        return matcherModule.matchesBrandFilter(filterValue, productValue, productTitle);
+      case 'graphics':
+        matcherModule = require('./graphicsMatcher');
+        return matcherModule.matchesGraphicsFilter(filterValue, productValue, productTitle);
+      case 'processor':
+        matcherModule = require('./processorMatcher');
+        return matcherModule.matchesProcessorFilter(filterValue, productValue, productTitle);
+      case 'ram':
+        matcherModule = require('./ramMatcher');
+        return matcherModule.matchesRamFilter(filterValue, productValue, productTitle);
+      case 'screen_size':
+        matcherModule = require('./screenSizeMatcher');
+        return matcherModule.matchesScreenSizeFilter(filterValue, productValue, productTitle);
+      case 'storage':
+        matcherModule = require('./storageMatcher');
+        return matcherModule.matchesStorageFilter(filterValue, productValue, productTitle);
+      default:
+        console.warn(`No matcher found for filter type: ${filterType}`);
+        return false;
+    }
+  } catch (error) {
+    console.error(`Error in matchesFilter for ${filterType}:`, error);
     return false;
   }
-
-  // Delegate to the appropriate matcher function
-  return matchers[filterType](filterValue, productValue, productTitle);
 };
