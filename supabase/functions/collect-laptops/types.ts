@@ -1,32 +1,47 @@
 
 export interface OxylabsResponse {
   results: OxylabsResult[];
-  [key: string]: any;
+  job_id?: string;
+  status_code?: number;
+  status_message?: string;
 }
 
 export interface OxylabsResult {
-  content?: {
-    results?: LaptopItem[];
-    [key: string]: any;
+  content: {
+    results: LaptopResult[];
+    total_results?: number;
+    page?: number;
+    organic_results?: any[];
+    page_info?: any;
   };
-  [key: string]: any;
+  created_at?: string;
+  updated_at?: string;
+  page?: number;
+  url?: string;
+  job_id?: string;
+  status_code?: number;
+  parser_type?: string;
 }
 
-export interface LaptopItem {
-  title?: string;
-  asin?: string;
+export interface LaptopResult {
+  asin: string;
+  title: string;
   price?: {
-    value?: string;
-    [key: string]: any;
+    value: string;
+    currency: string;
   };
   price_original?: {
-    value?: string;
-    [key: string]: any;
+    value: string;
+    currency: string;
   };
+  url?: string;
   rating?: string;
   ratings_total?: string;
-  url?: string;
   images?: string[];
   description?: string;
-  [key: string]: any;
+  features?: string[];
+  attributes?: Record<string, string>;
+  variants?: any[];
+  sponsored?: boolean;
+  position?: number;
 }

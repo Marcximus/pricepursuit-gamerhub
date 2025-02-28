@@ -79,23 +79,9 @@ serve(async (req) => {
                   const laptops = results.content.results;
                   console.log(`Found ${laptops.length} laptops for ${brand} on page ${page}`);
                   
-                  // Add a check to verify laptops is iterable before processing
-                  if (!Array.isArray(laptops)) {
-                    console.error(`Error: laptops is not an array for ${brand} page ${page}`, laptops);
-                    stats.failed++;
-                    continue;
-                  }
-                  
                   // Process each laptop in the results
                   for (const laptop of laptops) {
                     try {
-                      // Ensure laptop is a valid object
-                      if (!laptop || typeof laptop !== 'object') {
-                        console.error(`Invalid laptop data:`, laptop);
-                        stats.failed++;
-                        continue;
-                      }
-                      
                       // Extract needed data from the laptop object
                       const processedLaptop = {
                         title: laptop.title || '',
@@ -114,8 +100,6 @@ serve(async (req) => {
                         updated_at: new Date().toISOString(),
                         created_at: new Date().toISOString()
                       };
-                      
-                      console.log(`Processing product: ${processedLaptop.asin} - ${processedLaptop.title}`);
                       
                       // Check if the product already exists
                       const { data: existingProduct, error: lookupError } = await supabase
