@@ -21,6 +21,7 @@ export const extractProcessorFromTitle = (
     // Intel Core processors with generation and model
     /\b(?:Intel\s*)?Core\s*i[3579](?:[- ]\d{4,5}[A-Z]*)?(?:\s*\d{1,2}th\s*Gen)?\b/i,
     /\b(?:\d{1,2})th\s*Gen\s*(?:Intel\s*)?Core\s*i[3579]\b/i,
+    /\b(?:\d+(?:\.\d+)?\s*GHz\s*)?(?:Intel\s*)?Core\s*i[3579]\b/i,
     
     // Intel Core Ultra
     /\b(?:Intel\s*)?Core\s*Ultra\s*[579]\b/i,
@@ -108,6 +109,22 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
     if (normalizedProcessor.includes('i7')) return 'Intel Core i7 (10th Gen)';
     if (normalizedProcessor.includes('i5')) return 'Intel Core i5 (10th Gen)';
     if (normalizedProcessor.includes('i3')) return 'Intel Core i3 (10th Gen)';
+  }
+  
+  // Handle processor model numbers and GHz mentions
+  if (normalizedProcessor.match(/i[3579]-\d{4,5}[a-z]*/)) {
+    if (normalizedProcessor.includes('i9')) return 'Intel Core i9';
+    if (normalizedProcessor.includes('i7')) return 'Intel Core i7';
+    if (normalizedProcessor.includes('i5')) return 'Intel Core i5';
+    if (normalizedProcessor.includes('i3')) return 'Intel Core i3';
+  }
+  
+  if (normalizedProcessor.match(/\d+(?:\.\d+)?\s*ghz.*core.*i[3579]/i) || 
+      normalizedProcessor.match(/core.*i[3579].*\d+(?:\.\d+)?\s*ghz/i)) {
+    if (normalizedProcessor.includes('i9')) return 'Intel Core i9';
+    if (normalizedProcessor.includes('i7')) return 'Intel Core i7';
+    if (normalizedProcessor.includes('i5')) return 'Intel Core i5';
+    if (normalizedProcessor.includes('i3')) return 'Intel Core i3';
   }
   
   // AMD Ryzen

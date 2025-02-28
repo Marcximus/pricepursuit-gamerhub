@@ -52,6 +52,15 @@ export const matchesProcessorFilter = (
     if (filterValue.includes('Intel Core i') && normalizedProcessor.includes('i' + filterValue.charAt(filterValue.length - 1))) {
       return true;
     }
+    
+    // Match GHz processor mentions with appropriate Intel Core category
+    if (normalizedProcessor.match(/\d+(?:\.\d+)?\s*ghz.*i([3579])/i) ||
+        normalizedProcessor.match(/i([3579]).*\d+(?:\.\d+)?\s*ghz/i)) {
+      const coreNumber = normalizedProcessor.match(/i([3579])/i)?.[1];
+      if (coreNumber && filterValue === `Intel Core i${coreNumber}`) {
+        return true;
+      }
+    }
   }
   
   // Try to extract processor from title and standardize if available
@@ -81,6 +90,15 @@ export const matchesProcessorFilter = (
     
     if (filterValue === 'MediaTek' && normalizedTitle.includes('mediatek')) {
       return true;
+    }
+    
+    // Check for GHz mentions with core numbers in title
+    if (normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*i([3579])/i) ||
+        normalizedTitle.match(/i([3579]).*\d+(?:\.\d+)?\s*ghz/i)) {
+      const coreNumber = normalizedTitle.match(/i([3579])/i)?.[1];
+      if (coreNumber && filterValue === `Intel Core i${coreNumber}`) {
+        return true;
+      }
     }
   }
   

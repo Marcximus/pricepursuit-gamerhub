@@ -48,9 +48,10 @@ export const getUniqueFilterValues = (
 const getStandardizedProcessorValues = (laptops: Product[]): Set<string> => {
   const processorsSet = new Set<string>();
   
-  // Primary processor categories
+  // Primary processor categories - include Apple M4 variants
   const primaryCategories = [
     // Apple
+    'Apple M4 Ultra', 'Apple M4 Max', 'Apple M4 Pro', 'Apple M4',
     'Apple M3 Ultra', 'Apple M3 Max', 'Apple M3 Pro', 'Apple M3',
     'Apple M2 Ultra', 'Apple M2 Max', 'Apple M2 Pro', 'Apple M2',
     'Apple M1 Ultra', 'Apple M1 Max', 'Apple M1 Pro', 'Apple M1',
@@ -69,6 +70,9 @@ const getStandardizedProcessorValues = (laptops: Product[]): Set<string> => {
     'Intel Core i9 (10th Gen)', 'Intel Core i7 (10th Gen)', 
     'Intel Core i5 (10th Gen)', 'Intel Core i3 (10th Gen)',
     
+    // Generic Intel Core (for older generations and GHz variations)
+    'Intel Core i9', 'Intel Core i7', 'Intel Core i5', 'Intel Core i3',
+    
     // AMD Ryzen
     'AMD Ryzen 9', 'AMD Ryzen 7', 'AMD Ryzen 5', 'AMD Ryzen 3',
     
@@ -85,9 +89,9 @@ const getStandardizedProcessorValues = (laptops: Product[]): Set<string> => {
   // Add all standard categories that have at least one matching laptop
   primaryCategories.forEach(category => {
     const hasMatchingLaptop = laptops.some(laptop => {
-      const standardized = standardizeProcessorForFiltering(
-        laptop.processor || laptop.title
-      );
+      // Try to extract processor from title if available
+      const extractedProcessor = laptop.processor || laptop.title;
+      const standardized = standardizeProcessorForFiltering(extractedProcessor);
       return standardized === category;
     });
     
@@ -99,9 +103,8 @@ const getStandardizedProcessorValues = (laptops: Product[]): Set<string> => {
   // Always ensure "Other Processor" is available if there are laptops without
   // matching a standard category
   const hasOtherProcessors = laptops.some(laptop => {
-    const standardized = standardizeProcessorForFiltering(
-      laptop.processor || laptop.title
-    );
+    const extractedProcessor = laptop.processor || laptop.title;
+    const standardized = standardizeProcessorForFiltering(extractedProcessor);
     return standardized === 'Other Processor';
   });
   
