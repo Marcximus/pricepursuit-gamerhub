@@ -9,7 +9,7 @@ import { updateLaptops } from "@/utils/laptop/updateLaptops";
 import { refreshBrandModels } from "@/utils/laptop/refreshBrandModels";
 import { processLaptopsAI } from "@/utils/laptop/processLaptopsAI";
 
-export { collectLaptops, updateLaptops, refreshBrandModels, processLaptopsAI };
+export { collectLaptops, updateLaptops, refreshBrandModels };
 
 export const ITEMS_PER_PAGE = 50;
 
@@ -22,6 +22,11 @@ const defaultFilters: FilterOptions = {
   screenSizes: new Set<string>(),
   brands: new Set<string>()
 };
+
+export interface ProcessAIOptions {
+  focus?: 'graphics' | 'processor' | 'ram' | 'storage' | 'all';
+  limit?: number;
+}
 
 export const useLaptops = (
   page: number = 1, 
@@ -50,6 +55,6 @@ export const useLaptops = (
     collectLaptops,
     updateLaptops,
     refreshBrandModels,
-    processLaptopsAI
+    processLaptopsAI: (options?: ProcessAIOptions) => processLaptopsAI(options)
   };
 };
