@@ -3,14 +3,15 @@
 export {
   resetStaleCollections,
   checkActiveCollections,
-  updateBrandStatus
+  updateBrandStatus,
+  processPage
 } from './collection/statusManagement';
 
 export {
-  processPage
+  processProductData
 } from './collection/dataProcessing';
 
 export {
   saveCollectionProgress,
   getLastCollectionProgress
-} from './collection/progressTracking';
+} from './collection/statusManagement';

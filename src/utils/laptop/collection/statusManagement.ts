@@ -89,7 +89,7 @@ export async function saveCollectionProgress(
         id: 1, // Use a fixed ID for the progress record
         progress_data: isComplete ? null : progressData,
         last_updated: new Date().toISOString(),
-        is_complete: isComplete
+        progress_type: 'laptop_collection' // Add the required progress_type field
       });
       
     if (error) {
@@ -109,7 +109,7 @@ export async function getLastCollectionProgress() {
     const { data, error } = await supabase
       .from('collection_progress')
       .select('*')
-      .eq('id', 1)
+      .eq('id', '1') // Convert number to string to match expected type
       .single();
       
     if (error) {
