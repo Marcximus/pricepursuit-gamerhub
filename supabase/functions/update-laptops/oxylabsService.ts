@@ -1,5 +1,5 @@
 
-import { LaptopData } from './types'
+import { LaptopData } from './types.ts'
 
 // Constants
 const OXYLABS_USERNAME = Deno.env.get('OXYLABS_USERNAME') || ''

@@ -19,4 +19,3 @@ export function parsePrice(priceText: string | null): number | null {
   const price = parseFloat(cleanPrice);
   return isNaN(price) ? null : price;
 }
-

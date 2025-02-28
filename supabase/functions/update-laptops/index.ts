@@ -5,7 +5,7 @@ import { LaptopUpdateRequest, UpdateResponse } from './types.ts'
 import { fetchLaptopData } from './oxylabsService.ts'
 import { updateLaptopInDatabase } from './databaseService.ts'
 
-// Define CORS headers
+// CORS headers for browser requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -18,121 +18,119 @@ serve(async (req) => {
   }
 
   try {
-    // Parse request body
-    const { laptops } = await req.json() as LaptopUpdateRequest
-
-    if (!laptops || !Array.isArray(laptops) || laptops.length === 0) {
+    // Validate request method
+    if (req.method !== 'POST') {
       return new Response(
-        JSON.stringify({
-          success: false,
-          message: 'Invalid request. Please provide an array of laptops to update.'
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders }
-        }
+        JSON.stringify({ error: 'Method not allowed' }),
+        { status: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       )
     }
 
-    console.log(`Received update request for ${laptops.length} laptops`)
+    // Parse request body
+    const requestData: LaptopUpdateRequest = await req.json()
     
-    // Process each laptop in the background
-    EdgeRuntime.waitUntil(processLaptops(laptops))
+    if (!requestData.laptops || !Array.isArray(requestData.laptops) || requestData.laptops.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid request. Expected "laptops" array.' }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      )
+    }
 
-    // Return immediate success response
+    console.log(`Processing update request for ${requestData.laptops.length} laptops`)
+
+    // Initialize results tracking
+    const results = {
+      updated: [] as Array<{id: string; asin: string; success: boolean; message?: string}>,
+      failed: [] as Array<{id: string; asin: string; error: string}>
+    }
+
+    // Process each laptop sequentially
+    for (const laptop of requestData.laptops) {
+      try {
+        console.log(`Updating data for laptop ${laptop.id} (ASIN: ${laptop.asin})`)
+        
+        // Fetch latest data from Amazon
+        const laptopData = await fetchLaptopData(laptop.asin)
+        
+        if (!laptopData) {
+          console.error(`Failed to fetch data for laptop ${laptop.id} (ASIN: ${laptop.asin})`)
+          results.failed.push({
+            id: laptop.id,
+            asin: laptop.asin,
+            error: 'Failed to fetch product data from Amazon'
+          })
+          continue
+        }
+        
+        // Prepare data for update
+        const updateData = {
+          ...laptopData,
+          // Override with any specific values from the request
+          current_price: laptop.current_price !== undefined ? laptop.current_price : laptopData.current_price,
+          title: laptop.title || laptopData.title
+        }
+        
+        // Update the laptop record in the database
+        const updateResult = await updateLaptopInDatabase(laptop.id, updateData)
+        
+        if (updateResult.success) {
+          results.updated.push({
+            id: laptop.id,
+            asin: laptop.asin,
+            success: true,
+            message: updateResult.message
+          })
+        } else {
+          results.failed.push({
+            id: laptop.id,
+            asin: laptop.asin,
+            error: updateResult.error || 'Unknown error'
+          })
+        }
+      } catch (error) {
+        console.error(`Error processing laptop ${laptop.id}:`, error)
+        results.failed.push({
+          id: laptop.id,
+          asin: laptop.asin,
+          error: error.message || 'Unknown error'
+        })
+      }
+    }
+
+    // Prepare the response
+    const response: UpdateResponse = {
+      success: results.updated.length > 0,
+      message: `Updated ${results.updated.length} laptops. Failed: ${results.failed.length}`,
+      updatedCount: results.updated.length,
+      failedCount: results.failed.length,
+      results
+    }
+
     return new Response(
-      JSON.stringify({
-        success: true,
-        message: `Started updating ${laptops.length} laptops. This will be processed in the background.`,
-        count: laptops.length
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      JSON.stringify(response),
+      { 
+        status: 200, 
+        headers: { 
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        } 
       }
     )
   } catch (error) {
-    console.error('Error processing request:', error)
+    console.error('Error processing update request:', error)
+    
     return new Response(
-      JSON.stringify({
-        success: false,
-        message: 'Error processing request',
-        error: error.message
+      JSON.stringify({ 
+        error: 'Internal server error', 
+        details: error.message 
       }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      { 
+        status: 500, 
+        headers: { 
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        } 
       }
     )
   }
-})
-
-// Background processing function
-async function processLaptops(laptops: any[]) {
-  console.log(`Starting background process for ${laptops.length} laptops`)
-  
-  const results = {
-    updated: [] as any[],
-    failed: [] as any[]
-  }
-  
-  // Process each laptop sequentially to avoid rate limiting
-  for (const laptop of laptops) {
-    try {
-      console.log(`Processing laptop: ${laptop.asin} (ID: ${laptop.id})`)
-      
-      // Fetch latest data from Amazon
-      const laptopData = await fetchLaptopData(laptop.asin)
-      
-      if (!laptopData) {
-        console.error(`Failed to fetch data for ASIN ${laptop.asin}`)
-        results.failed.push({
-          id: laptop.id,
-          asin: laptop.asin,
-          error: 'Failed to fetch product data'
-        })
-        continue
-      }
-      
-      // Update the database with the new data
-      const updateResult = await updateLaptopInDatabase(laptop.id, laptopData)
-      
-      if (updateResult.success) {
-        console.log(`Successfully updated laptop: ${laptop.asin}`)
-        results.updated.push({
-          id: laptop.id,
-          asin: laptop.asin,
-          success: true
-        })
-      } else {
-        console.error(`Failed to update laptop ${laptop.asin} in database: ${updateResult.message}`)
-        results.failed.push({
-          id: laptop.id,
-          asin: laptop.asin,
-          error: updateResult.error || 'Unknown error'
-        })
-      }
-      
-      // Add a short delay between requests to avoid hitting rate limits
-      await new Promise(resolve => setTimeout(resolve, 2000))
-    } catch (error) {
-      console.error(`Error processing laptop ${laptop.asin}:`, error)
-      results.failed.push({
-        id: laptop.id,
-        asin: laptop.asin,
-        error: error.message
-      })
-    }
-  }
-  
-  // Log final results
-  const totalProcessed = results.updated.length + results.failed.length
-  console.log(`Background processing completed. Total: ${totalProcessed}, Success: ${results.updated.length}, Failed: ${results.failed.length}`)
-  
-  return results
-}
-
-// Handle shutdown events
-addEventListener('beforeunload', (ev) => {
-  console.log('Function shutdown due to:', ev.detail?.reason)
 })
