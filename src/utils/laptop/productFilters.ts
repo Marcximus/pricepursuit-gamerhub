@@ -30,6 +30,9 @@ const FORBIDDEN_KEYWORDS = [
   // New forbidden keywords added from user request
   "Keyboard cover", "Privacy Screen For", "Handheld Dock", "Charging Station",
   
+  // External storage devices added from user request
+  "X300 16TB", "N300 16TB", // Adding new external hard drive models
+  
   // Charger-related keywords (commonly mixed with laptops)
   "Charger fit", "Charger for", "Charger Fit For", "Adapter Laptop Charger",
   "Adapter Charger", "Laptop Super Charger", "Car Charger", "Charger Replacement",
