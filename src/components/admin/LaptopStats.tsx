@@ -1,64 +1,34 @@
 
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useLaptops } from "@/hooks/useLaptops";
-import { DatabaseStats } from "@/utils/laptop/stats/types";
-import { DatabaseOverview } from "./stats/DatabaseOverview";
-import { AiProcessingStatus } from "./stats/AiProcessingStatus";
-import { MissingInformation } from "./stats/MissingInformation";
-import { LoadingState } from "./stats/LoadingState";
-import { ErrorState } from "./stats/ErrorState";
-import { EmptyState } from "./stats/EmptyState";
+import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DatabaseOverview from './stats/DatabaseOverview';
+import AiProcessingStatus from './stats/AiProcessingStatus';
+import MissingInformation from './stats/MissingInformation';
+import DuplicateAsinChecker from './stats/DuplicateAsinChecker';
 
-export function LaptopStats() {
-  const [stats, setStats] = useState<DatabaseStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { getDatabaseStats } = useLaptops();
-
-  useEffect(() => {
-    async function fetchStats() {
-      try {
-        setLoading(true);
-        const statsData = await getDatabaseStats();
-        setStats(statsData);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching stats:', err);
-        setError('Failed to load statistics');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchStats();
-  }, [getDatabaseStats]);
-
-  if (loading) {
-    return <LoadingState />;
-  }
-
-  if (error) {
-    return <ErrorState error={error} />;
-  }
-
-  if (!stats) {
-    return <EmptyState />;
-  }
-
+export default function LaptopStats() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Database Statistics</CardTitle>
-        <CardDescription>Overview of laptop database</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-6 md:grid-cols-3">
-          <DatabaseOverview stats={stats} />
-          <AiProcessingStatus stats={stats} />
-          <MissingInformation stats={stats} />
-        </div>
-      </CardContent>
-    </Card>
+    <div className="w-full space-y-4 mt-4">
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="ai-processing">AI Processing</TabsTrigger>
+          <TabsTrigger value="missing-data">Missing Data</TabsTrigger>
+          <TabsTrigger value="data-quality">Data Quality</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview" className="mt-4">
+          <DatabaseOverview />
+        </TabsContent>
+        <TabsContent value="ai-processing" className="mt-4">
+          <AiProcessingStatus />
+        </TabsContent>
+        <TabsContent value="missing-data" className="mt-4">
+          <MissingInformation />
+        </TabsContent>
+        <TabsContent value="data-quality" className="mt-4">
+          <DuplicateAsinChecker />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
