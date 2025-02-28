@@ -26,36 +26,31 @@ export const applyBrandFilter = (
   
   // Special handling for "Other" category
   if (hasOtherBrandsFilter) {
-    // Check if the laptop brand is a major brand (has its own filter)
-    const isMainBrand = Array.from(mainBrandsSet).some(mainBrand => 
-      normalizedBrand.toLowerCase().includes(mainBrand) ||
-      mainBrand.includes(normalizedBrand.toLowerCase())
-    );
+    // Check if the laptop brand is a major brand (in the mainBrandsSet)
+    const isMainBrand = mainBrandsSet.has(normalizedBrand.toLowerCase());
     
-    // Check if it matches a specifically selected brand
-    const matchesSpecificBrand = Array.from(filters.brands)
-      .filter(selectedBrand => selectedBrand !== 'Other')
-      .some(selectedBrand => 
-        matchesFilter(selectedBrand, normalizedBrand, 'brand', laptop.title)
+    // Check if it matches any specifically selected brand
+    const matchesSelectedBrand = Array.from(filters.brands)
+      .filter(brand => brand !== 'Other')
+      .some(brand => 
+        matchesFilter(brand, normalizedBrand, 'brand', laptop.title)
       );
     
-    // For "Other" category, include if it's not a main brand
-    if (hasOtherBrandsFilter && !isMainBrand && !matchesSpecificBrand) {
+    // If "Other" is selected and this is not a main brand and doesn't match any selected brand
+    if (!isMainBrand && !matchesSelectedBrand) {
       return true;
     }
     
-    // For specific brands, only include if it matches one of them
-    if (matchesSpecificBrand) {
+    // If a specific brand is selected and this laptop matches it
+    if (matchesSelectedBrand) {
       return true;
     }
     
     return false;
   } else {
     // Standard brand filtering without "Other" category
-    const matchesBrand = Array.from(filters.brands).some(selectedBrand => 
+    return Array.from(filters.brands).some(selectedBrand => 
       matchesFilter(selectedBrand, normalizedBrand, 'brand', laptop.title)
     );
-    
-    return matchesBrand;
   }
 };

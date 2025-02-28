@@ -11,6 +11,7 @@ import {
   applyScreenSizeFilter,
   hasActiveFilters
 } from "./filtering";
+import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
 
 /**
  * Filters laptops based on selected filter options with improved validation
@@ -35,17 +36,34 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     return laptops;
   }
 
-  // Create a set of major brands to assist with "Other" category filtering
+  // Create a set of major brands (brands with 15+ items)
   const mainBrandsSet = new Set<string>();
   
-  // If filters contain brands, collect all non-Other brand filters for exclusion
-  if (filters.brands.size > 0) {
-    filters.brands.forEach(brand => {
-      if (brand !== 'Other') {
-        mainBrandsSet.add(brand.toLowerCase());
-      }
-    });
-  }
+  // Count occurrences of each brand
+  const brandCounts: Record<string, number> = {};
+  
+  laptops.forEach(laptop => {
+    if (!laptop.brand && !laptop.title) return;
+    
+    const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title).toLowerCase();
+    brandCounts[normalizedBrand] = (brandCounts[normalizedBrand] || 0) + 1;
+  });
+  
+  // Populate mainBrandsSet with brands that have 15+ laptops
+  Object.entries(brandCounts).forEach(([brand, count]) => {
+    if (count >= 15) {
+      mainBrandsSet.add(brand.toLowerCase());
+    }
+  });
+  
+  // Add any explicitly selected brands (except 'Other') to mainBrandsSet
+  filters.brands.forEach(brand => {
+    if (brand !== 'Other') {
+      mainBrandsSet.add(brand.toLowerCase());
+    }
+  });
+
+  console.log('Main brands set:', mainBrandsSet);
 
   const filteredLaptops = laptops.filter(laptop => {
     // Early return if laptop has no title or key specs
