@@ -25,14 +25,6 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
   // Extract model name if not provided using the normalizer
   const displayModel = model || normalizeModel(null, title, correctedBrand);
   
-  // Helper function to display spec values with better fallbacks
-  const formatSpec = (value: string | undefined, defaultText = "Unknown") => {
-    if (!value || value.toLowerCase() === 'not specified') {
-      return defaultText;
-    }
-    return value;
-  };
-  
   return (
     <div>
       <a 
@@ -46,7 +38,7 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
       <ul className="space-y-1 text-sm">
         <li>
           <span className="font-bold">Brand:</span>{" "}
-          {correctedBrand || "Unknown"}
+          {correctedBrand}
         </li>
         {displayModel && (
           <li>
@@ -57,29 +49,29 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
         <li>
           <span className="font-bold">Screen:</span>{" "}
           {specs.screenSize 
-            ? `${formatSpec(specs.screenSize)} ${specs.screenResolution ? `(${formatSpec(specs.screenResolution)})` : ''}`
-            : 'Unknown'}
+            ? `${specs.screenSize} ${specs.screenResolution ? `(${specs.screenResolution})` : ''}`
+            : 'Not specified'}
         </li>
         <li>
           <span className="font-bold">Processor:</span>{" "}
-          {formatSpec(specs.processor)}
+          {specs.processor || 'Not specified'}
         </li>
         <li>
           <span className="font-bold">GPU:</span>{" "}
-          {formatSpec(specs.graphics)}
+          {specs.graphics || 'Not specified'}
         </li>
         <li>
           <span className="font-bold">RAM:</span>{" "}
-          {formatSpec(specs.ram)}
+          {specs.ram || 'Not specified'}
         </li>
         <li>
           <span className="font-bold">Storage:</span>{" "}
-          {formatSpec(specs.storage)}
+          {specs.storage || 'Not specified'}
         </li>
         {specs.weight && (
           <li>
             <span className="font-bold">Weight:</span>{" "}
-            {formatSpec(specs.weight)}
+            {specs.weight}
           </li>
         )}
       </ul>
