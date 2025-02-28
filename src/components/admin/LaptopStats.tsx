@@ -13,6 +13,7 @@ import { ErrorState } from './stats/ErrorState';
 import { useToast } from "@/components/ui/use-toast";
 
 // Create a context for refreshing stats that can be used anywhere in the app
+// The function returns Promise<void> to match what's expected by UpdateLaptopsSection
 export const StatsRefreshContext = React.createContext<() => Promise<void>>(() => Promise.resolve());
 
 const LaptopStats = () => {
@@ -43,7 +44,8 @@ const LaptopStats = () => {
       setStats(databaseStats);
       setLastRefreshTime(new Date());
       setError(null);
-      return databaseStats;
+      
+      // Don't return databaseStats here to match Promise<void> type
     } catch (err) {
       console.error('Error fetching database stats:', err);
       setError(err instanceof Error ? err : new Error('Unknown error occurred'));
@@ -56,6 +58,8 @@ const LaptopStats = () => {
           variant: "destructive",
         });
       }
+      
+      // Re-throw the error so calling functions can handle it
       throw err;
     } finally {
       setRefreshing(false);
