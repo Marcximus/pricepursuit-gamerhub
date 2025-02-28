@@ -92,16 +92,18 @@ export async function saveCollectionProgress(
       }
     } as Json;
     
-    // Generate a UUID for the ID field - use a fixed ID to ensure we're always updating the same record
+    // Use a fixed UUID for the ID field
     const progressId = '7c75e6fe-c6b3-40be-9378-e44c8f45787d';
     
     // Create the record to upsert
     const record = {
-      id: progressId, // Use a UUID string ID instead of "1"
+      id: progressId,
       progress_data: progressData,
       last_updated: new Date().toISOString(),
       progress_type: 'laptop_collection' 
     };
+    
+    console.log('Saving collection progress:', record);
     
     const { error } = await supabase
       .from('collection_progress')
@@ -126,7 +128,7 @@ export async function getLastCollectionProgress() {
     const { data, error } = await supabase
       .from('collection_progress')
       .select('*')
-      .eq('id', '7c75e6fe-c6b3-40be-9378-e44c8f45787d') // Use the same UUID we use for saving
+      .eq('id', '7c75e6fe-c6b3-40be-9378-e44c8f45787d')
       .single();
       
     if (error) {

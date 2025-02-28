@@ -46,7 +46,7 @@ export async function collectLaptops() {
 
     console.log('Invoking collect-laptops edge function...');
     
-    // Call the Supabase Edge Function
+    // Call the Supabase Edge Function with proper parameters
     const { data, error } = await supabase.functions.invoke('collect-laptops', {
       body: { 
         action: 'collect-laptops',
@@ -68,10 +68,11 @@ export async function collectLaptops() {
       variant: "default"
     });
     
-    // Return a simplified response
+    // Return a response based on the edge function result
     return { 
+      success: true,
       batches: Math.ceil(COLLECTION_CONFIG.LAPTOP_BRANDS.length / COLLECTION_CONFIG.PARALLEL_BATCHES),
-      stats: {
+      stats: data?.stats || {
         processed: 0,
         updated: 0,
         added: 0,

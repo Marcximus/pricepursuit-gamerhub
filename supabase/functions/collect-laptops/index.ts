@@ -1,8 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import * as databaseService from './databaseService.ts';
-import { corsHeaders } from './cors.ts';
 
 interface RequestParams {
   action: string;
@@ -10,12 +8,9 @@ interface RequestParams {
   pagesPerBrand: number;
 }
 
-interface ProcessingStats {
-  processed: number;
-  updated: number;
-  added: number;
-  failed: number;
-  skipped?: number;
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 serve(async (req) => {
@@ -32,17 +27,31 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     
     // Parse the request body
-    const params: RequestParams = await req.json();
+    let params: RequestParams;
+    try {
+      params = await req.json();
+      console.log('[Function] Received parameters:', JSON.stringify(params));
+    } catch (error) {
+      console.error('[Function] Error parsing request body:', error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     const { brands, pagesPerBrand } = params;
     
     if (!brands || !Array.isArray(brands) || brands.length === 0) {
-      throw new Error('No brands specified for collection');
+      return new Response(
+        JSON.stringify({ error: 'No brands specified for collection' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log(`[Function] Starting collection for brands: ${brands.join(', ')}`);
     
     // Set up stats object to track progress
-    const stats: ProcessingStats = {
+    const stats = {
       processed: 0,
       updated: 0,
       added: 0,
@@ -56,7 +65,7 @@ serve(async (req) => {
         // Start by updating collection status for brands to indicate processing has started
         for (const brand of brands) {
           try {
-            await supabase
+            const { error: updateError } = await supabase
               .from('products')
               .update({ 
                 collection_status: 'in_progress',
@@ -64,59 +73,65 @@ serve(async (req) => {
               })
               .eq('brand', brand);
               
-            console.log(`[Brand: ${brand}] Set status to in_progress`);
+            if (updateError) {
+              console.error(`[Error] Failed to update status for brand ${brand}:`, updateError);
+            } else {
+              console.log(`[Brand: ${brand}] Set status to in_progress`);
+            }
           } catch (error) {
             console.error(`[Error] Failed to update status for brand ${brand}:`, error);
           }
         }
         
-        // For demonstration, let's simulate processing a product
-        // In a real function, this would fetch data from an external API and process it
-        const simulateProductProcessing = async (brand: string) => {
-          console.log(`[Brand: ${brand}] Processing data...`);
-          
-          // Simulate API delay
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          // Create a test product record to demonstrate the function works
-          const testProduct = {
-            title: `Test ${brand} Laptop`,
-            brand: brand,
-            asin: 'B0DPLW8955',  // Test ASIN
-            current_price: 999.99,
-            is_laptop: true,
-            collection_status: 'completed',
-            last_collection_attempt: new Date().toISOString(),
-            created_at: new Date().toISOString()
-          };
-          
-          // Insert or update the product
-          const { data, error } = await supabase
-            .from('products')
-            .upsert(testProduct)
-            .select();
-            
-          if (error) {
-            console.error(`[Error] Failed to insert test product for ${brand}:`, error);
-            stats.failed++;
-          } else {
-            console.log(`[Product: ${testProduct.asin}] Processing existing product`);
-            stats.processed++;
-            stats.updated++;
-          }
-          
-          // Update brand status to completed
-          await supabase
-            .from('products')
-            .update({ collection_status: 'completed' })
-            .eq('brand', brand);
-            
-          console.log(`[Brand: ${brand}] Set status to completed`);
-        };
-        
-        // Process each brand
+        // Simulate processing a product for each brand
         for (const brand of brands) {
-          await simulateProductProcessing(brand);
+          try {
+            console.log(`[Brand: ${brand}] Processing data...`);
+            
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Create a test product record to demonstrate the function works
+            const testProduct = {
+              title: `Test ${brand} Laptop`,
+              brand: brand,
+              asin: `TEST${Date.now()}`,  // Generate unique ASIN
+              current_price: 999.99,
+              is_laptop: true,
+              collection_status: 'completed',
+              last_collection_attempt: new Date().toISOString(),
+              created_at: new Date().toISOString()
+            };
+            
+            // Insert the product
+            const { data, error } = await supabase
+              .from('products')
+              .insert(testProduct);
+              
+            if (error) {
+              console.error(`[Error] Failed to insert test product for ${brand}:`, error);
+              stats.failed++;
+            } else {
+              console.log(`[Brand: ${brand}] Inserted test product successfully`);
+              stats.processed++;
+              stats.added++;
+            }
+            
+            // Update brand status to completed
+            const { error: updateError } = await supabase
+              .from('products')
+              .update({ collection_status: 'completed' })
+              .eq('brand', brand);
+              
+            if (updateError) {
+              console.error(`[Error] Failed to update status for brand ${brand}:`, updateError);
+            } else {
+              console.log(`[Brand: ${brand}] Set status to completed`);
+            }
+          } catch (brandError) {
+            console.error(`[Error] Error processing brand ${brand}:`, brandError);
+            stats.failed++;
+          }
         }
         
         console.log(`[Function] Collection completed with stats:`, stats);
@@ -126,10 +141,14 @@ serve(async (req) => {
         
         // Reset any brands that might be stuck in in_progress state
         try {
-          await supabase
+          const { error: resetError } = await supabase
             .from('products')
             .update({ collection_status: 'pending' })
             .eq('collection_status', 'in_progress');
+            
+          if (resetError) {
+            console.error('[Error] Failed to reset collection statuses:', resetError);
+          }
         } catch (resetError) {
           console.error('[Error] Failed to reset collection statuses:', resetError);
         }
