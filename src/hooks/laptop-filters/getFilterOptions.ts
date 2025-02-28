@@ -1,4 +1,3 @@
-
 import type { Product } from "@/types/product";
 import type { FilterableProductKeys } from "@/utils/laptop/filter";
 import { 
@@ -37,12 +36,25 @@ export const getUniqueFilterValues = (
         .replace(/intel\s+intel/i, 'Intel');
     });
   }
+
+  // Additional storage validation - only keep values that have at least one matching laptop
+  if (key === 'storage') {
+    cleanedValues = cleanedValues.filter(value => {
+      // Count laptops that match this storage value
+      const matchCount = laptops.filter(laptop => 
+        laptop.storage && normalizer(laptop.storage) === value
+      ).length;
+      
+      // Only keep filter values that have actual matching laptops
+      return matchCount > 0;
+    });
+  }
   
   // Sort values using the appropriate sorter
   const sortedValues = sorter(cleanedValues);
   
   // Log the sorted values for debugging
-  if (sortedValues.length > 0 && key === 'graphics') {
+  if (sortedValues.length > 0 && key === 'storage') {
     console.log(`Sorted ${key} filters:`, sortedValues);
   }
 

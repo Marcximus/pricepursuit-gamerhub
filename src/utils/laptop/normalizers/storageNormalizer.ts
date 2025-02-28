@@ -10,8 +10,9 @@ export const normalizeStorage = (storage: string): string => {
   // Get storage value in GB
   const gbValue = getStorageValue(storage);
   
-  // Filter out invalid or unrealistic storage values (less than 128GB for modern laptops)
-  if (gbValue < 128) {
+  // Filter out invalid or unrealistic storage values
+  // Most laptops have between 128GB and 4TB storage
+  if (gbValue < 128 || gbValue > 4096) {
     return '';
   }
   
