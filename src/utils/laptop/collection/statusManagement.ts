@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
-import { CollectionProgressData, CollectionStats } from "../types";
+import { CollectionStats } from "../types";
 
 /**
  * Reset any stale collection processes (those that have been "in_progress" for too long)
@@ -78,7 +78,6 @@ export async function saveCollectionProgress(
 ) {
   try {
     // Create the progress data object (or null if collection is complete)
-    // Using type assertion to ensure compatibility with Json type
     const progressData = isComplete ? null : {
       groupIndex,
       brandIndex,
@@ -90,12 +89,12 @@ export async function saveCollectionProgress(
         failed: stats.failed,
         skipped: stats.skipped
       }
-    } as Json;
+    };
     
     // Create the record to upsert
     const record = {
       id: '1', // Use a string ID 
-      progress_data: progressData,
+      progress_data: progressData as Json,
       last_updated: new Date().toISOString(),
       progress_type: 'laptop_collection' 
     };

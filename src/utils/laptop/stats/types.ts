@@ -30,4 +30,20 @@ export interface DatabaseStats {
     missingSpecs: number;
     recentlyChecked: number;
   };
+  // These properties are used by the components
+  aiProcessingStatus: {
+    pending: StatsCountResult;
+    processing: StatsCountResult;
+    error: StatsCountResult;
+    complete: StatsCountResult;
+    completionPercentage: number;
+  };
+  missingInformation: {
+    prices: { percentage: number };
+    processor: { percentage: number };
+    ram: { percentage: number };
+    storage: { percentage: number };
+    graphics: { percentage: number };
+    screenSize: { percentage: number };
+  };
 }

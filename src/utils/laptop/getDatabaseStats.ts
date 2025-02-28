@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { DatabaseStats } from "./stats/types";
-import { getTotalLaptopsCount } from "./stats/basicCountQueries";
+import { getTotalLaptopCount } from "./stats/basicCountQueries";
 import { getNotUpdatedLaptopsCount, getNotCheckedLaptopsCount, getRecentlyCheckedLaptopsCount } from "./stats/updateStatusQueries";
 import { getPendingAICount, getProcessedAICount, getInProgressAICount, getErrorAICount } from "./stats/aiProcessingQueries";
 import { 
@@ -16,7 +16,7 @@ import { calculatePercentage } from "./stats/percentageCalculator";
 export async function getDatabaseStats(): Promise<DatabaseStats> {
   try {
     // Get basic counts
-    const totalLaptops = await getTotalLaptopsCount();
+    const totalLaptops = await getTotalLaptopCount();
     
     // Get update status counts
     const notUpdated = await getNotUpdatedLaptopsCount();
@@ -41,6 +41,12 @@ export async function getDatabaseStats(): Promise<DatabaseStats> {
     const processedAiPercentage = calculatePercentage(processedAi.count, totalLaptops.count);
     const missingSpecsPercentage = calculatePercentage(missingAnySpec.count, totalLaptops.count);
     const recentlyCheckedPercentage = calculatePercentage(recentlyChecked.count, totalLaptops.count);
+    
+    // Calculate missing information percentages
+    const processorPercentage = calculatePercentage(noProcessor.count, totalLaptops.count);
+    const ramPercentage = calculatePercentage(noRam.count, totalLaptops.count);
+    const storagePercentage = calculatePercentage(noStorage.count, totalLaptops.count);
+    const graphicsPercentage = calculatePercentage(noGraphics.count, totalLaptops.count);
     
     return {
       totalLaptops: totalLaptops.count,
@@ -67,6 +73,22 @@ export async function getDatabaseStats(): Promise<DatabaseStats> {
         processedAi: processedAiPercentage,
         missingSpecs: missingSpecsPercentage,
         recentlyChecked: recentlyCheckedPercentage
+      },
+      // Map to the component-expected format
+      aiProcessingStatus: {
+        pending: pendingAi,
+        processing: inProgressAi,
+        error: errorAi,
+        complete: processedAi,
+        completionPercentage: processedAiPercentage
+      },
+      missingInformation: {
+        prices: { percentage: 0 }, // Placeholder until we have actual price data
+        processor: { percentage: processorPercentage },
+        ram: { percentage: ramPercentage },
+        storage: { percentage: storagePercentage },
+        graphics: { percentage: graphicsPercentage },
+        screenSize: { percentage: 0 } // Placeholder until we have screen size data
       }
     };
   } catch (error) {
