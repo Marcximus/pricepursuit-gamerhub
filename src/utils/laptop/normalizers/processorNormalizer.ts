@@ -1,5 +1,5 @@
 
-import { getProcessorValue } from '../hardwareScoring';
+import { getProcessorValue } from '../scoring/processor';
 
 /**
  * Normalizes processor strings for consistent display

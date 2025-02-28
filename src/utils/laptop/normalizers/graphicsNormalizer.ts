@@ -1,5 +1,5 @@
 
-import { getGraphicsValue } from '../hardwareScoring';
+import { getGraphicsValue } from '../scoring/graphics';
 
 /**
  * Normalizes graphics card strings for consistent display

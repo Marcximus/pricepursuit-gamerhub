@@ -1,5 +1,6 @@
 
-import { getProcessorValue, getGraphicsValue } from "@/utils/laptop/hardwareScoring";
+import { getProcessorValue } from "@/utils/laptop/scoring/processor";
+import { getGraphicsValue } from "@/utils/laptop/scoring/graphics";
 import { getRamValue, getStorageValue, getScreenSizeValue } from "@/utils/laptop/valueParser";
 
 /**
