@@ -2,32 +2,50 @@
 import { useMemo } from "react";
 import type { Product } from "@/types/product";
 import { getUniqueFilterValues } from "./laptop-filters/getFilterOptions";
+import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 
 /**
  * Hook for generating laptop filter options based on available laptop data
+ * Enhanced to support filter dependencies and two-way validation
  */
-export const useLaptopFilters = (laptops: Product[] | undefined) => {
+export const useLaptopFilters = (
+  laptops: Product[] | undefined,
+  activeFilters?: FilterOptions
+) => {
   return useMemo(() => {
     if (!laptops || laptops.length === 0) {
       console.log('No laptops available for generating filter options');
       return {
-        brands: new Set<string>(),        // First - most important
-        processors: new Set<string>(),    // Second - key spec
-        ramSizes: new Set<string>(),      // Third - key spec
-        storageOptions: new Set<string>(), // Fourth - key spec
-        graphicsCards: new Set<string>(),  // Fifth - key spec
-        screenSizes: new Set<string>(),    // Last - less critical
+        brands: new Set<string>(),
+        processors: new Set<string>(),
+        ramSizes: new Set<string>(),
+        storageOptions: new Set<string>(),
+        graphicsCards: new Set<string>(),
+        screenSizes: new Set<string>(),
       };
     }
 
+    // Log active filters for debugging
+    if (activeFilters) {
+      console.log('Generating filter options with active filters:', {
+        brands: activeFilters.brands.size,
+        processors: activeFilters.processors.size,
+        ram: activeFilters.ramSizes.size,
+        storage: activeFilters.storageOptions.size,
+        graphics: activeFilters.graphicsCards.size,
+        screenSizes: activeFilters.screenSizes.size,
+        priceRange: activeFilters.priceRange
+      });
+    }
+
     return {
-      // Reordered in a more user-centric way
-      brands: getUniqueFilterValues(laptops, 'brand'),            // First filter category
-      processors: getUniqueFilterValues(laptops, 'processor'),    // Second filter category
-      ramSizes: getUniqueFilterValues(laptops, 'ram'),            // Third filter category
-      storageOptions: getUniqueFilterValues(laptops, 'storage'),  // Fourth filter category
-      graphicsCards: getUniqueFilterValues(laptops, 'graphics'),  // Fifth filter category
-      screenSizes: getUniqueFilterValues(laptops, 'screen_size'), // Last filter category
+      // Pass activeFilters to implement filter dependencies
+      brands: getUniqueFilterValues(laptops, 'brand', activeFilters),
+      processors: getUniqueFilterValues(laptops, 'processor', activeFilters),
+      ramSizes: getUniqueFilterValues(laptops, 'ram', activeFilters),
+      storageOptions: getUniqueFilterValues(laptops, 'storage', activeFilters),
+      graphicsCards: getUniqueFilterValues(laptops, 'graphics', activeFilters),
+      screenSizes: getUniqueFilterValues(laptops, 'screen_size', activeFilters),
     };
-  }, [laptops]);
+  }, [laptops, activeFilters]);
 };
