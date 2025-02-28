@@ -15,7 +15,7 @@ export const applyProcessorFilter = (
     return true;
   }
   
-  // Extract processor from title with fallback to stored value
+  // First extract processor from title, with fallback to stored value
   const extractedProcessor = extractProcessorFromTitle(laptop.title, laptop.processor);
   
   // If we can't determine the processor at all, exclude when processor filter is active
@@ -26,10 +26,18 @@ export const applyProcessorFilter = (
   // Get standardized processor category
   const standardizedProcessor = standardizeProcessorForFiltering(extractedProcessor);
   
+  // Log for debugging matched standardized processors
+  if (standardizedProcessor !== 'Other Processor' && standardizedProcessor !== 'Unknown') {
+    // console.log(`Matched processor: "${extractedProcessor}" to category "${standardizedProcessor}"`);
+  }
+  
+  // Try direct match with standardized category first (most efficient)
+  if (filters.processors.has(standardizedProcessor)) {
+    return true;
+  }
+  
+  // If that fails, use the more detailed matcher logic that handles variations
   return Array.from(filters.processors).some(selectedProcessor => 
-    // Try direct match with standardized value first (more accurate)
-    selectedProcessor === standardizedProcessor ||
-    // Fall back to flexible matching which handles variations like "2.9 GHz Celeron"
     matchesFilter(selectedProcessor, extractedProcessor, 'processor', laptop.title)
   );
 };

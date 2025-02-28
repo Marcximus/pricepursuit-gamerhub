@@ -9,6 +9,7 @@ import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import type { SortOption } from "@/components/laptops/LaptopSort";
 import { normalizeBrand, normalizeModel } from "@/utils/laptop/valueNormalizer";
 import { applyAllProductFilters } from "@/utils/laptop/productFilters";
+import { extractProcessorFromTitle } from "@/utils/laptop/filter/extractors/processorExtractor";
 
 export const processAndFilterLaptops = (
   rawData: any[],
@@ -43,11 +44,15 @@ export const processAndFilterLaptops = (
     const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title);
     const normalizedModel = normalizeModel(laptop.model || '', laptop.title, normalizedBrand);
     
+    // Extract processor from title first, fall back to database value
+    const extractedProcessor = extractProcessorFromTitle(laptop.title, laptop.processor);
+    
     // Apply the normalized values
     const laptopWithNormalizedValues = {
       ...laptop,
       brand: normalizedBrand,
-      model: normalizedModel
+      model: normalizedModel,
+      processor: extractedProcessor || laptop.processor // Use extracted processor if available
     };
     
     const reviews = laptop.product_reviews || [];

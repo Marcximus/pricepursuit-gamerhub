@@ -1,3 +1,4 @@
+
 import type { Product } from "@/types/product";
 import type { FilterableProductKeys } from "@/utils/laptop/filter";
 import { 
@@ -7,6 +8,7 @@ import {
 } from "./filterHelpers";
 import { sorterMap, sortDefaultOptions } from "./filterSorters";
 import { standardizeProcessorForFiltering } from "@/utils/laptop/filter/extractors/processorExtractor";
+import { extractProcessorFromTitle } from "@/utils/laptop/filter/extractors/processorExtractor";
 
 /**
  * Gets unique, validated, and sorted filter options for a specific filter key
@@ -43,10 +45,24 @@ export const getUniqueFilterValues = (
 };
 
 /**
- * Gets standardized processor categories for filtering
+ * Gets standardized processor categories for filtering with improved extraction
  */
 const getStandardizedProcessorValues = (laptops: Product[]): Set<string> => {
   const processorsSet = new Set<string>();
+  const processorCounts: Record<string, number> = {};
+  
+  // First, process all laptops to extract and standardize their processors
+  laptops.forEach(laptop => {
+    // Extract processor from title with fallback to stored value 
+    const extractedProcessor = extractProcessorFromTitle(laptop.title, laptop.processor);
+    if (!extractedProcessor) return;
+    
+    // Get standardized category
+    const standardized = standardizeProcessorForFiltering(extractedProcessor);
+    
+    // Count occurrences of each category
+    processorCounts[standardized] = (processorCounts[standardized] || 0) + 1;
+  });
   
   // Primary processor categories - include Apple M4 variants
   const primaryCategories = [
@@ -86,33 +102,21 @@ const getStandardizedProcessorValues = (laptops: Product[]): Set<string> => {
     'Other Processor'
   ];
   
-  // Add all standard categories that have at least one matching laptop
+  // Add categories with at least one matching laptop
   primaryCategories.forEach(category => {
-    const hasMatchingLaptop = laptops.some(laptop => {
-      // Try to extract processor from title if available
-      const extractedProcessor = laptop.processor || laptop.title;
-      const standardized = standardizeProcessorForFiltering(extractedProcessor);
-      return standardized === category;
-    });
-    
-    if (hasMatchingLaptop) {
+    if (processorCounts[category] && processorCounts[category] > 0) {
       processorsSet.add(category);
     }
   });
   
-  // Always ensure "Other Processor" is available if there are laptops without
-  // matching a standard category
-  const hasOtherProcessors = laptops.some(laptop => {
-    const extractedProcessor = laptop.processor || laptop.title;
-    const standardized = standardizeProcessorForFiltering(extractedProcessor);
-    return standardized === 'Other Processor';
-  });
-  
-  if (hasOtherProcessors) {
+  // Always ensure "Other Processor" is available if there are laptops 
+  // that don't match a standard category
+  if (processorCounts['Other Processor'] && processorCounts['Other Processor'] > 0) {
     processorsSet.add('Other Processor');
   }
   
-  console.log('Standardized processor categories:', [...processorsSet]);
+  // Log processor category distribution for debugging
+  console.log('Processor category distribution:', processorCounts);
   
   return processorsSet;
 };

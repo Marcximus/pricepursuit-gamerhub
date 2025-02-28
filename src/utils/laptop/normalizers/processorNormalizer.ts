@@ -37,7 +37,7 @@ export const normalizeProcessor = (processor: string): string => {
     .replace(/\bi([3579])\b/i, 'Intel Core i$1')
     .replace(/intel\s+celeron/i, 'Intel Celeron')
     .replace(/intel\s+pentium/i, 'Intel Pentium')
-    .replace(/intel\s+ultra\s+([579])/i, 'Intel Core Ultra $1');
+    .replace(/intel\s+core\s+ultra\s+([579])/i, 'Intel Core Ultra $1');
     
   // Standardize AMD naming
   normalized = normalized
@@ -53,6 +53,11 @@ export const normalizeProcessor = (processor: string): string => {
     // Make sure "chip" is always added for Apple processors
     .replace(/apple\s+m(\d)(\s+(pro|max|ultra))?$/i, 'Apple M$1$2 chip');
     
+  // Standardize GHz mentions with processor models
+  normalized = normalized
+    .replace(/(\d+(?:\.\d+)?\s*GHz).*?(Intel\s+Core\s+i[3579])/i, '$2 $1')
+    .replace(/(\d+(?:\.\d+)?\s*GHz).*?(i[3579])/i, 'Intel Core $2 $1');
+    
   // Make sure spaces are normalized
   normalized = normalized.replace(/\s+/g, ' ').trim();
     
@@ -65,22 +70,12 @@ export const normalizeProcessor = (processor: string): string => {
 export const getProcessorFilterValue = (processor: string): string => {
   const normalized = normalizeProcessor(processor).toLowerCase();
   
-  // Intel CPU categories
-  if (normalized.includes('intel core ultra')) return 'Intel Core Ultra';
-  if (normalized.includes('i9')) return 'Intel Core i9';
-  if (normalized.includes('i7')) return 'Intel Core i7';
-  if (normalized.includes('i5')) return 'Intel Core i5';
-  if (normalized.includes('i3')) return 'Intel Core i3';
-  if (normalized.includes('celeron')) return 'Intel Celeron';
-  if (normalized.includes('pentium')) return 'Intel Pentium';
+  // Apple
+  if (normalized.includes('m4 ultra')) return 'Apple M4 Ultra';
+  if (normalized.includes('m4 max')) return 'Apple M4 Max';
+  if (normalized.includes('m4 pro')) return 'Apple M4 Pro';
+  if (normalized.includes('m4')) return 'Apple M4';
   
-  // AMD CPU categories
-  if (normalized.includes('ryzen 9')) return 'AMD Ryzen 9';
-  if (normalized.includes('ryzen 7')) return 'AMD Ryzen 7';
-  if (normalized.includes('ryzen 5')) return 'AMD Ryzen 5';
-  if (normalized.includes('ryzen 3')) return 'AMD Ryzen 3';
-  
-  // Apple CPU categories
   if (normalized.includes('m3 ultra')) return 'Apple M3 Ultra';
   if (normalized.includes('m3 max')) return 'Apple M3 Max';
   if (normalized.includes('m3 pro')) return 'Apple M3 Pro';
@@ -96,5 +91,53 @@ export const getProcessorFilterValue = (processor: string): string => {
   if (normalized.includes('m1 pro')) return 'Apple M1 Pro';
   if (normalized.includes('m1')) return 'Apple M1';
   
-  return normalized;
+  // Intel CPU categories
+  if (normalized.includes('core ultra 9')) return 'Intel Core Ultra 9';
+  if (normalized.includes('core ultra 7')) return 'Intel Core Ultra 7';
+  if (normalized.includes('core ultra 5')) return 'Intel Core Ultra 5';
+  if (normalized.includes('core ultra')) return 'Intel Core Ultra';
+  
+  // Intel Core with generation info
+  if (normalized.match(/13th|14th|i[3579]-13|i[3579]-14/)) {
+    if (normalized.includes('i9')) return 'Intel Core i9 (13th/14th Gen)';
+    if (normalized.includes('i7')) return 'Intel Core i7 (13th/14th Gen)';
+    if (normalized.includes('i5')) return 'Intel Core i5 (13th/14th Gen)';
+    if (normalized.includes('i3')) return 'Intel Core i3 (13th/14th Gen)';
+  }
+  
+  if (normalized.match(/11th|12th|i[3579]-11|i[3579]-12/)) {
+    if (normalized.includes('i9')) return 'Intel Core i9 (11th/12th Gen)';
+    if (normalized.includes('i7')) return 'Intel Core i7 (11th/12th Gen)';
+    if (normalized.includes('i5')) return 'Intel Core i5 (11th/12th Gen)';
+    if (normalized.includes('i3')) return 'Intel Core i3 (11th/12th Gen)';
+  }
+  
+  if (normalized.match(/10th|i[3579]-10/)) {
+    if (normalized.includes('i9')) return 'Intel Core i9 (10th Gen)';
+    if (normalized.includes('i7')) return 'Intel Core i7 (10th Gen)';
+    if (normalized.includes('i5')) return 'Intel Core i5 (10th Gen)';
+    if (normalized.includes('i3')) return 'Intel Core i3 (10th Gen)';
+  }
+  
+  // Generic Intel Core
+  if (normalized.includes('i9')) return 'Intel Core i9';
+  if (normalized.includes('i7')) return 'Intel Core i7';
+  if (normalized.includes('i5')) return 'Intel Core i5';
+  if (normalized.includes('i3')) return 'Intel Core i3';
+  
+  // Budget Intel
+  if (normalized.includes('celeron')) return 'Intel Celeron';
+  if (normalized.includes('pentium')) return 'Intel Pentium';
+  
+  // AMD Ryzen
+  if (normalized.includes('ryzen 9')) return 'AMD Ryzen 9';
+  if (normalized.includes('ryzen 7')) return 'AMD Ryzen 7';
+  if (normalized.includes('ryzen 5')) return 'AMD Ryzen 5';
+  if (normalized.includes('ryzen 3')) return 'AMD Ryzen 3';
+  
+  // Mobile
+  if (normalized.includes('snapdragon')) return 'Qualcomm Snapdragon';
+  if (normalized.includes('mediatek')) return 'MediaTek';
+  
+  return 'Other Processor';
 };
