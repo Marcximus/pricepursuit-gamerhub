@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Database, Clock } from "lucide-react";
+import { Database, Clock, CheckCircle } from "lucide-react";
 import { StatItem } from "./StatItem";
 import { DatabaseStats } from "@/utils/laptop/stats/types";
 
@@ -18,6 +18,12 @@ export function DatabaseOverview({ stats }: DatabaseOverviewProps) {
           icon={<Database className="h-4 w-4 text-blue-500" />}
           label="Total Laptops"
           value={stats.totalLaptops}
+        />
+        
+        <StatItem 
+          icon={<CheckCircle className="h-4 w-4 text-green-500" />}
+          label="Checked (24h)"
+          value={stats.updateStatus.recentlyChecked.count}
         />
         
         <StatItem 

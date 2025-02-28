@@ -1,28 +1,33 @@
 
 export interface StatsCountResult {
   count: number;
-  error: Error | null;
+  error: any | null;
 }
 
 export interface DatabaseStats {
   totalLaptops: number;
   updateStatus: {
-    notUpdated: { count: number; percentage: number };
-    notChecked: { count: number; percentage: number };
+    notUpdated: StatsCountResult;
+    notChecked: StatsCountResult;
+    recentlyChecked: StatsCountResult;
   };
-  aiProcessingStatus: {
-    pending: { count: number; percentage: number };
-    processing: { count: number; percentage: number };
-    error: { count: number; percentage: number };
-    complete: { count: number; percentage: number };
-    completionPercentage: number;
+  aiStatus: {
+    pending: StatsCountResult;
+    processed: StatsCountResult;
+    inProgress: StatsCountResult;
+    error: StatsCountResult;
   };
-  missingInformation: {
-    prices: { count: number; percentage: number };
-    processor: { count: number; percentage: number };
-    ram: { count: number; percentage: number };
-    storage: { count: number; percentage: number };
-    graphics: { count: number; percentage: number };
-    screenSize: { count: number; percentage: number };
+  missingInfo: {
+    noProcessor: StatsCountResult;
+    noRam: StatsCountResult;
+    noStorage: StatsCountResult;
+    noGraphics: StatsCountResult;
+    missingAnySpec: StatsCountResult;
+  };
+  percentages: {
+    pendingAi: number;
+    processedAi: number;
+    missingSpecs: number;
+    recentlyChecked: number;
   };
 }
