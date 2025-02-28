@@ -10,5 +10,12 @@ export interface FilterResult {
   message?: string;
 }
 
+// Define the MatcherFunction type that was missing
+export type MatcherFunction = (
+  filterValue: string,
+  productValue: string | null | undefined,
+  productTitle?: string
+) => boolean;
+
 // Re-export the FilterOptions type to have it available in this module
 export type { FilterOptions } from "@/components/laptops/LaptopFilters";
