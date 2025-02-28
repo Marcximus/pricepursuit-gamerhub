@@ -12,6 +12,7 @@ export interface Product {
   last_checked: string;
   created_at: string;
   update_status?: 'pending' | 'in_progress' | 'completed' | 'error';
+  collection_status?: 'pending' | 'in_progress' | 'refreshing' | 'completed' | 'error';
   processor?: string;
   processor_score?: number;
   ram?: string;
