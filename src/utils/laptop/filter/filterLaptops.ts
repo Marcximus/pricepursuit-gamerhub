@@ -12,6 +12,7 @@ import {
   hasActiveFilters
 } from "./filtering";
 import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
+import { extractProcessorFromTitle } from "./extractors/processorExtractor";
 
 /**
  * Filters laptops based on selected filter options with improved validation
@@ -65,6 +66,17 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
 
   console.log('Main brands set:', mainBrandsSet);
 
+  // Pre-extract processors for all laptops to improve filtering performance
+  const processorsCache = new Map<string, string>();
+  laptops.forEach(laptop => {
+    if (laptop.id) {
+      const extractedProcessor = extractProcessorFromTitle(laptop.title, laptop.processor);
+      if (extractedProcessor) {
+        processorsCache.set(laptop.id, extractedProcessor);
+      }
+    }
+  });
+
   const filteredLaptops = laptops.filter(laptop => {
     // Early return if laptop has no title or key specs
     if (!laptop.title || (!laptop.processor && !laptop.ram && !laptop.storage && !laptop.graphics)) {
@@ -94,6 +106,7 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
       ram: l.ram,
       storage: l.storage,
       processor: l.processor,
+      extractedProcessor: l.id ? processorsCache.get(l.id) : undefined,
       screen_size: l.screen_size,
       graphics: l.graphics
     })));

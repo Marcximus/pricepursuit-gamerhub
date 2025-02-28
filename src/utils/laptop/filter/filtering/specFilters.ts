@@ -1,10 +1,10 @@
-
 import type { Product } from "@/types/product";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import { matchesFilter } from "../matchers";
+import { extractProcessorFromTitle, standardizeProcessorForFiltering } from "../extractors/processorExtractor";
 
 /**
- * Apply processor filtering to a laptop
+ * Apply processor filtering to a laptop with improved title extraction
  */
 export const applyProcessorFilter = (
   laptop: Product,
@@ -14,13 +14,22 @@ export const applyProcessorFilter = (
     return true;
   }
   
-  // Exclude laptops with unspecified processors when processor filter is active
-  if (!laptop.processor) {
+  // Extract processor from title with fallback to stored value
+  const extractedProcessor = extractProcessorFromTitle(laptop.title, laptop.processor);
+  
+  // If we can't determine the processor at all, exclude when processor filter is active
+  if (!extractedProcessor) {
     return false;
   }
   
+  // Get standardized processor category
+  const standardizedProcessor = standardizeProcessorForFiltering(extractedProcessor);
+  
   return Array.from(filters.processors).some(selectedProcessor => 
-    matchesFilter(selectedProcessor, laptop.processor, 'processor', laptop.title)
+    // Try direct match with standardized value first (more accurate)
+    selectedProcessor === standardizedProcessor ||
+    // Fall back to flexible matching with raw values
+    matchesFilter(selectedProcessor, extractedProcessor, 'processor', laptop.title)
   );
 };
 
