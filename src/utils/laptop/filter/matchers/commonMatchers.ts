@@ -1,5 +1,11 @@
 
 import type { FilterableProductKeys, MatcherFunction } from "../filterTypes";
+import { matchesBrandFilter } from './brandMatcher';
+import { matchesGraphicsFilter } from './graphicsMatcher';
+import { matchesProcessorFilter } from './processorMatcher';
+import { matchesRamFilter } from './ramMatcher';
+import { matchesScreenSizeFilter } from './screenSizeMatcher';
+import { matchesStorageFilter } from './storageMatcher';
 
 /**
  * Common utility to parse value with unit from a string
@@ -19,8 +25,15 @@ export const parseValueWithUnit = (
   };
 };
 
-// Forward declare the matcher function type to avoid circular dependencies
-let matchers: Record<FilterableProductKeys, MatcherFunction> | null = null;
+// Define matchers mapping directly using ES modules
+const matchers: Record<FilterableProductKeys, MatcherFunction> = {
+  brand: matchesBrandFilter,
+  graphics: matchesGraphicsFilter,
+  processor: matchesProcessorFilter,
+  ram: matchesRamFilter,
+  screen_size: matchesScreenSizeFilter,
+  storage: matchesStorageFilter,
+};
 
 /**
  * Generic function to check if a product value matches a filter value
@@ -32,26 +45,6 @@ export const matchesFilter = (
   filterType: FilterableProductKeys,
   productTitle?: string
 ): boolean => {
-  // Initialize matchers if not already done
-  if (!matchers) {
-    // Import these here to avoid circular dependencies
-    const { matchesBrandFilter } = require('./brandMatcher');
-    const { matchesGraphicsFilter } = require('./graphicsMatcher');
-    const { matchesProcessorFilter } = require('./processorMatcher');
-    const { matchesRamFilter } = require('./ramMatcher');
-    const { matchesScreenSizeFilter } = require('./screenSizeMatcher');
-    const { matchesStorageFilter } = require('./storageMatcher');
-    
-    matchers = {
-      brand: matchesBrandFilter,
-      graphics: matchesGraphicsFilter,
-      processor: matchesProcessorFilter,
-      ram: matchesRamFilter,
-      screen_size: matchesScreenSizeFilter,
-      storage: matchesStorageFilter,
-    };
-  }
-
   // If no matcher exists for this filter type, return false
   if (!matchers[filterType]) {
     console.warn(`No matcher found for filter type: ${filterType}`);
