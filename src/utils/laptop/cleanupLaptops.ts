@@ -57,12 +57,10 @@ export const cleanupLaptopDatabase = async () => {
       }
     }
 
-    // 3. Find duplicate ASINs
-    const { data, error: asinQueryError } = await supabase
-      .from('get_duplicate_asins')
-      .select('*');
-
-    const duplicateAsins = data || [];
+    // 3. Find duplicate ASINs - using a direct query instead of RPC
+    // Since we created a SQL function previously, we can query for duplicate ASINs directly
+    const { data: duplicateAsinsResult, error: asinQueryError } = await supabase
+      .rpc('get_duplicate_asins');
 
     if (asinQueryError) {
       console.error('Error finding duplicate ASINs:', asinQueryError);
@@ -71,13 +69,13 @@ export const cleanupLaptopDatabase = async () => {
         description: `Error finding duplicates: ${asinQueryError.message}`,
         variant: "destructive"
       });
-    } else if (duplicateAsins.length > 0) {
-      console.log(`Found ${duplicateAsins.length} duplicate ASINs`);
+    } else if (duplicateAsinsResult && duplicateAsinsResult.length > 0) {
+      console.log(`Found ${duplicateAsinsResult.length} duplicate ASINs`);
       
       // For each duplicate ASIN, keep the most recent record and delete others
       let totalDuplicatesRemoved = 0;
       
-      for (const item of duplicateAsins) {
+      for (const item of duplicateAsinsResult) {
         const asin = item.asin;
         
         // Get all records for this ASIN, ordered by last_checked (most recent first)
