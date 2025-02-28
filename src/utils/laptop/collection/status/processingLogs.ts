@@ -1,89 +1,97 @@
 
-import { CollectionStats } from "../../types";
+/**
+ * Logs detailed information about a laptop processing operation
+ */
+export function logLaptopProcessingDetails(
+  asin: string,
+  title: string | null | undefined,
+  extractedData: any,
+  existingData: any
+) {
+  console.log(`\n🔍 PROCESSING DETAILS FOR ASIN: ${asin}`);
+  console.log(`📄 Title: ${title || 'N/A'}`);
+
+  // Display extraction results
+  console.log('\n📊 EXTRACTION RESULTS:');
+  
+  const fields = [
+    { name: 'Processor', key: 'processor' },
+    { name: 'RAM', key: 'ram' },
+    { name: 'Storage', key: 'storage' },
+    { name: 'Graphics', key: 'graphics' },
+    { name: 'Screen Size', key: 'screen_size' },
+    { name: 'Brand', key: 'brand' },
+    { name: 'Model', key: 'model' },
+    { name: 'Image URL', key: 'image_url' },
+    { name: 'Price', key: 'current_price' }
+  ];
+
+  fields.forEach(field => {
+    const existingValue = existingData ? existingData[field.key] : null;
+    const extractedValue = extractedData ? extractedData[field.key] : null;
+    
+    // Determine status icons
+    const existingIcon = existingValue ? '✅' : '❌';
+    const extractedIcon = extractedValue ? '✅' : '❌';
+    const updatedIcon = (existingValue !== extractedValue && extractedValue) ? '🔄' : ''; 
+    
+    console.log(`${field.name}:`);
+    console.log(`  - Existing: ${existingIcon} ${existingValue || 'NULL'}`);
+    console.log(`  - Extracted: ${extractedIcon} ${extractedValue || 'NULL'}`);
+    if (updatedIcon) {
+      console.log(`  ${updatedIcon} Value updated!`);
+    }
+  });
+  
+  // Special diagnostic section for problematic fields
+  if (!extractedData.image_url) {
+    console.log('\n⚠️ IMAGE URL EXTRACTION FAILED:');
+    console.log('  - Check if the data source contains image URLs');
+    console.log('  - Verify that the image URL extraction patterns are correctly configured');
+    console.log('  - Consider checking the raw data payload for available image data');
+  }
+  
+  if (!extractedData.processor || !extractedData.ram || !extractedData.storage || !extractedData.graphics) {
+    console.log('\n⚠️ CRITICAL SPECIFICATIONS MISSING:');
+    console.log('  - Major hardware specifications could not be extracted');
+    console.log('  - Source data may not contain sufficient technical details');
+    console.log('  - Consider enhancing the extraction patterns or source quality');
+  }
+  
+  console.log('\n--------------------------------------------------\n');
+}
 
 /**
- * Log product update details with enhanced specification extraction information
- * @param product Product being updated
- * @param isNew Whether this is a new product or an update
- * @param extracted Optional information about extracted data
+ * Logs a summary of laptop data extraction results
  */
-export function logProductDetails(product: any, isNew: boolean, extracted?: any) {
-  const operation = isNew ? 'Added' : 'Updated';
-  const emoji = isNew ? '🆕' : '🔄';
+export function logExtractionSummary(
+  processedCount: number,
+  successCount: number,
+  missingImageCount: number,
+  missingSpecsCount: number
+) {
+  console.log('\n📋 LAPTOP DATA EXTRACTION SUMMARY');
+  console.log(`🔢 Total laptops processed: ${processedCount}`);
+  console.log(`✅ Successfully extracted data: ${successCount} (${Math.round((successCount/processedCount)*100)}%)`);
+  console.log(`🖼️ Missing image URLs: ${missingImageCount} (${Math.round((missingImageCount/processedCount)*100)}%)`);
+  console.log(`⚙️ Missing critical specs: ${missingSpecsCount} (${Math.round((missingSpecsCount/processedCount)*100)}%)`);
   
-  console.log(`${emoji} ${operation} product: ASIN=${product.asin}`);
-  console.log(`  📝 Title: ${product.title?.substring(0, 100)}${product.title?.length > 100 ? '...' : ''}`);
+  // Add diagnostic guidance
+  console.log('\n🔧 EXTRACTION DIAGNOSTIC GUIDANCE:');
   
-  // Calculate completion percentage of specs extracted
-  const specFields = ['brand', 'model', 'processor', 'ram', 'storage', 'graphics', 'screen_size', 'screen_resolution', 'image_url'];
-  const availableSpecs = specFields.filter(field => product[field] && product[field].toString().trim() !== '').length;
-  const specCompletionPercent = Math.round((availableSpecs / specFields.length) * 100);
-  
-  // Add emoji based on completion percentage
-  let completionEmoji = '🔴';
-  if (specCompletionPercent >= 75) completionEmoji = '🟢';
-  else if (specCompletionPercent >= 50) completionEmoji = '🟡';
-  else if (specCompletionPercent >= 25) completionEmoji = '🟠';
-  
-  console.log(`  ${completionEmoji} Specs completion: ${specCompletionPercent}% (${availableSpecs}/${specFields.length} fields)`);
-  
-  if (product.brand) console.log(`  🏷️ Brand: ${product.brand}`);
-  if (product.model) console.log(`  📱 Model: ${product.model}`);
-  if (product.current_price) console.log(`  💰 Price: $${product.current_price}`);
-  if (product.processor) {
-    console.log(`  🧠 Processor: ${product.processor}`);
-  } else {
-    console.log(`  ❌ Processor: Not extracted from title "${product.title}"`);
-  }
-  if (product.ram) {
-    console.log(`  🧮 RAM: ${product.ram}`);
-  } else {
-    console.log(`  ❌ RAM: Not extracted from title "${product.title}"`);
-  } 
-  if (product.storage) {
-    console.log(`  💾 Storage: ${product.storage}`);
-  } else {
-    console.log(`  ❌ Storage: Not extracted from title "${product.title}"`);
-  }
-  if (product.graphics) {
-    console.log(`  🎮 Graphics: ${product.graphics}`);
-  } else {
-    console.log(`  ❌ Graphics: Not extracted from title "${product.title}"`);
-  }
-  if (product.screen_size) {
-    console.log(`  📱 Screen: ${product.screen_size}`);
-  } else {
-    console.log(`  ❌ Screen size: Not extracted from title "${product.title}"`);
-  }
-  if (product.screen_resolution) {
-    console.log(`  🖥️ Resolution: ${product.screen_resolution}`);
-  }
-  if (product.image_url) {
-    console.log(`  🖼️ Image URL: ${product.image_url.substring(0, 60)}...`);
-  } else {
-    console.log(`  ❌ Image URL: Not available`);
-  }
-  if (product.rating && product.rating_count) console.log(`  ⭐ Rating: ${product.rating}/5 (${product.rating_count} reviews)`);
-  
-  // Enhanced price analysis
-  if (product.current_price && product.original_price) {
-    const discount = Math.round(((product.original_price - product.current_price) / product.original_price) * 100);
-    if (discount > 0) {
-      console.log(`  🏷️ Discount: ${discount}% off original price of $${product.original_price}`);
-    }
+  if (missingImageCount > processedCount * 0.2) {
+    console.log('⚠️ HIGH RATE OF MISSING IMAGES DETECTED:');
+    console.log('  - Check image URL extraction patterns');
+    console.log('  - Verify that the data source contains image information');
+    console.log('  - Review API response data structure for image fields');
   }
   
-  // If we have extraction data, show attempts vs success
-  if (extracted) {
-    console.log(`  📊 Extraction details:`);
-    Object.entries(extracted).forEach(([key, value]) => {
-      const success = value !== null && value !== undefined && value !== '';
-      console.log(`    ${success ? '✅' : '❌'} ${key}: ${success ? value : 'Failed to extract'}`);
-    });
+  if (missingSpecsCount > processedCount * 0.2) {
+    console.log('⚠️ HIGH RATE OF MISSING SPECIFICATIONS DETECTED:');
+    console.log('  - Review specification extraction patterns');
+    console.log('  - Check title and description text for specification data');
+    console.log('  - Consider enhancing fallback extraction methods');
   }
   
-  console.log(`  ⏱️ Processed at: ${new Date().toLocaleTimeString()}`);
-  
-  // Add separator line for better readability
-  console.log(`  -----------------------------------------------`);
+  console.log('\n--------------------------------------------------\n');
 }
