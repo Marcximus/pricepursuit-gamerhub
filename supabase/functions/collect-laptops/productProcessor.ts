@@ -1,117 +1,125 @@
 
-import { extractLaptopSpecs } from './deepseekService';
-import { LaptopProductData } from './types';
-import { normalizeProductSpecs } from '@/utils/laptop/collectionUtils';
-
 /**
- * Process raw product data into a structured format
+ * Processes a laptop product from Oxylabs and inserts or updates it in the database
+ * @param product The product object from Oxylabs
+ * @param brand The brand of the product
+ * @param supabase Supabase client instance
+ * @returns Result of the operation
  */
-export async function processRawProduct(rawProduct: any): Promise<LaptopProductData | null> {
+export async function processLaptopProduct(product: any, brand: string, supabase: any) {
   try {
-    if (!rawProduct || !rawProduct.asin) {
-      console.error('Invalid product data:', rawProduct);
-      return null;
+    // Skip products without required fields
+    if (!product.asin || !product.title) {
+      console.log("Skipping product without required fields");
+      return { success: false, action: 'skipped', reason: 'missing_required_fields' };
     }
-
-    let processedProduct: LaptopProductData = {
-      asin: rawProduct.asin,
-      title: rawProduct.title || '',
-      current_price: extractPrice(rawProduct.price),
-      original_price: extractPrice(rawProduct.original_price),
-      rating: extractRating(rawProduct.rating),
-      rating_count: extractRatingCount(rawProduct.rating_count),
-      image_url: rawProduct.image_url || '',
-      product_url: rawProduct.product_url || '',
-      brand: extractBrand(rawProduct.title, rawProduct.brand),
-      model: '',
-      processor: '',
-      ram: '',
-      storage: '',
-      graphics: '',
-      screen_size: '',
-      screen_resolution: '',
-      weight: '',
-      battery_life: ''
-    };
-
-    // Extract specifications from the product data
-    const extractedSpecs = await extractLaptopSpecs(processedProduct.title);
     
-    if (extractedSpecs) {
-      processedProduct = {
-        ...processedProduct,
-        ...extractedSpecs
-      };
+    // Check if product already exists
+    const { data: existingProducts, error: fetchError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('asin', product.asin)
+      .limit(1);
+    
+    if (fetchError) {
+      console.error("Error checking if product exists:", fetchError);
+      return { success: false, action: 'failed', reason: 'database_error' };
     }
-
-    // Normalize all specifications for consistency
-    processedProduct = normalizeProductSpecs(processedProduct);
-
-    return processedProduct;
+    
+    // Extract price from the product (handle different formats)
+    const currentPrice = extractPrice(product.price);
+    const originalPrice = extractPrice(product.price_strikethrough || product.price_original);
+    
+    // Build the product object
+    const productData = {
+      asin: product.asin,
+      title: product.title,
+      brand: brand,
+      current_price: currentPrice,
+      original_price: originalPrice || currentPrice,
+      rating: parseFloat(product.rating) || null,
+      rating_count: parseInt(product.reviews_count || product.ratings_total) || null,
+      image_url: product.url_image || product.images?.[0],
+      product_url: product.url,
+      description: product.description || null,
+      last_checked: new Date().toISOString(),
+      is_laptop: true,
+      collection_status: 'completed',
+      update_status: 'pending'
+    };
+    
+    // Either update existing product or insert new one
+    if (existingProducts && existingProducts.length > 0) {
+      // Update existing product
+      const { error: updateError } = await supabase
+        .from('products')
+        .update(productData)
+        .eq('asin', product.asin);
+      
+      if (updateError) {
+        console.error("Error updating product:", updateError);
+        return { success: false, action: 'failed', reason: 'update_error' };
+      }
+      
+      return { success: true, action: 'updated', id: existingProducts[0].id };
+    } else {
+      // Insert new product
+      const { data: newProduct, error: insertError } = await supabase
+        .from('products')
+        .insert(productData)
+        .select('id')
+        .single();
+      
+      if (insertError) {
+        console.error("Error inserting product:", insertError);
+        return { success: false, action: 'failed', reason: 'insert_error' };
+      }
+      
+      return { success: true, action: 'added', id: newProduct?.id };
+    }
   } catch (error) {
-    console.error('Error processing product:', error);
-    return null;
+    console.error("Error processing product:", error);
+    return { success: false, action: 'failed', error: error.message };
   }
 }
 
 /**
- * Extract and parse price from raw data
+ * Extracts a numeric price from various price formats
+ * @param price Price in various formats
+ * @returns Numeric price
  */
-function extractPrice(priceString: string | null | undefined): number | null {
-  if (!priceString) return null;
+function extractPrice(price: any): number | null {
+  if (!price) return null;
   
-  // Handle different price formats
-  const priceMatch = priceString.toString().match(/[\d,]+\.?\d*/);
-  if (priceMatch) {
-    return parseFloat(priceMatch[0].replace(/,/g, ''));
+  // Handle object format {value: "123.45", currency: "USD"}
+  if (typeof price === 'object' && price.value) {
+    return extractNumericPrice(price.value);
   }
+  
+  // Handle string format
+  if (typeof price === 'string') {
+    return extractNumericPrice(price);
+  }
+  
+  // Handle numeric format
+  if (typeof price === 'number') {
+    return price;
+  }
+  
   return null;
 }
 
 /**
- * Extract and parse rating from raw data
+ * Extracts numeric value from a price string
+ * @param priceStr Price string
+ * @returns Numeric price
  */
-function extractRating(ratingString: string | null | undefined): number | null {
-  if (!ratingString) return null;
+function extractNumericPrice(priceStr: string): number | null {
+  if (!priceStr) return null;
   
-  const ratingMatch = ratingString.toString().match(/[\d\.]+/);
-  if (ratingMatch) {
-    const rating = parseFloat(ratingMatch[0]);
-    return rating > 5 ? rating / 20 : rating; // Handle 100-point scales
-  }
-  return null;
-}
-
-/**
- * Extract and parse rating count from raw data
- */
-function extractRatingCount(countString: string | null | undefined): number | null {
-  if (!countString) return null;
+  // Remove currency symbols and commas, then extract numeric value
+  const numericValue = priceStr.replace(/[^0-9.]/g, '');
+  const price = parseFloat(numericValue);
   
-  const countMatch = countString.toString().match(/[\d,]+/);
-  if (countMatch) {
-    return parseInt(countMatch[0].replace(/,/g, ''));
-  }
-  return null;
-}
-
-/**
- * Extract brand information from title and raw brand data
- */
-function extractBrand(title: string, rawBrand: string | null | undefined): string {
-  if (rawBrand) return rawBrand;
-  
-  // Common laptop brands to check against the title
-  const commonBrands = [
-    'Apple', 'Dell', 'HP', 'ASUS', 'Lenovo', 'Acer',
-    'Microsoft', 'MSI', 'Samsung', 'Razer', 'LG', 'Gigabyte'
-  ];
-  
-  for (const brand of commonBrands) {
-    if (title.toLowerCase().includes(brand.toLowerCase())) {
-      return brand;
-    }
-  }
-  
-  return 'Unknown Brand';
+  return isNaN(price) ? null : price;
 }

@@ -1,30 +1,20 @@
 
 project_id = "kkebyebrhdpcwqnxhjcx"
 
-[process-laptops-ai.secrets]
-SUPABASE_URL = "vaulted"
-SUPABASE_SERVICE_ROLE_KEY = "vaulted"
-DEEPSEEK_API_KEY = "vaulted"
-OXYLABS_USERNAME = "vaulted"
-OXYLABS_PASSWORD = "vaulted"
+[collect-laptops]
+verify_jwt = false
 
-[scheduled-update.secrets]
-SUPABASE_URL = "vaulted"
-SUPABASE_SERVICE_ROLE_KEY = "vaulted"
-OXYLABS_USERNAME = "vaulted"
-OXYLABS_PASSWORD = "vaulted"
+[fetch-laptops] 
+verify_jwt = false
 
-[collect-laptops.secrets]
-SUPABASE_URL = "vaulted"
-SUPABASE_SERVICE_ROLE_KEY = "vaulted"
-OXYLABS_USERNAME = "vaulted"
-OXYLABS_PASSWORD = "vaulted"
+[fetch-product]
+verify_jwt = false
 
-[update-laptops.secrets]
-SUPABASE_URL = "vaulted"
-SUPABASE_SERVICE_ROLE_KEY = "vaulted"
-OXYLABS_USERNAME = "vaulted"
-OXYLABS_PASSWORD = "vaulted"
+[process-laptops-ai]
+verify_jwt = false
 
-[collect-laptops.test]
-command = "deno test --allow-net --allow-env"
+[scheduled-update]
+verify_jwt = false
+
+[update-laptops]
+verify_jwt = false
