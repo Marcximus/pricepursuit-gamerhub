@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 import { CollectionProgressData, CollectionStats } from "../types";
 
 /**
@@ -77,24 +78,31 @@ export async function saveCollectionProgress(
 ) {
   try {
     // Create the progress data object (or null if collection is complete)
+    // Using type assertion to ensure compatibility with Json type
     const progressData = isComplete ? null : {
       groupIndex,
       brandIndex,
       timestamp: new Date().toISOString(),
-      stats
-    };
+      stats: {
+        processed: stats.processed,
+        updated: stats.updated,
+        added: stats.added,
+        failed: stats.failed,
+        skipped: stats.skipped
+      }
+    } as Json;
     
     // Create the record to upsert
     const record = {
       id: '1', // Use a string ID 
-      progress_data: progressData, // Supabase will handle the JSON conversion
+      progress_data: progressData,
       last_updated: new Date().toISOString(),
       progress_type: 'laptop_collection' 
     };
     
     const { error } = await supabase
       .from('collection_progress')
-      .upsert(record); // Pass as a single object, not an array
+      .upsert(record);
       
     if (error) {
       console.error('Error saving collection progress:', error);
