@@ -2,16 +2,29 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLaptops } from "@/hooks/useLaptops";
-import { Loader2 } from "lucide-react";
+import { Loader2, Database, Clock, AlertCircle, CheckSquare, Search, MinusCircle } from "lucide-react";
 
 interface StatsData {
   totalLaptops: number;
-  withPrice: { count: number; percentage: number };
-  withProcessor: { count: number; percentage: number };
-  withRam: { count: number; percentage: number };
-  withStorage: { count: number; percentage: number };
-  withGraphics: { count: number; percentage: number };
-  withScreenSize: { count: number; percentage: number };
+  updateStatus: {
+    notUpdated: { count: number; percentage: number };
+    notChecked: { count: number; percentage: number };
+  };
+  aiProcessingStatus: {
+    pending: { count: number; percentage: number };
+    processing: { count: number; percentage: number };
+    error: { count: number; percentage: number };
+    complete: { count: number; percentage: number };
+    completionPercentage: number;
+  };
+  missingInformation: {
+    prices: { count: number; percentage: number };
+    processor: { count: number; percentage: number };
+    ram: { count: number; percentage: number };
+    storage: { count: number; percentage: number };
+    graphics: { count: number; percentage: number };
+    screenSize: { count: number; percentage: number };
+  };
 }
 
 export function LaptopStats() {
@@ -81,88 +94,180 @@ export function LaptopStats() {
     <Card>
       <CardHeader>
         <CardTitle>Database Statistics</CardTitle>
-        <CardDescription>Overview of laptop data completeness</CardDescription>
+        <CardDescription>Overview of laptop database</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <StatCard
-            title="Total Products"
-            value={stats.totalLaptops}
-            description="Laptops in database"
-          />
-          <StatCard
-            title="With Price"
-            value={stats.withPrice.count}
-            percentage={stats.withPrice.percentage}
-            description="Have pricing information"
-          />
-          <StatCard
-            title="With Processor"
-            value={stats.withProcessor.count}
-            percentage={stats.withProcessor.percentage}
-            description="Have processor information"
-          />
-          <StatCard
-            title="With RAM"
-            value={stats.withRam.count}
-            percentage={stats.withRam.percentage}
-            description="Have RAM information"
-          />
-          <StatCard
-            title="With Storage"
-            value={stats.withStorage.count}
-            percentage={stats.withStorage.percentage}
-            description="Have storage information"
-          />
-          <StatCard
-            title="With Graphics"
-            value={stats.withGraphics.count}
-            percentage={stats.withGraphics.percentage}
-            description="Have graphics information"
-          />
-          <StatCard
-            title="With Screen Size"
-            value={stats.withScreenSize.count}
-            percentage={stats.withScreenSize.percentage}
-            description="Have screen size information"
-          />
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Database Overview Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Database Overview</h3>
+            
+            <div className="space-y-2">
+              <StatItem 
+                icon={<Database className="h-4 w-4 text-blue-500" />}
+                label="Total Laptops"
+                value={stats.totalLaptops}
+              />
+              
+              <StatItem 
+                icon={<Clock className="h-4 w-4 text-amber-500" />}
+                label="Not Updated (24h)"
+                value={stats.updateStatus.notUpdated.count}
+              />
+              
+              <StatItem 
+                icon={<Clock className="h-4 w-4 text-amber-500" />}
+                label="Not Checked (24h)"
+                value={stats.updateStatus.notChecked.count}
+              />
+            </div>
+          </div>
+          
+          {/* AI Processing Status Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">AI Processing Status</h3>
+            
+            <div className="space-y-2">
+              <StatItem 
+                icon={<Search className="h-4 w-4 text-slate-500" />}
+                label="Pending"
+                value={stats.aiProcessingStatus.pending.count}
+              />
+              
+              <StatItem 
+                icon={<Loader2 className="h-4 w-4 text-blue-500" />}
+                label="Processing"
+                value={stats.aiProcessingStatus.processing.count}
+              />
+              
+              <StatItem 
+                icon={<AlertCircle className="h-4 w-4 text-red-500" />}
+                label="Error"
+                value={stats.aiProcessingStatus.error.count}
+              />
+              
+              <StatItem 
+                icon={<CheckSquare className="h-4 w-4 text-green-500" />}
+                label="Complete"
+                value={stats.aiProcessingStatus.complete.count}
+              />
+              
+              <div className="mt-4">
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm">Processing Completion</span>
+                  <span className="text-sm font-medium">{stats.aiProcessingStatus.completionPercentage}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full ${
+                      stats.aiProcessingStatus.completionPercentage >= 75 ? 'bg-green-500' : 
+                      stats.aiProcessingStatus.completionPercentage >= 50 ? 'bg-blue-500' : 
+                      stats.aiProcessingStatus.completionPercentage >= 25 ? 'bg-amber-500' : 
+                      'bg-red-500'
+                    }`}
+                    style={{ width: `${stats.aiProcessingStatus.completionPercentage}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Missing Information Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Missing Information</h3>
+            
+            <div className="space-y-3">
+              <MissingDataItem 
+                label="Missing Prices"
+                percentage={stats.missingInformation.prices.percentage}
+              />
+              
+              <MissingDataItem 
+                label="Missing Processor"
+                percentage={stats.missingInformation.processor.percentage}
+              />
+              
+              <MissingDataItem 
+                label="Missing RAM"
+                percentage={stats.missingInformation.ram.percentage}
+              />
+              
+              <MissingDataItem 
+                label="Missing Storage"
+                percentage={stats.missingInformation.storage.percentage}
+              />
+              
+              <MissingDataItem 
+                label="Missing Graphics"
+                percentage={stats.missingInformation.graphics.percentage}
+              />
+              
+              <MissingDataItem 
+                label="Missing Screen Size"
+                percentage={stats.missingInformation.screenSize.percentage}
+              />
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function StatCard({ 
-  title, 
-  value, 
-  percentage, 
-  description 
+function StatItem({ 
+  icon, 
+  label, 
+  value 
 }: { 
-  title: string; 
-  value: number; 
-  percentage?: number; 
-  description: string 
+  icon: React.ReactNode; 
+  label: string; 
+  value: number;
 }) {
   return (
-    <div className="bg-gray-50 rounded-lg p-4">
-      <div className="text-sm font-medium text-gray-500">{title}</div>
-      <div className="mt-1 flex items-baseline">
-        <div className="text-2xl font-semibold">{value.toLocaleString()}</div>
-        {percentage !== undefined && (
-          <div className={`ml-2 text-sm font-medium ${percentage >= 85 ? 'text-green-600' : percentage >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
-            {percentage}%
-          </div>
-        )}
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        {icon}
+        <span className="text-sm text-gray-700">{label}</span>
       </div>
-      <div className="mt-1 text-xs text-gray-500">{description}</div>
-      {percentage !== undefined && (
-        <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-          <div 
-            className={`h-1.5 rounded-full ${percentage >= 85 ? 'bg-green-500' : percentage >= 50 ? 'bg-amber-500' : 'bg-red-500'}`} 
-            style={{ width: `${percentage}%` }}
-          ></div>
+      <span className="font-medium">{value.toLocaleString()}</span>
+    </div>
+  );
+}
+
+function MissingDataItem({ 
+  label, 
+  percentage
+}: { 
+  label: string; 
+  percentage: number;
+}) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <MinusCircle className="h-4 w-4 text-slate-500" />
+          <span className="text-sm text-gray-700">{label}</span>
         </div>
-      )}
+        <span 
+          className={`text-sm font-medium ${
+            percentage >= 50 ? 'text-red-600' : 
+            percentage >= 20 ? 'text-amber-600' : 
+            'text-green-600'
+          }`}
+        >
+          {percentage}%
+        </span>
+      </div>
+      <div className="w-full bg-gray-200 rounded-full h-1.5">
+        <div 
+          className={`h-1.5 rounded-full ${
+            percentage >= 50 ? 'bg-red-500' : 
+            percentage >= 20 ? 'bg-amber-500' : 
+            'bg-green-500'
+          }`}
+          style={{ width: `${percentage}%` }}
+        ></div>
+      </div>
     </div>
   );
 }
