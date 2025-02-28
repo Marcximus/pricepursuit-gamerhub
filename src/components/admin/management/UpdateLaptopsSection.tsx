@@ -1,9 +1,11 @@
 
 import React, { useState, useContext, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Clock } from "lucide-react";
 import ManagementCard from "./ManagementCard";
 import { StatsRefreshContext } from "@/components/admin/LaptopStats";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 
 interface UpdateLaptopsSectionProps {
   updateLaptops: () => Promise<any>;
@@ -20,6 +22,12 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
   const [updateStartTime, setUpdateStartTime] = useState<Date | null>(null);
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<NodeJS.Timeout | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
+  
+  // Auto-update state
+  const [autoUpdateEnabled, setAutoUpdateEnabled] = useState(false);
+  const [autoUpdateInterval, setAutoUpdateInterval] = useState<NodeJS.Timeout | null>(null);
+  const [nextUpdateTime, setNextUpdateTime] = useState<Date | null>(null);
+  const [timeUntilNextUpdate, setTimeUntilNextUpdate] = useState<number>(300); // 5 minutes in seconds
 
   // Clean up intervals on unmount
   useEffect(() => {
@@ -27,8 +35,11 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
       if (autoRefreshInterval) {
         clearInterval(autoRefreshInterval);
       }
+      if (autoUpdateInterval) {
+        clearInterval(autoUpdateInterval);
+      }
     };
-  }, [autoRefreshInterval]);
+  }, [autoRefreshInterval, autoUpdateInterval]);
 
   // Update elapsed time counter
   useEffect(() => {
@@ -48,6 +59,73 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
       if (timer) clearInterval(timer);
     };
   }, [isUpdating, updateStartTime]);
+
+  // Update time until next auto-update
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    
+    if (autoUpdateEnabled && nextUpdateTime && !isUpdating) {
+      timer = setInterval(() => {
+        const currentTime = new Date();
+        const secondsUntilNext = Math.max(0, Math.floor((nextUpdateTime.getTime() - currentTime.getTime()) / 1000));
+        setTimeUntilNextUpdate(secondsUntilNext);
+      }, 1000);
+    }
+    
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [autoUpdateEnabled, nextUpdateTime, isUpdating]);
+
+  // Auto-update effect
+  useEffect(() => {
+    if (autoUpdateEnabled && !isUpdating) {
+      // Set next update time
+      const nextUpdate = new Date();
+      nextUpdate.setMinutes(nextUpdate.getMinutes() + 5);
+      setNextUpdateTime(nextUpdate);
+      
+      console.log('Auto-update enabled, scheduling next update in 5 minutes');
+      
+      const interval = setInterval(() => {
+        if (!isUpdating) {
+          console.log('Auto-update triggered');
+          handleUpdateLaptops();
+          
+          // Reset next update time after triggering
+          const newNextUpdate = new Date();
+          newNextUpdate.setMinutes(newNextUpdate.getMinutes() + 5);
+          setNextUpdateTime(newNextUpdate);
+        } else {
+          console.log('Skipping auto-update: update already in progress');
+        }
+      }, 5 * 60 * 1000); // 5 minutes
+      
+      setAutoUpdateInterval(interval);
+      
+      toast({
+        title: "Auto-Update Enabled",
+        description: "Laptop prices will be automatically updated every 5 minutes",
+      });
+      
+      return () => {
+        clearInterval(interval);
+        setAutoUpdateInterval(null);
+      };
+    } else if (!autoUpdateEnabled) {
+      if (autoUpdateInterval) {
+        clearInterval(autoUpdateInterval);
+        setAutoUpdateInterval(null);
+        setNextUpdateTime(null);
+        console.log('Auto-update disabled');
+        
+        toast({
+          title: "Auto-Update Disabled",
+          description: "Automatic updates have been turned off",
+        });
+      }
+    }
+  }, [autoUpdateEnabled, isUpdating]);
 
   // Function to start auto-refreshing stats during updates
   const startAutoRefresh = () => {
@@ -192,8 +270,20 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
     }
   };
 
+  // Toggle auto-update function
+  const toggleAutoUpdate = () => {
+    setAutoUpdateEnabled(!autoUpdateEnabled);
+  };
+
   // Format time display (mm:ss)
   const formatElapsedTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // Format time until next update (mm:ss)
+  const formatTimeUntilNextUpdate = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
@@ -203,6 +293,11 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
     if (isUpdating && updateCount > 0) {
       return `Currently updating ${updateCount} laptops. Process has been running for ${formatElapsedTime(elapsedTime)}. Updates prioritize oldest check date, missing prices and images.`;
     }
+    
+    if (autoUpdateEnabled && nextUpdateTime && !isUpdating) {
+      return `Auto-update enabled. Next update in ${formatTimeUntilNextUpdate(timeUntilNextUpdate)}. Updates prioritize oldest check date, missing prices and images.`;
+    }
+    
     return "Update prices and information for all laptops - prioritizes by oldest check date, missing prices and images";
   };
 
@@ -215,6 +310,23 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
       onClick={handleUpdateLaptops}
       variant="outline"
       disabled={isUpdating}
+      customActions={
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={autoUpdateEnabled}
+            onCheckedChange={toggleAutoUpdate}
+            disabled={isUpdating}
+            id="auto-update-switch"
+          />
+          <label 
+            htmlFor="auto-update-switch" 
+            className="text-sm cursor-pointer flex items-center gap-1"
+          >
+            <Clock className="h-3.5 w-3.5" />
+            Auto-update
+          </label>
+        </div>
+      }
     />
   );
 };
