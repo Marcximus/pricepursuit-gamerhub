@@ -30,7 +30,7 @@ export const updateLaptops = async () => {
       formattedLastChecked: laptop.last_checked ? new Date(laptop.last_checked).toLocaleString() : 'Never checked'
     }));
 
-    // Log detailed info about laptops to be updated
+    // Log detailed info about laptops to be updated - now using ASIN as primary identifier
     console.log(`Found ${laptops.length} laptops to update with the following priority:`);
     formattedLaptops.forEach((laptop, index) => {
       console.log(`${index + 1}. ASIN: ${laptop.asin}, Title: ${laptop.title?.substring(0, 30)}..., Last Checked: ${laptop.formattedLastChecked}, Current Price: ${laptop.current_price === null ? 'NULL' : `$${laptop.current_price}`}`);
@@ -49,7 +49,7 @@ export const updateLaptops = async () => {
     if (oldestCheckedLaptops.length > 0) {
       console.log('- Oldest checked laptops:');
       oldestCheckedLaptops.forEach((l, i) => {
-        console.log(`  ${i+1}. Last checked: ${l.formattedLastChecked}, ASIN: ${l.asin}, Price: ${l.current_price === null ? 'NULL' : `$${l.current_price}`}`);
+        console.log(`  ${i+1}. ASIN: ${l.asin}, Last checked: ${l.formattedLastChecked}, Price: ${l.current_price === null ? 'NULL' : `$${l.current_price}`}`);
       });
     }
     
@@ -78,7 +78,7 @@ export const updateLaptops = async () => {
         })));
 
         // Mark chunk laptops as pending update
-        console.log(`Marking ${chunk.length} laptops as pending_update`);
+        console.log(`Marking ${chunk.length} laptops (ASINs: ${chunkAsins.join(', ')}) as pending_update`);
         const { error: statusError } = await supabase
           .from('products')
           .update({ 
@@ -94,7 +94,7 @@ export const updateLaptops = async () => {
 
         // Call edge function for this chunk
         try {
-          console.log(`Invoking update-laptops function for chunk ${i + 1} with ${chunk.length} laptops`);
+          console.log(`Invoking update-laptops function for chunk ${i + 1} with ${chunk.length} laptops (ASINs: ${chunkAsins.join(', ')})`);
           const { data, error } = await supabase.functions.invoke('update-laptops', {
             body: { 
               laptops: chunk.map(l => ({ 
@@ -108,7 +108,7 @@ export const updateLaptops = async () => {
           });
           
           if (error) {
-            console.error(`Error processing chunk ${i + 1}:`, error);
+            console.error(`Error processing chunk ${i + 1} (ASINs: ${chunkAsins.join(', ')}):`, error);
             console.log(`Marking chunk ${i + 1} laptops as error due to function invocation failure`);
             await supabase
               .from('products')
@@ -118,7 +118,7 @@ export const updateLaptops = async () => {
             console.log(`Successfully initiated update for chunk ${i + 1} with response:`, data);
           }
         } catch (error) {
-          console.error(`Failed to process chunk ${i + 1}:`, error);
+          console.error(`Failed to process chunk ${i + 1} (ASINs: ${chunkAsins.join(', ')}):`, error);
         }
 
         // Add a small delay between chunks to prevent rate limiting
@@ -144,4 +144,3 @@ export const updateLaptops = async () => {
     return { success: false, error: error.message };
   }
 };
-

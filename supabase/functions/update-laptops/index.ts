@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 import { corsHeaders } from "./oxylabsService.ts"
@@ -12,7 +11,9 @@ interface UpdateRequest {
   laptops: Array<{
     id: string;
     asin: string;
+    current_price?: number | null;
     title?: string; // Optional title for better logging
+    last_checked?: string;
   }>;
 }
 
@@ -26,11 +27,13 @@ serve(async (req) => {
     const { laptops } = await req.json() as UpdateRequest;
     console.log(`Processing price update request for ${laptops.length} laptops`);
     
-    // Log the full list of laptops to be processed
+    // Log the full list of laptops to be processed - now with ASIN as primary identifier
     console.log('Laptops to be processed:', laptops.map(l => ({
-      id: l.id,
       asin: l.asin,
-      titlePreview: l.title ? `${l.title.substring(0, 20)}...` : 'No title'
+      id: l.id, // Keep ID for database reference but don't use in user-facing logs
+      titlePreview: l.title ? `${l.title.substring(0, 20)}...` : 'No title',
+      currentPrice: l.current_price === null ? 'NULL' : `$${l.current_price}`,
+      lastChecked: l.last_checked ? new Date(l.last_checked).toLocaleString() : 'Never'
     })));
 
     // Use EdgeRuntime for waitUntil if available, otherwise use Deno fetch API context
@@ -58,27 +61,27 @@ serve(async (req) => {
       for (const laptop of laptops) {
         try {
           console.log(`--------------------------------------------------`);
-          console.log(`🔄 Processing laptop ${laptop.id} (ASIN: ${laptop.asin})`);
+          console.log(`🔄 Processing laptop ASIN: ${laptop.asin}`);
           if (laptop.title) {
             console.log(`Title preview: ${laptop.title.substring(0, 50)}...`);
           }
           
-          // Set status to in_progress
-          console.log(`Setting status to in_progress for laptop ${laptop.id}`);
+          // Set status to in_progress - still using id for database reference
+          console.log(`Setting status to in_progress for laptop ASIN: ${laptop.asin}`);
           await supabase
             .from('products')
             .update({ update_status: 'in_progress' })
             .eq('id', laptop.id);
 
-          // Fetch latest pricing data
-          console.log(`Fetching pricing data for ASIN ${laptop.asin}...`);
+          // Fetch latest pricing data using ASIN
+          console.log(`Fetching pricing data for ASIN: ${laptop.asin}...`);
           const response = await fetchProductPricing(laptop.asin);
-          console.log(`Got response for ASIN ${laptop.asin}, parsing results...`);
+          console.log(`Got response for ASIN: ${laptop.asin}, parsing results...`);
           
           const productData = response.results[0]?.content;
 
           if (!productData) {
-            console.error(`❌ No pricing data found for ASIN ${laptop.asin}`);
+            console.error(`❌ No pricing data found for ASIN: ${laptop.asin}`);
             await supabase
               .from('products')
               .update({ 
@@ -96,19 +99,45 @@ serve(async (req) => {
           const rating = productData.rating?.rating;
           const ratingCount = productData.rating?.rating_count;
 
-          console.log(`📊 Extracted data for ASIN ${laptop.asin}:`, {
+          console.log(`📊 Extracted data for ASIN: ${laptop.asin}:`, {
             currentPrice: currentPrice || 'NULL',
             originalPrice: originalPrice || 'NULL',
             rating: rating || 'NULL',
             ratingCount: ratingCount || 'NULL'
           });
 
+          // Verify the price is valid - don't update with null/zero prices if we already have a price
+          if (currentPrice === null || currentPrice === 0 || typeof currentPrice !== 'number') {
+            console.warn(`⚠️ Invalid price (${currentPrice}) found for ASIN: ${laptop.asin}, checking existing price`);
+            
+            // If we have an existing price, don't overwrite with invalid value
+            if (laptop.current_price && laptop.current_price > 0) {
+              console.warn(`Keeping existing price $${laptop.current_price} for ASIN: ${laptop.asin} - not updating with invalid price`);
+              
+              // Still update other data but keep existing price
+              await supabase
+                .from('products')
+                .update({ 
+                  rating: rating || null,
+                  rating_count: ratingCount || null,
+                  update_status: 'completed',
+                  last_checked: new Date().toISOString(),
+                  last_updated: new Date().toISOString()
+                })
+                .eq('id', laptop.id);
+                
+              console.log(`✅ Kept existing price and updated other data for ASIN: ${laptop.asin}`);
+              results.success++;
+              continue;
+            }
+          }
+
           // Prepare review data if available
           let reviewData = null;
           if (productData.reviews) {
-            console.log(`Found review data for ASIN ${laptop.asin}`);
+            console.log(`Found review data for ASIN: ${laptop.asin}`);
             const reviewCount = productData.reviews.recent_reviews ? productData.reviews.recent_reviews.length : 0;
-            console.log(`Found ${reviewCount} reviews for ASIN ${laptop.asin}`);
+            console.log(`Found ${reviewCount} reviews for ASIN: ${laptop.asin}`);
             
             reviewData = {
               rating_breakdown: productData.reviews.rating_breakdown || {},
@@ -136,11 +165,11 @@ serve(async (req) => {
             last_updated: new Date().toISOString()
           };
 
-          console.log(`💾 Updating laptop ${laptop.id} with new data`);
+          console.log(`💾 Updating laptop ASIN: ${laptop.asin} with new data`, updateData);
 
-          // Store current price in price history if different
-          if (currentPrice) {
-            console.log(`Checking price history for laptop ${laptop.id}`);
+          // Store current price in price history if different and valid
+          if (currentPrice && typeof currentPrice === 'number' && currentPrice > 0) {
+            console.log(`Checking price history for ASIN: ${laptop.asin}`);
             const { data: existingPrice, error: priceError } = await supabase
               .from('price_history')
               .select('price')
@@ -150,11 +179,11 @@ serve(async (req) => {
               .single();
 
             if (priceError && priceError.code !== 'PGRST116') {
-              console.error(`Error checking price history for laptop ${laptop.id}:`, priceError);
+              console.error(`Error checking price history for ASIN: ${laptop.asin}:`, priceError);
             }
 
             if (!existingPrice || existingPrice.price !== currentPrice) {
-              console.log(`Adding new price ${currentPrice} to history for laptop ${laptop.id}`);
+              console.log(`Adding new price $${currentPrice} to history for ASIN: ${laptop.asin}`);
               await supabase
                 .from('price_history')
                 .insert({
@@ -163,10 +192,10 @@ serve(async (req) => {
                   timestamp: new Date().toISOString()
                 });
             } else {
-              console.log(`Price ${currentPrice} already exists in history for laptop ${laptop.id}, skipping`);
+              console.log(`Price $${currentPrice} already exists in history for ASIN: ${laptop.asin}, skipping`);
             }
           } else {
-            console.log(`No current price for laptop ${laptop.id}, skipping price history update`);
+            console.log(`No valid current price for ASIN: ${laptop.asin}, skipping price history update`);
           }
 
           const { error: updateError } = await supabase
@@ -175,10 +204,10 @@ serve(async (req) => {
             .eq('id', laptop.id);
             
           if (updateError) {
-            console.error(`❌ Error updating laptop ${laptop.id}:`, updateError);
+            console.error(`❌ Error updating ASIN: ${laptop.asin}:`, updateError);
             results.completedWithErrors++;
           } else {
-            console.log(`✅ Successfully updated price data for laptop ${laptop.id}`);
+            console.log(`✅ Successfully updated price data for ASIN: ${laptop.asin}`);
             results.success++;
           }
 
@@ -186,7 +215,7 @@ serve(async (req) => {
           await new Promise(resolve => setTimeout(resolve, 1000));
 
         } catch (error) {
-          console.error(`❌ Error processing laptop ${laptop.id}:`, error);
+          console.error(`❌ Error processing ASIN: ${laptop.asin}:`, error);
           await supabase
             .from('products')
             .update({ 
@@ -207,7 +236,7 @@ serve(async (req) => {
       JSON.stringify({ 
         message: 'Price update process initiated',
         laptopCount: laptops.length,
-        laptopIds: laptops.map(l => l.id)
+        laptops: laptops.map(l => ({ asin: l.asin }))
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
