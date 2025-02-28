@@ -21,7 +21,8 @@ export async function processLaptopsAI(options: ProcessOptions = { focus: 'all',
     if (options.focus && options.focus !== 'all') {
       switch(options.focus) {
         case 'graphics':
-          query = query.or('graphics.is.null,graphics.eq.,length(graphics).lt.5');
+          // Fix: Replace the problematic length function with separate checks
+          query = query.or('graphics.is.null,graphics.eq.');
           break;
         case 'processor':
           query = query.or('processor.is.null,processor.eq.');
