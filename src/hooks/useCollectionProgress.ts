@@ -29,7 +29,7 @@ export const useCollectionProgress = () => {
         const staleTimeout = new Date(Date.now() - 30 * 1000).toISOString();
         
         const { data, error } = await supabase
-          .from('brands')
+          .from('products')
           .select('*')
           .eq('collection_status', 'in_progress')
           .gt('last_collection_attempt', staleTimeout)
@@ -69,7 +69,7 @@ export const useCollectionProgress = () => {
             const totalGroups = Math.ceil(COLLECTION_CONFIG.LAPTOP_BRANDS.length / COLLECTION_CONFIG.PARALLEL_BATCHES);
             
             // Calculate brands in current group
-            let brandsInCurrentGroup = COLLECTION_CONFIG.PARALLEL_BATCHES;
+            let brandsInCurrentGroup: number = COLLECTION_CONFIG.PARALLEL_BATCHES;
             if (currentGroup === totalGroups) {
               // Last group may have fewer brands
               const remainingBrands = COLLECTION_CONFIG.LAPTOP_BRANDS.length % COLLECTION_CONFIG.PARALLEL_BATCHES;
