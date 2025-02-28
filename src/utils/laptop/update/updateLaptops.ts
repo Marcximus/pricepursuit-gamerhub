@@ -7,13 +7,11 @@ export const updateLaptops = async () => {
     console.log('Starting silent update for ALL laptops...');
     
     // Get laptops with priority for those that haven't been updated in the longest time
-    // or missing image_url
+    // or missing image_url, with improved query to ensure results
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
       .select('id, asin, current_price, title, last_checked, image_url')
       .eq('is_laptop', true)
-      .not('update_status', 'eq', 'in_progress')
-      .or(`last_checked.is.null,image_url.is.null`) // Prioritize laptops with no image URLs
       .order('last_checked', { nullsFirst: true }) // Prioritize laptops that have never been checked
       .limit(100); // Limit to a reasonable number
 
