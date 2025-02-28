@@ -6,9 +6,12 @@ import { Search, RefreshCw, BrainCircuit, Filter } from "lucide-react";
 import { useLaptops } from "@/hooks/useLaptops";
 import { cleanupLaptopDatabase } from "@/utils/laptop/cleanupLaptops";
 import LaptopStats from "@/components/admin/LaptopStats";
+import { CollectionProgress } from "@/components/admin/stats/CollectionProgress";
+import { useCollectionProgress } from "@/hooks/useCollectionProgress";
 
 const Admin = () => {
   const { collectLaptops, updateLaptops, processLaptopsAI } = useLaptops();
+  const { isCollecting, progress } = useCollectionProgress();
 
   const handleCollectLaptops = async () => {
     try {
@@ -141,12 +144,16 @@ const Admin = () => {
                 </div>
                 <Button
                   onClick={handleCollectLaptops}
+                  disabled={isCollecting}
                   className="flex items-center gap-2"
                 >
                   <Search className="h-4 w-4" />
-                  Collect New
+                  {isCollecting ? 'Collection in Progress...' : 'Collect New'}
                 </Button>
               </div>
+              
+              {/* Collection Progress Component */}
+              <CollectionProgress isCollecting={isCollecting} progress={progress} />
 
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
