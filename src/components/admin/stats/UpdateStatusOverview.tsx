@@ -7,7 +7,7 @@ import { DatabaseStats } from "@/utils/laptop/stats/types";
 import { StatsRefreshContext } from "@/components/admin/stats/StatsContext";
 import { Button } from "@/components/ui/button";
 import { resetStalePendingUpdates } from "@/utils/laptop/stats/updateStatusQueries";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 interface UpdateStatusOverviewProps {
   stats: DatabaseStats;
@@ -19,6 +19,7 @@ export function UpdateStatusOverview({ stats }: UpdateStatusOverviewProps) {
   const [lastUpdatedTime, setLastUpdatedTime] = useState<string>(new Date().toLocaleTimeString());
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isResetting, setIsResetting] = useState<boolean>(false);
+  const { toast } = useToast();
 
   // Update last updated time when stats change
   useEffect(() => {
