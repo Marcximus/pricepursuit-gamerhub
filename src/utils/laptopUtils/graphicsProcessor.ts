@@ -4,32 +4,45 @@
  */
 export const processGraphics = (graphics: string | undefined, title: string): string | undefined => {
   if (graphics && typeof graphics === 'string' && !graphics.includes('undefined')) {
-    // Clean up common inconsistencies in GPU naming
-    let cleanedGraphics = graphics
-      .replace(/\bGPU\b/i, '') // Remove standalone "GPU" word
-      .replace(/\s+/g, ' ')    // Normalize spaces
+    // Clean up existing graphics string to remove unrelated specs
+    const cleanedGraphics = graphics
+      .replace(/(\d+\s*GB\s*(RAM|Memory|DDR\d*))/i, '')
+      .replace(/(\d+\s*(GB|TB)\s*(SSD|HDD|Storage))/i, '')
+      .replace(/(\d+(\.\d+)?\s*inch)/i, '')
+      .replace(/\b(USB|HDMI|Windows|WiFi|Bluetooth)\b/gi, '')
+      .replace(/\s+/g, ' ')
       .trim();
-    
-    // Add "Graphics" suffix for AMD integrated GPUs if not present
-    if (cleanedGraphics.includes('Radeon') && !cleanedGraphics.toLowerCase().includes('graphics')) {
-      cleanedGraphics += ' Graphics';
-    }
-    
-    // Add NVIDIA prefix if missing for RTX/GTX cards
-    if ((cleanedGraphics.match(/^(RTX|GTX)/) || cleanedGraphics.includes('GeForce')) && !cleanedGraphics.includes('NVIDIA')) {
-      cleanedGraphics = 'NVIDIA ' + cleanedGraphics;
-    }
+      
+    if (cleanedGraphics.length > 3 && 
+        cleanedGraphics !== 'Graphics' && 
+        cleanedGraphics !== 'GPU' && 
+        !cleanedGraphics.includes('32-core')) {
+      // Clean up common inconsistencies in GPU naming
+      let processedGraphics = cleanedGraphics
+        .replace(/\bGPU\b/i, '') // Remove standalone "GPU" word
+        .replace(/\s+/g, ' ')    // Normalize spaces
+        .trim();
+      
+      // Add "Graphics" suffix for AMD integrated GPUs if not present
+      if (processedGraphics.includes('Radeon') && !processedGraphics.toLowerCase().includes('graphics')) {
+        processedGraphics += ' Graphics';
+      }
+      
+      // Add NVIDIA prefix if missing for RTX/GTX cards
+      if ((processedGraphics.match(/^(RTX|GTX)/) || processedGraphics.includes('GeForce')) && !processedGraphics.includes('NVIDIA')) {
+        processedGraphics = 'NVIDIA ' + processedGraphics;
+      }
 
-    // Special handling for Intel graphics to standardize naming
-    if (cleanedGraphics.toLowerCase().includes('intel') && 
-        (cleanedGraphics.includes('UHD') || 
-         cleanedGraphics.includes('Iris') || 
-         cleanedGraphics.includes('HD'))) {
-      cleanedGraphics = cleanedGraphics.replace(/Intel\s+(UHD|Iris Xe|HD)\s*Graphics?/i, 'Intel $1 Graphics');
+      // Special handling for Intel graphics to standardize naming
+      if (processedGraphics.toLowerCase().includes('intel') && 
+          (processedGraphics.includes('UHD') || 
+           processedGraphics.includes('Iris') || 
+           processedGraphics.includes('HD'))) {
+        processedGraphics = processedGraphics.replace(/Intel\s+(UHD|Iris Xe|HD)\s*Graphics?/i, 'Intel $1 Graphics');
+      }
+      
+      return processedGraphics;
     }
-    
-    console.log('Processed existing graphics:', { original: graphics, cleaned: cleanedGraphics });
-    return cleanedGraphics;
   }
   
   // Look for graphics in the title (more specific patterns first)
@@ -55,7 +68,7 @@ export const processGraphics = (graphics: string | undefined, title: string): st
       
       // Standardize NVIDIA naming
       if (gpu.match(/^(?:GeForce\s+)?(?:RTX|GTX)/i)) {
-        gpu = `NVIDIA GeForce ${gpu.replace(/^GeForce\s+/i, '')}`;
+        gpu = `NVIDIA ${gpu.replace(/^GeForce\s+/i, '')}`;
       }
       
       // Standardize AMD naming
@@ -68,21 +81,22 @@ export const processGraphics = (graphics: string | undefined, title: string): st
         gpu = gpu.replace(/Intel\s+(UHD|Iris Xe|HD)\s*Graphics?/i, 'Intel $1 Graphics');
       }
       
-      console.log('Extracted graphics from title:', { title, gpu });
-      return gpu;
+      // Ensure the processor doesn't contain RAM or storage specs
+      if (!/\d+\s*GB\s*(RAM|Memory|SSD|Storage)/i.test(gpu)) {
+        return gpu;
+      }
     }
   }
   
   // Default integrated graphics detection based on processor
-  if (title.toLowerCase().includes('ryzen')) {
-    console.log('Detected AMD integrated graphics from Ryzen processor:', title);
+  if (title.toLowerCase().includes('ryzen') && !title.toLowerCase().includes('nvidia') && !title.toLowerCase().includes('rtx') && !title.toLowerCase().includes('gtx')) {
     return 'AMD Radeon Graphics';
-  } else if (title.includes('Intel')) {
-    console.log('Detected Intel integrated graphics:', title);
+  } else if (title.includes('Intel') && !title.toLowerCase().includes('nvidia') && !title.toLowerCase().includes('rtx') && !title.toLowerCase().includes('gtx')) {
     return 'Intel UHD Graphics';
+  } else if ((title.includes('M1') || title.includes('M2') || title.includes('M3')) && title.toLowerCase().includes('apple')) {
+    return title.includes('M1') ? 'Apple M1 GPU' : 
+           title.includes('M2') ? 'Apple M2 GPU' : 'Apple M3 GPU';
   }
   
-  // If no GPU is found, return undefined
-  console.log('No graphics found for:', title);
   return undefined;
 };

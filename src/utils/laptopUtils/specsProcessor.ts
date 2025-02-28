@@ -1,7 +1,18 @@
 
 export const processProcessor = (processor: string | undefined, title: string): string | undefined => {
   if (processor && typeof processor === 'string' && !processor.includes('undefined')) {
-    return processor;
+    // Clean up existing processor string to remove unrelated specs 
+    const cleanedProcessor = processor
+      .replace(/(\d+\s*GB\s*(RAM|Memory|DDR\d*))/i, '')
+      .replace(/(\d+\s*(GB|TB)\s*(SSD|HDD|Storage))/i, '')
+      .replace(/(\d+(\.\d+)?\s*inch)/i, '')
+      .replace(/\b(USB|HDMI|Windows|WiFi|Bluetooth)\b/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+      
+    if (cleanedProcessor.length > 3) {
+      return cleanedProcessor;
+    }
   }
   
   // Look for processor in the title (more specific patterns first)
@@ -47,7 +58,10 @@ export const processProcessor = (processor: string | undefined, title: string): 
         processedName = `${processedName} chip`;
       }
       
-      return processedName;
+      // Ensure the processor doesn't contain RAM or storage specs
+      if (!/\d+\s*GB\s*(RAM|Memory|SSD|Storage)/i.test(processedName)) {
+        return processedName;
+      }
     }
   }
   

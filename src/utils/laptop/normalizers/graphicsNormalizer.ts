@@ -24,6 +24,15 @@ export const normalizeGraphics = (graphics: string): string => {
       normalized.includes('N/A')) {
     return '';
   }
+  
+  // Remove other component specs that got mixed in with the graphics card
+  normalized = normalized
+    .replace(/(\d+\s*GB\s*(RAM|Memory|DDR\d*))/i, '')
+    .replace(/(\d+\s*(GB|TB)\s*(SSD|HDD|Storage))/i, '')
+    .replace(/(\d+(\.\d+)?\s*inch)/i, '')
+    .replace(/\b(USB|HDMI|Windows|WiFi|Bluetooth)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
     
   // Standardize NVIDIA naming
   normalized = normalized
