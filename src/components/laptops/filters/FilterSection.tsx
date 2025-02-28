@@ -52,13 +52,13 @@ export function FilterSection({
   const getIconComponent = () => {
     switch (icon.toLowerCase()) {
       case 'cpu':
-        return <Microchip className="h-4 w-4 text-slate-600" />;
+        return <Cpu className="h-4 w-4 text-slate-600" />;
       case 'memory':
         return <Layers className="h-4 w-4 text-slate-600" />;
       case 'hard-drive':
         return <HardDrive className="h-4 w-4 text-slate-600" />;
       case 'gpu':
-        return <Cpu className="h-4 w-4 text-slate-600" />;
+        return <Microchip className="h-4 w-4 text-slate-600" />;
       case 'monitor':
         return <Monitor className="h-4 w-4 text-slate-600" />;
       case 'brand':
