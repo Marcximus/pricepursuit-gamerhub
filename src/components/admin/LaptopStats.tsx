@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatabaseOverview } from './stats/DatabaseOverview';
 import { AiProcessingStatus } from './stats/AiProcessingStatus';
 import { MissingInformation } from './stats/MissingInformation';
+import { UpdateStatusOverview } from './stats/UpdateStatusOverview';
 import DuplicateAsinChecker from './stats/DuplicateAsinChecker';
 import { DatabaseStats } from "@/utils/laptop/stats/types";
 import { getDatabaseStats } from "@/utils/laptop/getDatabaseStats";
@@ -105,14 +106,18 @@ const LaptopStats = () => {
         
         {stats ? (
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="update-status">Update Status</TabsTrigger>
               <TabsTrigger value="ai-processing">AI Processing</TabsTrigger>
               <TabsTrigger value="missing-data">Missing Data</TabsTrigger>
               <TabsTrigger value="data-quality">Data Quality</TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="mt-4">
               <DatabaseOverview stats={stats} />
+            </TabsContent>
+            <TabsContent value="update-status" className="mt-4">
+              <UpdateStatusOverview stats={stats} />
             </TabsContent>
             <TabsContent value="ai-processing" className="mt-4">
               <AiProcessingStatus stats={stats} />
@@ -130,6 +135,6 @@ const LaptopStats = () => {
       </div>
     </StatsRefreshContext.Provider>
   );
-};
+}
 
 export default LaptopStats;

@@ -9,6 +9,12 @@ export interface DatabaseStats {
   updateStatus: {
     notUpdated: { count: number; percentage: number };
     notChecked: { count: number; percentage: number };
+    pendingUpdate: { count: number; percentage: number };
+    inProgress: { count: number; percentage: number };
+    completed: { count: number; percentage: number };
+    error: { count: number; percentage: number };
+    updatedLast24h: { count: number; percentage: number };
+    updatedLast7d: { count: number; percentage: number };
   };
   aiProcessingStatus: {
     pending: { count: number; percentage: number };

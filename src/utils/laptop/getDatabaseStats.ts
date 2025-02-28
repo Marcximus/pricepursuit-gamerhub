@@ -11,7 +11,13 @@ import {
 } from "./stats/basicCountQueries";
 import { 
   getNotUpdatedLaptopsCount, 
-  getNotCheckedLaptopsCount 
+  getNotCheckedLaptopsCount,
+  getPendingUpdateLaptopsCount,
+  getInProgressUpdateLaptopsCount,
+  getCompletedUpdateLaptopsCount,
+  getErrorUpdateLaptopsCount,
+  getUpdatedLast24HoursCount,
+  getUpdatedLast7DaysCount
 } from "./stats/updateStatusQueries";
 import { 
   getPendingAIProcessingCount, 
@@ -68,6 +74,25 @@ export async function getDatabaseStats(): Promise<DatabaseStats> {
     const notCheckedCountResult = await getNotCheckedLaptopsCount();
     const notCheckedCount = notCheckedCountResult.count;
 
+    // Get update status counts
+    const pendingUpdateCountResult = await getPendingUpdateLaptopsCount();
+    const pendingUpdateCount = pendingUpdateCountResult.count;
+    
+    const inProgressUpdateCountResult = await getInProgressUpdateLaptopsCount();
+    const inProgressUpdateCount = inProgressUpdateCountResult.count;
+    
+    const completedUpdateCountResult = await getCompletedUpdateLaptopsCount();
+    const completedUpdateCount = completedUpdateCountResult.count;
+    
+    const errorUpdateCountResult = await getErrorUpdateLaptopsCount();
+    const errorUpdateCount = errorUpdateCountResult.count;
+    
+    const updatedLast24HoursCountResult = await getUpdatedLast24HoursCount();
+    const updatedLast24HoursCount = updatedLast24HoursCountResult.count;
+    
+    const updatedLast7DaysCountResult = await getUpdatedLast7DaysCount();
+    const updatedLast7DaysCount = updatedLast7DaysCountResult.count;
+
     // Get AI processing status counts
     const pendingCountResult = await getPendingAIProcessingCount();
     const pendingCount = pendingCountResult.count;
@@ -94,6 +119,30 @@ export async function getDatabaseStats(): Promise<DatabaseStats> {
         notChecked: {
           count: notCheckedCount,
           percentage: calculatePercentage(notCheckedCount, totalCount)
+        },
+        pendingUpdate: {
+          count: pendingUpdateCount,
+          percentage: calculatePercentage(pendingUpdateCount, totalCount)
+        },
+        inProgress: {
+          count: inProgressUpdateCount,
+          percentage: calculatePercentage(inProgressUpdateCount, totalCount)
+        },
+        completed: {
+          count: completedUpdateCount,
+          percentage: calculatePercentage(completedUpdateCount, totalCount)
+        },
+        error: {
+          count: errorUpdateCount,
+          percentage: calculatePercentage(errorUpdateCount, totalCount)
+        },
+        updatedLast24h: {
+          count: updatedLast24HoursCount,
+          percentage: calculatePercentage(updatedLast24HoursCount, totalCount)
+        },
+        updatedLast7d: {
+          count: updatedLast7DaysCount,
+          percentage: calculatePercentage(updatedLast7DaysCount, totalCount)
         }
       },
       aiProcessingStatus: {

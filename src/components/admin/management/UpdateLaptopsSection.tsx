@@ -1,8 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { RefreshCw } from "lucide-react";
 import ManagementCard from "./ManagementCard";
+import { StatsRefreshContext } from "@/components/admin/LaptopStats";
 
 interface UpdateLaptopsSectionProps {
   updateLaptops: () => Promise<any>;
@@ -14,6 +15,8 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
   refreshStats 
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [updateCount, setUpdateCount] = useState(0);
+  const statsRefresh = useContext(StatsRefreshContext);
 
   const handleUpdateLaptops = async () => {
     if (isUpdating) return;
@@ -27,6 +30,11 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
       console.log('Update result:', result);
       
       if (result && result.success) {
+        // Extract the count from the result message if available
+        const countMatch = result.message.match(/Started updating (\d+) laptops/);
+        const count = countMatch ? parseInt(countMatch[1]) : 0;
+        setUpdateCount(count);
+        
         toast({
           title: "Update Started",
           description: result.message || "Started updating laptop information. This may take a few minutes.",
@@ -42,7 +50,12 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
       
       // Refresh stats immediately after update request
       await refreshStats();
-    } catch (error) {
+      
+      // Also refresh the global stats context
+      if (statsRefresh) {
+        await statsRefresh();
+      }
+    } catch (error: any) {
       console.error('Error updating laptops:', error);
       toast({
         title: "Error",
@@ -54,10 +67,17 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
     }
   };
 
+  const getDescription = () => {
+    if (isUpdating && updateCount > 0) {
+      return `Currently updating ${updateCount} laptops. Update process prioritizes oldest check date, missing prices and images.`;
+    }
+    return "Update prices and information for all laptops - prioritizes by oldest check date, missing prices and images";
+  };
+
   return (
     <ManagementCard
       title="Update Laptops"
-      description="Update prices and information for all laptops - prioritizes by oldest check date, missing prices and images"
+      description={getDescription()}
       icon={RefreshCw}
       buttonText={isUpdating ? "Updating..." : "Update Prices"}
       onClick={handleUpdateLaptops}
