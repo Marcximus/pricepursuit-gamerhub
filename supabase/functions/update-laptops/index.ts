@@ -12,6 +12,7 @@ interface UpdateRequest {
   laptops: Array<{
     id: string;
     asin: string;
+    title?: string; // Optional title for better logging
   }>;
 }
 
@@ -24,8 +25,14 @@ serve(async (req) => {
   try {
     const { laptops } = await req.json() as UpdateRequest;
     console.log(`Processing price update request for ${laptops.length} laptops`);
+    
+    // Log the full list of laptops to be processed
+    console.log('Laptops to be processed:', laptops.map(l => ({
+      id: l.id,
+      asin: l.asin,
+      titlePreview: l.title ? `${l.title.substring(0, 20)}...` : 'No title'
+    })));
 
-    // Process each laptop update
     // Use EdgeRuntime for waitUntil if available, otherwise use Deno fetch API context
     const waitUntilFn = (promise: Promise<any>) => {
       if (req.ctx && typeof req.ctx.waitUntil === 'function') {
@@ -41,22 +48,37 @@ serve(async (req) => {
 
     // Start the background processing
     waitUntilFn((async () => {
+      const results = {
+        success: 0,
+        failed: 0,
+        noPriceData: 0,
+        completedWithErrors: 0
+      };
+      
       for (const laptop of laptops) {
         try {
-          console.log(`Processing price update for laptop ${laptop.id} (ASIN: ${laptop.asin})`);
+          console.log(`--------------------------------------------------`);
+          console.log(`🔄 Processing laptop ${laptop.id} (ASIN: ${laptop.asin})`);
+          if (laptop.title) {
+            console.log(`Title preview: ${laptop.title.substring(0, 50)}...`);
+          }
           
           // Set status to in_progress
+          console.log(`Setting status to in_progress for laptop ${laptop.id}`);
           await supabase
             .from('products')
             .update({ update_status: 'in_progress' })
             .eq('id', laptop.id);
 
           // Fetch latest pricing data
+          console.log(`Fetching pricing data for ASIN ${laptop.asin}...`);
           const response = await fetchProductPricing(laptop.asin);
+          console.log(`Got response for ASIN ${laptop.asin}, parsing results...`);
+          
           const productData = response.results[0]?.content;
 
           if (!productData) {
-            console.error(`No pricing data found for ASIN ${laptop.asin}`);
+            console.error(`❌ No pricing data found for ASIN ${laptop.asin}`);
             await supabase
               .from('products')
               .update({ 
@@ -64,6 +86,7 @@ serve(async (req) => {
                 last_checked: new Date().toISOString()
               })
               .eq('id', laptop.id);
+            results.noPriceData++;
             continue;
           }
 
@@ -73,19 +96,33 @@ serve(async (req) => {
           const rating = productData.rating?.rating;
           const ratingCount = productData.rating?.rating_count;
 
+          console.log(`📊 Extracted data for ASIN ${laptop.asin}:`, {
+            currentPrice: currentPrice || 'NULL',
+            originalPrice: originalPrice || 'NULL',
+            rating: rating || 'NULL',
+            ratingCount: ratingCount || 'NULL'
+          });
+
           // Prepare review data if available
-          const reviewData = productData.reviews ? {
-            rating_breakdown: productData.reviews.rating_breakdown || {},
-            recent_reviews: (productData.reviews.recent_reviews || []).map(review => ({
-              rating: review.rating,
-              title: review.title || '',
-              content: review.content || '',
-              reviewer_name: review.reviewer_name || 'Anonymous',
-              review_date: review.review_date,
-              verified_purchase: review.verified_purchase || false,
-              helpful_votes: review.helpful_votes || 0
-            }))
-          } : null;
+          let reviewData = null;
+          if (productData.reviews) {
+            console.log(`Found review data for ASIN ${laptop.asin}`);
+            const reviewCount = productData.reviews.recent_reviews ? productData.reviews.recent_reviews.length : 0;
+            console.log(`Found ${reviewCount} reviews for ASIN ${laptop.asin}`);
+            
+            reviewData = {
+              rating_breakdown: productData.reviews.rating_breakdown || {},
+              recent_reviews: (productData.reviews.recent_reviews || []).map(review => ({
+                rating: review.rating,
+                title: review.title || '',
+                content: review.content || '',
+                reviewer_name: review.reviewer_name || 'Anonymous',
+                review_date: review.review_date,
+                verified_purchase: review.verified_purchase || false,
+                helpful_votes: review.helpful_votes || 0
+              }))
+            };
+          }
 
           // Update product with new price and review data only
           const updateData = {
@@ -99,9 +136,12 @@ serve(async (req) => {
             last_updated: new Date().toISOString()
           };
 
+          console.log(`💾 Updating laptop ${laptop.id} with new data`);
+
           // Store current price in price history if different
           if (currentPrice) {
-            const { data: existingPrice } = await supabase
+            console.log(`Checking price history for laptop ${laptop.id}`);
+            const { data: existingPrice, error: priceError } = await supabase
               .from('price_history')
               .select('price')
               .eq('product_id', laptop.id)
@@ -109,7 +149,12 @@ serve(async (req) => {
               .limit(1)
               .single();
 
+            if (priceError && priceError.code !== 'PGRST116') {
+              console.error(`Error checking price history for laptop ${laptop.id}:`, priceError);
+            }
+
             if (!existingPrice || existingPrice.price !== currentPrice) {
+              console.log(`Adding new price ${currentPrice} to history for laptop ${laptop.id}`);
               await supabase
                 .from('price_history')
                 .insert({
@@ -117,21 +162,31 @@ serve(async (req) => {
                   price: currentPrice,
                   timestamp: new Date().toISOString()
                 });
+            } else {
+              console.log(`Price ${currentPrice} already exists in history for laptop ${laptop.id}, skipping`);
             }
+          } else {
+            console.log(`No current price for laptop ${laptop.id}, skipping price history update`);
           }
 
-          await supabase
+          const { error: updateError } = await supabase
             .from('products')
             .update(updateData)
             .eq('id', laptop.id);
-
-          console.log(`Successfully updated price data for laptop ${laptop.id}`);
+            
+          if (updateError) {
+            console.error(`❌ Error updating laptop ${laptop.id}:`, updateError);
+            results.completedWithErrors++;
+          } else {
+            console.log(`✅ Successfully updated price data for laptop ${laptop.id}`);
+            results.success++;
+          }
 
           // Add delay between requests to avoid rate limiting
           await new Promise(resolve => setTimeout(resolve, 1000));
 
         } catch (error) {
-          console.error(`Error processing laptop ${laptop.id}:`, error);
+          console.error(`❌ Error processing laptop ${laptop.id}:`, error);
           await supabase
             .from('products')
             .update({ 
@@ -139,14 +194,21 @@ serve(async (req) => {
               last_checked: new Date().toISOString()
             })
             .eq('id', laptop.id);
+          results.failed++;
         }
       }
 
+      console.log('--------------------------------------------------');
       console.log('Completed processing all laptop price updates');
+      console.log('Final results:', results);
     })());
 
     return new Response(
-      JSON.stringify({ message: 'Price update process initiated' }),
+      JSON.stringify({ 
+        message: 'Price update process initiated',
+        laptopCount: laptops.length,
+        laptopIds: laptops.map(l => l.id)
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
