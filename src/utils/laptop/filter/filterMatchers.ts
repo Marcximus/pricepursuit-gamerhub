@@ -59,8 +59,14 @@ export const matchesFilter = (
 ): boolean => {
   if (!productValue) return false;
   
-  const productLower = productValue.toLowerCase();
-  const filterLower = filterValue.toLowerCase();
+  // Normalize values for comparison
+  const productLower = productValue.toLowerCase().trim();
+  const filterLower = filterValue.toLowerCase().trim();
+  
+  // If the strings are exactly equal after normalization, it's a match
+  if (productLower === filterLower) {
+    return true;
+  }
   
   switch (filterType) {
     case 'ram': {
@@ -90,7 +96,7 @@ export const matchesFilter = (
       const filterSize = parseScreenSize(filterValue);
       
       // Enforce realistic screen sizes for laptops
-      if (productSize < 10 || productSize > 21 || filterSize < 10 || filterSize > 21) {
+      if (productSize < 10 || productSize > 22 || filterSize < 10 || filterSize > 22) {
         return false;
       }
       
@@ -99,11 +105,6 @@ export const matchesFilter = (
     }
     
     case 'processor': {
-      // First try exact match on normalized processor names
-      if (productLower === filterLower) {
-        return true;
-      }
-      
       // Apple processor matching
       if ((filterLower.includes('m1') || filterLower.includes('m2') || filterLower.includes('m3')) &&
           (productLower.includes('m1') || productLower.includes('m2') || productLower.includes('m3'))) {
@@ -116,20 +117,24 @@ export const matchesFilter = (
         const productHasM2 = productLower.includes('m2');
         const productHasM3 = productLower.includes('m3');
         
+        // Match the specific M-series chip
+        if ((filterHasM1 && !productHasM1) || 
+            (filterHasM2 && !productHasM2) || 
+            (filterHasM3 && !productHasM3)) {
+          return false;
+        }
+        
         // Match variants (Pro, Max, etc.)
         const filterHasPro = filterLower.includes('pro');
         const filterHasMax = filterLower.includes('max');
         const productHasPro = productLower.includes('pro');
         const productHasMax = productLower.includes('max');
         
-        // Exact match for the specific M-series
-        if (filterHasM1 && !productHasM1) return false;
-        if (filterHasM2 && !productHasM2) return false;
-        if (filterHasM3 && !productHasM3) return false;
-        
         // If filter specifies Pro/Max variant, product must match
-        if (filterHasPro && !productHasPro) return false;
-        if (filterHasMax && !productHasMax) return false;
+        if ((filterHasPro && !productHasPro) || 
+            (filterHasMax && !productHasMax)) {
+          return false;
+        }
         
         return true;
       }
@@ -186,16 +191,11 @@ export const matchesFilter = (
         }
       }
       
-      // Avoid loose substring matches that could lead to false positives
-      // Instead check for key identifiers present in both filter and product
-      const keyTerms = [
-        'intel', 'core', 'i3', 'i5', 'i7', 'i9', 
-        'amd', 'ryzen', 'apple', 'm1', 'm2', 'm3',
-        'celeron', 'pentium', 'xeon'
-      ];
+      // Check for basic CPU type matches
+      const cpuTypes = ['intel', 'amd', 'ryzen', 'apple', 'celeron', 'pentium', 'xeon'];
       
-      for (const term of keyTerms) {
-        if (filterLower.includes(term) && !productLower.includes(term)) {
+      for (const type of cpuTypes) {
+        if (filterLower.includes(type) && !productLower.includes(type)) {
           return false;
         }
       }
@@ -209,16 +209,12 @@ export const matchesFilter = (
         return filterGenNum[0].substring(0, 2) === productGenNum[0].substring(0, 2);
       }
       
-      // More conservative approach - product should contain the entire filter value
-      return productLower.includes(filterLower);
+      // More conservative approach - product should contain the filter value exactly
+      const filterWords = filterLower.split(/\s+/);
+      return filterWords.every(word => productLower.includes(word));
     }
     
     case 'graphics': {
-      // First try exact match on normalized graphics names
-      if (productLower === filterLower) {
-        return true;
-      }
-      
       // NVIDIA discrete GPU matching
       if ((filterLower.includes('rtx') || filterLower.includes('gtx')) &&
           (productLower.includes('rtx') || productLower.includes('gtx'))) {
@@ -244,8 +240,8 @@ export const matchesFilter = (
       
       // Intel integrated graphics
       if (filterLower.includes('intel') && productLower.includes('intel')) {
-        const types = ['iris xe', 'iris', 'uhd', 'hd'];
-        for (const type of types) {
+        const graphicsTypes = ['iris xe', 'iris', 'uhd', 'hd'];
+        for (const type of graphicsTypes) {
           if (filterLower.includes(type) !== productLower.includes(type)) {
             return false;
           }
@@ -278,29 +274,32 @@ export const matchesFilter = (
                (filterLower.includes('m3') && productLower.includes('m3'));
       }
       
-      // Avoid vague matches like just "Graphics" or "GPU"
+      // Reject vague or meaningless graphics terms
       if (filterLower === 'graphics' || filterLower === 'gpu' || 
-          filterLower === 'integrated' || filterLower === 'dedicated') {
+          filterLower === 'integrated' || filterLower === 'dedicated' || 
+          filterLower === '32-core') {
         return false;
       }
       
-      // More conservative approach - product should contain the filter value
-      // and have at least one of these major GPU terms
-      const majorGpuTerms = ['nvidia', 'amd', 'radeon', 'intel', 'apple', 'rtx', 'gtx'];
-      const hasGpuTerm = majorGpuTerms.some(term => 
-        productLower.includes(term) && filterLower.includes(term)
+      // Match by major GPU brand terms
+      const gpuBrands = ['nvidia', 'amd', 'radeon', 'intel', 'apple', 'rtx', 'gtx'];
+      const sharesBrand = gpuBrands.some(brand => 
+        filterLower.includes(brand) && productLower.includes(brand)
       );
       
-      return hasGpuTerm && productLower.includes(filterLower);
+      // If it shares a brand term and all filter words are in the product
+      const filterWords = filterLower.split(/\s+/);
+      return sharesBrand && filterWords.every(word => productLower.includes(word));
     }
     
     case 'brand': {
-      // Use the improved brand normalization logic
+      // Use the specialized brand normalization function
       const normalizedProductBrand = normalizeBrand(productValue, productTitle);
       return normalizedProductBrand.toLowerCase() === filterValue.toLowerCase();
     }
     
     default:
+      // Default case - exact string matching
       return productLower.includes(filterLower);
   }
 };

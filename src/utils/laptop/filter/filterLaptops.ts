@@ -2,10 +2,10 @@
 import type { Product } from "@/types/product";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import { matchesFilter } from "./filterMatchers";
-import { normalizeBrand } from "@/utils/laptop/normalizers";
+import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
 
 /**
- * Filters laptops based on selected filter options with stricter validation
+ * Filters laptops based on selected filter options with improved validation
  */
 export const filterLaptops = (laptops: Product[], filters: FilterOptions): Product[] => {
   console.log('Starting filtering with:', {
@@ -21,13 +21,31 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     }
   });
 
+  // Skip filtering if no filters are applied
+  const hasActiveFilters = 
+    filters.processors.size > 0 || 
+    filters.ramSizes.size > 0 ||
+    filters.storageOptions.size > 0 ||
+    filters.graphicsCards.size > 0 ||
+    filters.screenSizes.size > 0 ||
+    filters.brands.size > 0 ||
+    filters.priceRange.min > 0 ||
+    filters.priceRange.max < 10000;
+    
+  if (!hasActiveFilters) {
+    console.log('No active filters, returning all laptops');
+    return laptops;
+  }
+
   const filteredLaptops = laptops.filter(laptop => {
-    const filterReasons: string[] = [];
+    // Early return if laptop has no title or key specs
+    if (!laptop.title || (!laptop.processor && !laptop.ram && !laptop.storage && !laptop.graphics)) {
+      return false;
+    }
     
     // Price Range Filter
     const price = laptop.current_price || 0;
     if (price < filters.priceRange.min || price > filters.priceRange.max) {
-      filterReasons.push(`Price out of range: ${price}`);
       return false;
     }
 
@@ -39,7 +57,6 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
       );
       
       if (!matchesBrand) {
-        filterReasons.push(`Brand mismatch: ${normalizedBrand}`);
         return false;
       }
     }
@@ -51,7 +68,6 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
       );
       
       if (!matchesProcessor) {
-        filterReasons.push(`Processor mismatch: ${laptop.processor}`);
         return false;
       }
     }
@@ -63,7 +79,6 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
       );
       
       if (!matchesRam) {
-        filterReasons.push(`RAM mismatch: ${laptop.ram}`);
         return false;
       }
     }
@@ -75,7 +90,6 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
       );
       
       if (!matchesStorage) {
-        filterReasons.push(`Storage mismatch: ${laptop.storage}`);
         return false;
       }
     }
@@ -87,7 +101,6 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
       );
       
       if (!matchesGraphics) {
-        filterReasons.push(`Graphics mismatch: ${laptop.graphics}`);
         return false;
       }
     }
@@ -99,7 +112,6 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
       );
       
       if (!matchesScreenSize) {
-        filterReasons.push(`Screen size mismatch: ${laptop.screen_size}`);
         return false;
       }
     }
@@ -112,8 +124,9 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
   // Log a sample of filtered laptops for debugging
   if (filteredLaptops.length > 0) {
     console.log('Sample of matching laptops:', filteredLaptops.slice(0, 3).map(l => ({
-      title: l.title,
+      title: l.title?.substring(0, 50) + '...',
       price: l.current_price,
+      brand: l.brand,
       ram: l.ram,
       storage: l.storage,
       processor: l.processor,
