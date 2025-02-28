@@ -1,15 +1,19 @@
 
 import { processProcessor, processRam, processStorage, processScreenResolution, 
-        processRefreshRate, processTouchscreen, processOperatingSystem, 
-        processColor, processWarranty, processOfficeIncluded, 
-        processBacklitKeyboard, processPorts, processFingerprint } from './specsProcessor';
+        processRefreshRate, processTouchscreen as specsProcessorTouchscreen, 
+        processOperatingSystem, processColor as specsProcessorColor, 
+        processWarranty, processOfficeIncluded, 
+        processBacklitKeyboard as specsProcessorBacklitKeyboard, 
+        processPorts as specsProcessorPorts, 
+        processFingerprint as specsProcessorFingerprint } from './specsProcessor';
+
 import { processGraphics } from './graphicsProcessor';
 import { processScreenSize, processWeight, processBatteryLife, 
-         processCamera, processColor as processPhysicalColor,
-         processTouchscreen as processPhysicalTouchscreen,
-         processBacklitKeyboard as processPhysicalBacklit,
-         processFingerprint as processPhysicalFingerprint,
-         processPorts as processPhysicalPorts } from './physicalSpecsProcessor';
+         processCamera, processColor as physicalProcessorColor,
+         processTouchscreen as physicalProcessorTouchscreen,
+         processBacklitKeyboard as physicalProcessorBacklitKeyboard,
+         processFingerprint as physicalProcessorFingerprint,
+         processPorts as physicalProcessorPorts } from './physicalSpecsProcessor';
 
 /**
  * Process laptop description to extract additional specifications
@@ -71,17 +75,17 @@ export const processLaptopDescription = (description: string | undefined, title:
   // For touchscreen detection, try both processors
   enhancedSpecs.touchscreen = enhancedSpecs.touchscreen !== undefined ? 
                             enhancedSpecs.touchscreen : 
-                            processTouchscreen(title, cleanDescription);
+                            specsProcessorTouchscreen(title, cleanDescription);
   if (enhancedSpecs.touchscreen === undefined) {
-    enhancedSpecs.touchscreen = processPhysicalTouchscreen(undefined, title, cleanDescription);
+    enhancedSpecs.touchscreen = physicalProcessorTouchscreen(undefined, title, cleanDescription);
   }
   
   enhancedSpecs.operating_system = enhancedSpecs.operating_system || processOperatingSystem(title, cleanDescription);
   
   // For color detection, try both processors
-  enhancedSpecs.color = enhancedSpecs.color || processColor(title, cleanDescription);
+  enhancedSpecs.color = enhancedSpecs.color || specsProcessorColor(title, cleanDescription);
   if (!enhancedSpecs.color) {
-    enhancedSpecs.color = processPhysicalColor(undefined, title, cleanDescription);
+    enhancedSpecs.color = physicalProcessorColor(undefined, title, cleanDescription);
   }
   
   enhancedSpecs.warranty = enhancedSpecs.warranty || processWarranty(title, cleanDescription);
@@ -92,22 +96,22 @@ export const processLaptopDescription = (description: string | undefined, title:
   // For backlit keyboard detection, try both processors
   enhancedSpecs.backlit_keyboard = enhancedSpecs.backlit_keyboard !== undefined ? 
                                  enhancedSpecs.backlit_keyboard : 
-                                 processBacklitKeyboard(title, cleanDescription);
+                                 specsProcessorBacklitKeyboard(title, cleanDescription);
   if (enhancedSpecs.backlit_keyboard === undefined) {
-    enhancedSpecs.backlit_keyboard = processPhysicalBacklit(undefined, title, cleanDescription);
+    enhancedSpecs.backlit_keyboard = physicalProcessorBacklitKeyboard(undefined, title, cleanDescription);
   }
   
   // For ports detection, try both processors
-  const specsProcessorPorts = processPorts(title, cleanDescription);
-  const physicalProcessorPorts = processPhysicalPorts(undefined, title, cleanDescription);
-  enhancedSpecs.ports = enhancedSpecs.ports || specsProcessorPorts || physicalProcessorPorts;
+  const specsProcessorPortsResult = specsProcessorPorts(title, cleanDescription);
+  const physicalProcessorPortsResult = physicalProcessorPorts(undefined, title, cleanDescription);
+  enhancedSpecs.ports = enhancedSpecs.ports || specsProcessorPortsResult || physicalProcessorPortsResult;
   
   // For fingerprint detection, try both processors
   enhancedSpecs.fingerprint = enhancedSpecs.fingerprint !== undefined ? 
                             enhancedSpecs.fingerprint : 
-                            processFingerprint(title, cleanDescription);
+                            specsProcessorFingerprint(title, cleanDescription);
   if (enhancedSpecs.fingerprint === undefined) {
-    enhancedSpecs.fingerprint = processPhysicalFingerprint(undefined, title, cleanDescription);
+    enhancedSpecs.fingerprint = physicalProcessorFingerprint(undefined, title, cleanDescription);
   }
   
   // Add camera information

@@ -5,11 +5,7 @@ import { processProcessor, processRam, processStorage, processScreenResolution,
          processColor, processWarranty, processOfficeIncluded,
          processBacklitKeyboard, processPorts, processFingerprint } from './specsProcessor';
 import { processGraphics } from './graphicsProcessor';
-import { processScreenSize, processWeight, processBatteryLife, processCamera, 
-         processColor as processPhysicalColor, processPorts as processPhysicalPorts,
-         processTouchscreen as processPhysicalTouchscreen,
-         processBacklitKeyboard as processPhysicalBacklit,
-         processFingerprint as processPhysicalFingerprint } from './physicalSpecsProcessor';
+import { processScreenSize, processWeight, processBatteryLife, processCamera } from './physicalSpecsProcessor';
 import { processLaptopDescription, hasPremiumFeatures, generateLaptopScore } from './descriptionProcessor';
 import { normalizeBrand } from '@/utils/laptop/normalizers/brandNormalizer';
 import { normalizeModel } from '@/utils/laptop/normalizers/modelNormalizer';
@@ -94,20 +90,16 @@ export const processLaptopData = (laptop: any): Product => {
     weight: processWeight(laptop.weight, processedTitle, laptop.description),
     battery_life: processBatteryLife(laptop.battery_life, processedTitle, laptop.description),
     camera: processCamera(laptop.camera, processedTitle, laptop.description),
-    color: processColor(processedTitle, laptop.description) || 
-           processPhysicalColor(undefined, processedTitle, laptop.description),
-    touchscreen: processTouchscreen(processedTitle, laptop.description) ||
-                 processPhysicalTouchscreen(undefined, processedTitle, laptop.description),
-    backlit_keyboard: processBacklitKeyboard(processedTitle, laptop.description) ||
-                      processPhysicalBacklit(undefined, processedTitle, laptop.description),
-    fingerprint: processFingerprint(processedTitle, laptop.description) ||
-                processPhysicalFingerprint(undefined, processedTitle, laptop.description),
-    ports: processPorts(processedTitle, laptop.description) ||
-           processPhysicalPorts(undefined, processedTitle, laptop.description),
+    color: processColor(processedTitle, laptop.description),
+    touchscreen: processTouchscreen(processedTitle, laptop.description),
+    backlit_keyboard: processBacklitKeyboard(processedTitle, laptop.description),
+    fingerprint: processFingerprint(processedTitle, laptop.description),
+    ports: processPorts(processedTitle, laptop.description),
     refresh_rate: processRefreshRate(processedTitle, laptop.description),
     operating_system: processOperatingSystem(processedTitle, laptop.description),
     warranty: processWarranty(processedTitle, laptop.description),
-    office_included: processOfficeIncluded(processedTitle, laptop.description)
+    office_included: processOfficeIncluded(processedTitle, laptop.description),
+    benchmark_score: null // Adding benchmark_score property
   };
   
   // Enhance with additional specs from description if available
@@ -154,8 +146,58 @@ export const processLaptopData = (laptop: any): Product => {
   };
 };
 
-export * from './titleProcessor';
-export * from './specsProcessor';
-export * from './graphicsProcessor';
-export * from './physicalSpecsProcessor';
-export * from './descriptionProcessor';
+// Selectively export necessary functions to avoid ambiguity
+export { processTitle } from './titleProcessor';
+export { 
+  processProcessor,
+  processRam,
+  processStorage,
+  processScreenResolution,
+  processRefreshRate,
+  processOperatingSystem,
+  processWarranty,
+  processOfficeIncluded
+} from './specsProcessor';
+export { processGraphics } from './graphicsProcessor';
+export {
+  processScreenSize,
+  processWeight,
+  processBatteryLife,
+  processCamera
+} from './physicalSpecsProcessor';
+export {
+  processLaptopDescription,
+  hasPremiumFeatures,
+  generateLaptopScore
+} from './descriptionProcessor';
+
+// Handle ambiguous exports by renaming them
+import {
+  processColor as specsProcessorColor,
+  processTouchscreen as specsProcessorTouchscreen,
+  processBacklitKeyboard as specsProcessorBacklitKeyboard,
+  processPorts as specsProcessorPorts,
+  processFingerprint as specsProcessorFingerprint
+} from './specsProcessor';
+
+import {
+  processColor as physicalProcessorColor,
+  processTouchscreen as physicalProcessorTouchscreen,
+  processBacklitKeyboard as physicalProcessorBacklitKeyboard,
+  processPorts as physicalProcessorPorts,
+  processFingerprint as physicalProcessorFingerprint
+} from './physicalSpecsProcessor';
+
+// Re-export with clear, disambiguated names
+export {
+  specsProcessorColor,
+  specsProcessorTouchscreen,
+  specsProcessorBacklitKeyboard,
+  specsProcessorPorts,
+  specsProcessorFingerprint,
+  physicalProcessorColor,
+  physicalProcessorTouchscreen,
+  physicalProcessorBacklitKeyboard,
+  physicalProcessorPorts,
+  physicalProcessorFingerprint
+};
