@@ -28,6 +28,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
   const [autoUpdateInterval, setAutoUpdateInterval] = useState<NodeJS.Timeout | null>(null);
   const [nextUpdateTime, setNextUpdateTime] = useState<Date | null>(null);
   const [timeUntilNextUpdate, setTimeUntilNextUpdate] = useState<number>(300); // 5 minutes in seconds
+  const [updateSuccess, setUpdateSuccess] = useState<boolean>(false);
 
   // Clean up intervals on unmount
   useEffect(() => {
@@ -69,6 +70,11 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
         const currentTime = new Date();
         const secondsUntilNext = Math.max(0, Math.floor((nextUpdateTime.getTime() - currentTime.getTime()) / 1000));
         setTimeUntilNextUpdate(secondsUntilNext);
+        
+        // If time is up, trigger update
+        if (secondsUntilNext === 0 && !isUpdating) {
+          handleUpdateLaptops();
+        }
       }, 1000);
     }
     
@@ -171,6 +177,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
           stopAutoRefresh();
           setIsUpdating(false);
           setUpdateStartTime(null);
+          setUpdateSuccess(false);
           toast({
             title: "Update process timed out",
             description: "The update process took too long and was reset. You may try again.",
@@ -189,6 +196,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
     try {
       setIsUpdating(true);
       setUpdateStartTime(new Date());
+      setUpdateSuccess(false);
       
       console.log('Update Laptops button clicked');
       console.log('Starting laptop update process...');
@@ -212,6 +220,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
         const countMatch = result.message.match(/Started updating (\d+) laptops/);
         const count = countMatch ? parseInt(countMatch[1]) : 0;
         setUpdateCount(count);
+        setUpdateSuccess(true);
         
         toast({
           title: "Update Started",
@@ -243,6 +252,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
           }
         }, 12 * 60 * 1000); // 12 minutes
       } else {
+        setUpdateSuccess(false);
         toast({
           title: "Update Status",
           description: result?.error || result?.message || "Failed to start laptop updates. Please check console for details.",
@@ -250,6 +260,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
         });
         console.error('Update finished with result:', result);
         setIsUpdating(false);
+        stopAutoRefresh();
       }
       
       // Refresh stats again after starting updates
@@ -260,6 +271,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
       }
     } catch (error: any) {
       console.error('Error updating laptops:', error);
+      setUpdateSuccess(false);
       toast({
         title: "Error",
         description: "Failed to start laptop updates: " + (error.message || "Unknown error"),
@@ -308,7 +320,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
       icon={RefreshCw}
       buttonText={isUpdating ? "Updating..." : "Update Prices"}
       onClick={handleUpdateLaptops}
-      variant="outline"
+      variant={updateSuccess ? "success" : "outline"}
       disabled={isUpdating}
       customActions={
         <div className="flex items-center gap-2">

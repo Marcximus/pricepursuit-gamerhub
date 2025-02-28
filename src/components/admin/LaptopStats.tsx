@@ -11,9 +11,9 @@ import { getDatabaseStats } from "@/utils/laptop/getDatabaseStats";
 import { LoadingState } from './stats/LoadingState';
 import { ErrorState } from './stats/ErrorState';
 import { useToast } from "@/components/ui/use-toast";
+import { resetStalePendingUpdates } from "@/utils/laptop/stats/updateStatusQueries";
 
 // Create a context for refreshing stats that can be used anywhere in the app
-// The function returns Promise<void> to match what's expected by UpdateLaptopsSection
 export const StatsRefreshContext = React.createContext<() => Promise<void>>(() => Promise.resolve());
 
 const LaptopStats = () => {
@@ -25,6 +25,26 @@ const LaptopStats = () => {
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState<boolean>(true);
   const [refreshCount, setRefreshCount] = useState<number>(0);
   const { toast } = useToast();
+  const [errorCount, setErrorCount] = useState<number>(0);
+
+  // Check for errors and reset stuck updates if needed
+  const checkAndResetStuckUpdates = useCallback(async () => {
+    if (!stats) return;
+    
+    const hasStuckUpdates = stats.updateStatus.inProgress.count > 0 && 
+                            stats.updateStatus.completed.count === 0 && 
+                            stats.updateStatus.updatedLast24h.count === 0;
+                            
+    if (hasStuckUpdates) {
+      console.log('Detected stuck updates. Auto-resetting...');
+      try {
+        await resetStalePendingUpdates();
+        console.log('Successfully reset stuck updates');
+      } catch (err) {
+        console.error('Error auto-resetting stuck updates:', err);
+      }
+    }
+  }, [stats]);
 
   // Create a stable fetchStats function that can be passed to the context
   const fetchStats = useCallback(async () => {
@@ -53,11 +73,16 @@ const LaptopStats = () => {
       setLastRefreshTime(new Date());
       setError(null);
       setRefreshCount(prev => prev + 1);
+      setErrorCount(0); // Reset error count on successful fetch
       
-      // Don't return databaseStats here to match Promise<void> type
+      // Check for stuck updates
+      if (refreshCount % 5 === 0) { // Only check every 5 refreshes to avoid too many resets
+        await checkAndResetStuckUpdates();
+      }
     } catch (err) {
       console.error('Error fetching database stats:', err);
       setError(err instanceof Error ? err : new Error('Unknown error occurred'));
+      setErrorCount(prev => prev + 1);
       
       // Only show toast if this was a manual refresh or if we don't have any stats yet
       if (refreshing || !stats) {
@@ -68,12 +93,22 @@ const LaptopStats = () => {
         });
       }
       
+      // If we encounter too many errors, disable auto-refresh
+      if (errorCount > 5 && autoRefreshEnabled) {
+        setAutoRefreshEnabled(false);
+        toast({
+          title: "Auto-refresh disabled",
+          description: "Too many errors encountered, auto-refresh has been disabled",
+          variant: "destructive",
+        });
+      }
+      
       // Re-throw the error so calling functions can handle it
       throw err;
     } finally {
       setRefreshing(false);
     }
-  }, [stats, toast, refreshing]);
+  }, [stats, toast, refreshing, refreshCount, errorCount, autoRefreshEnabled, checkAndResetStuckUpdates]);
 
   // Initial data fetch
   useEffect(() => {
@@ -117,10 +152,6 @@ const LaptopStats = () => {
       console.log('Auto-refreshing stats...');
       fetchStats().catch(err => {
         console.error('Auto-refresh error:', err);
-        // If we get multiple errors, consider disabling auto-refresh
-        if (error) {
-          console.warn('Multiple refresh errors, consider disabling auto-refresh');
-        }
       });
     }, refreshInterval);
     
@@ -129,7 +160,7 @@ const LaptopStats = () => {
       console.log('Cleaning up refresh interval');
       clearInterval(intervalId);
     };
-  }, [stats, fetchStats, autoRefreshEnabled, refreshCount, error]);
+  }, [stats, fetchStats, autoRefreshEnabled, refreshCount]);
 
   const handleManualRefresh = async () => {
     if (!refreshing) {

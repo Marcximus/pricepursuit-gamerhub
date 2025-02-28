@@ -12,7 +12,7 @@ interface ManagementCardProps {
   buttonText: string;
   onClick: () => void;
   disabled?: boolean;
-  variant?: VariantProps<typeof buttonVariants>["variant"];
+  variant?: VariantProps<typeof buttonVariants>["variant"] | "success";
   customActions?: ReactNode;
 }
 
@@ -26,6 +26,15 @@ const ManagementCard: React.FC<ManagementCardProps> = ({
   variant = "default",
   customActions,
 }) => {
+  // Map custom variants to button variants
+  const buttonVariant = variant === "success" ? "default" : variant;
+  
+  // Style for success button
+  const buttonStyle = 
+    variant === "success" 
+      ? "bg-green-600 text-white hover:bg-green-700 focus:ring-green-500"
+      : "";
+  
   return (
     <div className="flex flex-col rounded-lg border bg-card text-card-foreground shadow-sm">
       <div className="p-6 flex flex-col gap-6">
@@ -42,8 +51,8 @@ const ManagementCard: React.FC<ManagementCardProps> = ({
           <Button
             onClick={onClick}
             disabled={disabled}
-            variant={variant}
-            className="w-full"
+            variant={buttonVariant as VariantProps<typeof buttonVariants>["variant"]}
+            className={`w-full ${buttonStyle}`}
           >
             {buttonText}
           </Button>
