@@ -1,3 +1,4 @@
+
 import type { Product } from "@/types/product";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import { matchesFilter } from "../matchers";
@@ -28,7 +29,7 @@ export const applyProcessorFilter = (
   return Array.from(filters.processors).some(selectedProcessor => 
     // Try direct match with standardized value first (more accurate)
     selectedProcessor === standardizedProcessor ||
-    // Fall back to flexible matching with raw values
+    // Fall back to flexible matching which handles variations like "2.9 GHz Celeron"
     matchesFilter(selectedProcessor, extractedProcessor, 'processor', laptop.title)
   );
 };

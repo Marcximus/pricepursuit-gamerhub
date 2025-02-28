@@ -20,12 +20,66 @@ export const matchesProcessorFilter = (
     return true;
   }
   
+  // Check for substring matches for certain processors
+  // This helps match cases like "2.9 GHz Celeron" when "Intel Celeron" is selected
+  if (productValue) {
+    const normalizedProcessor = productValue.toLowerCase();
+    
+    if (filterValue === 'Intel Celeron' && normalizedProcessor.includes('celeron')) {
+      return true;
+    }
+    
+    if (filterValue === 'Intel Pentium' && normalizedProcessor.includes('pentium')) {
+      return true;
+    }
+    
+    if (filterValue === 'Qualcomm Snapdragon' && 
+        (normalizedProcessor.includes('snapdragon') || normalizedProcessor.includes('qualcomm'))) {
+      return true;
+    }
+    
+    if (filterValue === 'MediaTek' && normalizedProcessor.includes('mediatek')) {
+      return true;
+    }
+    
+    // Match Apple M4 variants
+    if (filterValue === 'Apple M4' && 
+        (normalizedProcessor.includes('m4') || normalizedProcessor.includes('apple m4'))) {
+      return true;
+    }
+    
+    // Match specific Intel Core i-series regardless of generation prefix/suffix variations
+    if (filterValue.includes('Intel Core i') && normalizedProcessor.includes('i' + filterValue.charAt(filterValue.length - 1))) {
+      return true;
+    }
+  }
+  
   // Try to extract processor from title and standardize if available
   if (productTitle) {
     const normalizedProcessor = normalizeProcessor(productValue || '');
     const titleStandardizedProcessor = standardizeProcessorForFiltering(normalizedProcessor);
     
     if (titleStandardizedProcessor === filterValue) {
+      return true;
+    }
+    
+    // Also check the title for substring matches
+    const normalizedTitle = productTitle.toLowerCase();
+    
+    if (filterValue === 'Intel Celeron' && normalizedTitle.includes('celeron')) {
+      return true;
+    }
+    
+    if (filterValue === 'Intel Pentium' && normalizedTitle.includes('pentium')) {
+      return true;
+    }
+    
+    if (filterValue === 'Qualcomm Snapdragon' && 
+        (normalizedTitle.includes('snapdragon') || normalizedTitle.includes('qualcomm'))) {
+      return true;
+    }
+    
+    if (filterValue === 'MediaTek' && normalizedTitle.includes('mediatek')) {
       return true;
     }
   }
