@@ -12,19 +12,29 @@ const Admin = () => {
 
   const handleCollectLaptops = async () => {
     try {
+      console.log('Collect New button clicked');
       console.log('Starting laptop collection process...');
+      
+      // Log what's available in the useLaptops hook
+      console.log('collectLaptops function from useLaptops:', typeof collectLaptops);
+      
       const result = await collectLaptops();
       console.log('Collection process result:', result);
       
-      toast({
-        title: "Collection Started",
-        description: "Started collecting new laptops. This may take a few minutes.",
-      });
+      if (result) {
+        toast({
+          title: "Collection Started",
+          description: "Started collecting new laptops. This may take a few minutes.",
+        });
+      } else {
+        console.log('Collection process returned null (possibly already in progress)');
+      }
     } catch (error) {
       console.error('Error collecting laptops:', error);
+      console.error('Error stack:', error.stack);
       toast({
         title: "Error",
-        description: "Failed to start laptop collection",
+        description: "Failed to start laptop collection: " + (error.message || "Unknown error"),
         variant: "destructive"
       });
     }

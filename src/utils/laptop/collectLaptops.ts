@@ -25,12 +25,17 @@ export async function collectLaptops() {
     console.log('Checking collection status...');
 
     const staleTimeout = new Date(Date.now() - COLLECTION_CONFIG.STALE_COLLECTION_MINUTES * 60 * 1000).toISOString();
+    console.log('Stale timeout set to:', staleTimeout);
     
     // Reset any stale collections (in case a previous collection was interrupted)
+    console.log('Resetting stale collections...');
     await resetStaleCollections(staleTimeout);
+    console.log('Stale collections reset complete');
     
     // Check if there's already a collection in progress
+    console.log('Checking for active collections...');
     const activeCollections = await checkActiveCollections(staleTimeout);
+    console.log('Active collections check result:', activeCollections);
 
     if (activeCollections && activeCollections.length > 0) {
       const timeElapsed = Math.round((new Date().getTime() - new Date(activeCollections[0].last_collection_attempt).getTime()) / 1000);
@@ -44,9 +49,14 @@ export async function collectLaptops() {
       return null;
     }
 
-    console.log('Invoking collect-laptops edge function...');
+    console.log('Preparing to invoke collect-laptops edge function...');
+    console.log('Edge function parameters:', { 
+      brands: COLLECTION_CONFIG.LAPTOP_BRANDS,
+      pagesPerBrand: COLLECTION_CONFIG.PAGES_PER_BRAND
+    });
     
     // Call the Supabase Edge Function with proper parameters
+    console.log('Invoking collect-laptops edge function...');
     const { data, error } = await supabase.functions.invoke('collect-laptops', {
       method: 'POST',
       body: { 
@@ -57,10 +67,17 @@ export async function collectLaptops() {
     
     if (error) {
       console.error('Error invoking collect-laptops function:', error);
+      console.error('Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        context: error.context,
+        details: error.details
+      });
       throw error;
     }
     
-    console.log('Edge function response:', data);
+    console.log('Edge function response received:', data);
     
     toast({
       title: "Collection Started",
@@ -69,6 +86,7 @@ export async function collectLaptops() {
     });
     
     // Return a response based on the edge function result
+    console.log('Collection process initiated successfully');
     return { 
       success: true,
       batches: Math.ceil(COLLECTION_CONFIG.LAPTOP_BRANDS.length / COLLECTION_CONFIG.PARALLEL_BATCHES),
@@ -82,13 +100,16 @@ export async function collectLaptops() {
 
   } catch (error) {
     console.error('Error in collectLaptops:', error);
+    console.error('Error stack:', error.stack);
     
     // Attempt to reset any in-progress statuses in case of error
     try {
+      console.log('Attempting to reset collection statuses after error...');
       await supabase
         .from('products')
         .update({ collection_status: 'pending' })
         .eq('collection_status', 'in_progress');
+      console.log('Reset collection statuses complete');
     } catch (resetError) {
       console.error('Error resetting collection statuses:', resetError);
     }
