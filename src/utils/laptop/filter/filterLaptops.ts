@@ -73,7 +73,11 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
       
       // Special handling for "Other" category
       if (hasOtherBrandsFilter) {
-        const isMainBrand = mainBrandsSet.has(normalizedBrand.toLowerCase());
+        // Check if the laptop brand is a major brand (has its own filter)
+        const isMainBrand = Array.from(mainBrandsSet).some(mainBrand => 
+          normalizedBrand.toLowerCase().includes(mainBrand) ||
+          mainBrand.includes(normalizedBrand.toLowerCase())
+        );
         
         // Check if it matches a specifically selected brand
         const matchesSpecificBrand = Array.from(filters.brands)
