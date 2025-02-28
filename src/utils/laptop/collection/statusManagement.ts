@@ -83,14 +83,15 @@ export async function saveCollectionProgress(
       stats
     };
     
+    // Fix: Pass the object as an array with one element for the upsert method
     const { error } = await supabase
       .from('collection_progress')
-      .upsert({
-        id: 1, // Use a fixed ID for the progress record
+      .upsert([{
+        id: '1', // Use a string ID to match the expected type
         progress_data: isComplete ? null : progressData,
         last_updated: new Date().toISOString(),
         progress_type: 'laptop_collection' // Add the required progress_type field
-      });
+      }]);
       
     if (error) {
       console.error('Error saving collection progress:', error);
@@ -109,7 +110,7 @@ export async function getLastCollectionProgress() {
     const { data, error } = await supabase
       .from('collection_progress')
       .select('*')
-      .eq('id', '1') // Convert number to string to match expected type
+      .eq('id', '1') // Use string '1' to match the type we saved
       .single();
       
     if (error) {
