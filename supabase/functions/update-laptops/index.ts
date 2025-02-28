@@ -1,7 +1,6 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { LaptopUpdateRequest, UpdateResponse } from './types.ts'
 import { fetchLaptopData } from './oxylabsService.ts'
 import { updateLaptopInDatabase } from './databaseService.ts'
 
@@ -27,7 +26,7 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const requestData: LaptopUpdateRequest = await req.json()
+    const requestData = await req.json()
     
     if (!requestData.laptops || !Array.isArray(requestData.laptops) || requestData.laptops.length === 0) {
       return new Response(
@@ -65,9 +64,9 @@ serve(async (req) => {
         // Prepare data for update
         const updateData = {
           ...laptopData,
-          // Override with any specific values from the request
-          current_price: laptop.current_price !== undefined ? laptop.current_price : laptopData.current_price,
-          title: laptop.title || laptopData.title
+          // Override with any specific values from the request if needed
+          current_price: laptopData.current_price !== null ? laptopData.current_price : laptop.current_price,
+          title: laptopData.title || laptop.title
         }
         
         // Update the laptop record in the database
@@ -98,7 +97,7 @@ serve(async (req) => {
     }
 
     // Prepare the response
-    const response: UpdateResponse = {
+    const response = {
       success: results.updated.length > 0,
       message: `Updated ${results.updated.length} laptops. Failed: ${results.failed.length}`,
       updatedCount: results.updated.length,
