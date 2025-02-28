@@ -79,7 +79,7 @@ const ComparePriceLaptops = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <Navigation />
       
       <main className="pt-32 pb-16">
@@ -104,6 +104,9 @@ const ComparePriceLaptops = () => {
                 onSortChange={handleSortChange}
                 isLoading={isLaptopsLoading}
                 isRefetching={isRefetching}
+                filters={filters}
+                onFiltersChange={handleFiltersChange}
+                filterOptions={filterOptions}
               />
             }
             content={
@@ -124,7 +127,6 @@ const ComparePriceLaptops = () => {
       </main>
     </div>
   );
-};
+}
 
 export default ComparePriceLaptops;
-

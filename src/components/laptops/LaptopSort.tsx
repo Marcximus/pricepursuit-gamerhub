@@ -14,19 +14,19 @@ export function LaptopSort({ sortBy, onSortChange }: LaptopSortProps) {
       value={sortBy}
       onValueChange={(value) => onSortChange(value as SortOption)}
     >
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm">
         <SelectValue placeholder="Sort by..." />
       </SelectTrigger>
       <SelectContent
-        className="w-[180px] bg-popover shadow-md"
+        className="w-[180px] bg-white shadow-md"
         position="popper"
         sideOffset={4}
         align="end"
         side="bottom"
       >
-        <SelectItem value="price-asc">Price: Low to High</SelectItem>
-        <SelectItem value="price-desc">Price: High to Low</SelectItem>
-        <SelectItem value="rating-desc">Best Rated</SelectItem>
+        <SelectItem value="price-asc" className="text-sm">Price: Low to High</SelectItem>
+        <SelectItem value="price-desc" className="text-sm">Price: High to Low</SelectItem>
+        <SelectItem value="rating-desc" className="text-sm">Best Rated</SelectItem>
       </SelectContent>
     </Select>
   );
