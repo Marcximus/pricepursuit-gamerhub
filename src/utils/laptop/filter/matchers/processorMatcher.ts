@@ -197,30 +197,26 @@ export const matchesProcessorFilter = (
       'Intel Celeron', 'Intel Pentium', 'Qualcomm Snapdragon', 'MediaTek'
     ];
     
+    // Check against BOTH product value and title
+    let belongsToMainCategory = false;
+    
     // Product value check
     if (productValue) {
-      // Check if the processor doesn't belong to any main category
-      const belongsToMainCategory = mainProcessorCategories.some(category => 
+      // Check if the processor includes any main category
+      belongsToMainCategory = mainProcessorCategories.some(category => 
         productValue.toLowerCase().includes(category.toLowerCase())
       );
-      
-      if (!belongsToMainCategory) {
-        return true;
-      }
     }
     
-    // Title check if product value doesn't match any category
-    if (productTitle) {
-      // Check if the title doesn't contain any main processor category
-      const titleContainsMainCategory = mainProcessorCategories.some(category => 
+    // If not found in product value, check title
+    if (!belongsToMainCategory && productTitle) {
+      belongsToMainCategory = mainProcessorCategories.some(category => 
         productTitle.toLowerCase().includes(category.toLowerCase())
       );
-      
-      // If neither product value nor title contains a main category, it's "Other"
-      if (!titleContainsMainCategory) {
-        return true;
-      }
     }
+    
+    // Only categorize as "Other Processor" if it doesn't match any main category
+    return !belongsToMainCategory;
   }
   
   return false;
