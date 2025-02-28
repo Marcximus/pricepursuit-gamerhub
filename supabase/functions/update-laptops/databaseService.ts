@@ -1,111 +1,139 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
+import { SupabaseClient } from '@supabase/supabase-js'
+import { LaptopUpdate, LaptopUpdateResult } from './types'
 
-// Initialize Supabase client
-const supabaseUrl = Deno.env.get('SUPABASE_URL')
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+/**
+ * Update a laptop in the database
+ */
+export const updateLaptop = async (
+  supabase: SupabaseClient,
+  laptop: LaptopUpdate
+): Promise<LaptopUpdateResult> => {
+  // Get current timestamp
+  const now = new Date().toISOString()
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables are not set')
-}
+  // Determine whether a price record should be created
+  const shouldCreatePriceRecord = 
+    laptop.current_price !== null && 
+    laptop.current_price !== undefined && 
+    laptop.current_price > 0
 
-const supabase = createClient(supabaseUrl!, supabaseServiceKey!)
-
-export async function updateLaptopInDatabase(id: string, updateData: any) {
-  try {
-    console.log(`Updating laptop ${id} with data:`, JSON.stringify(updateData, null, 2).substring(0, 200) + '...')
-    
-    // Prepare the data to update
-    const dataToUpdate = {
-      ...updateData,
-      last_checked: new Date().toISOString(),
-      update_status: 'completed'
+  // Track and log specification extraction 
+  const hasExtractedSpecs = !!(
+    laptop.processor || 
+    laptop.ram || 
+    laptop.storage || 
+    laptop.graphics || 
+    laptop.screen_size
+  )
+  
+  // Log the update details for debugging
+  console.log(`Updating laptop ${laptop.id} (ASIN: ${laptop.asin}):`, {
+    hasPrice: shouldCreatePriceRecord,
+    price: laptop.current_price,
+    hasSpecs: hasExtractedSpecs,
+    specs: {
+      processor: !!laptop.processor,
+      ram: !!laptop.ram,
+      storage: !!laptop.storage,
+      graphics: !!laptop.graphics,
+      screen_size: !!laptop.screen_size
+    },
+    raw: {
+      processor: laptop.processor,
+      ram: laptop.ram,
+      storage: laptop.storage,
+      graphics: laptop.graphics,
+      screen_size: laptop.screen_size
     }
-    
-    // Update the product in the database
-    const { data, error } = await supabase
+  })
+
+  try {
+    // Start by updating the product
+    const { error: updateError } = await supabase
       .from('products')
-      .update(dataToUpdate)
-      .eq('id', id)
-      .select()
-      .single()
-    
-    if (error) {
-      console.error(`Database update error for laptop ${id}:`, error)
-      return { 
-        success: false, 
-        error: `Database error: ${error.message}` 
-      }
-    }
-    
-    console.log(`Successfully updated laptop ${id} in database`)
-    
-    // Store price history if there's a price
-    if (updateData.current_price) {
-      try {
-        await storePriceHistory(id, updateData.current_price)
-      } catch (priceHistoryError) {
-        console.error(`Error storing price history for ${id}:`, priceHistoryError)
-        // Continue even if price history storage fails
-      }
-    }
-    
-    return { 
-      success: true, 
-      message: `Updated laptop ${id} successfully`,
-      data
-    }
-  } catch (error) {
-    console.error(`Error in updateLaptopInDatabase for ${id}:`, error)
-    return { 
-      success: false, 
-      error: error.message || 'Unknown error in updateLaptopInDatabase'
-    }
-  }
-}
-
-async function storePriceHistory(productId: string, price: number) {
-  try {
-    // First check if we already have a price record for today to avoid duplicates
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    
-    const { data: existingRecords, error: checkError } = await supabase
-      .from('price_history')
-      .select('*')
-      .eq('product_id', productId)
-      .gte('created_at', today.toISOString())
-      .lt('created_at', tomorrow.toISOString())
-    
-    if (checkError) {
-      console.error(`Error checking existing price history for ${productId}:`, checkError)
-      return
-    }
-    
-    // If we already have a record for today, don't add another one
-    if (existingRecords && existingRecords.length > 0) {
-      console.log(`Price history for ${productId} already exists for today, skipping`)
-      return
-    }
-    
-    // Insert new price history record
-    const { error: insertError } = await supabase
-      .from('price_history')
-      .insert({
-        product_id: productId,
-        price: price,
-        timestamp: new Date().toISOString()
+      .update({
+        title: laptop.title,
+        current_price: laptop.current_price,
+        original_price: laptop.original_price,
+        rating: laptop.rating,
+        rating_count: laptop.rating_count,
+        total_reviews: laptop.total_reviews,
+        image_url: laptop.image_url,
+        processor: laptop.processor,
+        ram: laptop.ram,
+        storage: laptop.storage,
+        graphics: laptop.graphics,
+        screen_size: laptop.screen_size,
+        screen_resolution: laptop.screen_resolution,
+        weight: laptop.weight,
+        battery_life: laptop.battery_life,
+        brand: laptop.brand,
+        model: laptop.model,
+        update_status: 'completed',
+        last_checked: now,
+        last_updated: now
       })
-    
-    if (insertError) {
-      console.error(`Error inserting price history for ${productId}:`, insertError)
-      return
+      .eq('id', laptop.id)
+
+    if (updateError) {
+      console.error(`Error updating laptop ${laptop.id}:`, updateError)
+      return {
+        id: laptop.id,
+        asin: laptop.asin,
+        success: false,
+        message: `Error updating laptop: ${updateError.message}`
+      }
     }
-    
-    console.log(`Successfully stored price history for ${productId}: $${price}`)
+
+    // Check if we need to create a price history record
+    if (shouldCreatePriceRecord) {
+      // Get today's date in YYYY-MM-DD format for checking existing price records
+      const today = new Date().toISOString().split('T')[0]
+      
+      // Check if we already have a price record for today
+      const { data: existingPrices, error: checkError } = await supabase
+        .from('price_history')
+        .select('id')
+        .eq('product_id', laptop.id)
+        .gte('timestamp', `${today}T00:00:00Z`)
+        .lt('timestamp', `${today}T23:59:59Z`)
+        .limit(1)
+      
+      if (checkError) {
+        console.error(`Error checking existing price records for ${laptop.id}:`, checkError)
+      } else if (!existingPrices || existingPrices.length === 0) {
+        // No price record for today, create one
+        const { error: priceError } = await supabase
+          .from('price_history')
+          .insert({
+            product_id: laptop.id,
+            price: laptop.current_price,
+            timestamp: now
+          })
+        
+        if (priceError) {
+          console.error(`Error creating price history for ${laptop.id}:`, priceError)
+        }
+      } else {
+        console.log(`Price history for ${laptop.id} already exists for today, skipping`)
+      }
+    }
+
+    // Return success
+    return {
+      id: laptop.id,
+      asin: laptop.asin,
+      success: true,
+      message: `Updated laptop ${laptop.id} successfully`
+    }
   } catch (error) {
-    console.error(`Error in storePriceHistory for ${productId}:`, error)
+    console.error(`Exception updating laptop ${laptop.id}:`, error)
+    return {
+      id: laptop.id,
+      asin: laptop.asin,
+      success: false,
+      message: `Exception updating laptop: ${(error as Error).message}`
+    }
   }
 }
