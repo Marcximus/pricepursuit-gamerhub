@@ -1,91 +1,168 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
-interface ProcessOptions {
-  focus?: 'graphics' | 'processor' | 'ram' | 'storage' | 'all';
-  limit?: number;
-}
+const PARALLEL_PROCESSING = 1; // Process one at a time
+const DELAY_BETWEEN_REQUESTS = 250; // 250ms delay between requests
+const BATCH_SIZE = 5; // Process max 5 laptops at a time
+const TIMEOUT_DURATION = 30000; // 30 second timeout
 
-export async function processLaptopsAI(options: ProcessOptions = { focus: 'all', limit: 100 }) {
+// Type for the edge function response
+type EdgeFunctionResponse = {
+  error?: any;
+  data?: any;
+};
+
+export const processLaptopsAI = async () => {
   try {
-    console.log('Starting AI processing for laptops with options:', options);
+    console.log('Starting AI processing for laptops...');
     
-    // Determine query based on focus area
-    let query = supabase
+    // Get laptops that need AI processing
+    const { data: laptops, error: fetchError } = await supabase
       .from('products')
-      .select('id, title, description, asin')
-      .eq('is_laptop', true)
-      .eq('ai_processing_status', 'pending');
-    
-    // Apply focus filter if specified
-    if (options.focus && options.focus !== 'all') {
-      switch(options.focus) {
-        case 'graphics':
-          // Using direct comparison instead of length function
-          query = query.or('graphics.is.null,graphics.eq.'); 
-          break;
-        case 'processor':
-          query = query.or('processor.is.null,processor.eq.');
-          break;
-        case 'ram':
-          query = query.or('ram.is.null,ram.eq.');
-          break;
-        case 'storage':
-          query = query.or('storage.is.null,storage.eq.');
-          break;
-      }
+      .select('id, asin, ai_processing_status')
+      .in('ai_processing_status', ['pending', 'error', 'processing'])
+      .order('ai_processing_status', { ascending: true, nullsFirst: true }) // pending first
+      .order('created_at', { ascending: true }) // oldest first
+      .limit(BATCH_SIZE);
+
+    if (fetchError) {
+      console.error('Error fetching laptops:', fetchError);
+      toast({
+        title: "Error",
+        description: "Failed to fetch laptops for processing",
+        variant: "destructive"
+      });
+      return { success: false, error: fetchError };
     }
-    
-    // Apply limit
-    query = query.limit(options.limit || 100);
-    
-    const { data: laptops, error } = await query;
-    
-    if (error) {
-      console.error('Error fetching laptops for AI processing:', error);
-      return { success: false, error: error.message };
-    }
-    
+
     if (!laptops || laptops.length === 0) {
-      console.log('No laptops found for AI processing');
+      console.log('No laptops need processing');
+      toast({
+        title: "No laptops to process",
+        description: "All laptops have been processed",
+        variant: "default"
+      });
       return { success: true, processed: 0 };
     }
-    
-    // Mark laptops as in progress
-    const lapTopIds = laptops.map(laptop => laptop.id);
-    const { error: updateError } = await supabase
-      .from('products')
-      .update({ ai_processing_status: 'in_progress' })
-      .in('id', lapTopIds);
-    
-    if (updateError) {
-      console.error('Error marking laptops as in progress:', updateError);
-      return { success: false, error: updateError.message };
-    }
-    
-    // Call edge function to process laptops
-    const response = await fetch('/api/process-laptops-ai', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        laptops,
-        focus: options.focus || 'all'
-      }),
+
+    console.log(`Found ${laptops.length} laptops to process`);
+    toast({
+      title: "Processing Started",
+      description: `Starting to process ${laptops.length} laptops...`,
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error from process-laptops-ai function:', errorText);
-      return { success: false, error: errorText };
+
+    let processedCount = 0;
+    let errorCount = 0;
+
+    // Process laptops one at a time
+    for (const laptop of laptops) {
+      try {
+        console.log(`Processing laptop ${laptop.asin} (current status: ${laptop.ai_processing_status})...`);
+
+        // Update status to processing
+        const { error: updateError } = await supabase
+          .from('products')
+          .update({ 
+            ai_processing_status: 'processing',
+            ai_processed_at: new Date().toISOString() 
+          })
+          .eq('id', laptop.id);
+
+        if (updateError) {
+          console.error(`Error updating status for laptop ${laptop.asin}:`, updateError);
+          errorCount++;
+          continue;
+        }
+
+        // Call the process-laptops-ai edge function with a timeout
+        try {
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('Function timed out')), TIMEOUT_DURATION);
+          });
+
+          const processingPromise = supabase.functions.invoke<EdgeFunctionResponse>('process-laptops-ai', {
+            body: { asin: laptop.asin }
+          });
+
+          const response = await Promise.race([processingPromise, timeoutPromise]);
+
+          // Type guard to ensure response is EdgeFunctionResponse
+          if (response && typeof response === 'object' && 'error' in response && response.error) {
+            throw response.error;
+          }
+          
+          processedCount++;
+          console.log(`Successfully processed laptop ${laptop.asin}`);
+
+          // Show progress toast every few laptops
+          if (processedCount % 2 === 0 || processedCount === laptops.length) {
+            toast({
+              title: "Processing Progress",
+              description: `Processed ${processedCount} of ${laptops.length} laptops`,
+            });
+          }
+
+        } catch (edgeFunctionError) {
+          console.error('Edge function error:', edgeFunctionError);
+          errorCount++;
+          
+          // Update status to error
+          await supabase
+            .from('products')
+            .update({
+              ai_processing_status: 'error',
+              ai_processed_at: new Date().toISOString()
+            })
+            .eq('id', laptop.id);
+
+          toast({
+            title: "Processing Error",
+            description: `Failed to process laptop ${laptop.asin}. Will retry later.`,
+            variant: "destructive"
+          });
+        }
+
+        // Add delay between requests
+        await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
+
+      } catch (error) {
+        console.error(`Error processing laptop ${laptop.asin}:`, error);
+        errorCount++;
+        
+        // Update status to error
+        await supabase
+          .from('products')
+          .update({
+            ai_processing_status: 'error',
+            ai_processed_at: new Date().toISOString()
+          })
+          .eq('id', laptop.id);
+      }
     }
-    
-    console.log(`Successfully started AI processing for ${laptops.length} laptops`);
-    return { success: true, processed: laptops.length };
-    
+
+    const summary = `Processed ${processedCount} laptops (${errorCount} errors)`;
+    console.log(summary);
+
+    toast({
+      title: "Processing Complete",
+      description: summary,
+      variant: errorCount > 0 ? "destructive" : "default"
+    });
+
+    return { 
+      success: true, 
+      processed: processedCount,
+      errors: errorCount 
+    };
+
   } catch (error) {
-    console.error('Error in processLaptopsAI:', error);
-    return { success: false, error: error.message };
+    console.error('Failed to start AI processing:', error);
+    toast({
+      title: "Error",
+      description: "Failed to start AI processing",
+      variant: "destructive"
+    });
+    return { success: false, error };
   }
-}
+};
