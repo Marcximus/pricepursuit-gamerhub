@@ -8,7 +8,7 @@ import {
   checkActiveCollections, 
   saveCollectionProgress, 
   getLastCollectionProgress 
-} from "./collection/statusManagement";
+} from "./collection/status";
 import { createBrandBatches, processBrand } from "./collectionUtils";
 
 export async function collectLaptops() {

@@ -1,0 +1,67 @@
+
+import { CollectionStats } from "../../types";
+
+/**
+ * Log product update details with enhanced specification extraction information
+ * @param product Product being updated
+ * @param isNew Whether this is a new product or an update
+ * @param extracted Optional information about extracted data
+ */
+export function logProductDetails(product: any, isNew: boolean, extracted?: any) {
+  const operation = isNew ? 'Added' : 'Updated';
+  const emoji = isNew ? '🆕' : '🔄';
+  
+  console.log(`${emoji} ${operation} product: ASIN=${product.asin}`);
+  console.log(`  📝 Title: ${product.title?.substring(0, 100)}${product.title?.length > 100 ? '...' : ''}`);
+  
+  // Calculate completion percentage of specs extracted
+  const specFields = ['brand', 'model', 'processor', 'ram', 'storage', 'graphics', 'screen_size', 'screen_resolution'];
+  const availableSpecs = specFields.filter(field => product[field] && product[field].toString().trim() !== '').length;
+  const specCompletionPercent = Math.round((availableSpecs / specFields.length) * 100);
+  
+  console.log(`  🧮 Specs completion: ${specCompletionPercent}% (${availableSpecs}/${specFields.length} fields)`);
+  
+  if (product.brand) console.log(`  🏷️ Brand: ${product.brand}`);
+  if (product.model) console.log(`  📱 Model: ${product.model}`);
+  if (product.current_price) console.log(`  💰 Price: $${product.current_price}`);
+  if (product.processor) {
+    console.log(`  🧠 Processor: ${product.processor}`);
+  } else {
+    console.log(`  ❌ Processor: Not extracted from title "${product.title}"`);
+  }
+  if (product.ram) {
+    console.log(`  🧮 RAM: ${product.ram}`);
+  } else {
+    console.log(`  ❌ RAM: Not extracted from title "${product.title}"`);
+  } 
+  if (product.storage) {
+    console.log(`  💾 Storage: ${product.storage}`);
+  } else {
+    console.log(`  ❌ Storage: Not extracted from title "${product.title}"`);
+  }
+  if (product.graphics) {
+    console.log(`  🎮 Graphics: ${product.graphics}`);
+  } else {
+    console.log(`  ❌ Graphics: Not extracted from title "${product.title}"`);
+  }
+  if (product.screen_size) {
+    console.log(`  📱 Screen: ${product.screen_size}`);
+  } else {
+    console.log(`  ❌ Screen size: Not extracted from title "${product.title}"`);
+  }
+  if (product.screen_resolution) {
+    console.log(`  🖥️ Resolution: ${product.screen_resolution}`);
+  }
+  if (product.rating && product.rating_count) console.log(`  ⭐ Rating: ${product.rating}/5 (${product.rating_count} reviews)`);
+  
+  // If we have extraction data, show attempts vs success
+  if (extracted) {
+    console.log(`  📊 Extraction details:`);
+    Object.entries(extracted).forEach(([key, value]) => {
+      const success = value !== null && value !== undefined && value !== '';
+      console.log(`    ${success ? '✅' : '❌'} ${key}: ${success ? value : 'Failed to extract'}`);
+    });
+  }
+  
+  console.log(`  ⏱️ Processed at: ${new Date().toLocaleTimeString()}`);
+}
