@@ -76,22 +76,25 @@ export async function saveCollectionProgress(
   isComplete: boolean = false
 ) {
   try {
-    const progressData: CollectionProgressData = {
+    // Create the progress data object (or null if collection is complete)
+    const progressData = isComplete ? null : {
       groupIndex,
       brandIndex,
       timestamp: new Date().toISOString(),
       stats
     };
     
-    // Fix: Convert the progress data to JSON string to match the Json type expected by Supabase
+    // Create the record to upsert
+    const record = {
+      id: '1', // Use a string ID 
+      progress_data: progressData, // Supabase will handle the JSON conversion
+      last_updated: new Date().toISOString(),
+      progress_type: 'laptop_collection' 
+    };
+    
     const { error } = await supabase
       .from('collection_progress')
-      .upsert([{
-        id: '1', // Use a string ID to match the expected type
-        progress_data: isComplete ? null : progressData as any, // Cast to any to bypass type check
-        last_updated: new Date().toISOString(),
-        progress_type: 'laptop_collection' 
-      }]);
+      .upsert(record); // Pass as a single object, not an array
       
     if (error) {
       console.error('Error saving collection progress:', error);
