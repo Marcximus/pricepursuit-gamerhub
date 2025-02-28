@@ -1,9 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { DollarSign } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 type PriceRangeFilterProps = {
   minPrice: number;
@@ -14,18 +14,36 @@ type PriceRangeFilterProps = {
 export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRangeFilterProps) {
   const [localMin, setLocalMin] = useState(minPrice);
   const [localMax, setLocalMax] = useState(maxPrice);
+  const [includeHigherPrices, setIncludeHigherPrices] = useState(false);
   
-  const MAX_POSSIBLE_PRICE = 10000;
-  const isDefaultPriceRange = minPrice === 0 && maxPrice === MAX_POSSIBLE_PRICE;
+  const STANDARD_MAX_PRICE = 2000;
+  const EXTENDED_MAX_PRICE = 10000;
+  
+  const currentMaxPrice = includeHigherPrices ? EXTENDED_MAX_PRICE : STANDARD_MAX_PRICE;
+  const isDefaultPriceRange = minPrice === 0 && maxPrice === currentMaxPrice;
+
+  // Initialize local max based on whether price is beyond standard range
+  useEffect(() => {
+    setIncludeHigherPrices(maxPrice > STANDARD_MAX_PRICE);
+  }, []);
 
   // Create tick labels
   const generateTickLabels = () => {
     const labels = [];
-    const tickCount = 6; // 0, 2000, 4000, 6000, 8000, 10000
-    for (let i = 0; i < tickCount; i++) {
-      const value = Math.round(i * (MAX_POSSIBLE_PRICE / (tickCount - 1)));
+    const tickCount = includeHigherPrices ? 6 : 5; // 0, 500, 1000, 1500, 2000, (10000 if extended)
+    
+    for (let i = 0; i < tickCount - 1; i++) {
+      const value = Math.round(i * (STANDARD_MAX_PRICE / (tickCount - 2)));
       labels.push(formatPrice(value, true));
     }
+    
+    // Add the last label based on current max
+    if (includeHigherPrices) {
+      labels.push(formatPrice(EXTENDED_MAX_PRICE, true));
+    } else {
+      labels.push(formatPrice(STANDARD_MAX_PRICE, true) + "+");
+    }
+    
     return labels;
   };
 
@@ -61,10 +79,28 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
     return () => clearTimeout(timeoutId);
   }, [localMin, localMax, minPrice, maxPrice, onPriceChange]);
 
+  // Handle high price toggle change
+  const handleHighPriceToggle = (checked: boolean) => {
+    setIncludeHigherPrices(checked);
+    
+    // Adjust max price based on toggle state
+    if (checked) {
+      // If turning on higher prices, keep current max if higher than standard
+      const newMax = localMax > STANDARD_MAX_PRICE ? localMax : EXTENDED_MAX_PRICE;
+      setLocalMax(newMax);
+      onPriceChange(localMin, newMax);
+    } else {
+      // If turning off higher prices, cap at standard max
+      const newMax = Math.min(localMax, STANDARD_MAX_PRICE);
+      setLocalMax(newMax);
+      onPriceChange(localMin, newMax);
+    }
+  };
+
   const handleResetPrice = () => {
     setLocalMin(0);
-    setLocalMax(MAX_POSSIBLE_PRICE);
-    onPriceChange(0, MAX_POSSIBLE_PRICE);
+    setLocalMax(currentMaxPrice);
+    onPriceChange(0, currentMaxPrice);
   };
 
   // Format price for display
@@ -101,7 +137,7 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
           defaultValue={[localMin, localMax]}
           value={[localMin, localMax]}
           min={0}
-          max={MAX_POSSIBLE_PRICE}
+          max={currentMaxPrice}
           step={50}
           onValueChange={handleSliderChange}
           onValueCommit={handleSliderCommit}
@@ -130,11 +166,22 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
             value={localMax}
             onChange={(e) => setLocalMax(Number(e.target.value))}
             min={localMin + 50}
-            max={MAX_POSSIBLE_PRICE}
+            max={currentMaxPrice}
             className="pl-9 h-9 text-sm"
           />
           <div className="absolute left-3 top-2.5 text-slate-500">$</div>
         </div>
+      </div>
+
+      <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
+        <Label htmlFor="include-higher-prices" className="text-sm text-slate-600">
+          Include higher prices (2k+)
+        </Label>
+        <Switch
+          id="include-higher-prices"
+          checked={includeHigherPrices}
+          onCheckedChange={handleHighPriceToggle}
+        />
       </div>
     </div>
   );
