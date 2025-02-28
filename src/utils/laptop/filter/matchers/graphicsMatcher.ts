@@ -1,6 +1,8 @@
 
+import { normalizeGraphics, getGraphicsFilterValue } from "@/utils/laptop/normalizers/graphicsNormalizer";
+
 /**
- * Matcher for graphics card filter values
+ * Matcher for graphics card filter values with improved accuracy
  */
 export const matchesGraphicsFilter = (
   filterValue: string,
@@ -9,8 +11,20 @@ export const matchesGraphicsFilter = (
 ): boolean => {
   if (!productValue) return false;
   
-  const productLower = productValue.toLowerCase().trim();
-  const filterLower = filterValue.toLowerCase().trim();
+  // Normalize both filter and product values for consistency
+  const normalizedProduct = normalizeGraphics(productValue);
+  
+  // Get category-based filter values for better matching
+  const productFilterValue = getGraphicsFilterValue(normalizedProduct);
+  
+  // Primary case: direct category match
+  if (productFilterValue.toLowerCase() === filterValue.toLowerCase()) {
+    return true;
+  }
+  
+  // Secondary case: more detailed checking
+  const productLower = normalizedProduct.toLowerCase();
+  const filterLower = filterValue.toLowerCase();
   
   // NVIDIA discrete GPU matching
   if ((filterLower.includes('rtx') || filterLower.includes('gtx')) &&

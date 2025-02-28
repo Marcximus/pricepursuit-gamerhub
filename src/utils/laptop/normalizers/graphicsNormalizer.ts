@@ -1,8 +1,6 @@
 
-import { getGraphicsValue } from '../scoring/graphics';
-
 /**
- * Normalizes graphics card strings for consistent display
+ * Normalizes graphics card strings for consistent display and filtering
  */
 export const normalizeGraphics = (graphics: string): string => {
   if (!graphics) return '';
@@ -36,32 +34,74 @@ export const normalizeGraphics = (graphics: string): string => {
     
   // Standardize NVIDIA naming
   normalized = normalized
-    .replace(/nvidia\s+geforce\s+rtx?/i, 'NVIDIA RTX')
-    .replace(/nvidia\s+geforce\s+gtx?/i, 'NVIDIA GTX')
-    .replace(/nvidia\s+rtx?/i, 'NVIDIA RTX')
-    .replace(/nvidia\s+gtx?/i, 'NVIDIA GTX')
-    .replace(/geforce\s+rtx?/i, 'NVIDIA RTX')
-    .replace(/geforce\s+gtx?/i, 'NVIDIA GTX');
+    .replace(/nvidia\s+geforce\s+rtx\s*/i, 'NVIDIA RTX ')
+    .replace(/nvidia\s+geforce\s+gtx\s*/i, 'NVIDIA GTX ')
+    .replace(/geforce\s+rtx\s*/i, 'NVIDIA RTX ')
+    .replace(/geforce\s+gtx\s*/i, 'NVIDIA GTX ')
+    .replace(/nvidia\s+rtx\s*/i, 'NVIDIA RTX ')
+    .replace(/nvidia\s+gtx\s*/i, 'NVIDIA GTX ')
+    .replace(/\brtx\s+(\d{4})/i, 'NVIDIA RTX $1')
+    .replace(/\bgtx\s+(\d{4})/i, 'NVIDIA GTX $1');
     
   // Standardize Intel naming
   normalized = normalized
-    .replace(/intel(\s+iris)?(\s+xe)?\s+graphics/i, 'Intel Iris Xe Graphics')
+    .replace(/intel\s+iris\s+xe\s+graphics/i, 'Intel Iris Xe Graphics')
+    .replace(/intel\s+iris\s+graphics/i, 'Intel Iris Graphics')
     .replace(/intel\s+uhd\s+graphics/i, 'Intel UHD Graphics')
-    .replace(/intel\s+hd\s+graphics/i, 'Intel HD Graphics');
+    .replace(/intel\s+hd\s+graphics/i, 'Intel HD Graphics')
+    .replace(/\bIris\s+Xe\b/i, 'Intel Iris Xe Graphics')
+    .replace(/\bUHD\s+Graphics\b/i, 'Intel UHD Graphics');
     
   // Standardize AMD naming
   normalized = normalized
-    .replace(/amd\s+radeon/i, 'AMD Radeon')
-    .replace(/radeon/i, 'AMD Radeon');
+    .replace(/amd\s+radeon\s+graphics/i, 'AMD Radeon Graphics')
+    .replace(/radeon\s+graphics/i, 'AMD Radeon Graphics')
+    .replace(/\bradeon\s+rx\s+/i, 'AMD Radeon RX ')
+    .replace(/\bradeon\s+/i, 'AMD Radeon ');
     
   // Apple naming
   normalized = normalized
-    .replace(/apple\s+m1/i, 'Apple M1')
-    .replace(/apple\s+m2/i, 'Apple M2')
-    .replace(/apple\s+m3/i, 'Apple M3')
-    .replace(/m1\s+gpu/i, 'Apple M1')
-    .replace(/m2\s+gpu/i, 'Apple M2')
-    .replace(/m3\s+gpu/i, 'Apple M3');
+    .replace(/apple\s+m(\d)(\s+(pro|max|ultra))?(\s+gpu)?/i, 'Apple M$1$2 GPU')
+    .replace(/m(\d)(\s+(pro|max|ultra))?\s+gpu/i, 'Apple M$1$2 GPU')
+    .replace(/m(\d)(\s+(pro|max|ultra))?/i, 'Apple M$1$2 GPU');
     
+  // Make sure spaces are normalized
+  normalized = normalized.replace(/\s+/g, ' ').trim();
+  
+  return normalized;
+};
+
+/**
+ * Get a simplified version of the graphics card for filtering purposes
+ */
+export const getGraphicsFilterValue = (graphics: string): string => {
+  const normalized = normalizeGraphics(graphics).toLowerCase();
+  
+  // NVIDIA discrete GPU categories
+  if (normalized.includes('rtx 40')) return 'NVIDIA RTX 40 Series';
+  if (normalized.includes('rtx 30')) return 'NVIDIA RTX 30 Series';
+  if (normalized.includes('rtx 20')) return 'NVIDIA RTX 20 Series';
+  if (normalized.includes('rtx')) return 'NVIDIA RTX';
+  if (normalized.includes('gtx 16')) return 'NVIDIA GTX 16 Series';
+  if (normalized.includes('gtx 10')) return 'NVIDIA GTX 10 Series';
+  if (normalized.includes('gtx')) return 'NVIDIA GTX';
+  
+  // AMD discrete GPU categories
+  if (normalized.includes('radeon rx 7')) return 'AMD Radeon RX 7000 Series';
+  if (normalized.includes('radeon rx 6')) return 'AMD Radeon RX 6000 Series';
+  if (normalized.includes('radeon rx')) return 'AMD Radeon RX';
+  if (normalized.includes('radeon')) return 'AMD Radeon Graphics';
+  
+  // Intel integrated graphics categories
+  if (normalized.includes('iris xe')) return 'Intel Iris Xe Graphics';
+  if (normalized.includes('iris')) return 'Intel Iris Graphics';
+  if (normalized.includes('uhd')) return 'Intel UHD Graphics';
+  if (normalized.includes('hd graphics')) return 'Intel HD Graphics';
+  
+  // Apple integrated graphics
+  if (normalized.includes('m3')) return 'Apple M3 GPU';
+  if (normalized.includes('m2')) return 'Apple M2 GPU';
+  if (normalized.includes('m1')) return 'Apple M1 GPU';
+  
   return normalized;
 };

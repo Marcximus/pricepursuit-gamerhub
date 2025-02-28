@@ -1,6 +1,8 @@
 
+import { normalizeProcessor, getProcessorFilterValue } from "@/utils/laptop/normalizers/processorNormalizer";
+
 /**
- * Matcher for processor filter values
+ * Matcher for processor filter values with improved accuracy
  */
 export const matchesProcessorFilter = (
   filterValue: string,
@@ -9,8 +11,20 @@ export const matchesProcessorFilter = (
 ): boolean => {
   if (!productValue) return false;
   
-  const productLower = productValue.toLowerCase().trim();
-  const filterLower = filterValue.toLowerCase().trim();
+  // Normalize both filter and product values for consistency
+  const normalizedProduct = normalizeProcessor(productValue);
+  
+  // Get category-based filter values for better matching
+  const productFilterValue = getProcessorFilterValue(normalizedProduct);
+  
+  // Primary case: direct category match
+  if (productFilterValue.toLowerCase() === filterValue.toLowerCase()) {
+    return true;
+  }
+  
+  // Secondary case: more detailed checking
+  const productLower = normalizedProduct.toLowerCase();
+  const filterLower = filterValue.toLowerCase();
   
   // Apple processor matching
   if ((filterLower.includes('m1') || filterLower.includes('m2') || filterLower.includes('m3')) &&
@@ -34,12 +48,15 @@ export const matchesProcessorFilter = (
     // Match variants (Pro, Max, etc.)
     const filterHasPro = filterLower.includes('pro');
     const filterHasMax = filterLower.includes('max');
+    const filterHasUltra = filterLower.includes('ultra');
     const productHasPro = productLower.includes('pro');
     const productHasMax = productLower.includes('max');
+    const productHasUltra = productLower.includes('ultra');
     
-    // If filter specifies Pro/Max variant, product must match
+    // If filter specifies variant, product must match
     if ((filterHasPro && !productHasPro) || 
-        (filterHasMax && !productHasMax)) {
+        (filterHasMax && !productHasMax) || 
+        (filterHasUltra && !productHasUltra)) {
       return false;
     }
     
@@ -99,11 +116,13 @@ export const matchesProcessorFilter = (
   }
   
   // Check for basic CPU type matches
-  const cpuTypes = ['intel', 'amd', 'ryzen', 'apple', 'celeron', 'pentium', 'xeon'];
+  const cpuTypes = ['intel', 'amd', 'ryzen', 'apple', 'celeron', 'pentium', 'xeon', 'ultra'];
   
+  let matchesType = false;
   for (const type of cpuTypes) {
-    if (filterLower.includes(type) && !productLower.includes(type)) {
-      return false;
+    if (filterLower.includes(type)) {
+      matchesType = productLower.includes(type);
+      if (!matchesType) return false;
     }
   }
   

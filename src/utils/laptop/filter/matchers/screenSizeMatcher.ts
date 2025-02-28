@@ -1,6 +1,6 @@
 
 /**
- * Matcher for screen size filter values
+ * Matcher for screen size filter values with improved accuracy
  */
 export const matchesScreenSizeFilter = (
   filterValue: string,
@@ -19,5 +19,6 @@ export const matchesScreenSizeFilter = (
   const productSize = parseFloat(productMatch[1]);
   
   // Screen sizes should match precisely for filtering purposes
-  return Math.abs(filterSize - productSize) < 0.1; // Allow a small tolerance for rounding errors
+  // With a small tolerance for rounding errors
+  return Math.abs(filterSize - productSize) < 0.1;
 };

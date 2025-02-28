@@ -2,7 +2,7 @@
 import { parseValueWithUnit } from './commonMatchers';
 
 /**
- * Matcher for storage filter values
+ * Matcher for storage filter values with improved accuracy
  */
 export const matchesStorageFilter = (
   filterValue: string,
@@ -21,5 +21,6 @@ export const matchesStorageFilter = (
   const productGB = productStorage.unit === 'gb' ? productStorage.value : productStorage.value * 1024;
   
   // Storage capacities should match precisely for filtering purposes
-  return Math.abs(filterGB - productGB) < 1; // Allow a small tolerance for rounding errors
+  // With a small tolerance for rounding errors
+  return Math.abs(filterGB - productGB) < 1;
 };

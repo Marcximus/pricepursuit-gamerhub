@@ -3,8 +3,8 @@
 const BRAND_PATTERNS: {[key: string]: RegExp[]} = {
   'Apple': [/\bmacbook\b/i, /\bipad\b/i, /\bmac\b/i, /\bapple\b/i, /\bm1\b/i, /\bm2\b/i, /\bm3\b/i],
   'Lenovo': [/\blenovo\b/i, /\bthinkpad\b/i, /\bideapad\b/i, /\byoga\b/i, /\blegion\b/i],
-  'HP': [/\bhp\b/i, /\bspectre\b/i, /\bpavilion\b/i, /\benvy\b/i, /\bomen\b/i],
-  'Dell': [/\bdell\b/i, /\bxps\b/i, /\binspiron\b/i, /\blatitude\b/i, /\bprecision\b/i],
+  'HP': [/\bhp\b/i, /\bspectre\b/i, /\bpavilion\b/i, /\benvy\b/i, /\bomen\b/i, /\belitebook\b/i, /\bprobook\b/i],
+  'Dell': [/\bdell\b/i, /\bxps\b/i, /\binspiron\b/i, /\blatitude\b/i, /\bprecision\b/i, /\bvostro\b/i],
   'ASUS': [/\basus\b/i, /\bzenbook\b/i, /\brog\b/i, /\btuf\b/i, /\bvivobook\b/i],
   'Acer': [/\bacer\b/i, /\baspire\b/i, /\bpredator\b/i, /\bnitro\b/i, /\bswift\b/i],
   'MSI': [/\bmsi\b/i, /\braider\b/i, /\bstealth\b/i, /\btitan\b/i, /\bprestige\b/i],
@@ -12,7 +12,10 @@ const BRAND_PATTERNS: {[key: string]: RegExp[]} = {
   'Microsoft': [/\bmicrosoft\b/i, /\bsurface\b/i],
   'Razer': [/\brazer\b/i, /\bblade\b/i],
   'Alienware': [/\balienware\b/i],
-  'LG': [/\blg\b/i, /\bgram\b/i]
+  'LG': [/\blg\b/i, /\bgram\b/i],
+  'Gigabyte': [/\bgigabyte\b/i, /\baero\b/i],
+  'Huawei': [/\bhuawei\b/i, /\bmatebook\b/i],
+  'Xiaomi': [/\bxiaomi\b/i, /\bredmi\b/i, /\bmi notebook\b/i]
 };
 
 // Known laptop brands with proper capitalization
@@ -32,7 +35,11 @@ const BRAND_CORRECTIONS: {[key: string]: string} = {
   'gigabyte': 'Gigabyte',
   'huawei': 'Huawei',
   'xiaomi': 'Xiaomi',
-  'alienware': 'Alienware'
+  'alienware': 'Alienware',
+  'vaio': 'VAIO',
+  'fsjun': 'FSJUN',
+  'jumper': 'Jumper',
+  'acemagic': 'ACEMAGIC'
 };
 
 /**
