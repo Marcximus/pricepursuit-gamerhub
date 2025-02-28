@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { RefreshCw } from "lucide-react";
 import ManagementCard from "./ManagementCard";
@@ -13,8 +13,13 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
   updateLaptops, 
   refreshStats 
 }) => {
+  const [isUpdating, setIsUpdating] = useState(false);
+
   const handleUpdateLaptops = async () => {
+    if (isUpdating) return;
+    
     try {
+      setIsUpdating(true);
       console.log('Update Prices button clicked');
       console.log('Starting laptop update process...');
       
@@ -29,7 +34,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
       } else {
         toast({
           title: "Update Failed",
-          description: result?.error || "Failed to start laptop updates. Please check console for details.",
+          description: result?.error || result?.message || "Failed to start laptop updates. Please check console for details.",
           variant: "destructive"
         });
         console.error('Update failed with result:', result);
@@ -44,6 +49,8 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
         description: "Failed to start laptop updates: " + (error.message || "Unknown error"),
         variant: "destructive"
       });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -52,9 +59,10 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
       title="Update Laptops"
       description="Update prices and information for existing laptops"
       icon={RefreshCw}
-      buttonText="Update Prices"
+      buttonText={isUpdating ? "Updating..." : "Update Prices"}
       onClick={handleUpdateLaptops}
       variant="outline"
+      disabled={isUpdating}
     />
   );
 };

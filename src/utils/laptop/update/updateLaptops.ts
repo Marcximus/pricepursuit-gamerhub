@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { processChunksSequentially } from "./chunkProcessor";
+import { applyAllProductFilters } from "../productFilters";
 
 export const updateLaptops = async () => {
   try {
@@ -25,14 +26,22 @@ export const updateLaptops = async () => {
       return { success: false, message: 'No laptops found to update' };
     }
 
+    // Filter out any non-laptop products
+    const filteredLaptops = applyAllProductFilters(laptops);
+    
+    if (filteredLaptops.length === 0) {
+      console.log('No valid laptops found after filtering');
+      return { success: false, message: 'No valid laptops found after filtering' };
+    }
+
     // Format timestamps for logging
-    const formattedLaptops = laptops.map(laptop => ({
+    const formattedLaptops = filteredLaptops.map(laptop => ({
       ...laptop,
       formattedLastChecked: laptop.last_checked ? new Date(laptop.last_checked).toLocaleString() : 'Never checked'
     }));
 
     // Log detailed info about laptops to be updated - now using ASIN as primary identifier
-    console.log(`Found ${laptops.length} laptops to update with the following priority:`);
+    console.log(`Found ${filteredLaptops.length} laptops to update with the following priority:`);
     formattedLaptops.forEach((laptop, index) => {
       console.log(`${index + 1}. ASIN: ${laptop.asin}, Title: ${laptop.title?.substring(0, 30)}..., Last Checked: ${laptop.formattedLastChecked}, Current Price: ${laptop.current_price === null ? 'NULL' : `$${laptop.current_price}`}, Has Image: ${laptop.image_url ? 'Yes' : 'No'}`);
     });
@@ -43,8 +52,8 @@ export const updateLaptops = async () => {
     // Split laptops into chunks of 10
     const chunkSize = 10;
     const chunks = [];
-    for (let i = 0; i < laptops.length; i += chunkSize) {
-      chunks.push(laptops.slice(i, i + chunkSize));
+    for (let i = 0; i < filteredLaptops.length; i += chunkSize) {
+      chunks.push(filteredLaptops.slice(i, i + chunkSize));
     }
 
     console.log(`Split updates into ${chunks.length} chunks of up to ${chunkSize} laptops each`);
@@ -54,7 +63,7 @@ export const updateLaptops = async () => {
       console.error('Background process error:', error);
     });
     
-    return { success: true, message: `Started updating ${laptops.length} laptops in ${chunks.length} chunks` };
+    return { success: true, message: `Started updating ${filteredLaptops.length} laptops in ${chunks.length} chunks` };
 
   } catch (error: any) {
     console.error('Failed to update laptops:', error);

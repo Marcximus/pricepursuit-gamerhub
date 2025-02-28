@@ -134,6 +134,7 @@ export type Database = {
           last_collection_attempt: string | null
           last_updated: string | null
           model: string | null
+          operating_system: string | null
           original_price: number | null
           processor: string | null
           processor_score: number | null
@@ -172,6 +173,7 @@ export type Database = {
           last_collection_attempt?: string | null
           last_updated?: string | null
           model?: string | null
+          operating_system?: string | null
           original_price?: number | null
           processor?: string | null
           processor_score?: number | null
@@ -210,6 +212,7 @@ export type Database = {
           last_collection_attempt?: string | null
           last_updated?: string | null
           model?: string | null
+          operating_system?: string | null
           original_price?: number | null
           processor?: string | null
           processor_score?: number | null
