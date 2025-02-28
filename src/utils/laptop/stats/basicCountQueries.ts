@@ -1,168 +1,163 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { StatsCountResult } from "./types";
+import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Get total count of laptop products
- */
-export async function getTotalLaptopCount(): Promise<StatsCountResult> {
-  console.log('Executing getTotalLaptopCount query...');
-  const { count, error } = await supabase
-    .from('products')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_laptop', true);
-  
-  if (error) {
-    console.error('Error fetching total count:', error);
-  } else {
-    console.log(`Total laptop count result: ${count}`);
-  }
-  
-  return { count: count || 0, error };
-}
+export const getTotalLaptopCount = async (): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_laptop', true);
 
-/**
- * Get count of laptops with valid prices
- */
-export async function getLaptopsWithPriceCount(): Promise<StatsCountResult> {
-  console.log('Executing getLaptopsWithPriceCount query...');
-  const { count, error } = await supabase
-    .from('products')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_laptop', true)
-    .not('current_price', 'is', null);
-  
-  if (error) {
-    console.error('Error fetching price count:', error);
-  } else {
-    console.log(`Laptops with price count result: ${count}`);
-  }
-  
-  return { count: count || 0, error };
-}
+    if (error) {
+      console.error('Error getting total laptop count:', error);
+      return 0;
+    }
 
-/**
- * Get count of laptops with valid processor data
- */
-export async function getLaptopsWithProcessorCount(): Promise<StatsCountResult> {
-  console.log('Executing getLaptopsWithProcessorCount query...');
-  const { count, error } = await supabase
-    .from('products')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_laptop', true)
-    .not('processor', 'is', null)
-    .neq('processor', '');
-  
-  if (error) {
-    console.error('Error fetching processor count:', error);
-  } else {
-    console.log(`Laptops with processor count result: ${count}`);
+    return count || 0;
+  } catch (err) {
+    console.error('Exception getting total laptop count:', err);
+    return 0;
   }
-  
-  return { count: count || 0, error };
-}
+};
 
-/**
- * Get count of laptops with valid RAM data
- */
-export async function getLaptopsWithRamCount(): Promise<StatsCountResult> {
-  console.log('Executing getLaptopsWithRamCount query...');
-  const { count, error } = await supabase
-    .from('products')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_laptop', true)
-    .not('ram', 'is', null)
-    .neq('ram', '');
-  
-  if (error) {
-    console.error('Error fetching RAM count:', error);
-  } else {
-    console.log(`Laptops with RAM count result: ${count}`);
-  }
-  
-  return { count: count || 0, error };
-}
+export const getLaptopsWithPriceCount = async (): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_laptop', true)
+      .not('current_price', 'is', null);
 
-/**
- * Get count of laptops with valid storage data
- */
-export async function getLaptopsWithStorageCount(): Promise<StatsCountResult> {
-  console.log('Executing getLaptopsWithStorageCount query...');
-  const { count, error } = await supabase
-    .from('products')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_laptop', true)
-    .not('storage', 'is', null)
-    .neq('storage', '');
-  
-  if (error) {
-    console.error('Error fetching storage count:', error);
-  } else {
-    console.log(`Laptops with storage count result: ${count}`);
-  }
-  
-  return { count: count || 0, error };
-}
+    if (error) {
+      console.error('Error getting laptops with price count:', error);
+      return 0;
+    }
 
-/**
- * Get count of laptops with valid graphics data
- */
-export async function getLaptopsWithGraphicsCount(): Promise<StatsCountResult> {
-  console.log('Executing getLaptopsWithGraphicsCount query...');
-  const { count, error } = await supabase
-    .from('products')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_laptop', true)
-    .not('graphics', 'is', null)
-    .neq('graphics', '');
-  
-  if (error) {
-    console.error('Error fetching graphics count:', error);
-  } else {
-    console.log(`Laptops with graphics count result: ${count}`);
+    return count || 0;
+  } catch (err) {
+    console.error('Exception getting laptops with price count:', err);
+    return 0;
   }
-  
-  return { count: count || 0, error };
-}
+};
 
-/**
- * Get count of laptops with valid screen size data
- */
-export async function getLaptopsWithScreenSizeCount(): Promise<StatsCountResult> {
-  console.log('Executing getLaptopsWithScreenSizeCount query...');
-  const { count, error } = await supabase
-    .from('products')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_laptop', true)
-    .not('screen_size', 'is', null)
-    .neq('screen_size', '');
-  
-  if (error) {
-    console.error('Error fetching screen size count:', error);
-  } else {
-    console.log(`Laptops with screen size count result: ${count}`);
-  }
-  
-  return { count: count || 0, error };
-}
+export const getLaptopsWithProcessorCount = async (): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_laptop', true)
+      .not('processor', 'is', null);
 
-/**
- * Get random sample of missing data items for inspection
- */
-export async function getSampleMissingDataItems(field: string, limit: number = 10): Promise<any> {
-  console.log(`Fetching sample of ${limit} items missing ${field} data...`);
-  const { data, error } = await supabase
-    .from('products')
-    .select('id, title, asin, brand, model')
-    .eq('is_laptop', true)
-    .or(`${field}.is.null,${field}.eq.''`)
-    .limit(limit);
-  
-  if (error) {
-    console.error(`Error fetching sample missing ${field} items:`, error);
-    return { data: [], error };
+    if (error) {
+      console.error('Error getting laptops with processor count:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (err) {
+    console.error('Exception getting laptops with processor count:', err);
+    return 0;
   }
-  
-  console.log(`Retrieved ${data?.length || 0} sample items missing ${field} data`);
-  return { data, error };
-}
+};
+
+export const getLaptopsWithRamCount = async (): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_laptop', true)
+      .not('ram', 'is', null);
+
+    if (error) {
+      console.error('Error getting laptops with RAM count:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (err) {
+    console.error('Exception getting laptops with RAM count:', err);
+    return 0;
+  }
+};
+
+export const getLaptopsWithStorageCount = async (): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_laptop', true)
+      .not('storage', 'is', null);
+
+    if (error) {
+      console.error('Error getting laptops with storage count:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (err) {
+    console.error('Exception getting laptops with storage count:', err);
+    return 0;
+  }
+};
+
+export const getLaptopsWithGraphicsCount = async (): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_laptop', true)
+      .not('graphics', 'is', null);
+
+    if (error) {
+      console.error('Error getting laptops with graphics count:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (err) {
+    console.error('Exception getting laptops with graphics count:', err);
+    return 0;
+  }
+};
+
+export const getLaptopsWithScreenSizeCount = async (): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_laptop', true)
+      .not('screen_size', 'is', null);
+
+    if (error) {
+      console.error('Error getting laptops with screen size count:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (err) {
+    console.error('Exception getting laptops with screen size count:', err);
+    return 0;
+  }
+};
+
+export const getSampleLaptopsWithMissingInfo = async (limit = 5): Promise<any[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('id, asin, title, processor, ram, storage, graphics, screen_size, current_price, last_checked, update_status')
+      .eq('is_laptop', true)
+      .or('processor.is.null,ram.is.null,storage.is.null,graphics.is.null,screen_size.is.null')
+      .order('last_checked', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('Error getting sample laptops with missing info:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error('Exception getting sample laptops with missing info:', err);
+    return [];
+  }
+};

@@ -1,4 +1,6 @@
 
+// Types for update-laptops function
+
 // Request Types
 export interface LaptopUpdateRequest {
   laptops: Array<{
@@ -29,4 +31,35 @@ export interface UpdateResponse {
       error: string;
     }>;
   };
+}
+
+// Laptop Update Types
+export interface LaptopUpdate {
+  id: string;
+  asin: string;
+  title?: string;
+  current_price?: number | null;
+  original_price?: number | null;
+  rating?: number | null;
+  rating_count?: number | null;
+  total_reviews?: number | null;
+  image_url?: string;
+  processor?: string;
+  ram?: string;
+  storage?: string;
+  graphics?: string;
+  screen_size?: string;
+  screen_resolution?: string;
+  weight?: string;
+  battery_life?: string;
+  brand?: string;
+  model?: string;
+}
+
+export interface LaptopUpdateResult {
+  id: string;
+  asin: string;
+  success: boolean;
+  message?: string;
+  error?: string;
 }

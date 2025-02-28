@@ -28,3 +28,16 @@ export interface CollectionProgressData {
   timestamp: string;
   stats: CollectionStats;
 }
+
+// Define types for specification statistics
+export interface SpecificationStats {
+  totalLaptops: number;
+  missingInformation: {
+    prices: { count: number; percentage: number };
+    processor: { count: number; percentage: number };
+    ram: { count: number; percentage: number };
+    storage: { count: number; percentage: number };
+    graphics: { count: number; percentage: number };
+    screenSize: { count: number; percentage: number };
+  };
+}
