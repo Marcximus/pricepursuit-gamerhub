@@ -1,49 +1,28 @@
 
 export interface StatsCountResult {
   count: number;
-  error: any | null;
+  error: Error | null;
 }
 
 export interface DatabaseStats {
   totalLaptops: number;
   updateStatus: {
-    notUpdated: StatsCountResult;
-    notChecked: StatsCountResult;
-    recentlyChecked: StatsCountResult;
+    notUpdated: { count: number; percentage: number };
+    notChecked: { count: number; percentage: number };
   };
-  aiStatus: {
-    pending: StatsCountResult;
-    processed: StatsCountResult;
-    inProgress: StatsCountResult;
-    error: StatsCountResult;
-  };
-  missingInfo: {
-    noProcessor: StatsCountResult;
-    noRam: StatsCountResult;
-    noStorage: StatsCountResult;
-    noGraphics: StatsCountResult;
-    missingAnySpec: StatsCountResult;
-  };
-  percentages: {
-    pendingAi: number;
-    processedAi: number;
-    missingSpecs: number;
-    recentlyChecked: number;
-  };
-  // These properties are used by the components
   aiProcessingStatus: {
-    pending: StatsCountResult;
-    processing: StatsCountResult;
-    error: StatsCountResult;
-    complete: StatsCountResult;
+    pending: { count: number; percentage: number };
+    processing: { count: number; percentage: number };
+    error: { count: number; percentage: number };
+    complete: { count: number; percentage: number };
     completionPercentage: number;
   };
   missingInformation: {
-    prices: { percentage: number };
-    processor: { percentage: number };
-    ram: { percentage: number };
-    storage: { percentage: number };
-    graphics: { percentage: number };
-    screenSize: { percentage: number };
+    prices: { count: number; percentage: number };
+    processor: { count: number; percentage: number };
+    ram: { count: number; percentage: number };
+    storage: { count: number; percentage: number };
+    graphics: { count: number; percentage: number };
+    screenSize: { count: number; percentage: number };
   };
 }

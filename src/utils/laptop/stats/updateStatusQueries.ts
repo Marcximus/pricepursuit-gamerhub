@@ -41,23 +41,3 @@ export async function getNotCheckedLaptopsCount(): Promise<StatsCountResult> {
   
   return { count: count || 0, error };
 }
-
-/**
- * Get count of laptops checked in the last 24 hours
- */
-export async function getRecentlyCheckedLaptopsCount(): Promise<StatsCountResult> {
-  const oneDayAgo = new Date();
-  oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-  
-  const { count, error } = await supabase
-    .from('products')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_laptop', true)
-    .gte('last_checked', oneDayAgo.toISOString());
-  
-  if (error) {
-    console.error('Error fetching recently checked count:', error);
-  }
-  
-  return { count: count || 0, error };
-}

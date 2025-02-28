@@ -5,7 +5,7 @@ import { StatsCountResult } from "./types";
 /**
  * Get count of laptops with pending AI processing status
  */
-export async function getPendingAICount(): Promise<StatsCountResult> {
+export async function getPendingAIProcessingCount(): Promise<StatsCountResult> {
   const { count, error } = await supabase
     .from('products')
     .select('*', { count: 'exact', head: true })
@@ -22,7 +22,7 @@ export async function getPendingAICount(): Promise<StatsCountResult> {
 /**
  * Get count of laptops with in-progress AI processing status
  */
-export async function getInProgressAICount(): Promise<StatsCountResult> {
+export async function getProcessingAICount(): Promise<StatsCountResult> {
   const { count, error } = await supabase
     .from('products')
     .select('*', { count: 'exact', head: true })
@@ -39,7 +39,7 @@ export async function getInProgressAICount(): Promise<StatsCountResult> {
 /**
  * Get count of laptops with error AI processing status
  */
-export async function getErrorAICount(): Promise<StatsCountResult> {
+export async function getErrorAIProcessingCount(): Promise<StatsCountResult> {
   const { count, error } = await supabase
     .from('products')
     .select('*', { count: 'exact', head: true })
@@ -56,7 +56,7 @@ export async function getErrorAICount(): Promise<StatsCountResult> {
 /**
  * Get count of laptops with complete AI processing status
  */
-export async function getProcessedAICount(): Promise<StatsCountResult> {
+export async function getCompleteAIProcessingCount(): Promise<StatsCountResult> {
   const { count, error } = await supabase
     .from('products')
     .select('*', { count: 'exact', head: true })

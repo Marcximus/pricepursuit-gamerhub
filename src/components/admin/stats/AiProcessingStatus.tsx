@@ -9,11 +9,6 @@ interface AiProcessingStatusProps {
 }
 
 export function AiProcessingStatus({ stats }: AiProcessingStatusProps) {
-  // Calculate percentage based on actual count data
-  const completionPercentage = stats.totalLaptops > 0 
-    ? Math.round((stats.aiStatus.processed.count / stats.totalLaptops) * 100)
-    : 0;
-
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">AI Processing Status</h3>
@@ -22,41 +17,41 @@ export function AiProcessingStatus({ stats }: AiProcessingStatusProps) {
         <StatItem 
           icon={<Search className="h-4 w-4 text-slate-500" />}
           label="Pending"
-          value={stats.aiStatus.pending.count}
+          value={stats.aiProcessingStatus.pending.count}
         />
         
         <StatItem 
           icon={<Loader2 className="h-4 w-4 text-blue-500" />}
           label="Processing"
-          value={stats.aiStatus.inProgress.count}
+          value={stats.aiProcessingStatus.processing.count}
         />
         
         <StatItem 
           icon={<AlertCircle className="h-4 w-4 text-red-500" />}
           label="Error"
-          value={stats.aiStatus.error.count}
+          value={stats.aiProcessingStatus.error.count}
         />
         
         <StatItem 
           icon={<CheckSquare className="h-4 w-4 text-green-500" />}
           label="Complete"
-          value={stats.aiStatus.processed.count}
+          value={stats.aiProcessingStatus.complete.count}
         />
         
         <div className="mt-4">
           <div className="flex justify-between mb-1">
             <span className="text-sm">Processing Completion</span>
-            <span className="text-sm font-medium">{completionPercentage}%</span>
+            <span className="text-sm font-medium">{stats.aiProcessingStatus.completionPercentage}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
               className={`h-2 rounded-full ${
-                completionPercentage >= 75 ? 'bg-green-500' : 
-                completionPercentage >= 50 ? 'bg-blue-500' : 
-                completionPercentage >= 25 ? 'bg-amber-500' : 
+                stats.aiProcessingStatus.completionPercentage >= 75 ? 'bg-green-500' : 
+                stats.aiProcessingStatus.completionPercentage >= 50 ? 'bg-blue-500' : 
+                stats.aiProcessingStatus.completionPercentage >= 25 ? 'bg-amber-500' : 
                 'bg-red-500'
               }`}
-              style={{ width: `${completionPercentage}%` }}
+              style={{ width: `${stats.aiProcessingStatus.completionPercentage}%` }}
             ></div>
           </div>
         </div>

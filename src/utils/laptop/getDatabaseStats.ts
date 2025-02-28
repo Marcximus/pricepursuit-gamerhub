@@ -1,98 +1,144 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { DatabaseStats } from "./stats/types";
-import { getTotalLaptopCount } from "./stats/basicCountQueries";
-import { getNotUpdatedLaptopsCount, getNotCheckedLaptopsCount, getRecentlyCheckedLaptopsCount } from "./stats/updateStatusQueries";
-import { getPendingAICount, getProcessedAICount, getInProgressAICount, getErrorAICount } from "./stats/aiProcessingQueries";
 import { 
-  getNoProcessorCount, 
-  getNoRamCount, 
-  getNoStorageCount, 
-  getNoGraphicsCount,
-  getMissingAnySpecCount
-} from "./stats/missingInfoQueries";
-import { calculatePercentage } from "./stats/percentageCalculator";
+  getTotalLaptopCount, 
+  getLaptopsWithPriceCount, 
+  getLaptopsWithProcessorCount,
+  getLaptopsWithRamCount,
+  getLaptopsWithStorageCount,
+  getLaptopsWithGraphicsCount,
+  getLaptopsWithScreenSizeCount
+} from "./stats/basicCountQueries";
+import { 
+  getNotUpdatedLaptopsCount, 
+  getNotCheckedLaptopsCount 
+} from "./stats/updateStatusQueries";
+import { 
+  getPendingAIProcessingCount, 
+  getProcessingAICount, 
+  getErrorAIProcessingCount, 
+  getCompleteAIProcessingCount 
+} from "./stats/aiProcessingQueries";
+import { 
+  calculatePercentage, 
+  calculateInversePercentage 
+} from "./stats/percentageCalculator";
+import { DatabaseStats } from "./stats/types";
 
 export async function getDatabaseStats(): Promise<DatabaseStats> {
   try {
-    // Get basic counts
-    const totalLaptops = await getTotalLaptopCount();
+    console.log('Fetching database statistics...');
     
-    // Get update status counts
-    const notUpdated = await getNotUpdatedLaptopsCount();
-    const notChecked = await getNotCheckedLaptopsCount();
-    const recentlyChecked = await getRecentlyCheckedLaptopsCount();
-    
+    // Get total count of laptop products
+    const { count: totalCount, error: countError } = await getTotalLaptopCount();
+    if (countError) throw countError;
+
+    // Get count of products with valid prices
+    const { count: priceCount, error: priceError } = await getLaptopsWithPriceCount();
+    if (priceError) throw priceError;
+
+    // Get count of products with valid processor data
+    const { count: processorCount, error: processorError } = await getLaptopsWithProcessorCount();
+    if (processorError) throw processorError;
+
+    // Get count of products with valid RAM data
+    const { count: ramCount, error: ramError } = await getLaptopsWithRamCount();
+    if (ramError) throw ramError;
+
+    // Get count of products with valid storage data
+    const { count: storageCount, error: storageError } = await getLaptopsWithStorageCount();
+    if (storageError) throw storageError;
+
+    // Get count of products with valid graphics data
+    const { count: graphicsCount, error: graphicsError } = await getLaptopsWithGraphicsCount();
+    if (graphicsError) throw graphicsError;
+
+    // Get count of products with valid screen size data
+    const { count: screenSizeCount, error: screenSizeError } = await getLaptopsWithScreenSizeCount();
+    if (screenSizeError) throw screenSizeError;
+
+    // Get update and check status counts (last 24 hours)
+    const { count: notUpdatedCount, error: notUpdatedError } = await getNotUpdatedLaptopsCount();
+    if (notUpdatedError) throw notUpdatedError;
+
+    const { count: notCheckedCount, error: notCheckedError } = await getNotCheckedLaptopsCount();
+    if (notCheckedError) throw notCheckedError;
+
     // Get AI processing status counts
-    const pendingAi = await getPendingAICount();
-    const processedAi = await getProcessedAICount();
-    const inProgressAi = await getInProgressAICount();
-    const errorAi = await getErrorAICount();
-    
-    // Get missing information counts
-    const noProcessor = await getNoProcessorCount();
-    const noRam = await getNoRamCount();
-    const noStorage = await getNoStorageCount();
-    const noGraphics = await getNoGraphicsCount();
-    const missingAnySpec = await getMissingAnySpecCount();
-    
-    // Calculate percentages
-    const pendingAiPercentage = calculatePercentage(pendingAi.count, totalLaptops.count);
-    const processedAiPercentage = calculatePercentage(processedAi.count, totalLaptops.count);
-    const missingSpecsPercentage = calculatePercentage(missingAnySpec.count, totalLaptops.count);
-    const recentlyCheckedPercentage = calculatePercentage(recentlyChecked.count, totalLaptops.count);
-    
-    // Calculate missing information percentages
-    const processorPercentage = calculatePercentage(noProcessor.count, totalLaptops.count);
-    const ramPercentage = calculatePercentage(noRam.count, totalLaptops.count);
-    const storagePercentage = calculatePercentage(noStorage.count, totalLaptops.count);
-    const graphicsPercentage = calculatePercentage(noGraphics.count, totalLaptops.count);
-    
+    const { count: pendingCount, error: pendingError } = await getPendingAIProcessingCount();
+    if (pendingError) throw pendingError;
+
+    const { count: processingCount, error: processingError } = await getProcessingAICount();
+    if (processingError) throw processingError;
+
+    const { count: errorCount, error: errorStatusError } = await getErrorAIProcessingCount();
+    if (errorStatusError) throw errorStatusError;
+
+    const { count: completeCount, error: completeError } = await getCompleteAIProcessingCount();
+    if (completeError) throw completeError;
+
+    // Calculate percentages and processing completion percentage
+    const processingCompletionPercentage = calculatePercentage(completeCount, totalCount);
+
     return {
-      totalLaptops: totalLaptops.count,
+      totalLaptops: totalCount,
       updateStatus: {
-        notUpdated,
-        notChecked,
-        recentlyChecked
+        notUpdated: {
+          count: notUpdatedCount,
+          percentage: calculatePercentage(notUpdatedCount, totalCount)
+        },
+        notChecked: {
+          count: notCheckedCount,
+          percentage: calculatePercentage(notCheckedCount, totalCount)
+        }
       },
-      aiStatus: {
-        pending: pendingAi,
-        processed: processedAi,
-        inProgress: inProgressAi,
-        error: errorAi
-      },
-      missingInfo: {
-        noProcessor,
-        noRam,
-        noStorage,
-        noGraphics,
-        missingAnySpec
-      },
-      percentages: {
-        pendingAi: pendingAiPercentage,
-        processedAi: processedAiPercentage,
-        missingSpecs: missingSpecsPercentage,
-        recentlyChecked: recentlyCheckedPercentage
-      },
-      // Map to the component-expected format
       aiProcessingStatus: {
-        pending: pendingAi,
-        processing: inProgressAi,
-        error: errorAi,
-        complete: processedAi,
-        completionPercentage: processedAiPercentage
+        pending: {
+          count: pendingCount,
+          percentage: calculatePercentage(pendingCount, totalCount)
+        },
+        processing: {
+          count: processingCount,
+          percentage: calculatePercentage(processingCount, totalCount)
+        },
+        error: {
+          count: errorCount,
+          percentage: calculatePercentage(errorCount, totalCount)
+        },
+        complete: {
+          count: completeCount,
+          percentage: calculatePercentage(completeCount, totalCount)
+        },
+        completionPercentage: processingCompletionPercentage
       },
       missingInformation: {
-        prices: { percentage: 0 }, // Placeholder until we have actual price data
-        processor: { percentage: processorPercentage },
-        ram: { percentage: ramPercentage },
-        storage: { percentage: storagePercentage },
-        graphics: { percentage: graphicsPercentage },
-        screenSize: { percentage: 0 } // Placeholder until we have screen size data
+        prices: {
+          count: totalCount - priceCount,
+          percentage: calculateInversePercentage(priceCount, totalCount)
+        },
+        processor: {
+          count: totalCount - processorCount,
+          percentage: calculateInversePercentage(processorCount, totalCount)
+        },
+        ram: {
+          count: totalCount - ramCount,
+          percentage: calculateInversePercentage(ramCount, totalCount)
+        },
+        storage: {
+          count: totalCount - storageCount,
+          percentage: calculateInversePercentage(storageCount, totalCount)
+        },
+        graphics: {
+          count: totalCount - graphicsCount,
+          percentage: calculateInversePercentage(graphicsCount, totalCount)
+        },
+        screenSize: {
+          count: totalCount - screenSizeCount,
+          percentage: calculateInversePercentage(screenSizeCount, totalCount)
+        }
       }
     };
   } catch (error) {
-    console.error('Error getting database stats:', error);
+    console.error('Error in getDatabaseStats:', error);
     throw error;
   }
 }
