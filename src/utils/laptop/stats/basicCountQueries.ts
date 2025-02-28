@@ -141,13 +141,34 @@ export const getLaptopsWithScreenSizeCount = async (): Promise<StatsCountResult>
   }
 };
 
+export const getLaptopsWithImageCount = async (): Promise<StatsCountResult> => {
+  try {
+    const { count, error } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_laptop', true)
+      .not('image_url', 'is', null)
+      .not('image_url', 'eq', '');
+
+    if (error) {
+      console.error('Error getting laptops with image count:', error);
+      return { count: 0, error };
+    }
+
+    return { count: count || 0, error: null };
+  } catch (err) {
+    console.error('Exception getting laptops with image count:', err);
+    return { count: 0, error: err instanceof Error ? err : new Error(String(err)) };
+  }
+};
+
 export const getSampleLaptopsWithMissingInfo = async (limit = 5): Promise<any[]> => {
   try {
     const { data, error } = await supabase
       .from('products')
-      .select('id, asin, title, processor, ram, storage, graphics, screen_size, current_price, last_checked, update_status')
+      .select('id, asin, title, processor, ram, storage, graphics, screen_size, current_price, last_checked, update_status, image_url')
       .eq('is_laptop', true)
-      .or('processor.is.null,ram.is.null,storage.is.null,graphics.is.null,screen_size.is.null')
+      .or('processor.is.null,ram.is.null,storage.is.null,graphics.is.null,screen_size.is.null,image_url.is.null')
       .order('last_checked', { ascending: false })
       .limit(limit);
 

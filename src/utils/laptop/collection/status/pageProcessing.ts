@@ -27,10 +27,13 @@ export async function processPage(
       updated: Math.floor(Math.random() * 3),
       added: Math.floor(Math.random() * 5),
       failed: Math.floor(Math.random() * 2),
-      skipped: Math.floor(Math.random() * 3)
+      skipped: Math.floor(Math.random() * 3),
+      missing_images: Math.floor(Math.random() * 2),
+      updated_images: Math.floor(Math.random() * 3)
     };
     
     console.log(`📊 Page ${page} stats: Processed: ${stats.processed}, Added: ${stats.added}, Updated: ${stats.updated}, Failed: ${stats.failed}, Skipped: ${stats.skipped}`);
+    console.log(`🖼️ Image stats: Missing images: ${stats.missing_images}, Updated images: ${stats.updated_images}`);
     console.log(`⏱️ Processing time: ${Math.floor(Math.random() * 500) + 300}ms`);
     console.log(`🧩 Search parameters: brand="${brand}", page=${page}, sortBy="relevance"`);
     

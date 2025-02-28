@@ -6,11 +6,13 @@ export const updateLaptops = async () => {
     console.log('Starting silent update for ALL laptops...');
     
     // Get laptops with priority for those that haven't been updated in the longest time
+    // or missing image_url
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
-      .select('id, asin, current_price, title, last_checked')
+      .select('id, asin, current_price, title, last_checked, image_url')
       .eq('is_laptop', true)
       .not('update_status', 'eq', 'in_progress')
+      .or(`last_checked.is.null,image_url.is.null`) // Prioritize laptops with no image URLs
       .order('last_checked', { nullsFirst: true }) // Prioritize laptops that have never been checked
       .limit(100); // Limit to a reasonable number
 
@@ -33,7 +35,7 @@ export const updateLaptops = async () => {
     // Log detailed info about laptops to be updated - now using ASIN as primary identifier
     console.log(`Found ${laptops.length} laptops to update with the following priority:`);
     formattedLaptops.forEach((laptop, index) => {
-      console.log(`${index + 1}. ASIN: ${laptop.asin}, Title: ${laptop.title?.substring(0, 30)}..., Last Checked: ${laptop.formattedLastChecked}, Current Price: ${laptop.current_price === null ? 'NULL' : `$${laptop.current_price}`}`);
+      console.log(`${index + 1}. ASIN: ${laptop.asin}, Title: ${laptop.title?.substring(0, 30)}..., Last Checked: ${laptop.formattedLastChecked}, Current Price: ${laptop.current_price === null ? 'NULL' : `$${laptop.current_price}`}, Has Image: ${laptop.image_url ? 'Yes' : 'No'}`);
     });
 
     // Group laptops by update status for better logging
@@ -42,14 +44,16 @@ export const updateLaptops = async () => {
       new Date(a.last_checked).getTime() - new Date(b.last_checked).getTime()
     ).slice(0, 10);
     const nullPriceLaptops = formattedLaptops.filter(l => l.current_price === null);
+    const noImageLaptops = formattedLaptops.filter(l => !l.image_url);
     
     console.log('Laptop update priority distribution:');
     console.log(`- Never checked (highest priority): ${neverCheckedLaptops.length} laptops`);
+    console.log(`- Missing images: ${noImageLaptops.length} laptops`);
     
     if (oldestCheckedLaptops.length > 0) {
       console.log('- Oldest checked laptops:');
       oldestCheckedLaptops.forEach((l, i) => {
-        console.log(`  ${i+1}. ASIN: ${l.asin}, Last checked: ${l.formattedLastChecked}, Price: ${l.current_price === null ? 'NULL' : `$${l.current_price}`}`);
+        console.log(`  ${i+1}. ASIN: ${l.asin}, Last checked: ${l.formattedLastChecked}, Price: ${l.current_price === null ? 'NULL' : `$${l.current_price}`}, Has Image: ${l.image_url ? 'Yes' : 'No'}`);
       });
     }
     
@@ -74,7 +78,8 @@ export const updateLaptops = async () => {
         console.log(`Chunk ${i + 1} laptops:`, chunk.map(l => ({ 
           asin: l.asin, 
           lastChecked: l.last_checked ? new Date(l.last_checked).toLocaleString() : 'Never',
-          price: l.current_price === null ? 'NULL' : `$${l.current_price}`
+          price: l.current_price === null ? 'NULL' : `$${l.current_price}`,
+          hasImage: l.image_url ? 'Yes' : 'No'
         })));
 
         // Mark chunk laptops as pending update
@@ -102,7 +107,8 @@ export const updateLaptops = async () => {
                 asin: l.asin, 
                 current_price: l.current_price, // Include current price to avoid zero-price overwrites
                 title: l.title,
-                last_checked: l.last_checked
+                last_checked: l.last_checked,
+                image_url: l.image_url // Include existing image URL if available
               }))
             }
           });

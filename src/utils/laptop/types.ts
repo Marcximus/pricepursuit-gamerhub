@@ -5,6 +5,8 @@ export interface CollectionStats {
   added: number;
   failed: number;
   skipped?: number;
+  missing_images?: number;
+  updated_images?: number;
 }
 
 export interface CollectionConfig {
@@ -39,5 +41,6 @@ export interface SpecificationStats {
     storage: { count: number; percentage: number };
     graphics: { count: number; percentage: number };
     screenSize: { count: number; percentage: number };
+    images: { count: number; percentage: number }; // Added images tracking
   };
 }

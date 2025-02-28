@@ -15,7 +15,7 @@ export function logProductDetails(product: any, isNew: boolean, extracted?: any)
   console.log(`  📝 Title: ${product.title?.substring(0, 100)}${product.title?.length > 100 ? '...' : ''}`);
   
   // Calculate completion percentage of specs extracted
-  const specFields = ['brand', 'model', 'processor', 'ram', 'storage', 'graphics', 'screen_size', 'screen_resolution'];
+  const specFields = ['brand', 'model', 'processor', 'ram', 'storage', 'graphics', 'screen_size', 'screen_resolution', 'image_url'];
   const availableSpecs = specFields.filter(field => product[field] && product[field].toString().trim() !== '').length;
   const specCompletionPercent = Math.round((availableSpecs / specFields.length) * 100);
   
@@ -57,6 +57,11 @@ export function logProductDetails(product: any, isNew: boolean, extracted?: any)
   }
   if (product.screen_resolution) {
     console.log(`  🖥️ Resolution: ${product.screen_resolution}`);
+  }
+  if (product.image_url) {
+    console.log(`  🖼️ Image URL: ${product.image_url.substring(0, 60)}...`);
+  } else {
+    console.log(`  ❌ Image URL: Not available`);
   }
   if (product.rating && product.rating_count) console.log(`  ⭐ Rating: ${product.rating}/5 (${product.rating_count} reviews)`);
   

@@ -6,7 +6,8 @@ import {
   getLaptopsWithRamCount,
   getLaptopsWithStorageCount,
   getLaptopsWithGraphicsCount,
-  getLaptopsWithScreenSizeCount
+  getLaptopsWithScreenSizeCount,
+  getLaptopsWithImageCount
 } from "./stats/basicCountQueries";
 import { 
   getNotUpdatedLaptopsCount, 
@@ -55,6 +56,10 @@ export async function getDatabaseStats(): Promise<DatabaseStats> {
     // Get count of products with valid screen size data
     const screenSizeCountResult = await getLaptopsWithScreenSizeCount();
     const screenSizeCount = screenSizeCountResult.count;
+    
+    // Get count of products with images
+    const imageCountResult = await getLaptopsWithImageCount();
+    const imageCount = imageCountResult.count;
 
     // Get update and check status counts (last 24 hours)
     const notUpdatedCountResult = await getNotUpdatedLaptopsCount();
@@ -134,6 +139,10 @@ export async function getDatabaseStats(): Promise<DatabaseStats> {
         screenSize: {
           count: totalCount - screenSizeCount,
           percentage: calculateInversePercentage(screenSizeCount, totalCount)
+        },
+        images: {
+          count: totalCount - imageCount,
+          percentage: calculateInversePercentage(imageCount, totalCount)
         }
       }
     };
