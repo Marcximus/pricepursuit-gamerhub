@@ -7,6 +7,7 @@ import { sortLaptops } from "@/utils/laptopSort";
 import { paginateLaptops } from "@/utils/laptopPagination";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import type { SortOption } from "@/components/laptops/LaptopSort";
+import { normalizeBrand, normalizeModel } from "@/utils/laptop/valueNormalizer";
 
 export const processAndFilterLaptops = (
   rawData: any[],
@@ -32,6 +33,17 @@ export const processAndFilterLaptops = (
 
   // Process raw laptop data
   const processedLaptops = rawData.map(laptop => {
+    // Normalize brand and model before processing
+    const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title);
+    const normalizedModel = normalizeModel(laptop.model || '', laptop.title, normalizedBrand);
+    
+    // Apply the normalized values
+    const laptopWithNormalizedValues = {
+      ...laptop,
+      brand: normalizedBrand,
+      model: normalizedModel
+    };
+    
     const reviews = laptop.product_reviews || [];
     const reviewData = {
       rating_breakdown: {},
@@ -45,7 +57,7 @@ export const processAndFilterLaptops = (
         helpful_votes: review.helpful_votes || 0
       }))
     };
-    return processLaptopData(laptop);
+    return processLaptopData(laptopWithNormalizedValues);
   });
 
   logDataStatistics(processedLaptops);

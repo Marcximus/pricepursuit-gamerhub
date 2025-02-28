@@ -17,7 +17,18 @@ const BRAND_CORRECTIONS: {[key: string]: string} = {
   'huawei': 'Huawei',
   'xiaomi': 'Xiaomi',
   'medion': 'Medion',
-  'alienware': 'Alienware'
+  'alienware': 'Alienware',
+  'gateway': 'Gateway',
+  'chuwi': 'CHUWI',
+  'fujitsu': 'Fujitsu',
+  'vaio': 'VAIO',
+  'panasonic': 'Panasonic',
+  'evoo': 'EVOO',
+  'nexoc': 'NEXOC',
+  'xidu': 'XIDU',
+  'teclast': 'Teclast',
+  'jumper': 'Jumper',
+  'google': 'Google'
 };
 
 // Brand identification patterns to prevent incorrect brand detection
@@ -35,6 +46,17 @@ const BRAND_PATTERNS: {[key: string]: RegExp[]} = {
   'Alienware': [/\balienware\b/i],
   'LG': [/\blg\b/i, /\bgram\b/i]
 };
+
+// Patterns that should NOT be identified as brands
+const NON_BRAND_PATTERNS = [
+  /^v-?series$/i,
+  /^series$/i,
+  /^\d+$/,  // Just numbers
+  /^gen$/i,
+  /^inch$/i,
+  /^laptop$/i,
+  /^notebook$/i
+];
 
 /**
  * Detect the correct brand from the title and stored brand
@@ -55,8 +77,19 @@ function detectCorrectBrand(title: string, storedBrand?: string): string {
     }
   }
   
-  // If no brand pattern matched, use the stored brand
-  return correctBrandCapitalization(storedBrand) || 'Unknown Brand';
+  // If no brand pattern matched, check if the stored brand is valid
+  if (storedBrand) {
+    // Make sure the stored brand isn't something that shouldn't be a brand
+    for (const pattern of NON_BRAND_PATTERNS) {
+      if (pattern.test(storedBrand)) {
+        return 'Unknown Brand';
+      }
+    }
+    
+    return correctBrandCapitalization(storedBrand);
+  }
+  
+  return 'Unknown Brand';
 }
 
 /**
@@ -66,6 +99,14 @@ function correctBrandCapitalization(brand?: string): string {
   if (!brand) return '';
   
   const normalizedBrand = brand.toLowerCase().trim();
+  
+  // Check if this is a non-brand pattern
+  for (const pattern of NON_BRAND_PATTERNS) {
+    if (pattern.test(normalizedBrand)) {
+      return '';
+    }
+  }
+  
   if (BRAND_CORRECTIONS[normalizedBrand]) {
     return BRAND_CORRECTIONS[normalizedBrand];
   }

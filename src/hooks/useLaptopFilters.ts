@@ -8,7 +8,8 @@ import {
   normalizeScreenSize,
   normalizeGraphics,
   normalizeProcessor,
-  normalizeBrand
+  normalizeBrand,
+  normalizeModel
 } from "@/utils/laptop/valueNormalizer";
 import { getRamValue, getStorageValue, getScreenSizeValue } from "@/utils/laptop/valueParser";
 import type { FilterableProductKeys } from "@/utils/laptop/filter";
@@ -46,8 +47,17 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
               return normalizeGraphics(value);
             case 'processor':
               return normalizeProcessor(value);
-            case 'brand':
-              return normalizeBrand(value, laptop.title);
+            case 'brand': {
+              // Apply more aggressive normalization for brands
+              const normalizedBrand = normalizeBrand(value, laptop.title);
+              // Filter out clearly incorrect brand values
+              if (normalizedBrand === 'Unknown Brand' || 
+                  normalizedBrand.toLowerCase().includes('series') ||
+                  normalizedBrand.length < 2) {
+                return null;
+              }
+              return normalizedBrand;
+            }
             default:
               return value.trim();
           }

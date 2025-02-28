@@ -6,5 +6,6 @@ export {
   normalizeGraphics,
   normalizeScreenSize,
   normalizeRam,
-  normalizeStorage
+  normalizeStorage,
+  normalizeModel
 } from './normalizer';
