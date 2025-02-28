@@ -29,35 +29,52 @@ export async function getDatabaseStats(): Promise<DatabaseStats> {
     console.log('Fetching database statistics...');
     
     // Get total count of laptop products
-    const totalCount = await getTotalLaptopCount();
+    const totalCountResult = await getTotalLaptopCount();
+    const totalCount = totalCountResult.count;
 
     // Get count of products with valid prices
-    const priceCount = await getLaptopsWithPriceCount();
+    const priceCountResult = await getLaptopsWithPriceCount();
+    const priceCount = priceCountResult.count;
 
     // Get count of products with valid processor data
-    const processorCount = await getLaptopsWithProcessorCount();
+    const processorCountResult = await getLaptopsWithProcessorCount();
+    const processorCount = processorCountResult.count;
 
     // Get count of products with valid RAM data
-    const ramCount = await getLaptopsWithRamCount();
+    const ramCountResult = await getLaptopsWithRamCount();
+    const ramCount = ramCountResult.count;
 
     // Get count of products with valid storage data
-    const storageCount = await getLaptopsWithStorageCount();
+    const storageCountResult = await getLaptopsWithStorageCount();
+    const storageCount = storageCountResult.count;
 
     // Get count of products with valid graphics data
-    const graphicsCount = await getLaptopsWithGraphicsCount();
+    const graphicsCountResult = await getLaptopsWithGraphicsCount();
+    const graphicsCount = graphicsCountResult.count;
 
     // Get count of products with valid screen size data
-    const screenSizeCount = await getLaptopsWithScreenSizeCount();
+    const screenSizeCountResult = await getLaptopsWithScreenSizeCount();
+    const screenSizeCount = screenSizeCountResult.count;
 
     // Get update and check status counts (last 24 hours)
-    const notUpdatedCount = await getNotUpdatedLaptopsCount();
-    const notCheckedCount = await getNotCheckedLaptopsCount();
+    const notUpdatedCountResult = await getNotUpdatedLaptopsCount();
+    const notUpdatedCount = notUpdatedCountResult.count;
+    
+    const notCheckedCountResult = await getNotCheckedLaptopsCount();
+    const notCheckedCount = notCheckedCountResult.count;
 
     // Get AI processing status counts
-    const pendingCount = await getPendingAIProcessingCount();
-    const processingCount = await getProcessingAICount();
-    const errorCount = await getErrorAIProcessingCount();
-    const completeCount = await getCompleteAIProcessingCount();
+    const pendingCountResult = await getPendingAIProcessingCount();
+    const pendingCount = pendingCountResult.count;
+    
+    const processingCountResult = await getProcessingAICount();
+    const processingCount = processingCountResult.count;
+    
+    const errorCountResult = await getErrorAIProcessingCount();
+    const errorCount = errorCountResult.count;
+    
+    const completeCountResult = await getCompleteAIProcessingCount();
+    const completeCount = completeCountResult.count;
 
     // Calculate percentages and processing completion percentage
     const processingCompletionPercentage = calculatePercentage(completeCount, totalCount);

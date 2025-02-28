@@ -1,6 +1,6 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { LaptopUpdate, LaptopUpdateResult } from './types';
+import { LaptopUpdate, LaptopUpdateResult } from './types.ts';
 
 /**
  * Update a laptop in the database
