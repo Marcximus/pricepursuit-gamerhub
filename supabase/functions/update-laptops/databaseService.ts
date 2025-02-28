@@ -1,90 +1,149 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 
-export async function getLaptopsToUpdate(supabaseUrl: string, supabaseKey: string, batchSize: number) {
-  const supabase = createClient(supabaseUrl, supabaseKey);
+import { createClient } from '@supabase/supabase-js'
+import { Database } from '../types'
+import { LaptopUpdateResult } from './types'
 
-  const { data: laptops, error: fetchError } = await supabase
-    .from('products')
-    .select('id, asin')
-    .eq('is_laptop', true)
-    .or('current_price.is.null,last_checked.lt.now()-interval\'1 day\'')
-    .order('last_checked', { ascending: true })
-    .limit(batchSize);
+// Initialize Supabase client
+const supabaseUrl = Deno.env.get('SUPABASE_URL') as string
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string
+const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey)
 
-  if (fetchError) {
-    throw new Error(`Failed to fetch laptops: ${fetchError.message}`);
-  }
+export async function updateLaptopInDatabase(
+  laptopId: string,
+  updateData: Record<string, any>
+): Promise<LaptopUpdateResult> {
+  try {
+    console.log(`Updating laptop ${laptopId} with data:`, JSON.stringify(updateData, null, 2))
 
-  return laptops;
-}
-
-export async function updateLaptopStatus(supabaseUrl: string, supabaseKey: string, laptopIds: string[], status: string) {
-  const supabase = createClient(supabaseUrl, supabaseKey);
-  
-  const { error } = await supabase
-    .from('products')
-    .update({ update_status: status })
-    .in('id', laptopIds);
-
-  if (error) {
-    throw new Error(`Failed to update laptop status: ${error.message}`);
-  }
-}
-
-export async function updateLaptopData(
-  supabaseUrl: string, 
-  supabaseKey: string, 
-  laptopId: string, 
-  data: any, 
-  status: string
-) {
-  const supabase = createClient(supabaseUrl, supabaseKey);
-  
-  const { error } = await supabase
-    .from('products')
-    .update({
-      ...data,
+    // Ensure all necessary fields are included and properly processed
+    const dataToUpdate = {
+      // Basic information
+      title: updateData.title || null,
+      description: updateData.description || null,
+      current_price: updateData.current_price !== undefined ? updateData.current_price : null,
+      original_price: updateData.original_price !== undefined ? updateData.original_price : null,
+      
+      // Rating information
+      rating: updateData.rating !== undefined ? updateData.rating : null,
+      rating_count: updateData.rating_count !== undefined ? updateData.rating_count : null,
+      total_reviews: updateData.total_reviews !== undefined ? updateData.total_reviews : null,
+      average_rating: updateData.average_rating !== undefined ? updateData.average_rating : null,
+      wilson_score: updateData.wilson_score !== undefined ? updateData.wilson_score : null,
+      
+      // Product details
+      image_url: updateData.image_url || null,
+      product_url: updateData.product_url || null,
+      
+      // Specifications
+      processor: updateData.processor || null,
+      ram: updateData.ram || null,
+      storage: updateData.storage || null,
+      graphics: updateData.graphics || null,
+      screen_size: updateData.screen_size || null,
+      screen_resolution: updateData.screen_resolution || null,
+      weight: updateData.weight || null,
+      battery_life: updateData.battery_life || null,
+      brand: updateData.brand || null,
+      model: updateData.model || null,
+      
+      // Review data as JSON
+      review_data: updateData.review_data || null,
+      
+      // Status fields
+      update_status: 'completed',
       last_checked: new Date().toISOString(),
-      update_status: status
-    })
-    .eq('id', laptopId);
+      last_updated: new Date().toISOString()
+    }
 
-  if (error) {
-    throw new Error(`Failed to update laptop data: ${error.message}`);
+    // First update the product record
+    const { data, error } = await supabase
+      .from('products')
+      .update(dataToUpdate)
+      .eq('id', laptopId)
+      .select()
+
+    if (error) {
+      console.error(`Error updating laptop ${laptopId}:`, error)
+      throw error
+    }
+
+    // If we have price data, add a price history record
+    if (updateData.current_price !== undefined && updateData.current_price !== null) {
+      const { error: priceHistoryError } = await supabase
+        .from('price_history')
+        .insert({
+          product_id: laptopId,
+          price: updateData.current_price,
+          timestamp: new Date().toISOString()
+        })
+
+      if (priceHistoryError) {
+        console.error(`Error adding price history for laptop ${laptopId}:`, priceHistoryError)
+        // Don't throw here, as we've already updated the product
+      } else {
+        console.log(`Added price history record for laptop ${laptopId}: $${updateData.current_price}`)
+      }
+    }
+
+    // If we have review data, insert or update reviews
+    if (updateData.review_data?.recent_reviews?.length > 0) {
+      console.log(`Processing ${updateData.review_data.recent_reviews.length} reviews for laptop ${laptopId}`)
+      
+      // Process each review
+      for (const review of updateData.review_data.recent_reviews) {
+        // Only process reviews with actual content
+        if (review.content || review.title) {
+          const reviewData = {
+            product_id: laptopId,
+            rating: review.rating,
+            title: review.title || null,
+            content: review.content || null,
+            reviewer_name: review.reviewer_name || null,
+            review_date: review.review_date ? new Date(review.review_date).toISOString() : null,
+            verified_purchase: review.verified_purchase || false,
+            helpful_votes: review.helpful_votes || 0
+          }
+          
+          // Insert the review
+          const { error: reviewError } = await supabase
+            .from('product_reviews')
+            .insert(reviewData)
+            
+          if (reviewError) {
+            console.error(`Error adding review for laptop ${laptopId}:`, reviewError)
+            // Don't throw here, continue with other reviews
+          }
+        }
+      }
+    }
+
+    console.log(`Successfully updated laptop ${laptopId} with new data`)
+    return {
+      success: true,
+      message: 'Laptop updated successfully',
+      updatedId: laptopId,
+      updatedData: dataToUpdate
+    }
+  } catch (error) {
+    console.error(`Failed to update laptop ${laptopId}:`, error)
+    
+    // Update status to error in the database
+    try {
+      await supabase
+        .from('products')
+        .update({
+          update_status: 'error',
+          last_checked: new Date().toISOString()
+        })
+        .eq('id', laptopId)
+    } catch (statusError) {
+      console.error(`Failed to update status for laptop ${laptopId}:`, statusError)
+    }
+    
+    return {
+      success: false,
+      message: `Failed to update laptop: ${error.message}`,
+      error: error.message
+    }
   }
 }
-
-/**
- * Helper for checking if title contains forbidden keywords
- */
-export const hasForbiddenKeywords = (title: string, forbiddenKeywords: string[]): boolean => {
-  if (!title) return false;
-  
-  const normalizedTitle = title.toLowerCase();
-  
-  return forbiddenKeywords.some(keyword => 
-    normalizedTitle.includes(keyword.toLowerCase())
-  );
-};
-
-// Add this to your existing databaseService file
-export const FORBIDDEN_PRODUCT_KEYWORDS = [
-  "Charger Block", "Battery Replacement", "Replacement Laptop", "Stylus", "Mouse",
-  "Messenger Case", "Protective Case", "Protective Sleeve", "Laptop Battery",
-  "Laptop Charger", "Car Jump", "Headset", "Laptop Skin", "Charger Fit For",
-  "Adapter Laptop Charger", "Mouse Pro", "Charger fit", "Charger for", "Bag",
-  "External Hard Drive", "Power Adapter", "Mouse", "Jump Starter", "Battery Jump",
-  "Headset", "Laptop Stand", "Magic Keyboard", "Laptop Super Charger", "Backpack",
-  "Cooling pad", "External Enclosure", "Display Panel", "Cable for", "Surface dock",
-  "Surface docking", "Screen Extender", "Earbuds", "Screen Replacement", "dock triple",
-  "Bagpacks", "Bagoack", "Memory kit", "Soundbar", "Laptop AC Adapter",
-  "Cooling fan replacement", "Laptop Bottom Base Case", "CPU FAN", "Replacement Keyboards",
-  "Car Charger", "Adapter", "PIN LCD Display", "Power Cord Cable", "Charging Cable",
-  "Laptop Charger", "Hoodies", "Protector Cover", "Women's", "Women", "Pad Protector",
-  "Feet Replacement", "Charger for", "Sync Cable", "Insulation Wrapping", 
-  "Replacement Memory Ram", "Cord Cable", "Screen Protector", "Charging Adapter",
-  "Jack Connector", "Adapter Charger", "Wireless Mouse", "Rubber Feet Replacement",
-  "PortChanger", "Touchpad protector", "Touch pad protector", "Touch pad film protector",
-  "Charger Replacement", "Rubber Feet", "Laptop Sleeve", "Over-ear", "Laptop Charger",
-  "New 90%", "Portable DVD Writer"
-];

@@ -1,257 +1,138 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
-import { corsHeaders } from "./oxylabsService.ts"
-import { fetchProductPricing } from "./oxylabsService.ts"
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { createClient } from '@supabase/supabase-js'
+import { serve } from 'std/http/server.ts'
+import { LaptopUpdateRequest, UpdateResponse } from './types.ts'
+import { fetchLaptopData } from './oxylabsService.ts'
+import { updateLaptopInDatabase } from './databaseService.ts'
 
-interface UpdateRequest {
-  laptops: Array<{
-    id: string;
-    asin: string;
-    current_price?: number | null;
-    title?: string; // Optional title for better logging
-    last_checked?: string;
-  }>;
+// Define CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 serve(async (req) => {
-  // Handle CORS
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { laptops } = await req.json() as UpdateRequest;
-    console.log(`Processing price update request for ${laptops.length} laptops`);
-    
-    // Log the full list of laptops to be processed - now with ASIN as primary identifier
-    console.log('Laptops to be processed:', laptops.map(l => ({
-      asin: l.asin,
-      id: l.id, // Keep ID for database reference but don't use in user-facing logs
-      titlePreview: l.title ? `${l.title.substring(0, 20)}...` : 'No title',
-      currentPrice: l.current_price === null ? 'NULL' : `$${l.current_price}`,
-      lastChecked: l.last_checked ? new Date(l.last_checked).toLocaleString() : 'Never'
-    })));
+    // Parse request body
+    const { laptops } = await req.json() as LaptopUpdateRequest
 
-    // Use EdgeRuntime for waitUntil if available, otherwise use Deno fetch API context
-    const waitUntilFn = (promise: Promise<any>) => {
-      if (req.ctx && typeof req.ctx.waitUntil === 'function') {
-        req.ctx.waitUntil(promise);
-      } else if (typeof (globalThis as any).EdgeRuntime !== 'undefined' && 
-                (globalThis as any).EdgeRuntime.waitUntil) {
-        (globalThis as any).EdgeRuntime.waitUntil(promise);
-      } else {
-        // Just run the promise without waitUntil if not available
-        promise.catch(err => console.error('Background task error:', err));
-      }
-    };
-
-    // Start the background processing
-    waitUntilFn((async () => {
-      const results = {
-        success: 0,
-        failed: 0,
-        noPriceData: 0,
-        completedWithErrors: 0
-      };
-      
-      for (const laptop of laptops) {
-        try {
-          console.log(`--------------------------------------------------`);
-          console.log(`🔄 Processing laptop ASIN: ${laptop.asin}`);
-          if (laptop.title) {
-            console.log(`Title preview: ${laptop.title.substring(0, 50)}...`);
-          }
-          
-          // Set status to in_progress - still using id for database reference
-          console.log(`Setting status to in_progress for laptop ASIN: ${laptop.asin}`);
-          await supabase
-            .from('products')
-            .update({ update_status: 'in_progress' })
-            .eq('id', laptop.id);
-
-          // Fetch latest pricing data using ASIN
-          console.log(`Fetching pricing data for ASIN: ${laptop.asin}...`);
-          const response = await fetchProductPricing(laptop.asin);
-          console.log(`Got response for ASIN: ${laptop.asin}, parsing results...`);
-          
-          const productData = response.results[0]?.content;
-
-          if (!productData) {
-            console.error(`❌ No pricing data found for ASIN: ${laptop.asin}`);
-            await supabase
-              .from('products')
-              .update({ 
-                update_status: 'error',
-                last_checked: new Date().toISOString()
-              })
-              .eq('id', laptop.id);
-            results.noPriceData++;
-            continue;
-          }
-
-          // Extract only pricing and review data
-          const currentPrice = productData.pricing?.current_price;
-          const originalPrice = productData.pricing?.original_price;
-          const rating = productData.rating?.rating;
-          const ratingCount = productData.rating?.rating_count;
-
-          console.log(`📊 Extracted data for ASIN: ${laptop.asin}:`, {
-            currentPrice: currentPrice || 'NULL',
-            originalPrice: originalPrice || 'NULL',
-            rating: rating || 'NULL',
-            ratingCount: ratingCount || 'NULL'
-          });
-
-          // Verify the price is valid - don't update with null/zero prices if we already have a price
-          if (currentPrice === null || currentPrice === 0 || typeof currentPrice !== 'number') {
-            console.warn(`⚠️ Invalid price (${currentPrice}) found for ASIN: ${laptop.asin}, checking existing price`);
-            
-            // If we have an existing price, don't overwrite with invalid value
-            if (laptop.current_price && laptop.current_price > 0) {
-              console.warn(`Keeping existing price $${laptop.current_price} for ASIN: ${laptop.asin} - not updating with invalid price`);
-              
-              // Still update other data but keep existing price
-              await supabase
-                .from('products')
-                .update({ 
-                  rating: rating || null,
-                  rating_count: ratingCount || null,
-                  update_status: 'completed',
-                  last_checked: new Date().toISOString(),
-                  last_updated: new Date().toISOString()
-                })
-                .eq('id', laptop.id);
-                
-              console.log(`✅ Kept existing price and updated other data for ASIN: ${laptop.asin}`);
-              results.success++;
-              continue;
-            }
-          }
-
-          // Prepare review data if available
-          let reviewData = null;
-          if (productData.reviews) {
-            console.log(`Found review data for ASIN: ${laptop.asin}`);
-            const reviewCount = productData.reviews.recent_reviews ? productData.reviews.recent_reviews.length : 0;
-            console.log(`Found ${reviewCount} reviews for ASIN: ${laptop.asin}`);
-            
-            reviewData = {
-              rating_breakdown: productData.reviews.rating_breakdown || {},
-              recent_reviews: (productData.reviews.recent_reviews || []).map(review => ({
-                rating: review.rating,
-                title: review.title || '',
-                content: review.content || '',
-                reviewer_name: review.reviewer_name || 'Anonymous',
-                review_date: review.review_date,
-                verified_purchase: review.verified_purchase || false,
-                helpful_votes: review.helpful_votes || 0
-              }))
-            };
-          }
-
-          // Update product with new price and review data only
-          const updateData = {
-            current_price: currentPrice || null,
-            original_price: originalPrice || null,
-            rating: rating || null,
-            rating_count: ratingCount || null,
-            review_data: reviewData,
-            update_status: 'completed',
-            last_checked: new Date().toISOString(),
-            last_updated: new Date().toISOString()
-          };
-
-          console.log(`💾 Updating laptop ASIN: ${laptop.asin} with new data`, updateData);
-
-          // Store current price in price history if different and valid
-          if (currentPrice && typeof currentPrice === 'number' && currentPrice > 0) {
-            console.log(`Checking price history for ASIN: ${laptop.asin}`);
-            const { data: existingPrice, error: priceError } = await supabase
-              .from('price_history')
-              .select('price')
-              .eq('product_id', laptop.id)
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .single();
-
-            if (priceError && priceError.code !== 'PGRST116') {
-              console.error(`Error checking price history for ASIN: ${laptop.asin}:`, priceError);
-            }
-
-            if (!existingPrice || existingPrice.price !== currentPrice) {
-              console.log(`Adding new price $${currentPrice} to history for ASIN: ${laptop.asin}`);
-              await supabase
-                .from('price_history')
-                .insert({
-                  product_id: laptop.id,
-                  price: currentPrice,
-                  timestamp: new Date().toISOString()
-                });
-            } else {
-              console.log(`Price $${currentPrice} already exists in history for ASIN: ${laptop.asin}, skipping`);
-            }
-          } else {
-            console.log(`No valid current price for ASIN: ${laptop.asin}, skipping price history update`);
-          }
-
-          const { error: updateError } = await supabase
-            .from('products')
-            .update(updateData)
-            .eq('id', laptop.id);
-            
-          if (updateError) {
-            console.error(`❌ Error updating ASIN: ${laptop.asin}:`, updateError);
-            results.completedWithErrors++;
-          } else {
-            console.log(`✅ Successfully updated price data for ASIN: ${laptop.asin}`);
-            results.success++;
-          }
-
-          // Add delay between requests to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 1000));
-
-        } catch (error) {
-          console.error(`❌ Error processing ASIN: ${laptop.asin}:`, error);
-          await supabase
-            .from('products')
-            .update({ 
-              update_status: 'error',
-              last_checked: new Date().toISOString()
-            })
-            .eq('id', laptop.id);
-          results.failed++;
+    if (!laptops || !Array.isArray(laptops) || laptops.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: 'Invalid request. Please provide an array of laptops to update.'
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders }
         }
-      }
+      )
+    }
 
-      console.log('--------------------------------------------------');
-      console.log('Completed processing all laptop price updates');
-      console.log('Final results:', results);
-    })());
+    console.log(`Received update request for ${laptops.length} laptops`)
+    
+    // Process each laptop in the background
+    EdgeRuntime.waitUntil(processLaptops(laptops))
 
+    // Return immediate success response
     return new Response(
-      JSON.stringify({ 
-        message: 'Price update process initiated',
-        laptopCount: laptops.length,
-        laptops: laptops.map(l => ({ asin: l.asin }))
+      JSON.stringify({
+        success: true,
+        message: `Started updating ${laptops.length} laptops. This will be processed in the background.`,
+        count: laptops.length
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
-      },
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      }
     )
-
-  } catch (error: any) {
-    console.error('Error processing request:', error);
+  } catch (error) {
+    console.error('Error processing request:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({
+        success: false,
+        message: 'Error processing request',
+        error: error.message
+      }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
-      },
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      }
     )
   }
+})
+
+// Background processing function
+async function processLaptops(laptops: any[]) {
+  console.log(`Starting background process for ${laptops.length} laptops`)
+  
+  const results = {
+    updated: [] as any[],
+    failed: [] as any[]
+  }
+  
+  // Process each laptop sequentially to avoid rate limiting
+  for (const laptop of laptops) {
+    try {
+      console.log(`Processing laptop: ${laptop.asin} (ID: ${laptop.id})`)
+      
+      // Fetch latest data from Amazon
+      const laptopData = await fetchLaptopData(laptop.asin)
+      
+      if (!laptopData) {
+        console.error(`Failed to fetch data for ASIN ${laptop.asin}`)
+        results.failed.push({
+          id: laptop.id,
+          asin: laptop.asin,
+          error: 'Failed to fetch product data'
+        })
+        continue
+      }
+      
+      // Update the database with the new data
+      const updateResult = await updateLaptopInDatabase(laptop.id, laptopData)
+      
+      if (updateResult.success) {
+        console.log(`Successfully updated laptop: ${laptop.asin}`)
+        results.updated.push({
+          id: laptop.id,
+          asin: laptop.asin,
+          success: true
+        })
+      } else {
+        console.error(`Failed to update laptop ${laptop.asin} in database: ${updateResult.message}`)
+        results.failed.push({
+          id: laptop.id,
+          asin: laptop.asin,
+          error: updateResult.error || 'Unknown error'
+        })
+      }
+      
+      // Add a short delay between requests to avoid hitting rate limits
+      await new Promise(resolve => setTimeout(resolve, 2000))
+    } catch (error) {
+      console.error(`Error processing laptop ${laptop.asin}:`, error)
+      results.failed.push({
+        id: laptop.id,
+        asin: laptop.asin,
+        error: error.message
+      })
+    }
+  }
+  
+  // Log final results
+  const totalProcessed = results.updated.length + results.failed.length
+  console.log(`Background processing completed. Total: ${totalProcessed}, Success: ${results.updated.length}, Failed: ${results.failed.length}`)
+  
+  return results
+}
+
+// Handle shutdown events
+addEventListener('beforeunload', (ev) => {
+  console.log('Function shutdown due to:', ev.detail?.reason)
 })
