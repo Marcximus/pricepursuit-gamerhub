@@ -9,13 +9,15 @@ import { updateLaptops } from "@/utils/laptop/updateLaptops";
 import { refreshBrandModels } from "@/utils/laptop/refreshBrandModels";
 import { processLaptopsAI } from "@/utils/laptop/processLaptopsAI";
 import { getDatabaseStats } from "@/utils/laptop/getDatabaseStats";
+import { updateGraphicsData } from "@/utils/laptop/updateGraphicsData";
 
 export { 
   collectLaptops, 
   updateLaptops, 
   refreshBrandModels, 
   processLaptopsAI,
-  getDatabaseStats
+  getDatabaseStats,
+  updateGraphicsData
 };
 
 export const ITEMS_PER_PAGE = 50;
@@ -48,7 +50,8 @@ export const useLaptops = (
         updateLaptops,
         refreshBrandModels,
         processLaptopsAI,
-        getDatabaseStats
+        getDatabaseStats,
+        updateGraphicsData
       };
     },
   });
@@ -59,6 +62,7 @@ export const useLaptops = (
     updateLaptops,
     refreshBrandModels,
     processLaptopsAI,
-    getDatabaseStats
+    getDatabaseStats,
+    updateGraphicsData
   };
 };
