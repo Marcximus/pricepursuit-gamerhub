@@ -23,7 +23,9 @@ const FORBIDDEN_KEYWORDS = [
   "Jack Connector", "Adapter Charger", "Wireless Mouse", "Rubber Feet Replacement",
   "PortChanger", "Touchpad protector", "Touch pad protector", "Touch pad film protector",
   "Charger Replacement", "Rubber Feet", "Laptop Sleeve", "Over-ear", "Laptop Charger",
-  "New 90%", "Portable DVD Writer"
+  "New 90%", "Portable DVD Writer", "Computer Keyboard", "Charger", "Charger:",
+  "P40 Pro 5G", "Printer Ink", "Docking Station", "Seniors Guide", "P30 Pro",
+  "Webcam for PC", "Drive Player", "External CD", "External DVD", "BDXL"
 ];
 
 /**
