@@ -2,7 +2,7 @@
 import type { Product } from "@/types/product";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import { matchesFilter } from "./filterMatchers";
-import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
+import { normalizeBrand } from "@/utils/laptop/normalizers";
 
 /**
  * Filters laptops based on selected filter options with stricter validation

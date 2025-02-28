@@ -1,4 +1,7 @@
 
+/**
+ * Processes and normalizes graphics card information
+ */
 export const processGraphics = (graphics: string | undefined, title: string): string | undefined => {
   if (graphics && typeof graphics === 'string' && !graphics.includes('undefined')) {
     // Clean up common inconsistencies in GPU naming
@@ -83,4 +86,3 @@ export const processGraphics = (graphics: string | undefined, title: string): st
   console.log('No graphics found for:', title);
   return undefined;
 };
-
