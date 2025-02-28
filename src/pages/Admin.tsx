@@ -2,13 +2,13 @@
 import { toast } from "@/components/ui/use-toast";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import { Search, RefreshCw, BrainCircuit, Filter, Laptop } from "lucide-react";
+import { Search, RefreshCw, BrainCircuit, Filter } from "lucide-react";
 import { useLaptops } from "@/hooks/useLaptops";
 import { cleanupLaptopDatabase } from "@/utils/laptop/cleanupLaptops";
 import { LaptopStats } from "@/components/admin/LaptopStats";
 
 const Admin = () => {
-  const { collectLaptops, updateLaptops, processLaptopsAI, updateGraphicsData } = useLaptops();
+  const { collectLaptops, updateLaptops, processLaptopsAI } = useLaptops();
 
   const handleCollectLaptops = async () => {
     try {
@@ -91,31 +91,6 @@ const Admin = () => {
     }
   };
 
-  const handleUpdateGraphics = async () => {
-    try {
-      const result = await updateGraphicsData();
-      if (result.success) {
-        toast({
-          title: "Graphics Data Updated",
-          description: `Updated graphics data for ${result.updated} out of ${result.processed} laptops.`,
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error || "Failed to update graphics data",
-        });
-      }
-    } catch (error) {
-      console.error('Error updating graphics data:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update graphics data",
-      });
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -175,21 +150,6 @@ const Admin = () => {
                 >
                   <BrainCircuit className="h-4 w-4" />
                   Process with AI
-                </Button>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <h3 className="font-medium">Update Graphics Data</h3>
-                  <p className="text-sm text-gray-500">Update missing graphics data from titles and other specs</p>
-                </div>
-                <Button
-                  onClick={handleUpdateGraphics}
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <Laptop className="h-4 w-4" />
-                  Update Graphics
                 </Button>
               </div>
 
