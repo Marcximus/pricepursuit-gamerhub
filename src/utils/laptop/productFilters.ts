@@ -30,10 +30,6 @@ const FORBIDDEN_KEYWORDS = [
   // New forbidden keywords added from user request
   "Keyboard cover", "Privacy Screen For", "Handheld Dock", "Charging Station",
   
-  // External storage devices added from user request
-  "X300 16TB", "N300 16TB", "8TB Drive", "16TB Drive", "32TB Drive", 
-  "External SSD", "Portable SSD", "External HDD", "Expansion Drive",
-  
   // Charger-related keywords (commonly mixed with laptops)
   "Charger fit", "Charger for", "Charger Fit For", "Adapter Laptop Charger",
   "Adapter Charger", "Laptop Super Charger", "Car Charger", "Charger Replacement",
@@ -123,36 +119,12 @@ export const filterOutIPads = <T extends { model?: string }>(products: T[]): T[]
 };
 
 /**
- * Filter out products with unrealistic storage values
- * 
- * @param products Array of products to filter
- * @returns Array of products with realistic storage values
- */
-export const filterUnrealisticStorage = <T extends { storage?: string }>(products: T[]): T[] => {
-  return products.filter(product => {
-    if (!product.storage) return true; // Keep products without storage info
-    
-    // Filter out products with extremely large storage values 
-    // that are likely external drives rather than laptops
-    const storageString = product.storage.toLowerCase();
-    if (storageString.includes('8tb') || 
-        storageString.includes('16tb') || 
-        storageString.includes('32tb') ||
-        storageString.includes('64tb')) {
-      return false;
-    }
-    
-    return true;
-  });
-};
-
-/**
  * Apply all filtering rules to a list of products
  * 
  * @param products Array of products to filter
  * @returns Filtered products
  */
-export const applyAllProductFilters = <T extends { asin: string; title?: string; model?: string; storage?: string; last_checked?: string }>(
+export const applyAllProductFilters = <T extends { asin: string; title?: string; model?: string; last_checked?: string }>(
   products: T[]
 ): T[] => {
   // First remove products with forbidden keywords
@@ -161,9 +133,6 @@ export const applyAllProductFilters = <T extends { asin: string; title?: string;
   // Then filter out iPad models
   const withoutIPads = filterOutIPads(keywordFiltered);
   
-  // Filter out products with unrealistic storage values
-  const withRealisticStorage = filterUnrealisticStorage(withoutIPads);
-  
   // Then deduplicate ASINs
-  return deduplicateProductsByAsin(withRealisticStorage);
+  return deduplicateProductsByAsin(withoutIPads);
 };

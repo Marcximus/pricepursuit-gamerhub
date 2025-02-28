@@ -48,17 +48,6 @@ export function FilterSection({
     onChange(new Set());
   }, [onChange]);
 
-  // Function to format display labels for better readability
-  const formatDisplayLabel = (option: string): string => {
-    if (title === "Graphics" && option.includes("NVIDIA")) {
-      // Format NVIDIA graphics cards more clearly
-      return option
-        .replace(/NVIDIA\s+NVIDIA/i, "NVIDIA")
-        .replace(/NVIDIA\s+RTX\s+(\d{4})/i, "NVIDIA RTX $1");
-    }
-    return option;
-  };
-
   // Get the appropriate icon component based on the icon prop
   const getIconComponent = () => {
     switch (icon.toLowerCase()) {
@@ -135,7 +124,7 @@ export function FilterSection({
                     htmlFor={`${title}-${option}`}
                     className="text-sm leading-none cursor-pointer flex-1 text-slate-700"
                   >
-                    {formatDisplayLabel(option)}
+                    {option}
                   </label>
                 </div>
               ))

@@ -7,7 +7,7 @@ import { sortLaptops } from "@/utils/laptopSort";
 import { paginateLaptops } from "@/utils/laptopPagination";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import type { SortOption } from "@/components/laptops/LaptopSort";
-import { normalizeBrand, normalizeModel, normalizeStorage } from "@/utils/laptop/valueNormalizer";
+import { normalizeBrand, normalizeModel } from "@/utils/laptop/valueNormalizer";
 import { applyAllProductFilters } from "@/utils/laptop/productFilters";
 
 export const processAndFilterLaptops = (
@@ -35,21 +35,19 @@ export const processAndFilterLaptops = (
   // First apply product filtering to remove forbidden keywords and duplicate ASINs
   const filteredRawData = applyAllProductFilters(rawData);
   
-  console.log(`Filtered out ${rawData.length - filteredRawData.length} products based on keywords, unrealistic storage, and duplicate ASINs`);
+  console.log(`Filtered out ${rawData.length - filteredRawData.length} products based on keywords and duplicate ASINs`);
   
   // Process filtered laptop data
   const processedLaptops = filteredRawData.map(laptop => {
     // Normalize brand and model before processing
     const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title);
     const normalizedModel = normalizeModel(laptop.model || '', laptop.title, normalizedBrand);
-    const normalizedStorage = normalizeStorage(laptop.storage || '');
     
     // Apply the normalized values
     const laptopWithNormalizedValues = {
       ...laptop,
       brand: normalizedBrand,
-      model: normalizedModel,
-      storage: normalizedStorage
+      model: normalizedModel
     };
     
     const reviews = laptop.product_reviews || [];
@@ -67,16 +65,6 @@ export const processAndFilterLaptops = (
     };
     return processLaptopData(laptopWithNormalizedValues);
   });
-
-  // Log some info about storage values in the processed laptops
-  const storageValues = processedLaptops
-    .filter(laptop => laptop.storage)
-    .map(laptop => laptop.storage);
-  
-  console.log(`Storage values found (sample of up to 10):`, 
-    storageValues.slice(0, 10), 
-    `Total unique values: ${new Set(storageValues).size}`
-  );
 
   logDataStatistics(processedLaptops);
 
