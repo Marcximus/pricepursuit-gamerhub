@@ -148,5 +148,5 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 
-// Legacy compatibility export
-export const StatsRefreshContext = createContext<() => Promise<void>>(() => Promise.resolve());
+// Create a context specifically for the refresh function to maintain backward compatibility
+export const StatsRefreshContext = createContext<() => Promise<void>>(async () => {});

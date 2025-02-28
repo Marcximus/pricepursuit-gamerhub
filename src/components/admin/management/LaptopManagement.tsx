@@ -1,8 +1,8 @@
 
-import React, { useContext } from "react";
+import React from "react";
 import { useLaptops } from "@/hooks/useLaptops";
-import { StatsRefreshContext } from "@/components/admin/LaptopStats";
 import { useCollectionProgress } from "@/hooks/useCollectionProgress";
+import { useStats } from "@/components/admin/stats/StatsContext";
 import { UpdateLaptopsSection } from "./";
 import { CollectLaptopsSection } from "./";
 import { ProcessAISection } from "./";
@@ -11,7 +11,7 @@ import { CleanupSection } from "./";
 const LaptopManagement: React.FC = () => {
   const { collectLaptops, updateLaptops, processLaptopsAI } = useLaptops();
   const { isCollecting, progress } = useCollectionProgress();
-  const refreshStats = useContext(StatsRefreshContext);
+  const { fetchStats } = useStats();
 
   return (
     <div className="bg-white shadow rounded-lg p-6">
@@ -19,23 +19,23 @@ const LaptopManagement: React.FC = () => {
       <div className="space-y-4">
         <UpdateLaptopsSection 
           updateLaptops={updateLaptops} 
-          refreshStats={refreshStats} 
+          refreshStats={fetchStats} 
         />
 
         <CollectLaptopsSection 
           collectLaptops={collectLaptops} 
-          refreshStats={refreshStats}
+          refreshStats={fetchStats}
           isCollecting={isCollecting}
           progress={progress}
         />
         
         <ProcessAISection 
           processLaptopsAI={processLaptopsAI} 
-          refreshStats={refreshStats} 
+          refreshStats={fetchStats} 
         />
 
         <CleanupSection 
-          refreshStats={refreshStats} 
+          refreshStats={fetchStats} 
         />
       </div>
     </div>
