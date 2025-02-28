@@ -2,6 +2,28 @@
 import type { Product } from "@/types/product";
 import type { SortOption } from "@/components/laptops/LaptopSort";
 
+/**
+ * Calculates a weighted rating score that considers both rating value and number of reviews
+ * This creates a more reliable sorting metric than just using the raw rating
+ * 
+ * @param rating The product rating (typically 0-5)
+ * @param reviewCount The number of reviews
+ * @returns A weighted score that balances rating value with statistical significance
+ */
+const calculateWeightedRating = (rating: number, reviewCount: number): number => {
+  // If there's no rating or no reviews, return the lowest possible score
+  if (!rating || !reviewCount) return 0;
+  
+  // Use a weighted formula that gives more confidence as review count increases
+  // This is a simplified version of a Wilson score interval lower bound
+  const weight = Math.min(1, Math.log10(reviewCount + 1) / 2);
+  
+  // Weight between the actual rating and a neutral rating (3.0)
+  // As weight approaches 1, we trust the actual rating more
+  // As weight approaches 0, we pull the rating toward the neutral 3.0
+  return (rating * weight) + (3.0 * (1 - weight));
+};
+
 export const sortLaptops = (laptops: Product[], sortBy: SortOption): Product[] => {
   console.log('Sorting laptops:', { 
     sortBy, 
@@ -26,19 +48,18 @@ export const sortLaptops = (laptops: Product[], sortBy: SortOption): Product[] =
         return priceB - priceA;
       }
       case 'rating-desc': {
-        // Consider both rating and number of reviews for better sorting
+        // Calculate weighted ratings that consider both rating value and number of reviews
         const ratingA = a.rating ?? 0;
         const ratingB = b.rating ?? 0;
         const countA = a.rating_count ?? 0;
         const countB = b.rating_count ?? 0;
-
-        // If ratings are significantly different, sort by rating
-        if (Math.abs(ratingA - ratingB) > 0.3) {
-          return ratingB - ratingA;
-        }
-
-        // If ratings are similar, consider number of reviews
-        return countB - countA;
+        
+        // Calculate weighted scores
+        const weightedScoreA = calculateWeightedRating(ratingA, countA);
+        const weightedScoreB = calculateWeightedRating(ratingB, countB);
+        
+        // Sort by the weighted scores
+        return weightedScoreB - weightedScoreA;
       }
       default:
         return 0;
