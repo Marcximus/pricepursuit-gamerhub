@@ -58,6 +58,17 @@ export const containsForbiddenKeywords = (title: string): boolean => {
 };
 
 /**
+ * Check if a product has "iPad" in the model name
+ * 
+ * @param model Product model to check
+ * @returns true if the model contains "iPad"
+ */
+export const isIPad = (model: string | undefined): boolean => {
+  if (!model) return false;
+  return model.toLowerCase().includes('ipad');
+};
+
+/**
  * Filter products to remove those with forbidden keywords in their titles
  * 
  * @param products Array of products to filter
@@ -91,17 +102,30 @@ export const deduplicateProductsByAsin = <T extends { asin: string; last_checked
 };
 
 /**
+ * Filter products to remove iPads based on model name
+ * 
+ * @param products Array of products to filter
+ * @returns Array of products without iPad models
+ */
+export const filterOutIPads = <T extends { model?: string }>(products: T[]): T[] => {
+  return products.filter(product => !isIPad(product.model));
+};
+
+/**
  * Apply all filtering rules to a list of products
  * 
  * @param products Array of products to filter
  * @returns Filtered products
  */
-export const applyAllProductFilters = <T extends { asin: string; title?: string; last_checked?: string }>(
+export const applyAllProductFilters = <T extends { asin: string; title?: string; model?: string; last_checked?: string }>(
   products: T[]
 ): T[] => {
   // First remove products with forbidden keywords
   const keywordFiltered = filterProductsByKeywords(products);
   
+  // Then filter out iPad models
+  const withoutIPads = filterOutIPads(keywordFiltered);
+  
   // Then deduplicate ASINs
-  return deduplicateProductsByAsin(keywordFiltered);
+  return deduplicateProductsByAsin(withoutIPads);
 };

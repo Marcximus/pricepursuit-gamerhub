@@ -1,6 +1,6 @@
 
-import { normalizeBrand, BRAND_PATTERNS } from "@/utils/laptop/normalizers";
-import { normalizeModel, MODEL_PATTERNS } from "@/utils/laptop/normalizers";
+import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
+import { normalizeModel } from "@/utils/laptop/valueNormalizer";
 
 type LaptopSpecsProps = {
   title: string;
