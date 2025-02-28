@@ -12,7 +12,16 @@ export const StatsInitializer: React.FC = () => {
         if (!loading) return; // Skip if not in loading state (already initialized)
         
         console.log('StatsInitializer: Starting initial fetch');
+        
+        // Set a timeout to make sure we don't get stuck in loading state
+        const timeoutId = setTimeout(() => {
+          console.warn('StatsInitializer: Fetch timeout reached, forcing loading state to false');
+          setLoading(false);
+        }, 15000); // 15 second timeout
+        
         await fetchStats();
+        clearTimeout(timeoutId);
+        
         console.log('StatsInitializer: Initial fetch completed');
       } catch (error) {
         console.error("StatsInitializer: Initial fetch error:", error);

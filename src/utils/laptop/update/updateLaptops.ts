@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { processChunksSequentially } from "./chunkProcessor";
 import { applyAllProductFilters } from "../productFilters";
@@ -13,7 +14,7 @@ export const updateLaptops = async () => {
       .select('id, asin, current_price, title, last_checked, image_url, update_status')
       .eq('is_laptop', true)
       .order('last_checked', { nullsFirst: true }) // Prioritize laptops that have never been checked
-      .limit(200); // Increased limit to process more laptops
+      .limit(300); // Increased limit to process more laptops (from 200 to 300)
 
     if (fetchError) {
       console.error('Error fetching laptops:', fetchError);
@@ -68,8 +69,8 @@ export const updateLaptops = async () => {
     // Log priority distribution
     logPriorityDistribution(formattedLaptops);
 
-    // Split laptops into chunks of 10
-    const chunkSize = 10;
+    // Split laptops into chunks of 20 (increased from 10)
+    const chunkSize = 20;
     const chunks = [];
     for (let i = 0; i < prioritizedLaptops.length; i += chunkSize) {
       chunks.push(prioritizedLaptops.slice(i, i + chunkSize));

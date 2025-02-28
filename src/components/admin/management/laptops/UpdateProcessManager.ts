@@ -76,7 +76,8 @@ export const useUpdateProcessManager = ({
         // Start auto-refreshing stats
         startAutoRefresh();
         
-        // After 12 minutes, stop the auto-refresh and do one final refresh
+        // After 20 minutes (increased from 12 minutes), stop the auto-refresh and do one final refresh
+        // This accounts for the larger batch sizes and potential longer processing time
         setTimeout(() => {
           if (isUpdating) {
             console.log('Scheduled final refresh after timeout');
@@ -92,7 +93,7 @@ export const useUpdateProcessManager = ({
                 setIsUpdating(false);
               });
           }
-        }, 12 * 60 * 1000); // 12 minutes
+        }, 20 * 60 * 1000); // 20 minutes
       } else {
         setUpdateSuccess(false);
         toast({
@@ -139,7 +140,7 @@ export const useUpdateProcessManager = ({
     };
     
     if (isUpdating && updateCount > 0) {
-      return `Currently updating ${updateCount} laptops. Process has been running for ${formatElapsedTime(elapsedTime)}. Updates prioritize oldest check date, missing prices and images.`;
+      return `Currently updating ${updateCount} laptops in batches of 20. Process has been running for ${formatElapsedTime(elapsedTime)}. Updates prioritize oldest check date, missing prices and images.`;
     }
     
     if (autoUpdateEnabled && !isUpdating) {

@@ -1,6 +1,10 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Timeout configuration (in milliseconds)
+const FUNCTION_TIMEOUT = 60000; // 60 seconds timeout
+const DELAY_BETWEEN_CHUNKS = 1500; // Reduced from 2000ms to 1500ms
+
 export async function processChunksSequentially(chunks) {
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
@@ -30,12 +34,17 @@ export async function processChunksSequentially(chunks) {
       continue;
     }
 
-    // Call edge function for this chunk
+    // Call edge function for this chunk with proper timeout handling
     try {
       console.log(`Invoking update-laptops function for chunk ${i + 1} with ${chunk.length} laptops (ASINs: ${chunkAsins.join(', ')})`);
       
-      // Improve the function invocation with better error handling and data formatting
-      const { data, error } = await supabase.functions.invoke('update-laptops', {
+      // Create a promise that rejects after the timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Function invocation timed out')), FUNCTION_TIMEOUT);
+      });
+      
+      // Create the actual function invocation promise
+      const functionPromise = supabase.functions.invoke('update-laptops', {
         body: { 
           laptops: chunk.map(l => ({ 
             id: l.id, 
@@ -48,6 +57,11 @@ export async function processChunksSequentially(chunks) {
           }))
         }
       });
+      
+      // Race the promises - whichever completes first wins
+      const result = await Promise.race([functionPromise, timeoutPromise]);
+      
+      const { data, error } = result;
       
       if (error) {
         console.error(`Error processing chunk ${i + 1} (ASINs: ${chunkAsins.join(', ')}):`, error);
@@ -67,22 +81,33 @@ export async function processChunksSequentially(chunks) {
     } catch (error) {
       console.error(`Failed to process chunk ${i + 1} (ASINs: ${chunkAsins.join(', ')}):`, error);
       
+      // Check if this is a timeout error
+      const isTimeout = error.message && error.message.includes('timed out');
+      const errorStatus = isTimeout ? 'timeout' : 'error';
+      
+      console.log(`Marking chunk ${i + 1} laptops as ${errorStatus} due to ${isTimeout ? 'function timeout' : 'processing error'}`);
+      
       // Make sure to mark laptops as error in case of exception
       try {
         await supabase
           .from('products')
-          .update({ update_status: 'error' })
+          .update({ update_status: errorStatus })
           .in('asin', chunkAsins);
       } catch (markError) {
-        console.error(`Failed to mark chunk ${i + 1} as error:`, markError);
+        console.error(`Failed to mark chunk ${i + 1} as ${errorStatus}:`, markError);
+      }
+      
+      // If we had a timeout, we should give the system a bit more time to recover
+      if (isTimeout) {
+        console.log(`Adding extra recovery delay after timeout for chunk ${i + 1}`);
+        await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second recovery delay
       }
     }
 
     // Add a small delay between chunks to prevent rate limiting
     if (i < chunks.length - 1) {
-      const delayMs = 2000;
-      console.log(`Adding ${delayMs}ms delay before processing next chunk...`);
-      await new Promise(resolve => setTimeout(resolve, delayMs));
+      console.log(`Adding ${DELAY_BETWEEN_CHUNKS}ms delay before processing next chunk...`);
+      await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_CHUNKS));
     }
   }
   
