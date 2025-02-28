@@ -3,7 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { COLLECTION_CONFIG } from "./config";
 import { CollectionStats, CollectionProgressData } from "./types";
-import { resetStaleCollections, checkActiveCollections, saveCollectionProgress, getLastCollectionProgress } from "./collectionDb";
+import { 
+  resetStaleCollections, 
+  checkActiveCollections, 
+  saveCollectionProgress, 
+  getLastCollectionProgress 
+} from "./collection/statusManagement";
 import { createBrandBatches, processBrand } from "./collectionUtils";
 
 export async function collectLaptops() {
