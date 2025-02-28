@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { fetchLaptopData } from "./oxylabsService.ts";
 
 interface RequestParams {
   brands: string[];
@@ -62,23 +63,99 @@ serve(async (req) => {
           // Update brand status to in_progress
           await updateBrandStatus(supabase, brand, 'in_progress');
           
-          // For each page, process the brand
+          // For each page, process the brand using OxyLabs
           for (let page = 1; page <= pagesPerBrand; page++) {
             console.log(`Processing ${brand} page ${page}`);
             
-            // Simulate processing results - in a real implementation, this would
-            // call an actual API and process real data
-            const pageStats = await simulatePageProcessing(brand, page);
-            
-            // Update the overall stats
-            stats.processed += pageStats.processed;
-            stats.updated += pageStats.updated;
-            stats.added += pageStats.added;
-            stats.failed += pageStats.failed;
-            
-            // For testing purposes, create a test product in the database
-            if (page === 1) {
-              await createTestProduct(supabase, brand);
+            try {
+              // Fetch actual data from OxyLabs
+              const oxylabsResponse = await fetchLaptopData(brand, page);
+              console.log(`OxyLabs response received for ${brand} page ${page}`);
+              
+              if (oxylabsResponse && oxylabsResponse.results && oxylabsResponse.results.length > 0) {
+                const results = oxylabsResponse.results[0];
+                
+                if (results.content && results.content.results) {
+                  const laptops = results.content.results;
+                  console.log(`Found ${laptops.length} laptops for ${brand} on page ${page}`);
+                  
+                  // Process each laptop in the results
+                  for (const laptop of laptops) {
+                    try {
+                      // Extract needed data from the laptop object
+                      const processedLaptop = {
+                        title: laptop.title || '',
+                        brand: brand,
+                        asin: laptop.asin || '',
+                        current_price: parseFloat(laptop.price?.value || '0'),
+                        original_price: parseFloat(laptop.price_original?.value || laptop.price?.value || '0'),
+                        rating: parseFloat(laptop.rating || '0'),
+                        rating_count: parseInt(laptop.ratings_total || '0', 10),
+                        product_url: laptop.url || '',
+                        image_url: laptop.images && laptop.images.length > 0 ? laptop.images[0] : '',
+                        description: laptop.description || '',
+                        collection_status: 'completed',
+                        last_collection_attempt: new Date().toISOString(),
+                        is_laptop: true, // Mark as laptop by default, will be filtered later if needed
+                        updated_at: new Date().toISOString(),
+                        created_at: new Date().toISOString()
+                      };
+                      
+                      // Check if the product already exists
+                      const { data: existingProduct, error: lookupError } = await supabase
+                        .from('products')
+                        .select('id')
+                        .eq('asin', processedLaptop.asin)
+                        .limit(1);
+                        
+                      if (lookupError) {
+                        console.error(`Error looking up product ${processedLaptop.asin}:`, lookupError);
+                        stats.failed++;
+                        continue;
+                      }
+                      
+                      if (existingProduct && existingProduct.length > 0) {
+                        // Update existing product
+                        const { error: updateError } = await supabase
+                          .from('products')
+                          .update(processedLaptop)
+                          .eq('id', existingProduct[0].id);
+                          
+                        if (updateError) {
+                          console.error(`Error updating product ${processedLaptop.asin}:`, updateError);
+                          stats.failed++;
+                        } else {
+                          stats.updated++;
+                        }
+                      } else {
+                        // Insert new product
+                        const { error: insertError } = await supabase
+                          .from('products')
+                          .insert(processedLaptop);
+                          
+                        if (insertError) {
+                          console.error(`Error inserting product ${processedLaptop.asin}:`, insertError);
+                          stats.failed++;
+                        } else {
+                          stats.added++;
+                        }
+                      }
+                      
+                      stats.processed++;
+                    } catch (itemError) {
+                      console.error(`Error processing laptop item:`, itemError);
+                      stats.failed++;
+                    }
+                  }
+                } else {
+                  console.log(`No laptop results found for ${brand} on page ${page}`);
+                }
+              } else {
+                console.log(`No results returned from OxyLabs for ${brand} on page ${page}`);
+              }
+            } catch (pageError) {
+              console.error(`Error processing page ${page} for ${brand}:`, pageError);
+              stats.failed++;
             }
           }
           
@@ -111,54 +188,6 @@ serve(async (req) => {
         
       if (error) {
         console.error(`Error updating status for brand ${brand}:`, error);
-      }
-    }
-    
-    // Helper function to simulate processing a page
-    async function simulatePageProcessing(brand, page) {
-      // Simulate processing time
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Return simulated stats
-      return {
-        processed: Math.floor(Math.random() * 10) + 5,
-        updated: Math.floor(Math.random() * 3),
-        added: Math.floor(Math.random() * 5),
-        failed: Math.floor(Math.random() * 2)
-      };
-    }
-    
-    // Create a test product for verification purposes
-    async function createTestProduct(supabase, brand) {
-      // Generate a random model name
-      const modelNumber = Math.floor(Math.random() * 9000) + 1000;
-      const randomModel = `Test-${brand}-${modelNumber}`;
-      
-      const { error } = await supabase
-        .from('products')
-        .upsert({
-          title: `Test ${brand} Laptop ${modelNumber}`,
-          brand: brand,
-          model: randomModel,
-          price: Math.floor(Math.random() * 1000) + 500,
-          rating: (Math.random() * 4 + 1).toFixed(1),
-          specs: {
-            processor: 'Test Processor',
-            ram: '16GB',
-            storage: '512GB SSD',
-            graphics: 'Integrated Graphics',
-            screen: '15.6-inch Full HD'
-          },
-          collection_status: 'completed',
-          last_collection_attempt: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          created_at: new Date().toISOString()
-        });
-        
-      if (error) {
-        console.error(`Error creating test product for ${brand}:`, error);
-      } else {
-        console.log(`Created test product for ${brand}`);
       }
     }
 
