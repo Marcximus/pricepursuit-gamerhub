@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { DollarSign } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 type PriceRangeFilterProps = {
   minPrice: number;
@@ -14,18 +15,27 @@ type PriceRangeFilterProps = {
 export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRangeFilterProps) {
   const [localMin, setLocalMin] = useState(minPrice);
   const [localMax, setLocalMax] = useState(maxPrice);
+  const [extendedRange, setExtendedRange] = useState(false);
   
-  const MAX_POSSIBLE_PRICE = 10000;
-  const isDefaultPriceRange = minPrice === 0 && maxPrice === MAX_POSSIBLE_PRICE;
+  const STANDARD_MAX_PRICE = 2000;
+  const EXTENDED_MAX_PRICE = 10000;
+  const MAX_POSSIBLE_PRICE = extendedRange ? EXTENDED_MAX_PRICE : STANDARD_MAX_PRICE;
+  
+  const isDefaultPriceRange = minPrice === 0 && maxPrice === EXTENDED_MAX_PRICE;
 
-  // Create tick labels
+  // Create tick labels based on the current range
   const generateTickLabels = () => {
     const labels = [];
-    const tickCount = 6; // 0, 2000, 4000, 6000, 8000, 10000
-    for (let i = 0; i < tickCount; i++) {
-      const value = Math.round(i * (MAX_POSSIBLE_PRICE / (tickCount - 1)));
+    const tickCount = extendedRange ? 6 : 5; // 0, 500, 1000, 1500, 2000, (10000 if extended)
+    
+    for (let i = 0; i < tickCount - 1; i++) {
+      const value = Math.round(i * (STANDARD_MAX_PRICE / (tickCount - 1)));
       labels.push(formatPrice(value, true));
     }
+    
+    // Add the last label based on the range
+    labels.push(extendedRange ? "10k" : "2k");
+    
     return labels;
   };
 
@@ -33,6 +43,11 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
   useEffect(() => {
     setLocalMin(minPrice);
     setLocalMax(maxPrice);
+    
+    // Set extended range if maxPrice is higher than standard
+    if (maxPrice > STANDARD_MAX_PRICE) {
+      setExtendedRange(true);
+    }
   }, [minPrice, maxPrice]);
 
   // Handle slider changes
@@ -50,6 +65,22 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
     }
   };
 
+  // Handle extended range toggle
+  const handleRangeToggle = (checked: boolean) => {
+    setExtendedRange(checked);
+    
+    // When enabling extended range and max price is at standard max, extend it to the full range
+    if (checked && localMax === STANDARD_MAX_PRICE) {
+      setLocalMax(EXTENDED_MAX_PRICE);
+      onPriceChange(localMin, EXTENDED_MAX_PRICE);
+    } 
+    // When disabling extended range, cap the max price at standard max
+    else if (!checked && localMax > STANDARD_MAX_PRICE) {
+      setLocalMax(STANDARD_MAX_PRICE);
+      onPriceChange(localMin, STANDARD_MAX_PRICE);
+    }
+  };
+
   // Handle input changes with debounce
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -63,8 +94,8 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
 
   const handleResetPrice = () => {
     setLocalMin(0);
-    setLocalMax(MAX_POSSIBLE_PRICE);
-    onPriceChange(0, MAX_POSSIBLE_PRICE);
+    setLocalMax(extendedRange ? EXTENDED_MAX_PRICE : STANDARD_MAX_PRICE);
+    onPriceChange(0, extendedRange ? EXTENDED_MAX_PRICE : STANDARD_MAX_PRICE);
   };
 
   // Format price for display
@@ -96,10 +127,21 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
         )}
       </div>
 
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs text-slate-500">Standard range (0-2k)</span>
+        <div className="flex items-center space-x-2">
+          <span className="text-xs text-slate-500">Include premium (2k+)</span>
+          <Switch 
+            checked={extendedRange} 
+            onCheckedChange={handleRangeToggle}
+            aria-label="Extended price range toggle"
+          />
+        </div>
+      </div>
+
       <div className="pt-2">
         <Slider
-          defaultValue={[localMin, localMax]}
-          value={[localMin, localMax]}
+          value={[localMin, Math.min(localMax, MAX_POSSIBLE_PRICE)]}
           min={0}
           max={MAX_POSSIBLE_PRICE}
           step={50}
