@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      collection_progress: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_updated: string | null
+          progress_data: Json | null
+          progress_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_updated?: string | null
+          progress_data?: Json | null
+          progress_type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_updated?: string | null
+          progress_data?: Json | null
+          progress_type?: string
+        }
+        Relationships: []
+      }
       price_history: {
         Row: {
           created_at: string | null
