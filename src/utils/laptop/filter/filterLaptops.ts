@@ -37,6 +37,19 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     return laptops;
   }
 
+  // Create a list of major brands for "Other" category filtering
+  const mainBrands = new Set<string>();
+  const hasOtherBrandsFilter = filters.brands.has('Other');
+  
+  // If "Other" category is selected, collect all other brand filters for exclusion
+  if (hasOtherBrandsFilter) {
+    filters.brands.forEach(brand => {
+      if (brand !== 'Other') {
+        mainBrands.add(brand.toLowerCase());
+      }
+    });
+  }
+
   const filteredLaptops = laptops.filter(laptop => {
     // Early return if laptop has no title or key specs
     if (!laptop.title || (!laptop.processor && !laptop.ram && !laptop.storage && !laptop.graphics)) {
@@ -57,12 +70,29 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
       }
       
       const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title);
-      const matchesBrand = Array.from(filters.brands).some(selectedBrand => 
-        matchesFilter(selectedBrand, normalizedBrand, 'brand', laptop.title)
-      );
       
-      if (!matchesBrand) {
-        return false;
+      // Special handling for "Other" category
+      if (hasOtherBrandsFilter) {
+        const isMainBrand = mainBrands.has(normalizedBrand.toLowerCase());
+        const matchesSpecificBrand = Array.from(filters.brands).some(selectedBrand => 
+          selectedBrand !== 'Other' && matchesFilter(selectedBrand, normalizedBrand, 'brand', laptop.title)
+        );
+        
+        // Include if:
+        // 1. It matches a specifically selected brand, OR
+        // 2. It's part of "Other" (not a main brand) and "Other" is selected
+        if (!(matchesSpecificBrand || (hasOtherBrandsFilter && !isMainBrand))) {
+          return false;
+        }
+      } else {
+        // Standard brand filtering without "Other" category
+        const matchesBrand = Array.from(filters.brands).some(selectedBrand => 
+          matchesFilter(selectedBrand, normalizedBrand, 'brand', laptop.title)
+        );
+        
+        if (!matchesBrand) {
+          return false;
+        }
       }
     }
 

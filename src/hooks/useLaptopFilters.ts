@@ -1,7 +1,7 @@
 
 import { useMemo } from "react";
 import type { Product } from "@/types/product";
-import { getUniqueFilterValues } from "./laptop-filters/getFilterOptions";
+import { getUniqueFilterValues, getGroupedBrandValues } from "./laptop-filters/getFilterOptions";
 
 /**
  * Hook for generating laptop filter options based on available laptop data
@@ -21,13 +21,13 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
     }
 
     return {
-      // Reordered in a more user-centric way
-      brands: getUniqueFilterValues(laptops, 'brand'),            // First filter category
-      processors: getUniqueFilterValues(laptops, 'processor'),    // Second filter category
-      ramSizes: getUniqueFilterValues(laptops, 'ram'),            // Third filter category
-      storageOptions: getUniqueFilterValues(laptops, 'storage'),  // Fourth filter category
-      graphicsCards: getUniqueFilterValues(laptops, 'graphics'),  // Fifth filter category
-      screenSizes: getUniqueFilterValues(laptops, 'screen_size'), // Last filter category
+      // Use grouped brands instead of all individual brands
+      brands: getGroupedBrandValues(laptops, 15),  // Group brands with fewer than 15 laptops
+      processors: getUniqueFilterValues(laptops, 'processor'),
+      ramSizes: getUniqueFilterValues(laptops, 'ram'),
+      storageOptions: getUniqueFilterValues(laptops, 'storage'),
+      graphicsCards: getUniqueFilterValues(laptops, 'graphics'),
+      screenSizes: getUniqueFilterValues(laptops, 'screen_size'),
     };
   }, [laptops]);
 };
