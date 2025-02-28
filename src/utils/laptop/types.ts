@@ -14,3 +14,9 @@ export interface CollectionConfig {
   PAGES_PER_BRAND: number;
   STALE_COLLECTION_MINUTES: number;
 }
+
+// Add the missing MatchResult type
+export interface MatchResult {
+  matched: boolean;
+  value?: string;
+}

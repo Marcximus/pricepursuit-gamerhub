@@ -7,5 +7,5 @@ export * from './processorNormalizer';
 export * from './brandNormalizer';
 export * from './modelNormalizer';
 
-// Type exports for backward compatibility
+// Import the MatchResult type from the correct location
 export type { MatchResult } from '../types';
