@@ -1,4 +1,3 @@
-
 import type { Product } from "@/types/product";
 import { processLaptopData } from "@/utils/laptopUtils";
 import { logDataStatistics, analyzeFilteredResults } from "@/services/laptopAnalytics";
@@ -9,7 +8,7 @@ import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import type { SortOption } from "@/components/laptops/LaptopSort";
 import { normalizeBrand, normalizeModel } from "@/utils/laptop/valueNormalizer";
 import { applyAllProductFilters } from "@/utils/laptop/productFilters";
-import { extractProcessorFromTitle } from "@/utils/laptop/filter/extractors/processorExtractor";
+import { extractProcessorFromTitle } from "@/utils/laptop/filter/extractors/processor";
 
 export const processAndFilterLaptops = (
   rawData: any[],

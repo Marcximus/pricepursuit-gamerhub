@@ -1,4 +1,3 @@
-
 import type { Product } from "@/types/product";
 import type { FilterableProductKeys } from "@/utils/laptop/filter";
 import { 
@@ -7,8 +6,8 @@ import {
   validatorMap 
 } from "./filterHelpers";
 import { sorterMap, sortDefaultOptions } from "./filterSorters";
-import { standardizeProcessorForFiltering } from "@/utils/laptop/filter/extractors/processorExtractor";
-import { extractProcessorFromTitle } from "@/utils/laptop/filter/extractors/processorExtractor";
+import { standardizeProcessorForFiltering } from "@/utils/laptop/filter/extractors/processor";
+import { extractProcessorFromTitle } from "@/utils/laptop/filter/extractors/processor";
 
 /**
  * Gets unique, validated, and sorted filter options for a specific filter key

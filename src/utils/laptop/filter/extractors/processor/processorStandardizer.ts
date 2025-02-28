@@ -1,137 +1,17 @@
 
-/**
- * Extracts processor information from laptop title
- * First tries to find specific patterns, then falls back to general extraction
- */
-export const extractProcessorFromTitle = (
-  title: string | undefined,
-  existingProcessor?: string | null
-): string | null => {
-  if (!title) return existingProcessor || null;
-  
-  const normalizedTitle = title.toLowerCase();
-  
-  // Try to extract Intel Core Ultra processors
-  const ultraMatch = normalizedTitle.match(/(?:intel\s+)?(?:\d+[-\s]core\s+)?(?:core\s+)?ultra\s+([579])(?:\s+\d{3}[a-z]*)?/i);
-  if (ultraMatch) {
-    return `Intel Core Ultra ${ultraMatch[1]}`;
-  }
-  
-  // Try to extract Intel Core i-series processors with model numbers
-  const intelCoreMatch = normalizedTitle.match(/(?:intel\s+)?core\s+i([3579])(?:[- ](\d{4,5}[a-z]*))?/i);
-  if (intelCoreMatch) {
-    const model = intelCoreMatch[2] ? `-${intelCoreMatch[2]}` : '';
-    return `Intel Core i${intelCoreMatch[1]}${model}`;
-  }
-  
-  // Try to extract just i-series mentions (i5, i7, etc.)
-  const iSeriesMatch = normalizedTitle.match(/\bi([3579])(?:[- ](\d{4,5}[a-z]*))?/i);
-  if (iSeriesMatch) {
-    const model = iSeriesMatch[2] ? `-${iSeriesMatch[2]}` : '';
-    return `Intel Core i${iSeriesMatch[1]}${model}`;
-  }
-  
-  // Try to extract core_i patterns from title
-  const coreIMatch = normalizedTitle.match(/core_i([3579])/i);
-  if (coreIMatch) {
-    return `Intel Core i${coreIMatch[1]}`;
-  }
-  
-  // Try to extract GHz with core_i or i-series patterns
-  const ghzCoreMatch = normalizedTitle.match(/(\d+(?:\.\d+)?)\s*ghz\s*(?:core_i|core\s+i|i)([3579])/i);
-  if (ghzCoreMatch) {
-    return `Intel Core i${ghzCoreMatch[2]} ${ghzCoreMatch[1]}GHz`;
-  }
-  
-  // Try to extract GHz with Celeron
-  const ghzCeleronMatch = normalizedTitle.match(/(\d+(?:\.\d+)?)\s*ghz\s*(?:intel\s+)?celeron/i) || 
-                         normalizedTitle.match(/(?:intel\s+)?celeron\s+.*?(\d+(?:\.\d+)?)\s*ghz/i);
-  if (ghzCeleronMatch) {
-    return `Intel Celeron ${ghzCeleronMatch[1]}GHz`;
-  }
-  
-  // Try to extract GHz with Pentium
-  const ghzPentiumMatch = normalizedTitle.match(/(\d+(?:\.\d+)?)\s*ghz\s*(?:intel\s+)?pentium/i) || 
-                         normalizedTitle.match(/(?:intel\s+)?pentium\s+.*?(\d+(?:\.\d+)?)\s*ghz/i);
-  if (ghzPentiumMatch) {
-    return `Intel Pentium ${ghzPentiumMatch[1]}GHz`;
-  }
-  
-  // Try to extract Celeron with model numbers
-  const celeronMatch = normalizedTitle.match(/(?:intel\s+)?celeron\s+(n\d{4})/i);
-  if (celeronMatch) {
-    return `Intel Celeron ${celeronMatch[1].toUpperCase()}`;
-  }
-  
-  // Try to extract generic Celeron mentions
-  if (normalizedTitle.includes('celeron')) {
-    return 'Intel Celeron';
-  }
-  
-  // Try to extract Pentium with model numbers
-  const pentiumMatch = normalizedTitle.match(/(?:intel\s+)?pentium\s+([a-z0-9]+)/i);
-  if (pentiumMatch) {
-    return `Intel Pentium ${pentiumMatch[1].toUpperCase()}`;
-  }
-  
-  // Try to extract generic Pentium mentions
-  if (normalizedTitle.includes('pentium')) {
-    return 'Intel Pentium';
-  }
-  
-  // Try to extract Apple Silicon
-  const appleMatch = normalizedTitle.match(/apple\s+m([1234])(?:\s+(pro|max|ultra))?/i);
-  if (appleMatch) {
-    const variant = appleMatch[2] ? ` ${appleMatch[2].charAt(0).toUpperCase() + appleMatch[2].slice(1)}` : '';
-    return `Apple M${appleMatch[1]}${variant}`;
-  }
-  
-  // Try to extract M-series without Apple prefix
-  const mSeriesMatch = normalizedTitle.match(/\bm([1234])(?:\s+(pro|max|ultra))?\b/i);
-  if (mSeriesMatch && !normalizedTitle.includes('ram') && !normalizedTitle.includes('memory')) {
-    const variant = mSeriesMatch[2] ? ` ${mSeriesMatch[2].charAt(0).toUpperCase() + mSeriesMatch[2].slice(1)}` : '';
-    return `Apple M${mSeriesMatch[1]}${variant}`;
-  }
-  
-  // Try to extract AMD Ryzen with model numbers
-  const ryzenMatch = normalizedTitle.match(/amd\s+ryzen\s+([3579])(?:[- _](\d{4}[a-z]*))?/i);
-  if (ryzenMatch) {
-    const model = ryzenMatch[2] ? `-${ryzenMatch[2]}` : '';
-    return `AMD Ryzen ${ryzenMatch[1]}${model}`;
-  }
-  
-  // Try to extract Ryzen without AMD prefix
-  const ryzenWithoutAmdMatch = normalizedTitle.match(/\bryzen\s+([3579])(?:[- _](\d{4}[a-z]*))?/i);
-  if (ryzenWithoutAmdMatch) {
-    const model = ryzenWithoutAmdMatch[2] ? `-${ryzenWithoutAmdMatch[2]}` : '';
-    return `AMD Ryzen ${ryzenWithoutAmdMatch[1]}${model}`;
-  }
-  
-  // Try to extract Ryzen with underscore format (ryzen_5_3500u)
-  const ryzenUnderscoreMatch = normalizedTitle.match(/ryzen_([3579])_(\d{4}[a-z]*)/i);
-  if (ryzenUnderscoreMatch) {
-    return `AMD Ryzen ${ryzenUnderscoreMatch[1]}-${ryzenUnderscoreMatch[2]}`;
-  }
-  
-  // Try to extract MediaTek
-  const mediatekMatch = normalizedTitle.match(/mediatek\s+([a-z0-9]+)/i);
-  if (mediatekMatch) {
-    return `MediaTek ${mediatekMatch[1]}`;
-  }
-  
-  // Try to extract Snapdragon
-  const snapdragonMatch = normalizedTitle.match(/(?:qualcomm\s+)?snapdragon\s+([a-z0-9]+)/i);
-  if (snapdragonMatch) {
-    return `Qualcomm Snapdragon ${snapdragonMatch[1]}`;
-  }
-  
-  // If we have an existing processor value, return that
-  if (existingProcessor) {
-    return existingProcessor;
-  }
-  
-  return null;
-};
+import { 
+  appleSiliconPatterns, 
+  intelCorePatterns,
+  intelUltraPatterns,
+  amdRyzenPatterns,
+  generationPatterns
+} from './processorPatterns';
+import { 
+  containsAppleProcessor, 
+  containsIntelProcessor, 
+  containsAmdProcessor,
+  containsMobileProcessor
+} from './extractorUtils';
 
 /**
  * Standardizes processor information into categories for filtering
@@ -375,4 +255,3 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
   // If we can't categorize it, mark it as "Other"
   return 'Other Processor';
 };
-
