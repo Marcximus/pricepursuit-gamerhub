@@ -4,7 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { Cpu, HardDrive, Monitor, Search, Box, Laptop, Microchip, Memory, Gpu } from "lucide-react";
+import { Cpu, HardDrive, Monitor, Search, Box, Laptop, Chip, Layers } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
@@ -52,13 +52,13 @@ export function FilterSection({
   const getIconComponent = () => {
     switch (icon.toLowerCase()) {
       case 'cpu':
-        return <Microchip className="h-4 w-4 text-slate-600" />;
+        return <Chip className="h-4 w-4 text-slate-600" />;
       case 'memory':
-        return <Memory className="h-4 w-4 text-slate-600" />;
+        return <Layers className="h-4 w-4 text-slate-600" />;
       case 'hard-drive':
         return <HardDrive className="h-4 w-4 text-slate-600" />;
       case 'gpu':
-        return <Gpu className="h-4 w-4 text-slate-600" />;
+        return <Cpu className="h-4 w-4 text-slate-600" />;
       case 'monitor':
         return <Monitor className="h-4 w-4 text-slate-600" />;
       case 'brand':
