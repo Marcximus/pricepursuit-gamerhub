@@ -37,18 +37,30 @@ export const getUniqueFilterValues = (
     });
   }
 
-  // Additional storage validation - only keep values that have at least one matching laptop
-  if (key === 'storage') {
-    cleanedValues = cleanedValues.filter(value => {
-      // Count laptops that match this storage value
-      const matchCount = laptops.filter(laptop => 
-        laptop.storage && normalizer(laptop.storage) === value
-      ).length;
+  // Comprehensive filtering to ensure each filter option has matching laptops
+  cleanedValues = cleanedValues.filter(value => {
+    if (!value) return false;
+    
+    // Count laptops that match this value
+    const matchCount = laptops.filter(laptop => {
+      const laptopValue = laptop[key];
+      if (!laptopValue) return false;
       
-      // Only keep filter values that have actual matching laptops
-      return matchCount > 0;
-    });
-  }
+      // Use the appropriate normalizer for the comparison
+      const normalizedLaptopValue = normalizer(laptopValue);
+      return normalizedLaptopValue === value;
+    }).length;
+    
+    // Only keep filter values that have at least one matching laptop
+    const hasMatches = matchCount > 0;
+    
+    // Log any values that have no matches (for debugging)
+    if (!hasMatches && key === 'storage') {
+      console.log(`Filtering out storage option with no matches: "${value}"`);
+    }
+    
+    return hasMatches;
+  });
   
   // Sort values using the appropriate sorter
   const sortedValues = sorter(cleanedValues);
