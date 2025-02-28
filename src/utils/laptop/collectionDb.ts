@@ -1,7 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { CollectionStats } from "./types";
+import { CollectionStats, CollectionProgressData } from "./types";
+import { Json } from "@/integrations/supabase/types";
 
 export async function resetStaleCollections(staleTimeout: string) {
   const { error: cleanupError } = await supabase
@@ -110,7 +111,8 @@ export async function saveCollectionProgress(
       return false;
     }
     
-    const progressData = completed ? null : {
+    // Create the progress data object
+    const progressData: CollectionProgressData | null = completed ? null : {
       groupIndex,
       brandIndex,
       timestamp: new Date().toISOString(),
@@ -122,7 +124,7 @@ export async function saveCollectionProgress(
       const { error: updateError } = await supabase
         .from('collection_progress')
         .update({
-          progress_data: progressData,
+          progress_data: progressData as unknown as Json,
           last_updated: new Date().toISOString()
         })
         .eq('id', existingProgress[0].id);
@@ -137,7 +139,7 @@ export async function saveCollectionProgress(
         .from('collection_progress')
         .insert({
           progress_type: 'laptop_collection',
-          progress_data: progressData,
+          progress_data: progressData as unknown as Json,
           last_updated: new Date().toISOString()
         });
       

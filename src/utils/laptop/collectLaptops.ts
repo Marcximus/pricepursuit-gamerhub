@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { COLLECTION_CONFIG } from "./config";
-import { CollectionStats } from "./types";
+import { CollectionStats, CollectionProgressData } from "./types";
 import { resetStaleCollections, checkActiveCollections, saveCollectionProgress, getLastCollectionProgress } from "./collectionDb";
 import { createBrandBatches, processBrand } from "./collectionUtils";
 
@@ -47,10 +47,11 @@ export async function collectLaptops() {
     // If we have saved progress, use it to resume collection
     if (savedProgress && savedProgress.progress_data) {
       try {
-        const progressData = savedProgress.progress_data;
+        const progressData = savedProgress.progress_data as unknown as CollectionProgressData;
         
-        if (progressData.groupIndex !== undefined && 
-            progressData.brandIndex !== undefined && 
+        if (progressData && 
+            typeof progressData.groupIndex === 'number' && 
+            typeof progressData.brandIndex === 'number' && 
             progressData.timestamp) {
           
           const progressTimestamp = new Date(progressData.timestamp);

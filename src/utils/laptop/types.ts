@@ -20,3 +20,11 @@ export interface MatchResult {
   matched: boolean;
   value?: string;
 }
+
+// Define the structure of the progress data stored in the database
+export interface CollectionProgressData {
+  groupIndex: number;
+  brandIndex: number;
+  timestamp: string;
+  stats: CollectionStats;
+}
