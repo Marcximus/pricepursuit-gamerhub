@@ -3,5 +3,6 @@
 export * from './collectionLogs';
 export * from './collectionProgress';
 export * from './extractionLogs';
+export * from './pageProcessing';
 export * from './processingLogs';
 export * from './statusUpdates';
