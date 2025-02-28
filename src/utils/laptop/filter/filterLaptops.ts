@@ -51,6 +51,11 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
 
     // Brand Filter
     if (filters.brands.size > 0) {
+      // If brand is not specified, exclude when brand filter is active
+      if (!laptop.brand && !laptop.title) {
+        return false;
+      }
+      
       const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title);
       const matchesBrand = Array.from(filters.brands).some(selectedBrand => 
         matchesFilter(selectedBrand, normalizedBrand, 'brand', laptop.title)
@@ -62,7 +67,12 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     }
 
     // Processor Filter
-    if (filters.processors.size > 0 && laptop.processor) {
+    if (filters.processors.size > 0) {
+      // Exclude laptops with unspecified processors when processor filter is active
+      if (!laptop.processor) {
+        return false;
+      }
+      
       const matchesProcessor = Array.from(filters.processors).some(selectedProcessor => 
         matchesFilter(selectedProcessor, laptop.processor, 'processor', laptop.title)
       );
@@ -73,7 +83,12 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     }
 
     // RAM Filter
-    if (filters.ramSizes.size > 0 && laptop.ram) {
+    if (filters.ramSizes.size > 0) {
+      // Exclude laptops with unspecified RAM when RAM filter is active
+      if (!laptop.ram) {
+        return false;
+      }
+      
       const matchesRam = Array.from(filters.ramSizes).some(selectedRam => 
         matchesFilter(selectedRam, laptop.ram, 'ram', laptop.title)
       );
@@ -84,7 +99,12 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     }
 
     // Storage Filter
-    if (filters.storageOptions.size > 0 && laptop.storage) {
+    if (filters.storageOptions.size > 0) {
+      // Exclude laptops with unspecified storage when storage filter is active
+      if (!laptop.storage) {
+        return false;
+      }
+      
       const matchesStorage = Array.from(filters.storageOptions).some(selectedStorage => 
         matchesFilter(selectedStorage, laptop.storage, 'storage', laptop.title)
       );
@@ -95,7 +115,12 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     }
 
     // Graphics Filter
-    if (filters.graphicsCards.size > 0 && laptop.graphics) {
+    if (filters.graphicsCards.size > 0) {
+      // Exclude laptops with unspecified graphics when graphics filter is active
+      if (!laptop.graphics) {
+        return false;
+      }
+      
       const matchesGraphics = Array.from(filters.graphicsCards).some(selectedGraphics => 
         matchesFilter(selectedGraphics, laptop.graphics, 'graphics', laptop.title)
       );
@@ -106,7 +131,12 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     }
 
     // Screen Size Filter
-    if (filters.screenSizes.size > 0 && laptop.screen_size) {
+    if (filters.screenSizes.size > 0) {
+      // Exclude laptops with unspecified screen size when screen size filter is active
+      if (!laptop.screen_size) {
+        return false;
+      }
+      
       const matchesScreenSize = Array.from(filters.screenSizes).some(selectedSize => 
         matchesFilter(selectedSize, laptop.screen_size, 'screen_size', laptop.title)
       );

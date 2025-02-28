@@ -38,7 +38,7 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
       <ul className="space-y-1 text-sm">
         <li>
           <span className="font-bold">Brand:</span>{" "}
-          {correctedBrand}
+          {correctedBrand || 'Not Specified'}
         </li>
         {displayModel && (
           <li>
@@ -50,23 +50,23 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
           <span className="font-bold">Screen:</span>{" "}
           {specs.screenSize 
             ? `${specs.screenSize} ${specs.screenResolution ? `(${specs.screenResolution})` : ''}`
-            : 'Not specified'}
+            : 'Not Specified'}
         </li>
         <li>
           <span className="font-bold">Processor:</span>{" "}
-          {specs.processor || 'Not specified'}
+          {specs.processor || 'Not Specified'}
         </li>
         <li>
           <span className="font-bold">GPU:</span>{" "}
-          {specs.graphics || 'Not specified'}
+          {specs.graphics || 'Not Specified'}
         </li>
         <li>
           <span className="font-bold">RAM:</span>{" "}
-          {specs.ram || 'Not specified'}
+          {specs.ram || 'Not Specified'}
         </li>
         <li>
           <span className="font-bold">Storage:</span>{" "}
-          {specs.storage || 'Not specified'}
+          {specs.storage || 'Not Specified'}
         </li>
         {specs.weight && (
           <li>
