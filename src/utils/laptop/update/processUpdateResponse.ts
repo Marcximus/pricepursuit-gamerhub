@@ -32,3 +32,35 @@ export const processUpdateResponse = (response: any, existingData: any) => {
     return null;
   }
 };
+
+// Helper function to merge new data with existing data, preserving existing values
+export const preserveExistingData = (newData: any, existingData: any) => {
+  if (!existingData) return newData;
+  
+  // Create a merged object that prioritizes existing data
+  const mergedData = { ...newData };
+  
+  // List of fields we want to preserve if they already exist
+  const fieldsToPreserve = [
+    'processor', 'ram', 'storage', 'graphics', 'screen_size', 
+    'screen_resolution', 'weight', 'brand', 'model', 
+    'processor_score', 'battery_life', 'operating_system'
+  ];
+  
+  // Preserve existing values for specific fields if they exist
+  for (const field of fieldsToPreserve) {
+    if (existingData[field] && existingData[field].trim && existingData[field].trim() !== '') {
+      mergedData[field] = existingData[field];
+      console.log(`Preserved existing ${field}: ${existingData[field]}`);
+    }
+  }
+  
+  // Always update price, image, and rating information as these should be refreshed
+  ['current_price', 'original_price', 'image_url', 'rating', 'rating_count'].forEach(field => {
+    if (newData[field] !== null && newData[field] !== undefined) {
+      mergedData[field] = newData[field];
+    }
+  });
+  
+  return mergedData;
+};

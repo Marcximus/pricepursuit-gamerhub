@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { COLLECTION_CONFIG } from "./config";
 import { CollectionStats } from "./types";
 import { updateBrandStatus, processPage } from "./collection/statusManagement";
+import { preserveExistingData } from "./update/processUpdateResponse";
 
 /**
  * Create batches of brands for parallel processing
@@ -26,9 +27,16 @@ export function createBrandBatches(brands: string[], batchSize: number) {
  * @param groupIndex The current group index
  * @param brandIndex The current brand index within the group
  * @param totalStats The running statistics object to update
+ * @param preserveExistingData Whether to preserve existing data for already present ASINs
  * @returns Processing result
  */
-export async function processBrand(brand: string, groupIndex: number, brandIndex: number, totalStats: CollectionStats) {
+export async function processBrand(
+  brand: string, 
+  groupIndex: number, 
+  brandIndex: number, 
+  totalStats: CollectionStats,
+  preserveExistingDataFlag: boolean = true
+) {
   try {
     // Update status to in_progress
     await updateBrandStatus(brand, 'in_progress');
@@ -44,7 +52,7 @@ export async function processBrand(brand: string, groupIndex: number, brandIndex
     };
     
     for (let page = 1; page <= COLLECTION_CONFIG.PAGES_PER_BRAND; page++) {
-      const pageResult = await processPage(brand, page, groupIndex, brandIndex, totalBrands);
+      const pageResult = await processPage(brand, page, groupIndex, brandIndex, totalBrands, preserveExistingDataFlag);
       
       if (pageResult && pageResult.stats) {
         // Update brand stats

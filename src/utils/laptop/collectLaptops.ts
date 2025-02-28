@@ -10,6 +10,7 @@ import {
   getLastCollectionProgress 
 } from "./collection/status";
 import { createBrandBatches, processBrand } from "./collectionUtils";
+import { preserveExistingData } from "./update/processUpdateResponse";
 
 export async function collectLaptops() {
   console.log('collectLaptops function called');
@@ -103,7 +104,8 @@ export async function collectLaptops() {
       pagesPerBrand: COLLECTION_CONFIG.PAGES_PER_BRAND,
       startGroupIndex,
       startBrandIndex,
-      resumeStats
+      resumeStats,
+      preserveExistingData: true // Add flag to indicate we want to preserve existing data
     });
     
     // Call the Supabase Edge Function with proper parameters
@@ -116,7 +118,8 @@ export async function collectLaptops() {
         detailedLogging: true, // Add flag to enable detailed logging on the server
         startGroupIndex, // Send the starting group index
         startBrandIndex, // Send the starting brand index
-        resumeStats // Send the resume stats
+        resumeStats, // Send the resume stats
+        preserveExistingData: true // NEW: Flag to tell the edge function to preserve existing data
       }
     });
     
