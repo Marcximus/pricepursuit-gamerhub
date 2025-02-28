@@ -184,12 +184,6 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
           <div className="absolute left-3 top-2.5 text-slate-500">$</div>
         </div>
       </div>
-      
-      {isExtendedPrice && (
-        <div className="mt-3 text-xs text-slate-500 italic">
-          Showing all price ranges from ${STANDARD_MAX_PRICE} to ${EXTENDED_MAX_PRICE}
-        </div>
-      )}
     </div>
   );
 }
