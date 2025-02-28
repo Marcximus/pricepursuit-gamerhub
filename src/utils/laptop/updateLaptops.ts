@@ -33,7 +33,7 @@ export const updateLaptops = async () => {
     // Log detailed info about laptops to be updated
     console.log(`Found ${laptops.length} laptops to update with the following priority:`);
     formattedLaptops.forEach((laptop, index) => {
-      console.log(`${index + 1}. ID: ${laptop.id}, ASIN: ${laptop.asin}, Title: ${laptop.title?.substring(0, 30)}..., Last Checked: ${laptop.formattedLastChecked}, Current Price: ${laptop.current_price === null ? 'NULL' : `$${laptop.current_price}`}`);
+      console.log(`${index + 1}. ASIN: ${laptop.asin}, Title: ${laptop.title?.substring(0, 30)}..., Last Checked: ${laptop.formattedLastChecked}, Current Price: ${laptop.current_price === null ? 'NULL' : `$${laptop.current_price}`}`);
     });
 
     // Group laptops by update status for better logging
@@ -68,11 +68,10 @@ export const updateLaptops = async () => {
     const processChunks = async () => {
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
-        const chunkIds = chunk.map(l => l.id);
+        const chunkAsins = chunk.map(l => l.asin);
         
         console.log(`----- Processing chunk ${i + 1}/${chunks.length} -----`);
         console.log(`Chunk ${i + 1} laptops:`, chunk.map(l => ({ 
-          id: l.id.substring(0, 8) + '...', 
           asin: l.asin, 
           lastChecked: l.last_checked ? new Date(l.last_checked).toLocaleString() : 'Never',
           price: l.current_price === null ? 'NULL' : `$${l.current_price}`
@@ -86,7 +85,7 @@ export const updateLaptops = async () => {
             update_status: 'pending_update',
             last_checked: new Date().toISOString()
           })
-          .in('id', chunkIds);
+          .in('asin', chunkAsins);
 
         if (statusError) {
           console.error(`Error marking chunk ${i + 1} laptops for update:`, statusError);
@@ -101,6 +100,7 @@ export const updateLaptops = async () => {
               laptops: chunk.map(l => ({ 
                 id: l.id, 
                 asin: l.asin, 
+                current_price: l.current_price, // Include current price to avoid zero-price overwrites
                 title: l.title,
                 last_checked: l.last_checked
               }))
@@ -113,7 +113,7 @@ export const updateLaptops = async () => {
             await supabase
               .from('products')
               .update({ update_status: 'error' })
-              .in('id', chunkIds);
+              .in('asin', chunkAsins);
           } else {
             console.log(`Successfully initiated update for chunk ${i + 1} with response:`, data);
           }
@@ -144,3 +144,4 @@ export const updateLaptops = async () => {
     return { success: false, error: error.message };
   }
 };
+

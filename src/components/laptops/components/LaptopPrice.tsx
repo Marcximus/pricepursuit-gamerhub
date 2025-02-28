@@ -15,7 +15,7 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
   });
 
   const formatPrice = (price: number | null) => {
-    if (price === null || price === undefined || (typeof price === 'number' && isNaN(price))) {
+    if (price === null || price === undefined || (typeof price === 'number' && isNaN(price)) || price === 0) {
       console.log('Invalid price value:', price);
       return 'Price not available';
     }

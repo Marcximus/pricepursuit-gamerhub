@@ -1,7 +1,7 @@
 
 export interface Product {
   id: string;
-  asin: string;
+  asin: string;  // Primary identifier for all laptop products
   title: string;
   current_price: number;
   original_price: number;
