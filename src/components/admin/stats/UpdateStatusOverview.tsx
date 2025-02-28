@@ -1,5 +1,5 @@
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { CircleCheck, Clock, CircleAlert, RotateCw } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { StatItem } from "./StatItem";
@@ -14,29 +14,8 @@ interface UpdateStatusOverviewProps {
 export function UpdateStatusOverview({ stats }: UpdateStatusOverviewProps) {
   // Get the refresh function from context to allow manual refresh
   const refreshStats = useContext(StatsRefreshContext);
-  const [lastUpdatedTime, setLastUpdatedTime] = useState<string>(new Date().toLocaleTimeString());
+  const [lastUpdatedTime] = useState<string>(new Date().toLocaleTimeString());
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  
-  // Setup automatic refresh for the component
-  useEffect(() => {
-    // Update the last refreshed time whenever stats change
-    setLastUpdatedTime(new Date().toLocaleTimeString());
-    
-    // Set up interval to refresh more frequently when updates are in progress
-    const hasActiveUpdates = stats.updateStatus.inProgress.count > 0;
-    const refreshInterval = hasActiveUpdates ? 5000 : 15000; // 5 seconds during active updates, otherwise 15 seconds
-    
-    console.log(`Setting up refresh interval: ${refreshInterval}ms, active updates: ${hasActiveUpdates}`);
-    
-    const interval = setInterval(() => {
-      if (refreshStats) {
-        console.log("Auto-refreshing update status...");
-        refreshStats();
-      }
-    }, refreshInterval);
-    
-    return () => clearInterval(interval);
-  }, [stats.updateStatus.inProgress.count, refreshStats]);
 
   // Handle manual refresh click
   const handleRefresh = async () => {
@@ -45,7 +24,6 @@ export function UpdateStatusOverview({ stats }: UpdateStatusOverviewProps) {
       console.log("Manual refresh triggered");
       try {
         await refreshStats();
-        setLastUpdatedTime(new Date().toLocaleTimeString());
       } catch (error) {
         console.error("Error refreshing stats:", error);
       } finally {

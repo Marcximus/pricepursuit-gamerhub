@@ -19,6 +19,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
   const statsRefresh = useContext(StatsRefreshContext);
   const [updateStartTime, setUpdateStartTime] = useState<Date | null>(null);
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<NodeJS.Timeout | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   // Clean up intervals on unmount
   useEffect(() => {
@@ -29,16 +30,38 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
     };
   }, [autoRefreshInterval]);
 
+  // Update elapsed time counter
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    
+    if (isUpdating && updateStartTime) {
+      timer = setInterval(() => {
+        const currentTime = new Date();
+        const secondsElapsed = Math.floor((currentTime.getTime() - updateStartTime.getTime()) / 1000);
+        setElapsedTime(secondsElapsed);
+      }, 1000);
+    } else {
+      setElapsedTime(0);
+    }
+    
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isUpdating, updateStartTime]);
+
   // Function to start auto-refreshing stats during updates
   const startAutoRefresh = () => {
     if (autoRefreshInterval) {
       clearInterval(autoRefreshInterval);
     }
     
+    // Use statsRefresh from context instead of refreshStats prop
+    const refreshFunction = statsRefresh || refreshStats;
+    
     const intervalId = setInterval(() => {
       console.log('Auto-refreshing stats while updates are in progress...');
-      if (statsRefresh) {
-        statsRefresh()
+      if (refreshFunction) {
+        refreshFunction()
           .then(() => console.log('Auto-refresh successful'))
           .catch(err => console.error('Error during auto-refresh:', err));
       }
@@ -60,7 +83,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
   // Check if updates seem stuck and reset if necessary
   useEffect(() => {
     if (isUpdating && updateStartTime) {
-      const maxUpdateTime = 10 * 60 * 1000; // 10 minutes
+      const maxUpdateTime = 15 * 60 * 1000; // 15 minutes
       const interval = setInterval(() => {
         const currentTime = new Date();
         const elapsedTime = currentTime.getTime() - updateStartTime.getTime();
@@ -93,8 +116,15 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
       console.log('Starting laptop update process...');
       
       // Immediately refresh stats to get current state
-      if (statsRefresh) {
-        await statsRefresh();
+      // Use statsRefresh from context instead of refreshStats prop
+      const refreshFunction = statsRefresh || refreshStats;
+      if (refreshFunction) {
+        try {
+          await refreshFunction();
+        } catch (err) {
+          console.error('Error refreshing stats before update:', err);
+          // Continue with update process despite refresh error
+        }
       }
       
       const result = await updateLaptops();
@@ -113,14 +143,14 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
         // Start auto-refreshing stats
         startAutoRefresh();
         
-        // After 5 minutes, stop the auto-refresh and do one final refresh
+        // After 12 minutes, stop the auto-refresh and do one final refresh
         setTimeout(() => {
           if (isUpdating) {
             console.log('Scheduled final refresh after timeout');
             stopAutoRefresh();
             
-            if (statsRefresh) {
-              statsRefresh()
+            if (refreshFunction) {
+              refreshFunction()
                 .then(() => {
                   console.log('Final refresh completed');
                   setIsUpdating(false);
@@ -133,7 +163,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
               setIsUpdating(false);
             }
           }
-        }, 5 * 60 * 1000); // 5 minutes
+        }, 12 * 60 * 1000); // 12 minutes
       } else {
         toast({
           title: "Update Status",
@@ -145,7 +175,11 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
       }
       
       // Refresh stats again after starting updates
-      await refreshStats();
+      try {
+        await refreshStats();
+      } catch (err) {
+        console.error('Error refreshing stats after update:', err);
+      }
     } catch (error: any) {
       console.error('Error updating laptops:', error);
       toast({
@@ -158,13 +192,16 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
     }
   };
 
+  // Format time display (mm:ss)
+  const formatElapsedTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
   const getDescription = () => {
     if (isUpdating && updateCount > 0) {
-      const elapsedTime = updateStartTime 
-        ? Math.floor((new Date().getTime() - updateStartTime.getTime()) / 1000) 
-        : 0;
-      
-      return `Currently updating ${updateCount} laptops. Process has been running for ${elapsedTime} seconds. Updates prioritize oldest check date, missing prices and images.`;
+      return `Currently updating ${updateCount} laptops. Process has been running for ${formatElapsedTime(elapsedTime)}. Updates prioritize oldest check date, missing prices and images.`;
     }
     return "Update prices and information for all laptops - prioritizes by oldest check date, missing prices and images";
   };

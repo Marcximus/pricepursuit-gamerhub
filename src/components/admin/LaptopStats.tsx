@@ -22,10 +22,18 @@ const LaptopStats = () => {
   const [error, setError] = useState<Error | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState<boolean>(true);
+  const [refreshCount, setRefreshCount] = useState<number>(0);
   const { toast } = useToast();
 
   // Create a stable fetchStats function that can be passed to the context
   const fetchStats = useCallback(async () => {
+    // Prevent multiple concurrent refresh calls
+    if (refreshing) {
+      console.log('Already refreshing, skipping duplicate call');
+      return;
+    }
+    
     try {
       setRefreshing(true);
       console.log('Fetching database statistics...');
@@ -44,6 +52,7 @@ const LaptopStats = () => {
       setStats(databaseStats);
       setLastRefreshTime(new Date());
       setError(null);
+      setRefreshCount(prev => prev + 1);
       
       // Don't return databaseStats here to match Promise<void> type
     } catch (err) {
@@ -80,24 +89,47 @@ const LaptopStats = () => {
     };
     
     initialFetch();
-  }, [fetchStats]);
+    // This effect should only run once on component mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Set up auto-refresh interval based on update activity
+  // Set up auto-refresh interval based on update activity with proper cleanup
   useEffect(() => {
-    // Setup more frequent refresh when updates are happening
-    const hasActiveUpdates = stats?.updateStatus?.inProgress?.count > 0;
-    const refreshInterval = hasActiveUpdates ? 5000 : 15000; // 5s when active, 15s when idle
+    // Skip if auto-refresh is disabled
+    if (!autoRefreshEnabled) {
+      console.log('Auto-refresh is disabled');
+      return;
+    }
     
-    console.log(`Setting up stats refresh interval: ${refreshInterval}ms, active updates: ${hasActiveUpdates}`);
+    // Only run if we have stats
+    if (!stats) return;
     
+    // Determine if we have active updates
+    const hasActiveUpdates = stats.updateStatus?.inProgress?.count > 0;
+    
+    // Set refresh interval: 5s when updates happening, 30s when idle
+    const refreshInterval = hasActiveUpdates ? 5000 : 30000;
+    
+    console.log(`Setting up stats refresh interval: ${refreshInterval}ms, active updates: ${hasActiveUpdates}, refresh count: ${refreshCount}`);
+    
+    // Create interval for auto-refresh
     const intervalId = setInterval(() => {
       console.log('Auto-refreshing stats...');
-      fetchStats().catch(err => console.error('Auto-refresh error:', err));
+      fetchStats().catch(err => {
+        console.error('Auto-refresh error:', err);
+        // If we get multiple errors, consider disabling auto-refresh
+        if (error) {
+          console.warn('Multiple refresh errors, consider disabling auto-refresh');
+        }
+      });
     }, refreshInterval);
     
-    // Clean up interval on component unmount or when refresh frequency changes
-    return () => clearInterval(intervalId);
-  }, [fetchStats, stats?.updateStatus?.inProgress?.count]);
+    // Clean up interval when component unmounts or dependencies change
+    return () => {
+      console.log('Cleaning up refresh interval');
+      clearInterval(intervalId);
+    };
+  }, [stats, fetchStats, autoRefreshEnabled, refreshCount, error]);
 
   const handleManualRefresh = async () => {
     if (!refreshing) {
@@ -112,6 +144,16 @@ const LaptopStats = () => {
         console.error("Manual refresh error:", error);
       }
     }
+  };
+
+  const toggleAutoRefresh = () => {
+    setAutoRefreshEnabled(!autoRefreshEnabled);
+    toast({
+      title: autoRefreshEnabled ? "Auto-refresh disabled" : "Auto-refresh enabled",
+      description: autoRefreshEnabled 
+        ? "You'll need to manually refresh statistics" 
+        : "Statistics will refresh automatically",
+    });
   };
 
   if (loading && !stats) {
@@ -134,23 +176,35 @@ const LaptopStats = () => {
             <span className="text-xs text-gray-500">
               Last refreshed: {lastRefreshTime.toLocaleTimeString()}
             </span>
-            <button 
-              onClick={handleManualRefresh} 
-              disabled={refreshing}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 flex items-center space-x-1"
-            >
-              {refreshing ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>Refreshing...</span>
-                </>
-              ) : (
-                <span>Refresh Stats</span>
-              )}
-            </button>
+            <div className="flex space-x-2">
+              <button 
+                onClick={toggleAutoRefresh} 
+                className={`px-3 py-1.5 text-xs rounded-md ${
+                  autoRefreshEnabled 
+                    ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                }`}
+              >
+                {autoRefreshEnabled ? 'Auto-refresh ON' : 'Auto-refresh OFF'}
+              </button>
+              <button 
+                onClick={handleManualRefresh} 
+                disabled={refreshing}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 flex items-center space-x-1"
+              >
+                {refreshing ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Refreshing...</span>
+                  </>
+                ) : (
+                  <span>Refresh Stats</span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
         
