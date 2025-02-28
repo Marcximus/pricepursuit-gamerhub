@@ -2,8 +2,9 @@
 import { toast } from "@/components/ui/use-toast";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import { Search, RefreshCw, BrainCircuit } from "lucide-react";
+import { Search, RefreshCw, BrainCircuit, Filter } from "lucide-react";
 import { useLaptops } from "@/hooks/useLaptops";
+import { cleanupLaptopDatabase } from "@/utils/laptop/cleanupLaptops";
 
 const Admin = () => {
   const { collectLaptops, updateLaptops, processLaptopsAI } = useLaptops();
@@ -70,6 +71,25 @@ const Admin = () => {
     }
   };
 
+  const handleCleanup = async () => {
+    try {
+      const result = await cleanupLaptopDatabase();
+      if (result.success) {
+        toast({
+          title: "Cleanup Complete",
+          description: `Successfully cleaned up the laptop database. ${result.removedForbiddenKeywords} products with forbidden keywords were removed.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error cleaning up laptop database:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to clean up laptop database",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -124,6 +144,21 @@ const Admin = () => {
                 >
                   <BrainCircuit className="h-4 w-4" />
                   Process with AI
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <h3 className="font-medium">Clean Database</h3>
+                  <p className="text-sm text-gray-500">Remove accessories, duplicates and non-laptop products</p>
+                </div>
+                <Button
+                  onClick={handleCleanup}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Filter className="h-4 w-4" />
+                  Clean Database
                 </Button>
               </div>
             </div>

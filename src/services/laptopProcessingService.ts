@@ -8,6 +8,7 @@ import { paginateLaptops } from "@/utils/laptopPagination";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import type { SortOption } from "@/components/laptops/LaptopSort";
 import { normalizeBrand, normalizeModel } from "@/utils/laptop/valueNormalizer";
+import { applyAllProductFilters } from "@/utils/laptop/productFilters";
 
 export const processAndFilterLaptops = (
   rawData: any[],
@@ -31,8 +32,13 @@ export const processAndFilterLaptops = (
     page
   });
 
-  // Process raw laptop data
-  const processedLaptops = rawData.map(laptop => {
+  // First apply product filtering to remove forbidden keywords and duplicate ASINs
+  const filteredRawData = applyAllProductFilters(rawData);
+  
+  console.log(`Filtered out ${rawData.length - filteredRawData.length} products based on keywords and duplicate ASINs`);
+  
+  // Process filtered laptop data
+  const processedLaptops = filteredRawData.map(laptop => {
     // Normalize brand and model before processing
     const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title);
     const normalizedModel = normalizeModel(laptop.model || '', laptop.title, normalizedBrand);

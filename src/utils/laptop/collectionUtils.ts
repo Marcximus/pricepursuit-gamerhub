@@ -3,6 +3,7 @@ import { toast } from "@/components/ui/use-toast";
 import { COLLECTION_CONFIG } from "./config";
 import { CollectionStats } from "./types";
 import { processPage, updateBrandStatus } from "./collectionDb";
+import { containsForbiddenKeywords } from "./productFilters";
 
 export function createBrandBatches(brands: string[], batchSize: number) {
   const batches = [];
@@ -68,4 +69,14 @@ function showProgressToast(brand: string, page: number, stats: CollectionStats) 
       ${stats.updated} updated${skippedMsg}`,
     variant: "default"
   });
+}
+
+/**
+ * Check if a product should be collected based on filtering rules
+ * @param title Product title
+ * @returns True if the product should be collected, false if it should be skipped
+ */
+export function shouldCollectProduct(title: string): boolean {
+  // Skip products with forbidden keywords in the title
+  return !containsForbiddenKeywords(title);
 }
