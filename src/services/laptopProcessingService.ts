@@ -66,25 +66,17 @@ export const processAndFilterLaptops = (
     return processLaptopData(laptopWithNormalizedValues);
   });
 
-  // Additional filter to remove any iPads that might have made it through
-  const nonIpadLaptops = processedLaptops.filter(laptop => {
-    // Filter out items with iPad in model or title
-    if (laptop.model && laptop.model.toLowerCase().includes('ipad')) return false;
-    if (laptop.title && laptop.title.toLowerCase().includes('ipad')) return false;
-    return true;
-  });
-
-  logDataStatistics(nonIpadLaptops);
+  logDataStatistics(processedLaptops);
 
   // Apply filters and sorting
-  const filteredLaptops = filterLaptops(nonIpadLaptops, filters);
-  analyzeFilteredResults(nonIpadLaptops, filteredLaptops, filters, sortBy);
+  const filteredLaptops = filterLaptops(processedLaptops, filters);
+  analyzeFilteredResults(processedLaptops, filteredLaptops, filters, sortBy);
 
   const sortedLaptops = sortLaptops(filteredLaptops, sortBy);
   const paginatedResults = paginateLaptops(sortedLaptops, page, itemsPerPage);
 
   console.log('Filter/sort/pagination results:', {
-    totalLaptops: nonIpadLaptops.length,
+    totalLaptops: processedLaptops.length,
     afterFiltering: filteredLaptops.length,
     afterSorting: sortedLaptops.length,
     currentPage: page,
@@ -93,6 +85,6 @@ export const processAndFilterLaptops = (
 
   return {
     ...paginatedResults,
-    allLaptops: nonIpadLaptops
+    allLaptops: processedLaptops
   };
 };

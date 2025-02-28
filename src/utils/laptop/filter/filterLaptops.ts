@@ -43,15 +43,6 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
       return false;
     }
     
-    // Always filter out iPads by checking model and title
-    if (laptop.model && laptop.model.toLowerCase().includes('ipad')) {
-      return false;
-    }
-    
-    if (laptop.title && laptop.title.toLowerCase().includes('ipad')) {
-      return false;
-    }
-    
     // Price Range Filter
     const price = laptop.current_price || 0;
     if (price < filters.priceRange.min || price > filters.priceRange.max) {
@@ -170,8 +161,7 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
       storage: l.storage,
       processor: l.processor,
       screen_size: l.screen_size,
-      graphics: l.graphics,
-      model: l.model  // Added model to help debugging
+      graphics: l.graphics
     })));
   }
   
