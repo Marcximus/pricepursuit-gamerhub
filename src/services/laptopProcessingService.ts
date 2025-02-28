@@ -2,7 +2,7 @@
 import type { Product } from "@/types/product";
 import { processLaptopData } from "@/utils/laptopUtils";
 import { logDataStatistics, analyzeFilteredResults } from "@/services/laptopAnalytics";
-import { filterLaptops } from "@/utils/laptopFilters";
+import { filterLaptops } from "@/utils/laptop/filter";
 import { sortLaptops } from "@/utils/laptopSort";
 import { paginateLaptops } from "@/utils/laptopPagination";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";

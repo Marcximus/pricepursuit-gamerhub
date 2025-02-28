@@ -11,8 +11,7 @@ import {
   normalizeBrand
 } from "@/utils/laptop/valueNormalizer";
 import { getRamValue, getStorageValue, getScreenSizeValue } from "@/utils/laptop/valueParser";
-
-type FilterableProductKeys = 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size' | 'brand';
+import type { FilterableProductKeys } from "@/utils/laptop/filter";
 
 export const useLaptopFilters = (laptops: Product[] | undefined) => {
   return useMemo(() => {
