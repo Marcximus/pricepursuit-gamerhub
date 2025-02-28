@@ -11,7 +11,8 @@ export async function processChunksSequentially(chunks) {
       asin: l.asin, 
       lastChecked: l.last_checked ? new Date(l.last_checked).toLocaleString() : 'Never',
       price: l.current_price === null ? 'NULL' : `$${l.current_price}`,
-      hasImage: l.image_url ? 'Yes' : 'No'
+      hasImage: l.image_url ? 'Yes' : 'No',
+      status: l.update_status || 'pending'
     })));
 
     // Mark chunk laptops as pending update
@@ -42,7 +43,8 @@ export async function processChunksSequentially(chunks) {
             current_price: l.current_price, 
             title: l.title,
             last_checked: l.last_checked,
-            image_url: l.image_url 
+            image_url: l.image_url,
+            update_status: l.update_status || 'pending'
           }))
         }
       });

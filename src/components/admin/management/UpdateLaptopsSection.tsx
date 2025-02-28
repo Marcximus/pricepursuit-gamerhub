@@ -33,11 +33,11 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
         });
       } else {
         toast({
-          title: "Update Failed",
+          title: "Update Status",
           description: result?.error || result?.message || "Failed to start laptop updates. Please check console for details.",
-          variant: "destructive"
+          variant: result?.success === false ? "destructive" : "default"
         });
-        console.error('Update failed with result:', result);
+        console.error('Update finished with result:', result);
       }
       
       // Refresh stats immediately after update request
@@ -57,7 +57,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
   return (
     <ManagementCard
       title="Update Laptops"
-      description="Update prices and information for existing laptops"
+      description="Update prices and information for all laptops - prioritizes by oldest check date, missing prices and images"
       icon={RefreshCw}
       buttonText={isUpdating ? "Updating..." : "Update Prices"}
       onClick={handleUpdateLaptops}
