@@ -8,6 +8,7 @@ import { CollectionStats } from "../../types";
  * @param groupIndex Current group index
  * @param brandIndex Current brand index within group
  * @param totalBrands Total number of brands
+ * @param preserveExistingDataFlag Whether to preserve existing data for already present ASINs
  * @returns Processing result with stats
  */
 export async function processPage(
@@ -15,7 +16,8 @@ export async function processPage(
   page: number,
   groupIndex: number,
   brandIndex: number,
-  totalBrands: number
+  totalBrands: number,
+  preserveExistingDataFlag: boolean = true
 ) {
   try {
     console.log(`🔍 Processing ${brand} page ${page} (Group ${groupIndex + 1}, Brand ${brandIndex + 1}/${totalBrands})`);
