@@ -2,6 +2,7 @@
 import type { Product } from "@/types/product";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import { KNOWN_BRANDS } from "@/utils/laptop/hardwareScoring";
+import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
 
 // Helper parsing functions for consistent value extraction
 const parseRamValue = (value: string | null | undefined): number => {
@@ -48,7 +49,8 @@ const parseScreenSize = (value: string | null | undefined): number => {
 const matchesFilter = (
   filterValue: string,
   productValue: string | null | undefined,
-  filterType: 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size' | 'brand'
+  filterType: 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size' | 'brand',
+  productTitle?: string
 ): boolean => {
   if (!productValue) return false;
   
@@ -174,9 +176,9 @@ const matchesFilter = (
     }
     
     case 'brand': {
-      const normalizedProduct = productLower.trim();
-      const normalizedFilter = filterLower.trim();
-      return normalizedProduct === normalizedFilter;
+      // Use the improved brand detection logic
+      const normalizedProductBrand = normalizeBrand(productValue, productTitle);
+      return normalizedProductBrand.toLowerCase() === filterValue.toLowerCase();
     }
     
     default:
@@ -198,20 +200,7 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     }
   });
 
-  // Create a lookup of properly capitalized brand names
-  const brandMap: {[key: string]: string} = {};
-  Object.entries(KNOWN_BRANDS).forEach(([key, value]) => {
-    brandMap[key] = value;
-  });
-
-  const getProperBrand = (brand: string): string => {
-    if (!brand) return '';
-    const lowerBrand = brand.toLowerCase().trim();
-    return brandMap[lowerBrand] || brand;
-  };
-
   const filteredLaptops = laptops.filter(laptop => {
-    const brandNormalized = laptop.brand ? getProperBrand(laptop.brand) : '';
     const filterReasons: string[] = [];
     
     // Price Range Filter
@@ -223,12 +212,13 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
 
     // Brand Filter
     if (filters.brands.size > 0) {
+      const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title);
       const matchesBrand = Array.from(filters.brands).some(selectedBrand => 
-        brandNormalized.toLowerCase() === selectedBrand.toLowerCase()
+        normalizedBrand.toLowerCase() === selectedBrand.toLowerCase()
       );
       
       if (!matchesBrand) {
-        filterReasons.push(`Brand mismatch: ${brandNormalized}`);
+        filterReasons.push(`Brand mismatch: ${normalizedBrand}`);
         return false;
       }
     }

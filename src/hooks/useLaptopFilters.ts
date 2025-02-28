@@ -48,7 +48,7 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
             case 'processor':
               return normalizeProcessor(value);
             case 'brand':
-              return normalizeBrand(value);
+              return normalizeBrand(value, laptop.title);
             default:
               return value.trim();
           }
