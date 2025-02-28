@@ -14,6 +14,11 @@ export const matchesGraphicsFilter = (
   // Normalize both filter and product values for consistency
   const normalizedProduct = normalizeGraphics(productValue);
   
+  // Skip matching if the normalized product value is excessively long (likely invalid)
+  if (normalizedProduct.length > 50) {
+    return false;
+  }
+  
   // Get category-based filter values for better matching
   const productFilterValue = getGraphicsFilterValue(normalizedProduct);
   

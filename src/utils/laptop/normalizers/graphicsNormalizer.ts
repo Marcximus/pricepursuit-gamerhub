@@ -1,4 +1,3 @@
-
 /**
  * Normalizes graphics card strings for consistent display and filtering
  */
@@ -23,6 +22,16 @@ export const normalizeGraphics = (graphics: string): string => {
     return '';
   }
   
+  // Split by known delimiters that often separate graphics info from other specs
+  if (normalized.includes('Brand:') || 
+      normalized.includes('Screen Size:') || 
+      normalized.includes('Type:') ||
+      normalized.includes('Memory:')) {
+    // Keep only the part before these common delimiter phrases
+    const parts = normalized.split(/Brand:|Screen Size:|Type:|Memory:|RAM|Hard Drive:/i);
+    normalized = parts[0].trim();
+  }
+  
   // Remove other component specs that got mixed in with the graphics card
   normalized = normalized
     .replace(/(\d+\s*GB\s*(RAM|Memory|DDR\d*))/i, '')
@@ -34,6 +43,7 @@ export const normalizeGraphics = (graphics: string): string => {
     
   // Standardize NVIDIA naming
   normalized = normalized
+    .replace(/nvidia\s+nvidia/i, 'NVIDIA') // Remove duplicated NVIDIA
     .replace(/nvidia\s+geforce\s+rtx\s*/i, 'NVIDIA RTX ')
     .replace(/nvidia\s+geforce\s+gtx\s*/i, 'NVIDIA GTX ')
     .replace(/geforce\s+rtx\s*/i, 'NVIDIA RTX ')
@@ -76,6 +86,16 @@ export const normalizeGraphics = (graphics: string): string => {
  */
 export const getGraphicsFilterValue = (graphics: string): string => {
   const normalized = normalizeGraphics(graphics).toLowerCase();
+  
+  // Reject overly long strings that likely contain mixed information
+  if (normalized.length > 40) {
+    // Try to extract just the main parts
+    const parts = normalized.split(/\s+/);
+    if (parts.length > 5) {
+      // Take just the first 5 meaningful parts
+      return parts.slice(0, 5).join(' ');
+    }
+  }
   
   // NVIDIA discrete GPU categories
   if (normalized.includes('rtx 40')) return 'NVIDIA RTX 40 Series';
