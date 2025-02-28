@@ -68,12 +68,7 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
           <span className="font-bold">Storage:</span>{" "}
           {specs.storage || 'Not Specified'}
         </li>
-        {specs.weight && (
-          <li>
-            <span className="font-bold">Weight:</span>{" "}
-            {specs.weight}
-          </li>
-        )}
+        {/* Removed weight display */}
       </ul>
     </div>
   );
