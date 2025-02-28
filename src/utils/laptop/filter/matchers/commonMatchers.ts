@@ -28,7 +28,15 @@ export const matchesFilter = (
 ): boolean => {
   if (!productValue) return false;
   
-  // Import specific matchers dynamically
+  // Normalize values for comparison
+  const productLower = productValue.toLowerCase().trim();
+  const filterLower = filterValue.toLowerCase().trim();
+  
+  // If the strings are exactly equal after normalization, it's a match
+  if (productLower === filterLower) {
+    return true;
+  }
+  
   switch (filterType) {
     case 'ram':
       const { matchesRamFilter } = require('./ramMatcher');

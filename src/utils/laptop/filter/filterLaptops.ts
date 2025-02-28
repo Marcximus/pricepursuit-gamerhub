@@ -1,7 +1,7 @@
 
 import type { Product } from "@/types/product";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
-import { matchesFilter } from "./filterMatchers";
+import { matchesFilter } from "./matchers";
 import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
 
 /**
