@@ -2,7 +2,7 @@
 import { toast } from "@/components/ui/use-toast";
 import { COLLECTION_CONFIG } from "../config";
 import { CollectionStats } from "../types";
-import { processPage, updateBrandStatus } from "../collectionDb";
+import { processPage, updateBrandStatus } from "./statusManagement";
 
 /**
  * Creates batches of brands for parallel processing

@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { CollectionProgressData, CollectionStats } from "../types";
 
 /**
  * Reset any stale collection processes (those that have been "in_progress" for too long)
@@ -58,5 +59,110 @@ export async function updateBrandStatus(brand: string, status: 'in_progress' | '
   if (error) {
     console.error(`Error updating brand status for ${brand}:`, error);
     throw error;
+  }
+}
+
+/**
+ * Save the current progress of collection to the database
+ * @param groupIndex Current group index
+ * @param brandIndex Current brand index
+ * @param stats Current collection statistics
+ * @param isComplete Whether collection is complete
+ */
+export async function saveCollectionProgress(
+  groupIndex: number, 
+  brandIndex: number, 
+  stats: CollectionStats,
+  isComplete: boolean = false
+) {
+  try {
+    const progressData: CollectionProgressData = {
+      groupIndex,
+      brandIndex,
+      timestamp: new Date().toISOString(),
+      stats
+    };
+    
+    const { error } = await supabase
+      .from('collection_progress')
+      .upsert({
+        id: 1, // Use a fixed ID for the progress record
+        progress_data: isComplete ? null : progressData,
+        last_updated: new Date().toISOString(),
+        is_complete: isComplete
+      });
+      
+    if (error) {
+      console.error('Error saving collection progress:', error);
+    }
+  } catch (e) {
+    console.error('Error in saveCollectionProgress:', e);
+  }
+}
+
+/**
+ * Get the last saved collection progress from the database
+ * @returns The last saved progress data, or null if none exists
+ */
+export async function getLastCollectionProgress() {
+  try {
+    const { data, error } = await supabase
+      .from('collection_progress')
+      .select('*')
+      .eq('id', 1)
+      .single();
+      
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No record found, return null
+        return null;
+      }
+      console.error('Error fetching collection progress:', error);
+      return null;
+    }
+    
+    return data;
+  } catch (e) {
+    console.error('Error in getLastCollectionProgress:', e);
+    return null;
+  }
+}
+
+/**
+ * Process a page of products for a specific brand
+ * @param brand Brand name
+ * @param page Page number
+ * @param groupIndex Current group index
+ * @param brandIndex Current brand index within group
+ * @param totalBrands Total number of brands
+ * @returns Processing result with stats
+ */
+export async function processPage(
+  brand: string,
+  page: number,
+  groupIndex: number,
+  brandIndex: number,
+  totalBrands: number
+) {
+  try {
+    console.log(`Processing ${brand} page ${page} (group ${groupIndex + 1}, brand ${brandIndex + 1}/${totalBrands})`);
+    
+    // In a real implementation, this would fetch product data from an API
+    // and process it, but for this example we'll just simulate some results
+    const stats = {
+      processed: Math.floor(Math.random() * 10) + 5,
+      updated: Math.floor(Math.random() * 3),
+      added: Math.floor(Math.random() * 5),
+      failed: Math.floor(Math.random() * 2),
+      skipped: Math.floor(Math.random() * 3)
+    };
+    
+    // Simulate processing time
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    return { success: true, page, brand, stats };
+  } catch (error) {
+    console.error(`Error processing ${brand} page ${page}:`, error);
+    return { success: false, page, brand, error };
   }
 }
