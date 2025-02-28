@@ -25,6 +25,7 @@ const FORBIDDEN_KEYWORDS = [
   
   // New forbidden keywords added
   "imac", "Laptop Hard Drive", "Subscription", "Redmi Pad", "Mini PC", "Desktop",
+  "Ipad Air", // Added "Ipad Air" to the forbidden keywords list
   
   // Charger-related keywords (commonly mixed with laptops)
   "Charger fit", "Charger for", "Charger Fit For", "Adapter Laptop Charger",
