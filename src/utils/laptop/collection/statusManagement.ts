@@ -185,3 +185,4 @@ export async function processPage(
     return { success: false, page, brand, error };
   }
 }
+

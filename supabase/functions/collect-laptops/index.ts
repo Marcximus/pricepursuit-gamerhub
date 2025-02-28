@@ -1,196 +1,249 @@
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { corsHeaders } from './cors.ts'
-import { createOxylabsClient } from './oxylabsService.ts'
-import { supabase } from './supabaseClient.ts'
-import { processProduct } from './productProcessor.ts'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.33.2";
+import { corsHeaders } from "./cors.ts";
+import { scrapeBrandData } from "./oxylabsService.ts";
+import { processProducts } from "./productProcessor.ts";
+import { Database } from "../_shared/supabase-types.ts"; // Make sure you've defined types for your Supabase DB
 
-interface RequestData {
-  brands: string[]
-  pagesPerBrand: number
-  detailedLogging?: boolean
+// Initialize Supabase client
+const supabaseUrl = Deno.env.get("SUPABASE_URL") as string;
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") as string;
+const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+
+// Stats object to track collection results
+interface CollectionStats {
+  processed: number;
+  updated: number;
+  added: number;
+  failed: number;
+  skipped?: number;
 }
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+async function processAllBrands(brands: string[], pagesPerBrand: number, startGroupIndex = 0, startBrandIndex = 0, resumeStats: CollectionStats = { processed: 0, updated: 0, added: 0, failed: 0, skipped: 0 }, detailedLogging = false) {
+  console.log(`Starting processAllBrands with ${brands.length} brands, pagesPerBrand=${pagesPerBrand}, startGroupIndex=${startGroupIndex}, startBrandIndex=${startBrandIndex}`);
+  console.log(`Resuming with previous stats:`, resumeStats);
+
+  if (!brands || !Array.isArray(brands)) {
+    console.error("Invalid brands array:", brands);
+    throw new Error("Invalid brands array provided");
+  }
+
+  // Create batches of brands for processing
+  const brandBatches: string[][] = [];
+  const batchSize = 5; // Process 5 brands in parallel
+
+  for (let i = 0; i < brands.length; i += batchSize) {
+    brandBatches.push(brands.slice(i, i + batchSize));
+  }
+
+  // Initialize statistics object
+  const stats: CollectionStats = {
+    processed: resumeStats.processed || 0,
+    updated: resumeStats.updated || 0,
+    added: resumeStats.added || 0,
+    failed: resumeStats.failed || 0,
+    skipped: resumeStats.skipped || 0
+  };
+
+  // Save the progress after processing each brand
+  async function saveProgress(groupIndex: number, brandIndex: number, isComplete = false) {
+    const progressId = '7c75e6fe-c6b3-40be-9378-e44c8f45787d';
+    const progressData = isComplete ? null : {
+      groupIndex,
+      brandIndex,
+      timestamp: new Date().toISOString(),
+      stats
+    };
+
+    try {
+      const { error } = await supabase
+        .from('collection_progress')
+        .upsert({
+          id: progressId,
+          progress_data: progressData,
+          last_updated: new Date().toISOString(),
+          progress_type: 'laptop_collection'
+        });
+
+      if (error) {
+        console.error('Error saving collection progress:', error);
+      }
+    } catch (err) {
+      console.error('Exception saving collection progress:', err);
+    }
+  }
+
+  // Process brands in batches
+  for (let groupIndex = startGroupIndex; groupIndex < brandBatches.length; groupIndex++) {
+    const group = brandBatches[groupIndex];
+    
+    // Skip to the starting brand index only for the first group we process
+    const startIdx = groupIndex === startGroupIndex ? startBrandIndex : 0;
+    
+    for (let brandIndex = startIdx; brandIndex < group.length; brandIndex++) {
+      const brand = group[brandIndex];
+      console.log(`Processing brand ${brandIndex + 1}/${group.length} in group ${groupIndex + 1}/${brandBatches.length}: ${brand}`);
+
+      try {
+        // Mark the brand as in progress
+        await updateBrandStatus(brand, 'in_progress');
+
+        const brandStats = {
+          processed: 0,
+          updated: 0,
+          added: 0,
+          failed: 0
+        };
+
+        // Process all pages for this brand
+        for (let page = 1; page <= pagesPerBrand; page++) {
+          console.log(`Processing ${brand} page ${page}...`);
+          
+          try {
+            // Scrape product data for this brand and page
+            const laptops = await scrapeBrandData(brand, page);
+            
+            // Validate the laptops data
+            if (!laptops || !Array.isArray(laptops) || laptops.length === 0) {
+              console.warn(`No laptops found for ${brand} page ${page}, skipping...`);
+              continue;
+            }
+            
+            // Process the products
+            const pageResult = await processProducts(laptops, brand, detailedLogging);
+            
+            // Update stats
+            brandStats.processed += pageResult.processed;
+            brandStats.updated += pageResult.updated;
+            brandStats.added += pageResult.added;
+            brandStats.failed += pageResult.failed;
+            
+            console.log(`Page ${page} results:`, pageResult);
+          } catch (pageError) {
+            console.error(`Error processing page ${page} for ${brand}:`, pageError);
+            brandStats.failed += 1;
+          }
+        }
+
+        // Update the brand status to completed
+        await updateBrandStatus(brand, 'completed');
+        
+        // Update total stats
+        stats.processed += brandStats.processed;
+        stats.updated += brandStats.updated;
+        stats.added += brandStats.added;
+        stats.failed += brandStats.failed;
+        
+        console.log(`Completed brand ${brand} with stats:`, brandStats);
+        console.log(`Running totals:`, stats);
+        
+        // Save our progress after each brand
+        await saveProgress(groupIndex, brandIndex + 1);
+      } catch (brandError) {
+        console.error(`Error processing brand ${brand}:`, brandError);
+        stats.failed += 1;
+        
+        // Set the brand back to pending if it failed
+        try {
+          await updateBrandStatus(brand, 'pending');
+        } catch (resetError) {
+          console.error(`Failed to reset brand status for ${brand}:`, resetError);
+        }
+        
+        // Still save progress even on failure
+        await saveProgress(groupIndex, brandIndex + 1);
+      }
+    }
+  }
+
+  // Mark collection as complete by saving null progress data
+  await saveProgress(0, 0, true);
+  
+  console.log(`Collection process complete. Final stats:`, stats);
+  return stats;
+}
+
+async function updateBrandStatus(brand: string, status: 'in_progress' | 'completed' | 'pending') {
+  const updateData = {
+    collection_status: status,
+    ...(status === 'in_progress' ? { last_collection_attempt: new Date().toISOString() } : {})
+  };
+
+  const { error } = await supabase
+    .from('products')
+    .update(updateData)
+    .eq('brand', brand);
+
+  if (error) {
+    console.error(`Error updating brand status for ${brand}:`, error);
+    throw error;
+  }
+}
 
 serve(async (req) => {
-  console.log('Request received:', new Date().toISOString())
-
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: corsHeaders,
-    })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Parse the request body
-    const requestData: RequestData = await req.json()
-    const { brands, pagesPerBrand, detailedLogging = false } = requestData
+    const { brands, pagesPerBrand, startGroupIndex, startBrandIndex, resumeStats, detailedLogging } = await req.json();
+    
+    console.log('Received collection request with params:', { 
+      brandsCount: brands?.length, 
+      pagesPerBrand, 
+      startGroupIndex, 
+      startBrandIndex,
+      resumeStats,
+      detailedLogging
+    });
 
-    console.log(`Starting laptop collection for brands: ${brands.join(', ')}`)
-    console.log(`Pages per brand: ${pagesPerBrand}`)
-    console.log(`Detailed logging: ${detailedLogging}`)
+    if (!brands || !Array.isArray(brands) || brands.length === 0) {
+      throw new Error('No brands provided or invalid brands array');
+    }
 
-    // Create a client for the data collection service
-    const oxylabsClient = createOxylabsClient()
-
-    // Process all brands in sequence
-    const results = await processAllBrands(brands, pagesPerBrand, oxylabsClient, detailedLogging)
-
-    console.log('Collection process completed')
-    console.log('Results:', results)
+    if (!pagesPerBrand || typeof pagesPerBrand !== 'number' || pagesPerBrand <= 0) {
+      throw new Error('Invalid pagesPerBrand parameter');
+    }
+    
+    // Process all brands and collect statistics
+    const stats = await processAllBrands(
+      brands, 
+      pagesPerBrand, 
+      startGroupIndex || 0, 
+      startBrandIndex || 0, 
+      resumeStats || { processed: 0, updated: 0, added: 0, failed: 0, skipped: 0 },
+      detailedLogging || false
+    );
 
     return new Response(
       JSON.stringify({
-        success: true,
-        message: 'Laptop collection initiated',
-        stats: results.stats
+        success: true, 
+        stats,
+        message: `Processed ${brands.length} brands, ${stats.processed} products`
       }),
-      {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-        status: 200,
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
       }
-    )
+    );
   } catch (error) {
-    console.error('Error in collect-laptops function:', error)
+    console.error('Error in collect-laptops function:', error);
     
     return new Response(
       JSON.stringify({
-        success: false,
-        message: error.message,
-        error: error.toString(),
+        success: false, 
+        error: error.message || 'Unknown error',
+        details: error.stack || 'No stack trace available'
       }),
-      {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-        status: 500,
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
       }
-    )
+    );
   }
-})
+});
 
-async function processAllBrands(
-  brands: string[],
-  pagesPerBrand: number,
-  oxylabsClient: any,
-  detailedLogging: boolean
-) {
-  const totalStats = {
-    processed: 0,
-    added: 0,
-    updated: 0,
-    failed: 0,
-    skipped: 0
-  }
-
-  for (const brand of brands) {
-    try {
-      console.log(`Starting processing for brand: ${brand}`)
-      
-      // Process each page for the current brand
-      for (let page = 1; page <= pagesPerBrand; page++) {
-        console.log(`[${brand}] Processing page ${page}/${pagesPerBrand}`)
-        
-        try {
-          // Fetch data from Oxylabs
-          console.log(`[Oxylabs] Fetching data for ${brand} - page ${page}`)
-          const response = await oxylabsClient.fetchLaptopsByBrand(brand, page)
-          
-          if (!response || !response.results || !response.results[0] || !response.results[0].content) {
-            console.error(`[${brand}] No valid data received for page ${page}`)
-            totalStats.failed++
-            continue
-          }
-          
-          console.log(`[${brand}] Successfully received data for page ${page}`)
-          
-          const content = response.results[0].content
-          
-          // Process the laptops from the content
-          if (content.organic) {
-            const laptops = content.organic
-            
-            if (!Array.isArray(laptops)) {
-              console.error(`[${brand}] Invalid data format for page ${page} - laptops is not an array:`, typeof laptops)
-              totalStats.failed++
-              continue
-            }
-            
-            console.log(`[${brand}] Processing ${laptops.length} laptops from page ${page}`)
-            
-            for (const laptop of laptops) {
-              try {
-                totalStats.processed++
-                
-                if (detailedLogging) {
-                  console.log(`[${brand}] Processing laptop: ${laptop.title} (ASIN: ${laptop.asin})`)
-                }
-                
-                const result = await processProduct(laptop, brand, detailedLogging)
-                
-                if (result.status === 'added') {
-                  totalStats.added++
-                  if (detailedLogging) {
-                    console.log(`[${brand}] Added new laptop: ${laptop.title} (ASIN: ${laptop.asin})`)
-                  }
-                } else if (result.status === 'updated') {
-                  totalStats.updated++
-                  if (detailedLogging) {
-                    console.log(`[${brand}] Updated existing laptop: ${laptop.title} (ASIN: ${laptop.asin})`)
-                  }
-                } else if (result.status === 'skipped') {
-                  totalStats.skipped++
-                  if (detailedLogging) {
-                    console.log(`[${brand}] Skipped laptop: ${laptop.title} (ASIN: ${laptop.asin}) - Reason: ${result.reason || 'Unknown'}`)
-                  }
-                } else if (result.status === 'failed') {
-                  totalStats.failed++
-                  console.error(`[${brand}] Failed to process laptop: ${laptop.title} (ASIN: ${laptop.asin}) - Error: ${result.error}`)
-                }
-              } catch (laptopError) {
-                totalStats.failed++
-                console.error(`[${brand}] Error processing laptop from page ${page}:`, laptopError)
-              }
-            }
-          } else {
-            console.warn(`[${brand}] No organic results found for page ${page}`)
-          }
-        } catch (pageError) {
-          console.error(`Error processing page ${page} for ${brand}:`, pageError)
-          totalStats.failed++
-        }
-        
-        // Add delay between page requests to avoid rate limiting
-        if (page < pagesPerBrand) {
-          console.log(`[${brand}] Waiting before processing next page...`)
-          await sleep(1000)
-        }
-      }
-      
-      console.log(`Finished processing brand: ${brand}`)
-      console.log(`Brand stats for ${brand}:`, {
-        processed: totalStats.processed,
-        added: totalStats.added,
-        updated: totalStats.updated,
-        failed: totalStats.failed,
-        skipped: totalStats.skipped
-      })
-      
-    } catch (brandError) {
-      console.error(`Error processing brand ${brand}:`, brandError)
-    }
-  }
-  
-  console.log('Total stats for all brands:', totalStats)
-  
-  return {
-    success: true,
-    stats: totalStats
-  }
-}
+// This syntax is required for Deno Deploy
+// export default serve;

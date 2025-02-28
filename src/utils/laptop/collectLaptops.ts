@@ -50,10 +50,60 @@ export async function collectLaptops() {
       return null;
     }
 
+    // Check if there's a previously saved progress
+    console.log('Checking for previous collection progress...');
+    const lastProgress = await getLastCollectionProgress();
+    console.log('Last collection progress:', lastProgress);
+
+    // Determine starting point (resume or fresh start)
+    let startGroupIndex = 0;
+    let startBrandIndex = 0;
+    let resumeStats = {
+      processed: 0,
+      updated: 0,
+      added: 0,
+      failed: 0,
+      skipped: 0
+    };
+
+    if (lastProgress && lastProgress.progress_data) {
+      // Resume from where we left off
+      const progressData = lastProgress.progress_data as any;
+      startGroupIndex = progressData.groupIndex || 0;
+      startBrandIndex = progressData.brandIndex || 0;
+
+      // Add the stats from the previous run
+      if (progressData.stats) {
+        resumeStats = progressData.stats;
+        totalStats.processed = resumeStats.processed || 0;
+        totalStats.updated = resumeStats.updated || 0;
+        totalStats.added = resumeStats.added || 0;
+        totalStats.failed = resumeStats.failed || 0;
+        totalStats.skipped = resumeStats.skipped || 0;
+      }
+
+      console.log(`Resuming collection from group ${startGroupIndex}, brand ${startBrandIndex}`);
+      console.log('Resuming with previous stats:', resumeStats);
+      
+      toast({
+        title: "Resuming Collection",
+        description: `Resuming collection from where it left off (group ${startGroupIndex + 1}, brand ${startBrandIndex + 1}).`,
+        variant: "default"
+      });
+    } else {
+      console.log('Starting fresh collection');
+      
+      // We're starting fresh, so we need to save an initial progress record
+      await saveCollectionProgress(0, 0, totalStats, false);
+    }
+
     console.log('Preparing to invoke collect-laptops edge function...');
     console.log('Edge function parameters:', { 
       brands: COLLECTION_CONFIG.LAPTOP_BRANDS,
-      pagesPerBrand: COLLECTION_CONFIG.PAGES_PER_BRAND
+      pagesPerBrand: COLLECTION_CONFIG.PAGES_PER_BRAND,
+      startGroupIndex,
+      startBrandIndex,
+      resumeStats
     });
     
     // Call the Supabase Edge Function with proper parameters
@@ -63,7 +113,10 @@ export async function collectLaptops() {
       body: { 
         brands: COLLECTION_CONFIG.LAPTOP_BRANDS,
         pagesPerBrand: COLLECTION_CONFIG.PAGES_PER_BRAND,
-        detailedLogging: true // Add flag to enable detailed logging on the server
+        detailedLogging: true, // Add flag to enable detailed logging on the server
+        startGroupIndex, // Send the starting group index
+        startBrandIndex, // Send the starting brand index
+        resumeStats // Send the resume stats
       }
     });
     
@@ -82,8 +135,8 @@ export async function collectLaptops() {
     console.log('Edge function response received:', data);
     
     toast({
-      title: "Collection Started",
-      description: `Started collection for ${COLLECTION_CONFIG.LAPTOP_BRANDS.length} brands. This may take some time to complete. Check the console logs for detailed progress.`,
+      title: startGroupIndex > 0 || startBrandIndex > 0 ? "Collection Resumed" : "Collection Started",
+      description: `${startGroupIndex > 0 || startBrandIndex > 0 ? 'Resumed' : 'Started'} collection for ${COLLECTION_CONFIG.LAPTOP_BRANDS.length} brands. This may take some time to complete. Check the console logs for detailed progress.`,
       variant: "default"
     });
     
@@ -97,7 +150,8 @@ export async function collectLaptops() {
         updated: 0,
         added: 0,
         failed: 0
-      }
+      },
+      resumed: startGroupIndex > 0 || startBrandIndex > 0
     };
 
   } catch (error) {

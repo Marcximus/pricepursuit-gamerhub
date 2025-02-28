@@ -1,98 +1,143 @@
 
-import { supabase } from './supabaseClient.ts'
+import { insertOrUpdateProducts } from "./databaseService.ts";
 
-export async function processProduct(product: any, brand: string, detailedLogging = false) {
+export async function processProducts(products: any[], brand: string, detailedLogging = false) {
+  // Validate input
+  if (!products || !Array.isArray(products)) {
+    console.error(`Invalid products array for brand ${brand}:`, products);
+    return { processed: 0, updated: 0, added: 0, failed: 1 };
+  }
+  
+  console.log(`Processing ${products.length} products for brand ${brand}`);
+  
+  // Stats to track processing results
+  const stats = {
+    processed: 0,
+    updated: 0,
+    added: 0,
+    failed: 0
+  };
+
   try {
-    if (!product || !product.asin) {
-      if (detailedLogging) {
-        console.log('Skipping invalid product (missing ASIN):', product)
+    // Filter out non-laptop products by checking titles
+    const laptopProducts = products.filter(product => {
+      const title = (product.title || '').toLowerCase();
+      
+      // Keywords that indicate the product is likely a laptop
+      const laptopKeywords = ['laptop', 'notebook', 'ultrabook', 'chromebook', 'gaming laptop', 'macbook'];
+      
+      // Keywords that indicate the product is NOT a laptop
+      const nonLaptopKeywords = [
+        'laptop stand', 'laptop bag', 'laptop sleeve', 'laptop backpack', 'laptop case',
+        'laptop mount', 'laptop desk', 'laptop tray', 'laptop battery', 'laptop screen protector',
+        'laptop charger', 'laptop cooler', 'laptop cooling pad', 'laptop skin', 'laptop sticker',
+        'laptop accessory', 'laptop power adapter', 'laptop cart', 'laptop table', 'laptop riser'
+      ];
+      
+      // Check if the title contains any laptop keywords but none of the non-laptop keywords
+      const isLaptop = 
+        laptopKeywords.some(keyword => title.includes(keyword)) && 
+        !nonLaptopKeywords.some(keyword => title.includes(keyword));
+      
+      if (detailedLogging && !isLaptop) {
+        console.log(`Filtering out non-laptop: "${title}"`);
       }
-      return { status: 'skipped', reason: 'Invalid product data - missing ASIN' }
-    }
+      
+      return isLaptop;
+    });
+    
+    console.log(`Filtered to ${laptopProducts.length} laptop products out of ${products.length} total products`);
 
-    const asin = product.asin
+    // Process each laptop product
+    const processedProducts = laptopProducts.map(product => {
+      try {
+        // Basic validation
+        if (!product.asin) {
+          if (detailedLogging) console.log('Skipping product with no ASIN');
+          stats.failed++;
+          return null;
+        }
+
+        // Extract and normalize product data
+        return {
+          asin: product.asin,
+          title: product.title || '',
+          description: product.description || '',
+          current_price: extractPrice(product.price_information),
+          original_price: extractOriginalPrice(product.price_information),
+          rating: product.rating?.value || null,
+          rating_count: product.rating?.count || null,
+          image_url: product.image || '',
+          product_url: product.url || '',
+          category: product.category || '',
+          brand: brand, // Use the brand passed as argument
+          is_laptop: true // Mark as laptop
+        };
+      } catch (err) {
+        console.error(`Error processing product: ${err.message}`, err);
+        stats.failed++;
+        return null;
+      }
+    }).filter(Boolean); // Remove null entries
+
+    stats.processed = processedProducts.length;
     
     if (detailedLogging) {
-      console.log(`Processing product ASIN: ${asin}, Title: ${product.title || 'N/A'}`)
+      console.log(`Prepared ${processedProducts.length} product objects for database insertion/update`);
     }
 
-    // Check if product already exists
-    const { data: existingProducts, error: checkError } = await supabase
-      .from('products')
-      .select('*')
-      .eq('asin', asin)
-      .limit(1)
-
-    if (checkError) {
-      console.error(`Database error checking product existence for ASIN ${asin}:`, checkError)
-      return { status: 'failed', error: checkError.message }
-    }
-
-    const existingProduct = existingProducts && existingProducts.length > 0 ? existingProducts[0] : null
-    
-    if (detailedLogging && existingProduct) {
-      console.log(`Found existing product with ASIN ${asin}`)
-    }
-
-    // Extract relevant data from the product
-    const productData = {
-      asin: asin,
-      title: product.title || '',
-      brand: brand,
-      is_laptop: true,
-      image_url: product.image || '',
-      current_price: parseFloat(product.price?.value || '0') || null,
-      rating: parseFloat(product.rating?.value || '0') || null,
-      total_reviews: parseInt(product.reviews?.total_reviews || '0') || null,
-      collection_status: 'completed',
-      last_collection_attempt: new Date().toISOString(),
-      // Add other fields as available
-    }
-
-    if (detailedLogging) {
-      console.log(`Processed data for ASIN ${asin}:`, productData)
-    }
-
-    if (existingProduct) {
-      // Update existing product
-      const { data: updatedProduct, error: updateError } = await supabase
-        .from('products')
-        .update(productData)
-        .eq('id', existingProduct.id)
-        .select()
-
-      if (updateError) {
-        console.error(`Error updating product with ASIN ${asin}:`, updateError)
-        return { status: 'failed', error: updateError.message }
-      }
-
-      if (detailedLogging) {
-        console.log(`Successfully updated product with ASIN ${asin}`)
-        console.log('Updated data:', updatedProduct)
-      }
-
-      return { status: 'updated', id: existingProduct.id }
+    // Insert or update products in the database
+    if (processedProducts.length > 0) {
+      const results = await insertOrUpdateProducts(processedProducts, detailedLogging);
+      
+      stats.updated = results.updated;
+      stats.added = results.added;
+      stats.failed += results.failed;
+      
+      console.log(`Database results for ${brand}: ${results.added} added, ${results.updated} updated, ${results.failed} failed`);
     } else {
-      // Insert new product
-      const { data: newProduct, error: insertError } = await supabase
-        .from('products')
-        .insert(productData)
-        .select()
-
-      if (insertError) {
-        console.error(`Error inserting new product with ASIN ${asin}:`, insertError)
-        return { status: 'failed', error: insertError.message }
-      }
-
-      if (detailedLogging) {
-        console.log(`Successfully added new product with ASIN ${asin}`)
-        console.log('New product data:', newProduct)
-      }
-
-      return { status: 'added', id: newProduct?.[0]?.id }
+      console.log(`No valid laptop products found for ${brand}`);
     }
+
+    return stats;
   } catch (error) {
-    console.error(`Error processing product:`, error)
-    return { status: 'failed', error: error.message || 'Unknown error' }
+    console.error(`Error in processProducts for ${brand}:`, error);
+    return {
+      processed: stats.processed,
+      updated: stats.updated,
+      added: stats.added,
+      failed: stats.failed + 1 // Increment failed count
+    };
+  }
+}
+
+function extractPrice(priceInfo: any): number | null {
+  try {
+    if (!priceInfo) return null;
+    
+    // Try to get the current price
+    if (priceInfo.current_price) {
+      // Remove currency symbol and convert to number
+      const priceStr = String(priceInfo.current_price).replace(/[^0-9.]/g, '');
+      return Number(priceStr) || null;
+    }
+    
+    return null;
+  } catch (e) {
+    console.error('Error extracting price:', e);
+    return null;
+  }
+}
+
+function extractOriginalPrice(priceInfo: any): number | null {
+  try {
+    if (!priceInfo || !priceInfo.previous_price) return null;
+    
+    // Remove currency symbol and convert to number
+    const priceStr = String(priceInfo.previous_price).replace(/[^0-9.]/g, '');
+    return Number(priceStr) || null;
+  } catch (e) {
+    console.error('Error extracting original price:', e);
+    return null;
   }
 }

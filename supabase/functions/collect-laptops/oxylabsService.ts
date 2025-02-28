@@ -1,68 +1,89 @@
 
-// The Deno.env.get won't work in the browser preview, but will work in the Supabase Edge Function environment
-const OXYLABS_USERNAME = Deno.env.get('OXYLABS_USERNAME') ?? ''
-const OXYLABS_PASSWORD = Deno.env.get('OXYLABS_PASSWORD') ?? ''
+import { scrapingHeaders } from './databaseService.ts';
 
-export function createOxylabsClient() {
-  if (!OXYLABS_USERNAME || !OXYLABS_PASSWORD) {
-    console.error('Oxylabs credentials not found in environment variables')
-    throw new Error('Missing Oxylabs credentials')
-  }
+// Get Oxylabs credentials from environment variables
+const username = Deno.env.get("OXYLABS_USERNAME");
+const password = Deno.env.get("OXYLABS_PASSWORD");
 
-  return {
-    fetchLaptopsByBrand: async (brand: string, page: number) => {
-      try {
-        console.log(`[Oxylabs] Starting request for brand: ${brand}, page: ${page}`)
-        
-        const url = `https://www.amazon.com/s?k=${encodeURIComponent(brand)}+laptop&page=${page}`
-        console.log(`[Oxylabs] Request URL: ${url}`)
-        
-        const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic ' + btoa(`${OXYLABS_USERNAME}:${OXYLABS_PASSWORD}`),
-          },
-          body: JSON.stringify({
-            source: 'amazon_search',
-            domain: 'com',
-            query: `${brand} laptop`,
-            start_page: page,
-            pages: 1,
-            parse: true,
-          }),
-        })
+// Oxylabs SERP API endpoint
+const endpoint = "https://realtime.oxylabs.io/v1/queries";
 
-        if (!response.ok) {
-          const errorText = await response.text()
-          console.error(`[Oxylabs] API response error: ${response.status} ${response.statusText}`)
-          console.error(`[Oxylabs] Error details: ${errorText}`)
-          throw new Error(`Oxylabs API error: ${response.status} ${response.statusText}`)
-        }
+// Check if credentials are available
+if (!username || !password) {
+  console.error("OXYLABS_USERNAME or OXYLABS_PASSWORD environment variables are not set");
+}
 
-        const data = await response.json()
-        
-        console.log(`[Oxylabs] Response received for ${brand}, page ${page}`)
-        console.log(`[Oxylabs] Response status: ${response.status}`)
-        console.log(`[Oxylabs] Results count: ${data.results?.length || 0}`)
-        
-        if (data.results && data.results[0] && data.results[0].content && data.results[0].content.organic) {
-          console.log(`[Oxylabs] Found ${data.results[0].content.organic.length} organic products`)
-          
-          // Log a sample of the first product to help with debugging
-          if (data.results[0].content.organic.length > 0) {
-            const sampleProduct = data.results[0].content.organic[0]
-            console.log(`[Oxylabs] Sample product: ASIN=${sampleProduct.asin}, Title=${sampleProduct.title}`)
-          }
-        } else {
-          console.warn(`[Oxylabs] No organic products found in the response`)
-        }
-        
-        return data
-      } catch (error) {
-        console.error(`[Oxylabs] Error fetching data for ${brand}, page ${page}:`, error)
-        throw error
+export async function scrapeBrandData(brand: string, page: number = 1): Promise<any[]> {
+  try {
+    const brandQuery = encodeURIComponent(`${brand} laptop`);
+    console.log(`Scraping data for ${brand} laptops, page ${page}`);
+
+    // Build the request payload
+    const payload = {
+      source: "amazon_search",
+      domain: "com",
+      query: `${brandQuery}`,
+      start_page: page,
+      pages: 1,
+      parse: true,
+      context: [
+        { key: "category_id", value: "565108" } // Electronics > Computers & Accessories > Laptops
+      ]
+    };
+
+    // Log request details (excluding sensitive info)
+    console.log(`Making request to Oxylabs for ${brand} page ${page}`);
+
+    // Make the API request to Oxylabs
+    const response = await fetch(endpoint, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Basic " + btoa(`${username}:${password}`)
       }
+    });
+
+    // Check if the request was successful
+    if (!response.ok) {
+      const responseText = await response.text();
+      console.error(`Error from Oxylabs API (${response.status}): ${responseText}`);
+      throw new Error(`Oxylabs API error: ${response.status} ${response.statusText}`);
     }
+
+    // Parse the JSON response
+    const data = await response.json();
+    
+    // Validate the response structure
+    if (!data || !data.results || !data.results[0] || !data.results[0].content) {
+      console.error(`Unexpected response structure from Oxylabs for ${brand} page ${page}:`, JSON.stringify(data).slice(0, 200) + '...');
+      return [];
+    }
+
+    // Extract the product results
+    let results = data.results[0].content;
+    
+    if (!results || !results.results) {
+      console.error(`No results in Oxylabs response for ${brand} page ${page}`);
+      return [];
+    }
+
+    // Extract the organic results only
+    let laptops = results.results.organic || [];
+    
+    // Add validation to ensure we have an array of laptops
+    if (!Array.isArray(laptops)) {
+      console.error(`Expected an array of laptops but got ${typeof laptops}:`, laptops);
+      return [];
+    }
+    
+    // Log the number of laptops found
+    console.log(`Found ${laptops.length} laptops for ${brand} on page ${page}`);
+    
+    // Return the array of laptops
+    return laptops;
+  } catch (error) {
+    console.error(`Error scraping data for ${brand} page ${page}:`, error);
+    return []; // Return empty array on error instead of throwing to make the code more resilient
   }
 }
