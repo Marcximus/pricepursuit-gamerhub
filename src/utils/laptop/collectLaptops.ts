@@ -26,7 +26,10 @@ export async function collectLaptops() {
 
     const staleTimeout = new Date(Date.now() - COLLECTION_CONFIG.STALE_COLLECTION_MINUTES * 60 * 1000).toISOString();
     
+    // Reset any stale collections (in case a previous collection was interrupted)
     await resetStaleCollections(staleTimeout);
+    
+    // Check if there's already a collection in progress
     const activeCollections = await checkActiveCollections(staleTimeout);
 
     if (activeCollections && activeCollections.length > 0) {
