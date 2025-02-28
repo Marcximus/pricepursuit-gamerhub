@@ -24,7 +24,8 @@ export async function collectLaptops() {
   try {
     console.log('Checking collection status...');
 
-    const staleTimeout = new Date(Date.now() - COLLECTION_CONFIG.STALE_COLLECTION_MINUTES * 60 * 1000).toISOString();
+    // Set stale timeout to 30 seconds instead of using minutes from config
+    const staleTimeout = new Date(Date.now() - 30 * 1000).toISOString();
     console.log('Stale timeout set to:', staleTimeout);
     
     // Reset any stale collections (in case a previous collection was interrupted)
@@ -43,7 +44,7 @@ export async function collectLaptops() {
       
       toast({
         title: "Collection already in progress",
-        description: `A collection is already running (started ${Math.round(timeElapsed / 60)} minutes ago). Please wait for it to complete.`,
+        description: `A collection is already running (started ${timeElapsed} seconds ago). Please wait for it to complete or try again in ${Math.max(0, 30 - timeElapsed)} seconds.`,
         variant: "default"
       });
       return null;
