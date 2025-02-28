@@ -1,6 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js'
-import { serve } from 'std/http/server.ts'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { LaptopUpdateRequest, UpdateResponse } from './types.ts'
 import { fetchLaptopData } from './oxylabsService.ts'
 import { updateLaptopInDatabase } from './databaseService.ts'
