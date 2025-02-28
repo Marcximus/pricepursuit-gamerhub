@@ -26,8 +26,21 @@ serve(async (req) => {
     console.log(`Processing price update request for ${laptops.length} laptops`);
 
     // Process each laptop update
-    const ctx = req.ctx as { waitUntil: (promise: Promise<any>) => void };
-    ctx.waitUntil((async () => {
+    // Use EdgeRuntime for waitUntil if available, otherwise use Deno fetch API context
+    const waitUntilFn = (promise: Promise<any>) => {
+      if (req.ctx && typeof req.ctx.waitUntil === 'function') {
+        req.ctx.waitUntil(promise);
+      } else if (typeof (globalThis as any).EdgeRuntime !== 'undefined' && 
+                (globalThis as any).EdgeRuntime.waitUntil) {
+        (globalThis as any).EdgeRuntime.waitUntil(promise);
+      } else {
+        // Just run the promise without waitUntil if not available
+        promise.catch(err => console.error('Background task error:', err));
+      }
+    };
+
+    // Start the background processing
+    waitUntilFn((async () => {
       for (const laptop of laptops) {
         try {
           console.log(`Processing price update for laptop ${laptop.id} (ASIN: ${laptop.asin})`);
@@ -140,7 +153,7 @@ serve(async (req) => {
       },
     )
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error processing request:', error);
     return new Response(
       JSON.stringify({ error: error.message }),

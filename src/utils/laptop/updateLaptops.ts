@@ -60,7 +60,7 @@ export const updateLaptops = async () => {
 
         // Call edge function for this chunk
         try {
-          const { error } = await supabase.functions.invoke('update-laptops', {
+          const { data, error } = await supabase.functions.invoke('update-laptops', {
             body: { 
               laptops: chunk.map(l => ({ id: l.id, asin: l.asin }))
             }
@@ -73,7 +73,7 @@ export const updateLaptops = async () => {
               .update({ update_status: 'error' })
               .in('id', chunkIds);
           } else {
-            console.log(`Successfully initiated update for chunk ${i + 1}`);
+            console.log(`Successfully initiated update for chunk ${i + 1}`, data);
           }
         } catch (error) {
           console.error(`Failed to process chunk ${i + 1}:`, error);
