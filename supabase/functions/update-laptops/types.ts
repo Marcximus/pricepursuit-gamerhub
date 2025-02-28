@@ -1,34 +1,64 @@
 
-export interface UpdateLaptopRequest {
+/**
+ * Laptop object passed from client for update
+ */
+export interface LaptopUpdate {
+  id: string;
   asin: string;
-  force?: boolean;
+  current_price?: number | null;
+  title?: string;
+  last_checked?: string | null;
+  image_url?: string | null;
 }
 
-export interface UpdateLaptopResponse {
+/**
+ * Result of a laptop update operation
+ */
+export interface UpdateResult {
   success: boolean;
-  message: string;
-  data?: any;
+  priceUpdated: boolean;
+  imageUpdated: boolean;
+  specsUpdated: boolean;
   error?: string;
 }
 
-export interface LaptopUpdateData {
+/**
+ * Statistics about update operations
+ */
+export interface UpdateStats {
+  total: number;
+  successful: number;
+  failed: number;
+  priceUpdated: number;
+  imageUpdated: number;
+  specsUpdated: number;
+}
+
+/**
+ * Enhanced laptop data after processing
+ */
+export interface EnhancedLaptopData {
+  asin: string;
   title?: string;
+  brand?: string;
+  model?: string;
+  current_price?: number | null;
+  original_price?: number | null;
+  image_url?: string | null;
+  product_url?: string;
+  rating?: number | null;
+  rating_count?: number | null;
   description?: string;
-  current_price?: number;
-  original_price?: number;
-  rating?: number;
-  rating_count?: number;
-  image_url?: string;
-  review_data?: any;
   processor?: string;
   ram?: string;
   storage?: string;
-  graphics?: string;
   screen_size?: string;
   screen_resolution?: string;
+  graphics?: string;
   weight?: string;
-  battery_life?: string;
-  update_status?: string;
+  operating_system?: string;
+  touchscreen?: boolean;
+  color?: string;
+  review_data?: Record<string, any>;
   last_checked?: string;
-  last_updated?: string;
 }

@@ -1,142 +1,105 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { fetchLaptopData } from './oxylabsService.ts';
-import { updateLaptop } from './databaseService.ts';
-import { LaptopUpdateRequest, UpdateResponse } from './types.ts';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { corsHeaders } from "../_shared/cors.ts";
+import { fetchProductData } from "./oxylabsService.ts";
+import { updateProductInDatabase, logUpdateStats } from "./databaseService.ts";
 
-// CORS headers for browser requests
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+console.log("Hello from update-laptops function!");
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Set up Supabase client
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
   try {
-    // Validate request method
-    if (req.method !== 'POST') {
-      return new Response(
-        JSON.stringify({ error: 'Method not allowed' }),
-        { status: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
+    const { laptops } = await req.json();
+
+    if (!laptops || !Array.isArray(laptops) || laptops.length === 0) {
+      throw new Error("No laptops provided for update");
     }
 
-    // Parse request body
-    const requestData = await req.json() as LaptopUpdateRequest;
-    
-    if (!requestData.laptops || !Array.isArray(requestData.laptops) || requestData.laptops.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid request. Expected "laptops" array.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
-    }
+    console.log(`Received request to update ${laptops.length} laptops:`, 
+      laptops.map(l => `ASIN: ${l.asin}, ID: ${l.id}`));
 
-    console.log(`Processing update request for ${requestData.laptops.length} laptops`);
-
-    // Create Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Initialize results tracking
-    const results = {
-      updated: [] as Array<{id: string; asin: string; success: boolean; message?: string}>,
-      failed: [] as Array<{id: string; asin: string; error: string}>
-    };
-
-    // Process each laptop sequentially
-    for (const laptop of requestData.laptops) {
+    // Process updates in parallel with enhanced error handling
+    const updatePromises = laptops.map(async (laptop) => {
       try {
-        console.log(`Updating data for laptop ${laptop.id} (ASIN: ${laptop.asin})`);
+        console.log(`Fetching data for ASIN ${laptop.asin} from Amazon...`);
         
-        // Fetch latest data from Amazon
-        const laptopData = await fetchLaptopData(laptop.asin);
+        // Mark laptop as in_progress
+        await supabase
+          .from('products')
+          .update({ update_status: 'in_progress' })
+          .eq('id', laptop.id);
         
-        if (!laptopData) {
-          console.error(`Failed to fetch data for laptop ${laptop.id} (ASIN: ${laptop.asin})`);
-          results.failed.push({
-            id: laptop.id,
-            asin: laptop.asin,
-            error: 'Failed to fetch product data from Amazon'
-          });
-          continue;
+        // Fetch latest data from Oxylabs
+        const productData = await fetchProductData(laptop.asin);
+        
+        if (!productData) {
+          console.error(`Failed to fetch data for ASIN ${laptop.asin}`);
+          await supabase
+            .from('products')
+            .update({ update_status: 'error' })
+            .eq('id', laptop.id);
+          return { asin: laptop.asin, success: false, error: 'Data fetch failed' };
         }
         
-        // Prepare data for update
-        const updateData = {
-          id: laptop.id,
-          asin: laptop.asin,
-          ...laptopData,
-          // Override with any specific values from the request if needed
-          current_price: laptopData.current_price !== null ? laptopData.current_price : laptop.current_price,
-          title: laptopData.title || laptop.title
+        // Process the data and update in database with enhanced processing
+        const updateResult = await updateProductInDatabase(supabase, laptop, productData);
+        
+        return { 
+          asin: laptop.asin, 
+          success: updateResult.success, 
+          priceUpdated: updateResult.priceUpdated,
+          imageUpdated: updateResult.imageUpdated,
+          specsUpdated: updateResult.specsUpdated,
+          error: updateResult.error 
         };
-        
-        // Update the laptop record in the database
-        const updateResult = await updateLaptop(supabase, updateData);
-        
-        if (updateResult.success) {
-          results.updated.push({
-            id: laptop.id,
-            asin: laptop.asin,
-            success: true,
-            message: updateResult.message
-          });
-        } else {
-          results.failed.push({
-            id: laptop.id,
-            asin: laptop.asin,
-            error: updateResult.message || 'Unknown error'
-          });
-        }
       } catch (error) {
-        console.error(`Error processing laptop ${laptop.id}:`, error);
-        results.failed.push({
-          id: laptop.id,
-          asin: laptop.asin,
-          error: error.message || 'Unknown error'
-        });
+        console.error(`Error updating laptop ${laptop.asin}:`, error);
+        // Mark as error in database
+        await supabase
+          .from('products')
+          .update({ update_status: 'error' })
+          .eq('id', laptop.id);
+        return { asin: laptop.asin, success: false, error: error.message };
       }
-    }
+    });
 
-    // Prepare the response
-    const response: UpdateResponse = {
-      success: results.updated.length > 0,
-      message: `Updated ${results.updated.length} laptops. Failed: ${results.failed.length}`,
-      updatedCount: results.updated.length,
-      failedCount: results.failed.length,
-      results
-    };
-
+    const results = await Promise.all(updatePromises);
+    
+    // Log aggregate statistics
+    const stats = logUpdateStats(results);
+    
     return new Response(
-      JSON.stringify(response),
-      { 
-        status: 200, 
-        headers: { 
-          'Content-Type': 'application/json',
-          ...corsHeaders
-        } 
+      JSON.stringify({
+        success: true,
+        message: `Processed ${laptops.length} laptops`,
+        results: results,
+        stats: stats
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
       }
     );
   } catch (error) {
-    console.error('Error processing update request:', error);
-    
+    console.error("Error in update-laptops function:", error);
     return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error', 
-        details: error.message 
+      JSON.stringify({
+        success: false,
+        error: error.message,
       }),
-      { 
-        status: 500, 
-        headers: { 
-          'Content-Type': 'application/json',
-          ...corsHeaders
-        } 
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
       }
     );
   }
