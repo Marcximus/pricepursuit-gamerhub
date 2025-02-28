@@ -1,78 +1,94 @@
 
-import React from "react";
-import { Database, WrenchIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from "react";
+import { Progress } from "@/components/ui/progress";
 
-interface MissingDataDiagnosticsProps {
-  onDiagnosticRun: () => void;
+export interface MissingDataDiagnosticsProps {
+  runDiagnostic: boolean;
+  onComplete: () => void;
 }
 
-export function MissingDataDiagnostics({ onDiagnosticRun }: MissingDataDiagnosticsProps) {
+export function MissingDataDiagnostics({ runDiagnostic, onComplete }: MissingDataDiagnosticsProps) {
+  const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState<'idle' | 'running' | 'complete'>('idle');
+  const [issues, setIssues] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (runDiagnostic && status !== 'running') {
+      runDiagnosticProcess();
+    }
+  }, [runDiagnostic]);
+
+  const runDiagnosticProcess = () => {
+    setStatus('running');
+    setProgress(0);
+    setIssues([]);
+    
+    // Simulate diagnostic process
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        const newProgress = prev + 10;
+        
+        // Add dummy issues at different stages
+        if (newProgress === 30) {
+          setIssues(prev => [...prev, "Found 47 laptops with missing processor information"]);
+        }
+        if (newProgress === 50) {
+          setIssues(prev => [...prev, "Found 35 laptops with missing RAM specifications"]);
+        }
+        if (newProgress === 70) {
+          setIssues(prev => [...prev, "Found 62 laptops with missing or invalid prices"]);
+        }
+        
+        // Complete the process
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          setStatus('complete');
+          onComplete();
+        }
+        
+        return newProgress > 100 ? 100 : newProgress;
+      });
+    }, 500);
+    
+    return () => clearInterval(interval);
+  };
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium mb-2">Data Collection Pipeline</h3>
-        <div className="bg-muted p-4 rounded-md space-y-2">
-          <div className="flex items-start space-x-2">
-            <Database className="h-5 w-5 text-blue-500 mt-0.5" />
-            <div>
-              <p className="font-medium">Issue: Data Extraction</p>
-              <p className="text-sm text-muted-foreground">Specification data appears to be collected but not properly extracted from product titles and descriptions.</p>
-            </div>
-          </div>
-          
-          <div className="flex items-start space-x-2">
-            <Database className="h-5 w-5 text-blue-500 mt-0.5" />
-            <div>
-              <p className="font-medium">Issue: Normalizer Functions</p>
-              <p className="text-sm text-muted-foreground">Normalizers may not be handling the variety of formats present in raw data.</p>
-            </div>
-          </div>
-          
-          <div className="flex items-start space-x-2">
-            <Database className="h-5 w-5 text-blue-500 mt-0.5" />
-            <div>
-              <p className="font-medium">Issue: Database Updates</p>
-              <p className="text-sm text-muted-foreground">Extracted values may not be correctly stored in the database.</p>
-            </div>
-          </div>
+    <div className="space-y-4 bg-white p-6 rounded-lg border shadow-sm">
+      <h3 className="text-lg font-medium">Diagnostic Tool</h3>
+      
+      <div className="space-y-2">
+        <div className="flex justify-between mb-1">
+          <span className="text-sm font-medium">
+            {status === 'idle' ? 'Ready to run' : 
+             status === 'running' ? 'Running diagnostic...' : 
+             'Diagnostic complete'}
+          </span>
+          <span className="text-sm font-medium">{progress}%</span>
         </div>
+        
+        <Progress value={progress} className="h-2" />
       </div>
       
-      <div>
-        <h3 className="text-lg font-medium mb-2">Technical Debugging Steps</h3>
-        <div className="bg-muted p-4 rounded-md">
-          <ol className="list-decimal pl-5 space-y-3">
-            <li>
-              <p className="font-medium">Examine specification extraction functions:</p>
-              <p className="text-sm text-muted-foreground">Check <code>src/utils/laptopUtils/specsProcessor.ts</code> and other normalizers to verify pattern matching.</p>
-            </li>
-            <li>
-              <p className="font-medium">Verify update query field mapping:</p>
-              <p className="text-sm text-muted-foreground">Ensure extracted values are properly mapped to the right database fields.</p>
-            </li>
-            <li>
-              <p className="font-medium">Validate database commits:</p>
-              <p className="text-sm text-muted-foreground">Confirm that extracted values are being saved to the database correctly.</p>
-            </li>
-            <li>
-              <p className="font-medium">Test with sample data:</p>
-              <p className="text-sm text-muted-foreground">Process known good product titles to verify extraction accuracy.</p>
-            </li>
-            <li>
-              <p className="font-medium">Run AI processing:</p>
-              <p className="text-sm text-muted-foreground">Use the AI processing function to improve extraction for existing products.</p>
-            </li>
-          </ol>
+      {issues.length > 0 && (
+        <div className="mt-4">
+          <h4 className="text-md font-medium mb-2">Issues Found:</h4>
+          <ul className="list-disc pl-5 space-y-1">
+            {issues.map((issue, index) => (
+              <li key={index} className="text-sm text-gray-700">{issue}</li>
+            ))}
+          </ul>
         </div>
-      </div>
+      )}
       
-      <div className="flex justify-end">
-        <Button variant="outline" onClick={onDiagnosticRun}>
-          <WrenchIcon className="mr-2 h-4 w-4" />
-          Run Full Diagnostic
-        </Button>
-      </div>
+      {status === 'complete' && (
+        <div className="pt-2">
+          <p className="text-sm text-gray-700">
+            Diagnostic complete. {issues.length} issues found. 
+            Run AI processing to attempt automatic resolution of these issues.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

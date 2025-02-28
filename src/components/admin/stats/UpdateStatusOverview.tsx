@@ -1,6 +1,6 @@
 
 import React from "react";
-import { CircleCheck, CircleClock, CircleAlert, Clock, RotateCw } from "lucide-react";
+import { CircleCheck, Clock, CircleAlert, RotateCw } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { StatItem } from "./StatItem";
 import { DatabaseStats } from "@/utils/laptop/stats/types";
@@ -19,7 +19,7 @@ export function UpdateStatusOverview({ stats }: UpdateStatusOverviewProps) {
           <h4 className="text-sm font-medium mb-2">Update Pipeline</h4>
           <div className="space-y-2">
             <StatItem 
-              icon={<CircleClock className="h-4 w-4 text-slate-500" />}
+              icon={<Clock className="h-4 w-4 text-slate-500" />}
               label="Pending Update"
               value={stats.updateStatus.pendingUpdate.count}
             />
