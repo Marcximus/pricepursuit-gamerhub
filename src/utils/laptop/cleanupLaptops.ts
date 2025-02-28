@@ -58,8 +58,11 @@ export const cleanupLaptopDatabase = async () => {
     }
 
     // 3. Find duplicate ASINs
-    const { data: duplicateAsins, error: asinQueryError } = await supabase
-      .rpc('get_duplicate_asins');
+    const { data, error: asinQueryError } = await supabase
+      .from('get_duplicate_asins')
+      .select('*');
+
+    const duplicateAsins = data || [];
 
     if (asinQueryError) {
       console.error('Error finding duplicate ASINs:', asinQueryError);
@@ -68,7 +71,7 @@ export const cleanupLaptopDatabase = async () => {
         description: `Error finding duplicates: ${asinQueryError.message}`,
         variant: "destructive"
       });
-    } else if (duplicateAsins && duplicateAsins.length > 0) {
+    } else if (duplicateAsins.length > 0) {
       console.log(`Found ${duplicateAsins.length} duplicate ASINs`);
       
       // For each duplicate ASIN, keep the most recent record and delete others

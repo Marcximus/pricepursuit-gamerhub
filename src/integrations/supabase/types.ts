@@ -237,6 +237,13 @@ export type Database = {
         }
         Returns: number
       }
+      get_duplicate_asins: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          asin: string
+          count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
