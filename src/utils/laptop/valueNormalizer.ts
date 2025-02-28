@@ -9,7 +9,8 @@ export const normalizeRam = (ram: string): string => {
   if (!ram) return '';
   
   const gbValue = getRamValue(ram);
-  if (gbValue === 0) return ram;
+  // Filter out unrealistic RAM values (less than 2GB or greater than 128GB for laptops)
+  if (gbValue < 2 || gbValue > 128) return '';
   
   // Format as integer if it's a whole number, otherwise show decimal
   const formattedGB = Number.isInteger(gbValue) ? gbValue.toString() : gbValue.toFixed(1);
@@ -25,8 +26,8 @@ export const normalizeStorage = (storage: string): string => {
   // Get storage value in GB
   const gbValue = getStorageValue(storage);
   
-  // Filter out invalid or unrealistic storage values (less than 32GB)
-  if (gbValue < 32) {
+  // Filter out invalid or unrealistic storage values (less than 128GB for modern laptops)
+  if (gbValue < 128) {
     return '';
   }
   
@@ -48,9 +49,14 @@ export const normalizeScreenSize = (size: string): string => {
   // Extract the numeric value and standardize to inches
   const match = size.match(/(\d+\.?\d*)/);
   if (match) {
-    return `${match[1]}"`;
+    const sizeValue = parseFloat(match[1]);
+    // Filter out unrealistic laptop screen sizes (less than 10" or greater than 21")
+    if (sizeValue < 10 || sizeValue > 21) {
+      return '';
+    }
+    return `${sizeValue.toFixed(1)}"`;
   }
-  return size;
+  return '';
 };
 
 /**
@@ -67,6 +73,16 @@ export const normalizeGraphics = (graphics: string): string => {
     .replace(/GPU:?/i, '')
     .trim();
   
+  // Filter out invalid or nonsensical graphics card descriptions
+  if (normalized.length < 3 || 
+      normalized.includes('32-core') ||
+      normalized === 'integrated' ||
+      normalized === 'dedicated' ||
+      normalized.includes('undefined') ||
+      normalized.includes('N/A')) {
+    return '';
+  }
+    
   // Standardize NVIDIA naming
   normalized = normalized
     .replace(/nvidia\s+geforce\s+rtx?/i, 'NVIDIA RTX')
@@ -112,6 +128,13 @@ export const normalizeProcessor = (processor: string): string => {
     .replace(/CPU:?/i, '')
     .trim();
   
+  // Filter out invalid processor descriptions
+  if (normalized.length < 3 || 
+      normalized.includes('undefined') || 
+      normalized.includes('N/A')) {
+    return '';
+  }
+    
   // Standardize Intel naming
   normalized = normalized
     .replace(/intel\s+core\s+i([3579])[- ](\d{4,5})(H|U|HQ|K)?/i, 'Intel Core i$1-$2$3')
@@ -120,7 +143,7 @@ export const normalizeProcessor = (processor: string): string => {
     
   // Standardize AMD naming
   normalized = normalized
-    .replace(/amd\s+ryzen\s+([3579])[- ](\d{4})(H|U|HS|HX)?/i, 'AMD Ryzen $1-$2$3')
+    .replace(/amd\s+ryzen\s+([3579])[- ](\d{4,5}[A-Z]*(?:\s*HX)?)/i, 'AMD Ryzen $1-$2')
     .replace(/amd\s+ryzen\s+([3579])/i, 'AMD Ryzen $1');
     
   // Apple naming

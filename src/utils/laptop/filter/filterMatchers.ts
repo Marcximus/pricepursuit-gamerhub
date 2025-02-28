@@ -49,7 +49,7 @@ export const parseScreenSize = (value: string | null | undefined): number => {
 };
 
 /**
- * Check if a filter value matches a product value with fuzzy matching for various formats
+ * Check if a filter value matches a product value with stricter, category-specific matching rules
  */
 export const matchesFilter = (
   filterValue: string,
@@ -66,19 +66,36 @@ export const matchesFilter = (
     case 'ram': {
       const productRamGB = parseRamValue(productValue);
       const filterRamGB = parseRamValue(filterValue);
-      return Math.abs(productRamGB - filterRamGB) < 0.5;
+      
+      // Enforce realistic RAM values and stricter matching
+      if (productRamGB < 2 || filterRamGB < 2) return false;
+      
+      // Exact match with minimal tolerance (0.1 GB)
+      return Math.abs(productRamGB - filterRamGB) < 0.1;
     }
     
     case 'storage': {
       const productStorageGB = parseStorageValue(productValue);
       const filterStorageGB = parseStorageValue(filterValue);
+      
+      // Enforce realistic storage values and stricter matching
+      if (productStorageGB < 128 || filterStorageGB < 128) return false;
+      
+      // More precise matching for storage sizes (within 0.5GB)
       return Math.abs(productStorageGB - filterStorageGB) < 0.5;
     }
     
     case 'screen_size': {
       const productSize = parseScreenSize(productValue);
       const filterSize = parseScreenSize(filterValue);
-      return Math.abs(productSize - filterSize) < 0.1;
+      
+      // Enforce realistic screen sizes for laptops
+      if (productSize < 10 || productSize > 21 || filterSize < 10 || filterSize > 21) {
+        return false;
+      }
+      
+      // More precise matching for screen sizes (within 0.05")
+      return Math.abs(productSize - filterSize) < 0.05;
     }
     
     case 'processor': {
@@ -141,6 +158,7 @@ export const matchesFilter = (
           const productModel = productLower.match(/i[3579][- ](\d{4,5})/);
           
           if (filterModel && productModel) {
+            // Match at least first 2 digits of model number (generation)
             return filterModel[1].substring(0, 2) === productModel[1].substring(0, 2);
           }
           
@@ -168,7 +186,30 @@ export const matchesFilter = (
         }
       }
       
-      // Fallback to substring match
+      // Avoid loose substring matches that could lead to false positives
+      // Instead check for key identifiers present in both filter and product
+      const keyTerms = [
+        'intel', 'core', 'i3', 'i5', 'i7', 'i9', 
+        'amd', 'ryzen', 'apple', 'm1', 'm2', 'm3',
+        'celeron', 'pentium', 'xeon'
+      ];
+      
+      for (const term of keyTerms) {
+        if (filterLower.includes(term) && !productLower.includes(term)) {
+          return false;
+        }
+      }
+      
+      // Check if generation numbers match when both have them
+      const filterGenNum = filterLower.match(/\d{4}/);
+      const productGenNum = productLower.match(/\d{4}/);
+      
+      if (filterGenNum && productGenNum) {
+        // At least first two digits (generation) should match
+        return filterGenNum[0].substring(0, 2) === productGenNum[0].substring(0, 2);
+      }
+      
+      // More conservative approach - product should contain the entire filter value
       return productLower.includes(filterLower);
     }
     
@@ -237,8 +278,20 @@ export const matchesFilter = (
                (filterLower.includes('m3') && productLower.includes('m3'));
       }
       
-      // Fallback to substring match
-      return productLower.includes(filterLower);
+      // Avoid vague matches like just "Graphics" or "GPU"
+      if (filterLower === 'graphics' || filterLower === 'gpu' || 
+          filterLower === 'integrated' || filterLower === 'dedicated') {
+        return false;
+      }
+      
+      // More conservative approach - product should contain the filter value
+      // and have at least one of these major GPU terms
+      const majorGpuTerms = ['nvidia', 'amd', 'radeon', 'intel', 'apple', 'rtx', 'gtx'];
+      const hasGpuTerm = majorGpuTerms.some(term => 
+        productLower.includes(term) && filterLower.includes(term)
+      );
+      
+      return hasGpuTerm && productLower.includes(filterLower);
     }
     
     case 'brand': {

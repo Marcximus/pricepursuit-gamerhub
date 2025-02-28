@@ -5,7 +5,7 @@ import { matchesFilter } from "./filterMatchers";
 import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
 
 /**
- * Filters laptops based on selected filter options
+ * Filters laptops based on selected filter options with stricter validation
  */
 export const filterLaptops = (laptops: Product[], filters: FilterOptions): Product[] => {
   console.log('Starting filtering with:', {
@@ -35,7 +35,7 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     if (filters.brands.size > 0) {
       const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title);
       const matchesBrand = Array.from(filters.brands).some(selectedBrand => 
-        normalizedBrand.toLowerCase() === selectedBrand.toLowerCase()
+        matchesFilter(selectedBrand, normalizedBrand, 'brand', laptop.title)
       );
       
       if (!matchesBrand) {
@@ -47,7 +47,7 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     // Processor Filter
     if (filters.processors.size > 0 && laptop.processor) {
       const matchesProcessor = Array.from(filters.processors).some(selectedProcessor => 
-        matchesFilter(selectedProcessor, laptop.processor, 'processor')
+        matchesFilter(selectedProcessor, laptop.processor, 'processor', laptop.title)
       );
       
       if (!matchesProcessor) {
@@ -59,7 +59,7 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     // RAM Filter
     if (filters.ramSizes.size > 0 && laptop.ram) {
       const matchesRam = Array.from(filters.ramSizes).some(selectedRam => 
-        matchesFilter(selectedRam, laptop.ram, 'ram')
+        matchesFilter(selectedRam, laptop.ram, 'ram', laptop.title)
       );
       
       if (!matchesRam) {
@@ -71,7 +71,7 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     // Storage Filter
     if (filters.storageOptions.size > 0 && laptop.storage) {
       const matchesStorage = Array.from(filters.storageOptions).some(selectedStorage => 
-        matchesFilter(selectedStorage, laptop.storage, 'storage')
+        matchesFilter(selectedStorage, laptop.storage, 'storage', laptop.title)
       );
       
       if (!matchesStorage) {
@@ -83,7 +83,7 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     // Graphics Filter
     if (filters.graphicsCards.size > 0 && laptop.graphics) {
       const matchesGraphics = Array.from(filters.graphicsCards).some(selectedGraphics => 
-        matchesFilter(selectedGraphics, laptop.graphics, 'graphics')
+        matchesFilter(selectedGraphics, laptop.graphics, 'graphics', laptop.title)
       );
       
       if (!matchesGraphics) {
@@ -95,7 +95,7 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     // Screen Size Filter
     if (filters.screenSizes.size > 0 && laptop.screen_size) {
       const matchesScreenSize = Array.from(filters.screenSizes).some(selectedSize => 
-        matchesFilter(selectedSize, laptop.screen_size, 'screen_size')
+        matchesFilter(selectedSize, laptop.screen_size, 'screen_size', laptop.title)
       );
       
       if (!matchesScreenSize) {
@@ -116,7 +116,9 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
       price: l.current_price,
       ram: l.ram,
       storage: l.storage,
-      processor: l.processor
+      processor: l.processor,
+      screen_size: l.screen_size,
+      graphics: l.graphics
     })));
   }
   

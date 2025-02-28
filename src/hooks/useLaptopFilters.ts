@@ -37,16 +37,55 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
           }
 
           switch (key) {
-            case 'ram':
-              return normalizeRam(value);
-            case 'storage':
-              return normalizeStorage(value);
-            case 'screen_size':
-              return normalizeScreenSize(value);
-            case 'graphics':
-              return normalizeGraphics(value);
-            case 'processor':
-              return normalizeProcessor(value);
+            case 'ram': {
+              const normalized = normalizeRam(value);
+              // Skip low RAM values that are likely errors
+              const ramGB = getRamValue(normalized);
+              if (ramGB < 4 || ramGB > 128) {
+                return null;
+              }
+              return normalized;
+            }
+            case 'storage': {
+              const normalized = normalizeStorage(value);
+              // Skip low storage values that are likely errors
+              const storageGB = getStorageValue(normalized);
+              if (storageGB < 128) {
+                return null;
+              }
+              return normalized;
+            }
+            case 'screen_size': {
+              const normalized = normalizeScreenSize(value);
+              // Skip unrealistic screen sizes
+              const sizeInches = getScreenSizeValue(normalized);
+              if (sizeInches < 10 || sizeInches > 21) {
+                return null;
+              }
+              return normalized;
+            }
+            case 'graphics': {
+              const normalized = normalizeGraphics(value);
+              // Skip generic or nonsensical GPU values
+              if (normalized.length < 3 || 
+                  normalized === 'integrated' || 
+                  normalized === 'dedicated' ||
+                  normalized === 'GPU' ||
+                  normalized.includes('32-core')) {
+                return null;
+              }
+              return normalized;
+            }
+            case 'processor': {
+              const normalized = normalizeProcessor(value);
+              // Skip generic processor values
+              if (normalized.length < 3 || 
+                  normalized === 'CPU' || 
+                  normalized === 'Processor') {
+                return null;
+              }
+              return normalized;
+            }
             case 'brand': {
               // Apply more aggressive normalization for brands
               const normalizedBrand = normalizeBrand(value, laptop.title);
