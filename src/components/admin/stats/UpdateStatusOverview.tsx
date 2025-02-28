@@ -1,5 +1,5 @@
 
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { CircleCheck, Clock, CircleAlert, RotateCw } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { StatItem } from "./StatItem";
@@ -14,16 +14,64 @@ interface UpdateStatusOverviewProps {
 export function UpdateStatusOverview({ stats }: UpdateStatusOverviewProps) {
   // Get the refresh function from context to allow manual refresh
   const refreshStats = useContext(StatsRefreshContext);
-
-  // Get current timestamp for display
-  const lastUpdatedTime = new Date().toLocaleTimeString();
+  const [lastUpdatedTime, setLastUpdatedTime] = useState<string>(new Date().toLocaleTimeString());
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  
+  // Setup automatic refresh for the component
+  useEffect(() => {
+    // Update the last refreshed time whenever stats change
+    setLastUpdatedTime(new Date().toLocaleTimeString());
+    
+    // Set up interval to refresh more frequently when updates are in progress
+    const hasActiveUpdates = stats.updateStatus.inProgress.count > 0;
+    const refreshInterval = hasActiveUpdates ? 5000 : 15000; // 5 seconds during active updates, otherwise 15 seconds
+    
+    console.log(`Setting up refresh interval: ${refreshInterval}ms, active updates: ${hasActiveUpdates}`);
+    
+    const interval = setInterval(() => {
+      if (refreshStats) {
+        console.log("Auto-refreshing update status...");
+        refreshStats();
+      }
+    }, refreshInterval);
+    
+    return () => clearInterval(interval);
+  }, [stats.updateStatus.inProgress.count, refreshStats]);
 
   // Handle manual refresh click
-  const handleRefresh = () => {
-    if (refreshStats) {
-      refreshStats();
+  const handleRefresh = async () => {
+    if (refreshStats && !isRefreshing) {
+      setIsRefreshing(true);
+      console.log("Manual refresh triggered");
+      try {
+        await refreshStats();
+        setLastUpdatedTime(new Date().toLocaleTimeString());
+      } catch (error) {
+        console.error("Error refreshing stats:", error);
+      } finally {
+        setIsRefreshing(false);
+      }
     }
   };
+
+  // Calculate proper percentage for the progress bar
+  const calculateProgressPercentage = (): number => {
+    // If there are pending or in-progress updates, we need to show some progress
+    const totalInQueue = stats.updateStatus.pendingUpdate.count + stats.updateStatus.inProgress.count;
+    
+    if (stats.updateStatus.completed.count === 0 && totalInQueue === 0) {
+      return 0;
+    }
+    
+    // Calculate based on completed vs total in the pipeline
+    const total = stats.updateStatus.completed.count + totalInQueue + stats.updateStatus.error.count;
+    const percentage = (stats.updateStatus.completed.count / total) * 100;
+    
+    // Return at least 5% if we have active updates but no completions yet
+    return stats.updateStatus.inProgress.count > 0 && percentage === 0 ? 5 : percentage;
+  };
+
+  const progressPercentage = calculateProgressPercentage();
 
   return (
     <div className="space-y-4">
@@ -33,10 +81,11 @@ export function UpdateStatusOverview({ stats }: UpdateStatusOverviewProps) {
           variant="outline" 
           size="sm" 
           onClick={handleRefresh} 
+          disabled={isRefreshing}
           className="text-xs"
         >
-          <RotateCw className="h-3 w-3 mr-1" />
-          Refresh Status
+          <RotateCw className={`h-3 w-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Refreshing...' : 'Refresh Status'}
         </Button>
       </div>
       
@@ -51,7 +100,7 @@ export function UpdateStatusOverview({ stats }: UpdateStatusOverviewProps) {
             />
             
             <StatItem 
-              icon={<RotateCw className="h-4 w-4 text-blue-500" />}
+              icon={<RotateCw className={`h-4 w-4 text-blue-500 ${stats.updateStatus.inProgress.count > 0 ? 'animate-spin' : ''}`} />}
               label="In Progress"
               value={stats.updateStatus.inProgress.count}
             />
@@ -105,16 +154,16 @@ export function UpdateStatusOverview({ stats }: UpdateStatusOverviewProps) {
           <span className="text-sm">Update Progress</span>
           <span className="text-sm font-medium">
             {stats.updateStatus.completed.count} / {stats.totalLaptops} 
-            ({stats.updateStatus.completed.percentage}%)
+            ({Math.round(progressPercentage)}%)
           </span>
         </div>
         <Progress 
-          value={stats.updateStatus.completed.percentage} 
+          value={progressPercentage} 
           className="h-2"
           indicatorClassName={`${
-            stats.updateStatus.completed.percentage >= 75 ? 'bg-green-500' : 
-            stats.updateStatus.completed.percentage >= 50 ? 'bg-blue-500' : 
-            stats.updateStatus.completed.percentage >= 25 ? 'bg-amber-500' : 
+            progressPercentage >= 75 ? 'bg-green-500' : 
+            progressPercentage >= 50 ? 'bg-blue-500' : 
+            progressPercentage >= 25 ? 'bg-amber-500' : 
             'bg-red-500'
           }`}
         />
