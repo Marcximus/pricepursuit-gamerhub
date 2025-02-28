@@ -1,88 +1,117 @@
 
-import { OxylabsResult, ProductData } from './types.ts';
+import { extractLaptopSpecs } from './deepseekService';
+import { LaptopProductData } from './types';
+import { normalizeProductSpecs } from '@/utils/laptop/collectionUtils';
 
-export function processProducts(result: OxylabsResult, brand: string): ProductData[] {
-  console.log('Processing Oxylabs result:', {
-    hasContent: !!result?.content,
-    hasResults: !!result?.content?.results,
-    paidResults: result?.content?.results?.paid?.length || 0,
-    organicResults: result?.content?.results?.organic?.length || 0,
-  });
-
-  const validProducts: ProductData[] = [];
-  const allResults = [
-    ...(result?.content?.results?.paid || []),
-    ...(result?.content?.results?.organic || [])
-  ];
-
-  for (const item of allResults) {
-    if (!item.asin) {
-      console.log('Skipping result without ASIN:', {
-        title: item.title || 'no title',
-        hasUrl: !!item.url,
-        isSponsored: item.is_sponsored
-      });
-      continue;
+/**
+ * Process raw product data into a structured format
+ */
+export async function processRawProduct(rawProduct: any): Promise<LaptopProductData | null> {
+  try {
+    if (!rawProduct || !rawProduct.asin) {
+      console.error('Invalid product data:', rawProduct);
+      return null;
     }
 
-    try {
-      // Properly handle price data
-      let currentPrice = null;
-      let originalPrice = null;
+    let processedProduct: LaptopProductData = {
+      asin: rawProduct.asin,
+      title: rawProduct.title || '',
+      current_price: extractPrice(rawProduct.price),
+      original_price: extractPrice(rawProduct.original_price),
+      rating: extractRating(rawProduct.rating),
+      rating_count: extractRatingCount(rawProduct.rating_count),
+      image_url: rawProduct.image_url || '',
+      product_url: rawProduct.product_url || '',
+      brand: extractBrand(rawProduct.title, rawProduct.brand),
+      model: '',
+      processor: '',
+      ram: '',
+      storage: '',
+      graphics: '',
+      screen_size: '',
+      screen_resolution: '',
+      weight: '',
+      battery_life: ''
+    };
 
-      // Check organic result price first (most reliable)
-      if (typeof item.price === 'number' && !isNaN(item.price)) {
-        currentPrice = item.price;
-        // If there's a strikethrough price, use it as original price
-        if (typeof item.price_strikethrough === 'number' && !isNaN(item.price_strikethrough)) {
-          originalPrice = item.price_strikethrough;
-        }
-      }
-
-      // Log price processing for debugging
-      console.log('Processing price for ASIN:', {
-        asin: item.asin,
-        rawPrice: item.price,
-        rawStrikethrough: item.price_strikethrough,
-        processedCurrentPrice: currentPrice,
-        processedOriginalPrice: originalPrice
-      });
-
-      const productData: ProductData = {
-        asin: item.asin,
-        title: item.title || '',
-        current_price: currentPrice,
-        original_price: originalPrice,
-        rating: typeof item.rating === 'number' ? item.rating : null,
-        rating_count: typeof item.reviews_count === 'number' ? item.reviews_count : null,
-        image_url: item.url_image || '',
-        product_url: item.url || '',
-        is_laptop: true,
-        brand: brand,
-        collection_status: 'completed',
-        last_checked: new Date().toISOString(),
-        last_collection_attempt: new Date().toISOString()
+    // Extract specifications from the product data
+    const extractedSpecs = await extractLaptopSpecs(processedProduct.title);
+    
+    if (extractedSpecs) {
+      processedProduct = {
+        ...processedProduct,
+        ...extractedSpecs
       };
+    }
 
-      validProducts.push(productData);
-    } catch (error) {
-      console.error('Error processing product:', {
-        asin: item.asin,
-        error: error.message,
-        item: JSON.stringify(item)
-      });
+    // Normalize all specifications for consistency
+    processedProduct = normalizeProductSpecs(processedProduct);
+
+    return processedProduct;
+  } catch (error) {
+    console.error('Error processing product:', error);
+    return null;
+  }
+}
+
+/**
+ * Extract and parse price from raw data
+ */
+function extractPrice(priceString: string | null | undefined): number | null {
+  if (!priceString) return null;
+  
+  // Handle different price formats
+  const priceMatch = priceString.toString().match(/[\d,]+\.?\d*/);
+  if (priceMatch) {
+    return parseFloat(priceMatch[0].replace(/,/g, ''));
+  }
+  return null;
+}
+
+/**
+ * Extract and parse rating from raw data
+ */
+function extractRating(ratingString: string | null | undefined): number | null {
+  if (!ratingString) return null;
+  
+  const ratingMatch = ratingString.toString().match(/[\d\.]+/);
+  if (ratingMatch) {
+    const rating = parseFloat(ratingMatch[0]);
+    return rating > 5 ? rating / 20 : rating; // Handle 100-point scales
+  }
+  return null;
+}
+
+/**
+ * Extract and parse rating count from raw data
+ */
+function extractRatingCount(countString: string | null | undefined): number | null {
+  if (!countString) return null;
+  
+  const countMatch = countString.toString().match(/[\d,]+/);
+  if (countMatch) {
+    return parseInt(countMatch[0].replace(/,/g, ''));
+  }
+  return null;
+}
+
+/**
+ * Extract brand information from title and raw brand data
+ */
+function extractBrand(title: string, rawBrand: string | null | undefined): string {
+  if (rawBrand) return rawBrand;
+  
+  // Common laptop brands to check against the title
+  const commonBrands = [
+    'Apple', 'Dell', 'HP', 'ASUS', 'Lenovo', 'Acer',
+    'Microsoft', 'MSI', 'Samsung', 'Razer', 'LG', 'Gigabyte'
+  ];
+  
+  for (const brand of commonBrands) {
+    if (title.toLowerCase().includes(brand.toLowerCase())) {
+      return brand;
     }
   }
-
-  // Log summary of processed products
-  console.log(`Processed ${validProducts.length} valid products for brand ${brand}. Products with prices:`, {
-    totalProducts: validProducts.length,
-    productsWithPrices: validProducts.filter(p => p.current_price !== null).length,
-    priceRange: validProducts.length > 0 ? {
-      min: Math.min(...validProducts.filter(p => p.current_price !== null).map(p => p.current_price || 0)),
-      max: Math.max(...validProducts.filter(p => p.current_price !== null).map(p => p.current_price || 0))
-    } : 'no prices'
-  });
-
-  return validProducts;
+  
+  return 'Unknown Brand';
 }
