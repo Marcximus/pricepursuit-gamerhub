@@ -5,8 +5,12 @@ import { processProcessor, processRam, processStorage, processScreenResolution,
          processColor, processWarranty, processOfficeIncluded,
          processBacklitKeyboard, processPorts, processFingerprint } from './specsProcessor';
 import { processGraphics } from './graphicsProcessor';
-import { processScreenSize, processWeight, processBatteryLife } from './physicalSpecsProcessor';
-import { processLaptopDescription, hasPremiumFeatures } from './descriptionProcessor';
+import { processScreenSize, processWeight, processBatteryLife, processCamera, 
+         processColor as processPhysicalColor, processPorts as processPhysicalPorts,
+         processTouchscreen as processPhysicalTouchscreen,
+         processBacklitKeyboard as processPhysicalBacklit,
+         processFingerprint as processPhysicalFingerprint } from './physicalSpecsProcessor';
+import { processLaptopDescription, hasPremiumFeatures, generateLaptopScore } from './descriptionProcessor';
 import { normalizeBrand } from '@/utils/laptop/normalizers/brandNormalizer';
 import { normalizeModel } from '@/utils/laptop/normalizers/modelNormalizer';
 import type { Product } from "@/types/product";
@@ -89,11 +93,31 @@ export const processLaptopData = (laptop: any): Product => {
     graphics: processGraphics(laptop.graphics, processedTitle + ' ' + (laptop.description || '')),
     weight: processWeight(laptop.weight, processedTitle, laptop.description),
     battery_life: processBatteryLife(laptop.battery_life, processedTitle, laptop.description),
+    camera: processCamera(laptop.camera, processedTitle, laptop.description),
+    color: processColor(processedTitle, laptop.description) || 
+           processPhysicalColor(undefined, processedTitle, laptop.description),
+    touchscreen: processTouchscreen(processedTitle, laptop.description) ||
+                 processPhysicalTouchscreen(undefined, processedTitle, laptop.description),
+    backlit_keyboard: processBacklitKeyboard(processedTitle, laptop.description) ||
+                      processPhysicalBacklit(undefined, processedTitle, laptop.description),
+    fingerprint: processFingerprint(processedTitle, laptop.description) ||
+                processPhysicalFingerprint(undefined, processedTitle, laptop.description),
+    ports: processPorts(processedTitle, laptop.description) ||
+           processPhysicalPorts(undefined, processedTitle, laptop.description),
+    refresh_rate: processRefreshRate(processedTitle, laptop.description),
+    operating_system: processOperatingSystem(processedTitle, laptop.description),
+    warranty: processWarranty(processedTitle, laptop.description),
+    office_included: processOfficeIncluded(processedTitle, laptop.description)
   };
   
   // Enhance with additional specs from description if available
   if (laptop.description) {
     specs = processLaptopDescription(laptop.description, processedTitle, specs);
+  }
+  
+  // Calculate a benchmark score if not already provided
+  if (!laptop.benchmark_score && Object.values(specs).some(value => value !== null && value !== undefined)) {
+    specs.benchmark_score = generateLaptopScore(specs);
   }
   
   // Process and create the laptop product object
@@ -116,7 +140,7 @@ export const processLaptopData = (laptop: any): Product => {
     screen_size: specs.screen_size,
     screen_resolution: specs.screen_resolution,
     graphics: specs.graphics,
-    benchmark_score: laptop.benchmark_score || null,
+    benchmark_score: laptop.benchmark_score || specs.benchmark_score || null,
     weight: specs.weight,
     battery_life: specs.battery_life,
     brand: detectedBrand,
