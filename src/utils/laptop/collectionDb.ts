@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { CollectionStats, CollectionProgressData } from "./types";
 import { Json } from "@/integrations/supabase/types";
-import { normalizeProductSpecs } from "./collectionUtils";
+import { normalizeProductSpecs } from "./collection";
 
 export async function resetStaleCollections(staleTimeout: string) {
   const { error: cleanupError } = await supabase
