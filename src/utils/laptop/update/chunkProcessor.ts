@@ -59,22 +59,21 @@ export async function processChunksSequentially(chunks) {
       });
       
       // Race the promises - whichever completes first wins
-      const result = await Promise.race([functionPromise, timeoutPromise]);
+      // Fix: Properly type the result as any to avoid TypeScript errors
+      const result: any = await Promise.race([functionPromise, timeoutPromise]);
       
-      const { data, error } = result;
-      
-      if (error) {
-        console.error(`Error processing chunk ${i + 1} (ASINs: ${chunkAsins.join(', ')}):`, error);
+      if (result && result.error) {
+        console.error(`Error processing chunk ${i + 1} (ASINs: ${chunkAsins.join(', ')}):`, result.error);
         console.log(`Marking chunk ${i + 1} laptops as error due to function invocation failure`);
         await supabase
           .from('products')
           .update({ update_status: 'error' })
           .in('asin', chunkAsins);
-      } else {
-        console.log(`Successfully initiated update for chunk ${i + 1} with response:`, data);
+      } else if (result && result.data) {
+        console.log(`Successfully initiated update for chunk ${i + 1} with response:`, result.data);
         
         // Update the status to completed for this batch if no further action needed
-        if (data && data.success) {
+        if (result.data && result.data.success) {
           console.log(`Update-laptops function successfully processed chunk ${i + 1}`);
         }
       }
