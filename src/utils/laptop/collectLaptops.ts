@@ -48,8 +48,8 @@ export async function collectLaptops() {
     
     // Call the Supabase Edge Function with proper parameters
     const { data, error } = await supabase.functions.invoke('collect-laptops', {
+      method: 'POST',
       body: { 
-        action: 'collect-laptops',
         brands: COLLECTION_CONFIG.LAPTOP_BRANDS,
         pagesPerBrand: COLLECTION_CONFIG.PAGES_PER_BRAND
       }

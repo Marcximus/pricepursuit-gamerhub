@@ -3,7 +3,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 interface RequestParams {
-  action: string;
   brands: string[];
   pagesPerBrand: number;
 }
@@ -11,7 +10,7 @@ interface RequestParams {
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -156,7 +155,12 @@ serve(async (req) => {
     };
 
     // Start processing in the background
-    EdgeRuntime.waitUntil(processAllBrands());
+    if (typeof EdgeRuntime !== 'undefined') {
+      EdgeRuntime.waitUntil(processAllBrands());
+    } else {
+      // Fallback for environments where EdgeRuntime is not available (like testing)
+      processAllBrands().catch(e => console.error('[Error] Background processing error:', e));
+    }
 
     // Return immediate response
     return new Response(
@@ -174,7 +178,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('[Error] Function error:', error);
+    console.error('[Error] Function error:', error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
