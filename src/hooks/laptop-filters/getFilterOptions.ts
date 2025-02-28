@@ -26,11 +26,23 @@ export const getUniqueFilterValues = (
   // Get validated values
   const values = getValidValues(laptops, key, normalizer, validator);
   
+  // Clean up filter display values (especially for graphics cards)
+  let cleanedValues = values;
+  if (key === 'graphics') {
+    cleanedValues = values.map(value => {
+      // Remove duplicated brands in display
+      return value
+        .replace(/nvidia\s+nvidia/i, 'NVIDIA')
+        .replace(/amd\s+amd/i, 'AMD')
+        .replace(/intel\s+intel/i, 'Intel');
+    });
+  }
+  
   // Sort values using the appropriate sorter
-  const sortedValues = sorter(values);
+  const sortedValues = sorter(cleanedValues);
   
   // Log the sorted values for debugging
-  if (sortedValues.length > 0) {
+  if (sortedValues.length > 0 && key === 'graphics') {
     console.log(`Sorted ${key} filters:`, sortedValues);
   }
 

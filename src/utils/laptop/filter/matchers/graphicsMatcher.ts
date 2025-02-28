@@ -2,7 +2,7 @@
 import { normalizeGraphics, getGraphicsFilterValue } from "@/utils/laptop/normalizers/graphicsNormalizer";
 
 /**
- * Matcher for graphics card filter values with improved accuracy
+ * Matcher for graphics card filter values with improved accuracy for specific models
  */
 export const matchesGraphicsFilter = (
   filterValue: string,
@@ -12,6 +12,7 @@ export const matchesGraphicsFilter = (
   if (!productValue) return false;
   
   // Normalize both filter and product values for consistency
+  const normalizedFilter = normalizeGraphics(filterValue);
   const normalizedProduct = normalizeGraphics(productValue);
   
   // Skip matching if the normalized product value is excessively long (likely invalid)
@@ -19,91 +20,75 @@ export const matchesGraphicsFilter = (
     return false;
   }
   
-  // Get category-based filter values for better matching
-  const productFilterValue = getGraphicsFilterValue(normalizedProduct);
+  // Log for debugging
+  console.log('Graphics matching:', { 
+    filter: filterValue,
+    normalizedFilter,
+    product: productValue,
+    normalizedProduct
+  });
   
-  // Primary case: direct category match
-  if (productFilterValue.toLowerCase() === filterValue.toLowerCase()) {
-    return true;
-  }
+  // Check for specific model number match - this handles cases like "RTX 4060"
+  const filterModelMatch = normalizedFilter.match(/\b(rtx|gtx)\s+(\d{4})\b/i);
+  const productModelMatch = normalizedProduct.match(/\b(rtx|gtx)\s+(\d{4})\b/i);
   
-  // Secondary case: more detailed checking
-  const productLower = normalizedProduct.toLowerCase();
-  const filterLower = filterValue.toLowerCase();
-  
-  // NVIDIA discrete GPU matching
-  if ((filterLower.includes('rtx') || filterLower.includes('gtx')) &&
-      (productLower.includes('rtx') || productLower.includes('gtx'))) {
-      
-    const filterIsRTX = filterLower.includes('rtx');
-    const productIsRTX = productLower.includes('rtx');
+  if (filterModelMatch && productModelMatch) {
+    const [, filterPrefix, filterModel] = filterModelMatch;
+    const [, productPrefix, productModel] = productModelMatch;
     
-    // Must match the specific architecture (RTX vs GTX)
-    if (filterIsRTX !== productIsRTX) {
-      return false;
-    }
+    // Both prefix (RTX/GTX) and model number must match
+    const prefixMatch = filterPrefix.toLowerCase() === productPrefix.toLowerCase();
+    const modelMatch = filterModel === productModel;
     
-    // Match the series number (e.g., RTX 30xx vs RTX 40xx)
-    const filterSeries = filterLower.match(/(?:rtx|gtx)\s*(\d)/i);
-    const productSeries = productLower.match(/(?:rtx|gtx)\s*(\d)/i);
-    
-    if (filterSeries && productSeries) {
-      return filterSeries[1] === productSeries[1];
-    }
-    
-    return true;
-  }
-  
-  // Intel integrated graphics
-  if (filterLower.includes('intel') && productLower.includes('intel')) {
-    const graphicsTypes = ['iris xe', 'iris', 'uhd', 'hd'];
-    for (const type of graphicsTypes) {
-      if (filterLower.includes(type) !== productLower.includes(type)) {
-        return false;
+    if (prefixMatch && modelMatch) {
+      // If filter mentions memory size (e.g., "8GB GDDR6"), check for that too
+      const filterMemMatch = normalizedFilter.match(/\b(\d+)\s*GB\b/i);
+      if (filterMemMatch) {
+        const filterMemSize = filterMemMatch[1];
+        const productMemMatch = normalizedProduct.match(/\b(\d+)\s*GB\b/i);
+        
+        // If product specifies memory size, it must match the filter
+        if (productMemMatch) {
+          return productMemMatch[1] === filterMemSize;
+        }
+        
+        // If product doesn't specify memory but everything else matches, consider it a match
+        return true;
       }
-    }
-    return true;
-  }
-  
-  // AMD graphics
-  if (filterLower.includes('radeon') && productLower.includes('radeon')) {
-    const filterHasRX = filterLower.includes('rx');
-    const productHasRX = productLower.includes('rx');
-    
-    if (filterHasRX && productHasRX) {
-      const filterSeries = filterLower.match(/rx\s*(\d)/i);
-      const productSeries = productLower.match(/rx\s*(\d)/i);
       
-      if (filterSeries && productSeries) {
-        return filterSeries[1] === productSeries[1];
-      }
+      // No memory size in filter, but GPU model matches
       return true;
     }
-    return !filterHasRX && !productHasRX;
-  }
-  
-  // Apple integrated graphics
-  if ((filterLower.includes('m1') || filterLower.includes('m2') || filterLower.includes('m3')) &&
-      (productLower.includes('m1') || productLower.includes('m2') || productLower.includes('m3'))) {
-    return (filterLower.includes('m1') && productLower.includes('m1')) ||
-           (filterLower.includes('m2') && productLower.includes('m2')) ||
-           (filterLower.includes('m3') && productLower.includes('m3'));
-  }
-  
-  // Reject vague or meaningless graphics terms
-  if (filterLower === 'graphics' || filterLower === 'gpu' || 
-      filterLower === 'integrated' || filterLower === 'dedicated' || 
-      filterLower === '32-core') {
+    
     return false;
   }
   
-  // Match by major GPU brand terms
-  const gpuBrands = ['nvidia', 'amd', 'radeon', 'intel', 'apple', 'rtx', 'gtx'];
-  const sharesBrand = gpuBrands.some(brand => 
-    filterLower.includes(brand) && productLower.includes(brand)
-  );
+  // Get category-based filter values for broader matching when specific model matching fails
+  const filterCategory = getGraphicsFilterValue(normalizedFilter);
+  const productCategory = getGraphicsFilterValue(normalizedProduct);
   
-  // If it shares a brand term and all filter words are in the product
-  const filterWords = filterLower.split(/\s+/);
-  return sharesBrand && filterWords.every(word => productLower.includes(word));
+  // If both can be categorized, use category matching
+  if (filterCategory && productCategory) {
+    return filterCategory.toLowerCase() === productCategory.toLowerCase();
+  }
+  
+  // Fall back to simplified word matching for edge cases
+  // This is less strict but helps with non-standard descriptions
+  const filterWords = normalizedFilter.toLowerCase().split(/\s+/).filter(Boolean);
+  const productWords = normalizedProduct.toLowerCase().split(/\s+/).filter(Boolean);
+  
+  // For short filters (1-2 words), require all words to be present
+  if (filterWords.length <= 2) {
+    return filterWords.every(word => 
+      productWords.some(prodWord => prodWord.includes(word) || word.includes(prodWord))
+    );
+  }
+  
+  // For longer filters, require at least 70% of words to match
+  const matchCount = filterWords.filter(word => 
+    productWords.some(prodWord => prodWord.includes(word) || word.includes(prodWord))
+  ).length;
+  
+  const matchRatio = matchCount / filterWords.length;
+  return matchRatio >= 0.7;
 };

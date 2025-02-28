@@ -1,3 +1,4 @@
+
 /**
  * Normalizes graphics card strings for consistent display and filtering
  */
@@ -10,6 +11,7 @@ export const normalizeGraphics = (graphics: string): string => {
     .replace(/Graphics\s+Card:?/i, '')
     .replace(/Integrated\s+Graphics:?/i, '')
     .replace(/GPU:?/i, '')
+    .replace(/Dedicated\s+[-–]\s*/i, '') // Remove "Dedicated -" prefix
     .trim();
   
   // Filter out invalid or nonsensical graphics card descriptions
@@ -41,9 +43,14 @@ export const normalizeGraphics = (graphics: string): string => {
     .replace(/\s+/g, ' ')
     .trim();
     
+  // Fix duplicated brand names
+  normalized = normalized
+    .replace(/nvidia\s+nvidia/i, 'NVIDIA')
+    .replace(/amd\s+amd/i, 'AMD')
+    .replace(/intel\s+intel/i, 'Intel');
+    
   // Standardize NVIDIA naming
   normalized = normalized
-    .replace(/nvidia\s+nvidia/i, 'NVIDIA') // Remove duplicated NVIDIA
     .replace(/nvidia\s+geforce\s+rtx\s*/i, 'NVIDIA RTX ')
     .replace(/nvidia\s+geforce\s+gtx\s*/i, 'NVIDIA GTX ')
     .replace(/geforce\s+rtx\s*/i, 'NVIDIA RTX ')
@@ -52,6 +59,15 @@ export const normalizeGraphics = (graphics: string): string => {
     .replace(/nvidia\s+gtx\s*/i, 'NVIDIA GTX ')
     .replace(/\brtx\s+(\d{4})/i, 'NVIDIA RTX $1')
     .replace(/\bgtx\s+(\d{4})/i, 'NVIDIA GTX $1');
+    
+  // Extract memory information for NVIDIA cards
+  const memoryMatch = normalized.match(/(\d+)\s*GB\s*(?:GDDR\d*|memory)/i);
+  let memoryInfo = '';
+  if (memoryMatch) {
+    memoryInfo = ` ${memoryMatch[1]}GB`;
+    // Remove any duplicate memory mentions
+    normalized = normalized.replace(/\s\d+\s*GB\s*(?:GDDR\d*|memory)/gi, '');
+  }
     
   // Standardize Intel naming
   normalized = normalized
@@ -75,6 +91,11 @@ export const normalizeGraphics = (graphics: string): string => {
     .replace(/m(\d)(\s+(pro|max|ultra))?\s+gpu/i, 'Apple M$1$2 GPU')
     .replace(/m(\d)(\s+(pro|max|ultra))?/i, 'Apple M$1$2 GPU');
     
+  // Add back memory info for NVIDIA cards, ensuring it's at the end of the string
+  if (memoryInfo && (normalized.includes('NVIDIA RTX') || normalized.includes('NVIDIA GTX'))) {
+    normalized = normalized.trim() + memoryInfo;
+  }
+    
   // Make sure spaces are normalized
   normalized = normalized.replace(/\s+/g, ' ').trim();
   
@@ -97,7 +118,19 @@ export const getGraphicsFilterValue = (graphics: string): string => {
     }
   }
   
-  // NVIDIA discrete GPU categories
+  // Extract specific model information for NVIDIA cards
+  const modelMatch = normalized.match(/\b(rtx|gtx)\s+(\d{4})\b/i);
+  if (modelMatch) {
+    const [, prefix, model] = modelMatch;
+    
+    // Include memory size if available
+    const memMatch = normalized.match(/\b(\d+)gb\b/i);
+    const memSize = memMatch ? ` ${memMatch[1]}GB` : '';
+    
+    return `NVIDIA ${prefix.toUpperCase()} ${model}${memSize}`;
+  }
+  
+  // NVIDIA discrete GPU categories (fallback)
   if (normalized.includes('rtx 40')) return 'NVIDIA RTX 40 Series';
   if (normalized.includes('rtx 30')) return 'NVIDIA RTX 30 Series';
   if (normalized.includes('rtx 20')) return 'NVIDIA RTX 20 Series';
