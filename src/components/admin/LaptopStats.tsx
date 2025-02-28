@@ -9,27 +9,53 @@ import { DatabaseStats } from "@/utils/laptop/stats/types";
 import { getDatabaseStats } from "@/utils/laptop/getDatabaseStats";
 import { LoadingState } from './stats/LoadingState';
 import { ErrorState } from './stats/ErrorState';
+import { useToast } from "@/components/ui/use-toast";
 
 const LaptopStats = () => {
   const [stats, setStats] = useState<DatabaseStats | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const { toast } = useToast();
+
+  const fetchStats = async () => {
+    try {
+      setRefreshing(true);
+      console.log('Fetching database statistics...');
+      const databaseStats = await getDatabaseStats();
+      
+      // Log detailed stats to help debug missing information
+      console.log('Database stats received:', {
+        totalLaptops: databaseStats.totalLaptops,
+        missingPrices: databaseStats.missingInformation.prices,
+        missingProcessor: databaseStats.missingInformation.processor,
+        missingRam: databaseStats.missingInformation.ram,
+        missingStorage: databaseStats.missingInformation.storage,
+        missingGraphics: databaseStats.missingInformation.graphics,
+        missingScreenSize: databaseStats.missingInformation.screenSize,
+      });
+      
+      setStats(databaseStats);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching database stats:', err);
+      setError(err instanceof Error ? err : new Error('Unknown error occurred'));
+      
+      // Only show toast if this was a manual refresh or if we don't have any stats yet
+      if (refreshing || !stats) {
+        toast({
+          title: "Error",
+          description: "Failed to refresh database statistics",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        const databaseStats = await getDatabaseStats();
-        setStats(databaseStats);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching database stats:', err);
-        setError(err instanceof Error ? err : new Error('Unknown error occurred'));
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchStats();
 
     // Set up a refresh interval (every 60 seconds)
@@ -38,6 +64,13 @@ const LaptopStats = () => {
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);
   }, []);
+
+  const handleManualRefresh = () => {
+    if (!refreshing) {
+      setRefreshing(true);
+      fetchStats();
+    }
+  };
 
   if (loading && !stats) {
     return <LoadingState message="Loading database statistics..." />;
@@ -52,6 +85,17 @@ const LaptopStats = () => {
 
   return (
     <div className="w-full space-y-4 mt-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-semibold">Database Statistics</h2>
+        <button 
+          onClick={handleManualRefresh} 
+          disabled={refreshing}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+        >
+          {refreshing ? 'Refreshing...' : 'Refresh Stats'}
+        </button>
+      </div>
+      
       {stats ? (
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
