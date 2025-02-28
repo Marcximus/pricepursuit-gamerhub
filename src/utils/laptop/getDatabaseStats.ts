@@ -1,235 +1,139 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { 
+  getTotalLaptopCount, 
+  getLaptopsWithPriceCount, 
+  getLaptopsWithProcessorCount,
+  getLaptopsWithRamCount,
+  getLaptopsWithStorageCount,
+  getLaptopsWithGraphicsCount,
+  getLaptopsWithScreenSizeCount
+} from "./stats/basicCountQueries";
+import { 
+  getNotUpdatedLaptopsCount, 
+  getNotCheckedLaptopsCount 
+} from "./stats/updateStatusQueries";
+import { 
+  getPendingAIProcessingCount, 
+  getProcessingAICount, 
+  getErrorAIProcessingCount, 
+  getCompleteAIProcessingCount 
+} from "./stats/aiProcessingQueries";
+import { 
+  calculatePercentage, 
+  calculateInversePercentage 
+} from "./stats/percentageCalculator";
+import { DatabaseStats } from "./stats/types";
 
-export async function getDatabaseStats() {
+export async function getDatabaseStats(): Promise<DatabaseStats> {
   try {
     console.log('Fetching database statistics...');
     
     // Get total count of laptop products
-    const { count: totalCount, error: countError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true);
-
-    if (countError) {
-      console.error('Error fetching total count:', countError);
-      throw countError;
-    }
+    const { count: totalCount, error: countError } = await getTotalLaptopCount();
+    if (countError) throw countError;
 
     // Get count of products with valid prices
-    const { count: priceCount, error: priceError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true)
-      .not('current_price', 'is', null);
-
-    if (priceError) {
-      console.error('Error fetching price count:', priceError);
-      throw priceError;
-    }
+    const { count: priceCount, error: priceError } = await getLaptopsWithPriceCount();
+    if (priceError) throw priceError;
 
     // Get count of products with valid processor data
-    const { count: processorCount, error: processorError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true)
-      .not('processor', 'is', null)
-      .neq('processor', '');
-
-    if (processorError) {
-      console.error('Error fetching processor count:', processorError);
-      throw processorError;
-    }
+    const { count: processorCount, error: processorError } = await getLaptopsWithProcessorCount();
+    if (processorError) throw processorError;
 
     // Get count of products with valid RAM data
-    const { count: ramCount, error: ramError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true)
-      .not('ram', 'is', null)
-      .neq('ram', '');
-
-    if (ramError) {
-      console.error('Error fetching RAM count:', ramError);
-      throw ramError;
-    }
+    const { count: ramCount, error: ramError } = await getLaptopsWithRamCount();
+    if (ramError) throw ramError;
 
     // Get count of products with valid storage data
-    const { count: storageCount, error: storageError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true)
-      .not('storage', 'is', null)
-      .neq('storage', '');
-
-    if (storageError) {
-      console.error('Error fetching storage count:', storageError);
-      throw storageError;
-    }
+    const { count: storageCount, error: storageError } = await getLaptopsWithStorageCount();
+    if (storageError) throw storageError;
 
     // Get count of products with valid graphics data
-    const { count: graphicsCount, error: graphicsError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true)
-      .not('graphics', 'is', null)
-      .neq('graphics', '');
-
-    if (graphicsError) {
-      console.error('Error fetching graphics count:', graphicsError);
-      throw graphicsError;
-    }
+    const { count: graphicsCount, error: graphicsError } = await getLaptopsWithGraphicsCount();
+    if (graphicsError) throw graphicsError;
 
     // Get count of products with valid screen size data
-    const { count: screenSizeCount, error: screenSizeError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true)
-      .not('screen_size', 'is', null)
-      .neq('screen_size', '');
-
-    if (screenSizeError) {
-      console.error('Error fetching screen size count:', screenSizeError);
-      throw screenSizeError;
-    }
+    const { count: screenSizeCount, error: screenSizeError } = await getLaptopsWithScreenSizeCount();
+    if (screenSizeError) throw screenSizeError;
 
     // Get update and check status counts (last 24 hours)
-    const oneDayAgo = new Date();
-    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-    
-    const { count: notUpdatedCount, error: notUpdatedError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true)
-      .lt('last_updated', oneDayAgo.toISOString());
+    const { count: notUpdatedCount, error: notUpdatedError } = await getNotUpdatedLaptopsCount();
+    if (notUpdatedError) throw notUpdatedError;
 
-    if (notUpdatedError) {
-      console.error('Error fetching not updated count:', notUpdatedError);
-      throw notUpdatedError;
-    }
-
-    const { count: notCheckedCount, error: notCheckedError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true)
-      .lt('last_checked', oneDayAgo.toISOString());
-
-    if (notCheckedError) {
-      console.error('Error fetching not checked count:', notCheckedError);
-      throw notCheckedError;
-    }
+    const { count: notCheckedCount, error: notCheckedError } = await getNotCheckedLaptopsCount();
+    if (notCheckedError) throw notCheckedError;
 
     // Get AI processing status counts
-    const { count: pendingCount, error: pendingError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true)
-      .eq('ai_processing_status', 'pending');
+    const { count: pendingCount, error: pendingError } = await getPendingAIProcessingCount();
+    if (pendingError) throw pendingError;
 
-    if (pendingError) {
-      console.error('Error fetching pending count:', pendingError);
-      throw pendingError;
-    }
+    const { count: processingCount, error: processingError } = await getProcessingAICount();
+    if (processingError) throw processingError;
 
-    const { count: processingCount, error: processingError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true)
-      .eq('ai_processing_status', 'processing');
+    const { count: errorCount, error: errorStatusError } = await getErrorAIProcessingCount();
+    if (errorStatusError) throw errorStatusError;
 
-    if (processingError) {
-      console.error('Error fetching processing count:', processingError);
-      throw processingError;
-    }
+    const { count: completeCount, error: completeError } = await getCompleteAIProcessingCount();
+    if (completeError) throw completeError;
 
-    const { count: errorCount, error: errorStatusError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true)
-      .eq('ai_processing_status', 'error');
-
-    if (errorStatusError) {
-      console.error('Error fetching error status count:', errorStatusError);
-      throw errorStatusError;
-    }
-
-    const { count: completeCount, error: completeError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_laptop', true)
-      .eq('ai_processing_status', 'complete');
-
-    if (completeError) {
-      console.error('Error fetching complete count:', completeError);
-      throw completeError;
-    }
-
-    // Calculate percentages
-    const calculatePercentage = (count: number) => 
-      totalCount ? Math.round((count / totalCount) * 100) : 0;
-    
-    const calculateInversePercentage = (count: number) => 
-      totalCount ? Math.round(((totalCount - count) / totalCount) * 100) : 0;
-
-    // Calculate AI processing completion percentage
-    const processingCompletionPercentage = 
-      totalCount ? Math.round((completeCount / totalCount) * 100) : 0;
+    // Calculate percentages and processing completion percentage
+    const processingCompletionPercentage = calculatePercentage(completeCount, totalCount);
 
     return {
-      totalLaptops: totalCount || 0,
+      totalLaptops: totalCount,
       updateStatus: {
         notUpdated: {
-          count: notUpdatedCount || 0,
-          percentage: calculatePercentage(notUpdatedCount || 0)
+          count: notUpdatedCount,
+          percentage: calculatePercentage(notUpdatedCount, totalCount)
         },
         notChecked: {
-          count: notCheckedCount || 0,
-          percentage: calculatePercentage(notCheckedCount || 0)
+          count: notCheckedCount,
+          percentage: calculatePercentage(notCheckedCount, totalCount)
         }
       },
       aiProcessingStatus: {
         pending: {
-          count: pendingCount || 0,
-          percentage: calculatePercentage(pendingCount || 0)
+          count: pendingCount,
+          percentage: calculatePercentage(pendingCount, totalCount)
         },
         processing: {
-          count: processingCount || 0,
-          percentage: calculatePercentage(processingCount || 0)
+          count: processingCount,
+          percentage: calculatePercentage(processingCount, totalCount)
         },
         error: {
-          count: errorCount || 0,
-          percentage: calculatePercentage(errorCount || 0)
+          count: errorCount,
+          percentage: calculatePercentage(errorCount, totalCount)
         },
         complete: {
-          count: completeCount || 0,
-          percentage: calculatePercentage(completeCount || 0)
+          count: completeCount,
+          percentage: calculatePercentage(completeCount, totalCount)
         },
         completionPercentage: processingCompletionPercentage
       },
       missingInformation: {
         prices: {
-          count: totalCount - priceCount || 0,
-          percentage: calculateInversePercentage(priceCount || 0)
+          count: totalCount - priceCount,
+          percentage: calculateInversePercentage(priceCount, totalCount)
         },
         processor: {
-          count: totalCount - processorCount || 0,
-          percentage: calculateInversePercentage(processorCount || 0)
+          count: totalCount - processorCount,
+          percentage: calculateInversePercentage(processorCount, totalCount)
         },
         ram: {
-          count: totalCount - ramCount || 0,
-          percentage: calculateInversePercentage(ramCount || 0)
+          count: totalCount - ramCount,
+          percentage: calculateInversePercentage(ramCount, totalCount)
         },
         storage: {
-          count: totalCount - storageCount || 0,
-          percentage: calculateInversePercentage(storageCount || 0)
+          count: totalCount - storageCount,
+          percentage: calculateInversePercentage(storageCount, totalCount)
         },
         graphics: {
-          count: totalCount - graphicsCount || 0,
-          percentage: calculateInversePercentage(graphicsCount || 0)
+          count: totalCount - graphicsCount,
+          percentage: calculateInversePercentage(graphicsCount, totalCount)
         },
         screenSize: {
-          count: totalCount - screenSizeCount || 0,
-          percentage: calculateInversePercentage(screenSizeCount || 0)
+          count: totalCount - screenSizeCount,
+          percentage: calculateInversePercentage(screenSizeCount, totalCount)
         }
       }
     };
