@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { fetchLaptopData } from './oxylabsService.ts'
-import { upsertProduct } from './databaseService.ts'
+import * as databaseService from './databaseService.ts'
 import { corsHeaders } from './cors.ts'
 
 interface ProcessingStats {
@@ -10,6 +10,7 @@ interface ProcessingStats {
   updated: number;
   added: number;
   failed: number;
+  skipped?: number;
 }
 
 serve(async (req) => {
@@ -23,7 +24,7 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const { brands, current_page, batch_number, total_batches } = await req.json();
+    const { brands, current_page, batch_number, total_batches, pages_per_brand } = await req.json();
 
     console.log(`[Function] Processing page ${current_page} for brands: ${brands.join(', ')} (Batch ${batch_number}/${total_batches})`);
 
@@ -31,7 +32,8 @@ serve(async (req) => {
       processed: 0,
       updated: 0,
       added: 0,
-      failed: 0
+      failed: 0,
+      skipped: 0
     };
 
     // Process brands in the background
@@ -99,7 +101,8 @@ serve(async (req) => {
                   is_laptop: true
                 };
 
-                await upsertProduct(supabase, result, processedData);
+                // Use the database service to upsert the product
+                await databaseService.upsertProduct(supabase, result, processedData);
                 
                 if (isNewProduct) {
                   stats.added++;
@@ -173,4 +176,3 @@ serve(async (req) => {
 addEventListener('beforeunload', (ev) => {
   console.log('Function shutdown detected. Reason:', ev.detail?.reason);
 });
-
