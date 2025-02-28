@@ -29,52 +29,35 @@ export async function getDatabaseStats(): Promise<DatabaseStats> {
     console.log('Fetching database statistics...');
     
     // Get total count of laptop products
-    const { count: totalCount, error: countError } = await getTotalLaptopCount();
-    if (countError) throw countError;
+    const totalCount = await getTotalLaptopCount();
 
     // Get count of products with valid prices
-    const { count: priceCount, error: priceError } = await getLaptopsWithPriceCount();
-    if (priceError) throw priceError;
+    const priceCount = await getLaptopsWithPriceCount();
 
     // Get count of products with valid processor data
-    const { count: processorCount, error: processorError } = await getLaptopsWithProcessorCount();
-    if (processorError) throw processorError;
+    const processorCount = await getLaptopsWithProcessorCount();
 
     // Get count of products with valid RAM data
-    const { count: ramCount, error: ramError } = await getLaptopsWithRamCount();
-    if (ramError) throw ramError;
+    const ramCount = await getLaptopsWithRamCount();
 
     // Get count of products with valid storage data
-    const { count: storageCount, error: storageError } = await getLaptopsWithStorageCount();
-    if (storageError) throw storageError;
+    const storageCount = await getLaptopsWithStorageCount();
 
     // Get count of products with valid graphics data
-    const { count: graphicsCount, error: graphicsError } = await getLaptopsWithGraphicsCount();
-    if (graphicsError) throw graphicsError;
+    const graphicsCount = await getLaptopsWithGraphicsCount();
 
     // Get count of products with valid screen size data
-    const { count: screenSizeCount, error: screenSizeError } = await getLaptopsWithScreenSizeCount();
-    if (screenSizeError) throw screenSizeError;
+    const screenSizeCount = await getLaptopsWithScreenSizeCount();
 
     // Get update and check status counts (last 24 hours)
-    const { count: notUpdatedCount, error: notUpdatedError } = await getNotUpdatedLaptopsCount();
-    if (notUpdatedError) throw notUpdatedError;
-
-    const { count: notCheckedCount, error: notCheckedError } = await getNotCheckedLaptopsCount();
-    if (notCheckedError) throw notCheckedError;
+    const notUpdatedCount = await getNotUpdatedLaptopsCount();
+    const notCheckedCount = await getNotCheckedLaptopsCount();
 
     // Get AI processing status counts
-    const { count: pendingCount, error: pendingError } = await getPendingAIProcessingCount();
-    if (pendingError) throw pendingError;
-
-    const { count: processingCount, error: processingError } = await getProcessingAICount();
-    if (processingError) throw processingError;
-
-    const { count: errorCount, error: errorStatusError } = await getErrorAIProcessingCount();
-    if (errorStatusError) throw errorStatusError;
-
-    const { count: completeCount, error: completeError } = await getCompleteAIProcessingCount();
-    if (completeError) throw completeError;
+    const pendingCount = await getPendingAIProcessingCount();
+    const processingCount = await getProcessingAICount();
+    const errorCount = await getErrorAIProcessingCount();
+    const completeCount = await getCompleteAIProcessingCount();
 
     // Calculate percentages and processing completion percentage
     const processingCompletionPercentage = calculatePercentage(completeCount, totalCount);

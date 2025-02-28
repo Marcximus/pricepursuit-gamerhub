@@ -115,7 +115,18 @@ export function MissingInformation({ stats }: MissingInformationProps) {
       });
       
       // Get counts of non-null values for key specification columns
-      const { data, error } = await supabase.rpc('get_specification_stats');
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          id,
+          ram, 
+          storage, 
+          processor, 
+          graphics, 
+          screen_size
+        `)
+        .eq('is_laptop', true)
+        .limit(100);
       
       if (error) {
         console.error('Error running SQL query:', error);
@@ -125,7 +136,28 @@ export function MissingInformation({ stats }: MissingInformationProps) {
           variant: "destructive"
         });
       } else {
-        console.log('Raw database specification statistics:', data);
+        // Analyze the results
+        const totalSample = data.length;
+        const stats = {
+          processor: data.filter(row => row.processor !== null).length,
+          ram: data.filter(row => row.ram !== null).length,
+          storage: data.filter(row => row.storage !== null).length,
+          graphics: data.filter(row => row.graphics !== null).length,
+          screenSize: data.filter(row => row.screen_size !== null).length
+        };
+        
+        console.log('Raw database specification statistics:', {
+          totalSample,
+          nonNullCounts: stats,
+          percentages: {
+            processor: ((stats.processor / totalSample) * 100).toFixed(1) + '%',
+            ram: ((stats.ram / totalSample) * 100).toFixed(1) + '%',
+            storage: ((stats.storage / totalSample) * 100).toFixed(1) + '%',
+            graphics: ((stats.graphics / totalSample) * 100).toFixed(1) + '%',
+            screenSize: ((stats.screenSize / totalSample) * 100).toFixed(1) + '%'
+          }
+        });
+        
         toast({
           title: "Database Check Complete",
           description: "Retrieved current database statistics. Check console for details.",
