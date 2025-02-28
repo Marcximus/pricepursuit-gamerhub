@@ -1,12 +1,11 @@
 
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '../types'
-import { LaptopUpdateResult } from './types'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
+import { LaptopUpdateResult } from './types.ts'
 
 // Initialize Supabase client
 const supabaseUrl = Deno.env.get('SUPABASE_URL') as string
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string
-const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey)
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function updateLaptopInDatabase(
   laptopId: string,
