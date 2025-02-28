@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { COLLECTION_CONFIG } from "./config";
 import { CollectionStats } from "./types";
-import { resetStaleCollections, checkActiveCollections } from "./collectionDb";
+import { resetStaleCollections, checkActiveCollections, saveCollectionProgress, getLastCollectionProgress } from "./collectionDb";
 import { createBrandBatches, processBrand } from "./collectionUtils";
 
 export async function collectLaptops() {
@@ -36,23 +36,102 @@ export async function collectLaptops() {
       return null;
     }
 
+    // Get saved progress from the last interrupted collection
+    const savedProgress = await getLastCollectionProgress();
+    let startGroupIndex = 0;
+    let startBrandIndexInGroup = 0;
+    
     const brandBatches = createBrandBatches(COLLECTION_CONFIG.LAPTOP_BRANDS, COLLECTION_CONFIG.PARALLEL_BATCHES);
     console.log(`Processing ${brandBatches.length} batch groups with ${COLLECTION_CONFIG.PARALLEL_BATCHES} brands per group`);
 
-    toast({
-      title: "Collection Started",
-      description: `Starting collection for ${COLLECTION_CONFIG.LAPTOP_BRANDS.length} brands in ${brandBatches.length} batches`,
-      variant: "default"
-    });
+    // If we have saved progress, use it to resume collection
+    if (savedProgress && savedProgress.progress_data) {
+      try {
+        const progressData = savedProgress.progress_data;
+        
+        if (progressData.groupIndex !== undefined && 
+            progressData.brandIndex !== undefined && 
+            progressData.timestamp) {
+          
+          const progressTimestamp = new Date(progressData.timestamp);
+          const hoursSinceLastProgress = (new Date().getTime() - progressTimestamp.getTime()) / (1000 * 60 * 60);
+          
+          // Only resume if the saved progress is recent (less than 24 hours old)
+          if (hoursSinceLastProgress < 24) {
+            startGroupIndex = progressData.groupIndex;
+            startBrandIndexInGroup = progressData.brandIndex + 1; // Start from the next brand
+            
+            // If we're at the end of a group, move to the next group
+            if (startBrandIndexInGroup >= brandBatches[startGroupIndex].length) {
+              startGroupIndex++;
+              startBrandIndexInGroup = 0;
+            }
+            
+            // If we have valid resume data, log it and inform the user
+            if (startGroupIndex < brandBatches.length) {
+              console.log(`Resuming collection from group ${startGroupIndex + 1}/${brandBatches.length}, brand index ${startBrandIndexInGroup}`);
+              
+              // Add the stats from the previous run if available
+              if (progressData.stats) {
+                totalStats.processed += progressData.stats.processed || 0;
+                totalStats.updated += progressData.stats.updated || 0;
+                totalStats.added += progressData.stats.added || 0;
+                totalStats.failed += progressData.stats.failed || 0;
+                totalStats.skipped = (totalStats.skipped || 0) + (progressData.stats.skipped || 0);
+                
+                console.log(`Restored previous collection stats:`, totalStats);
+              }
+              
+              toast({
+                title: "Resuming Collection",
+                description: `Resuming collection from previous progress (${Math.round(hoursSinceLastProgress * 10) / 10} hours ago)`,
+                variant: "default"
+              });
+            }
+          } else {
+            console.log(`Saved progress is too old (${Math.round(hoursSinceLastProgress)} hours), starting fresh collection`);
+          }
+        }
+      } catch (progressError) {
+        console.error('Error parsing saved progress data:', progressError);
+        // If there's an error parsing the saved progress, start from the beginning
+      }
+    }
 
-    for (const [groupIndex, batchGroup] of brandBatches.entries()) {
+    if (startGroupIndex === 0 && startBrandIndexInGroup === 0) {
+      toast({
+        title: "Collection Started",
+        description: `Starting collection for ${COLLECTION_CONFIG.LAPTOP_BRANDS.length} brands in ${brandBatches.length} batches`,
+        variant: "default"
+      });
+    }
+
+    // Process each batch group
+    for (let groupIndex = startGroupIndex; groupIndex < brandBatches.length; groupIndex++) {
+      const batchGroup = brandBatches[groupIndex];
       console.log(`Processing batch group ${groupIndex + 1}/${brandBatches.length}`);
-
-      const processBrandPromises = batchGroup.map((brand, brandIndex) => 
-        processBrand(brand, groupIndex, brandIndex, totalStats)
-      );
-
-      await Promise.all(processBrandPromises);
+      
+      // Process brands in parallel within the group, starting from the saved index
+      const startIndex = groupIndex === startGroupIndex ? startBrandIndexInGroup : 0;
+      
+      for (let brandIndex = startIndex; brandIndex < batchGroup.length; brandIndex++) {
+        const brand = batchGroup[brandIndex];
+        console.log(`Processing brand ${brand} (group ${groupIndex + 1}, index ${brandIndex})`);
+        
+        // Process this brand
+        try {
+          const brandResult = await processBrand(brand, groupIndex, brandIndex, totalStats);
+          
+          // Save progress after each brand is processed
+          await saveCollectionProgress(groupIndex, brandIndex, totalStats);
+          
+        } catch (brandError) {
+          console.error(`Error processing brand ${brand}:`, brandError);
+          // Save progress even if there's an error
+          await saveCollectionProgress(groupIndex, brandIndex, totalStats);
+          continue;
+        }
+      }
 
       if (groupIndex < brandBatches.length - 1) {
         console.log(`Waiting ${COLLECTION_CONFIG.DELAY_BETWEEN_BATCHES}ms before processing next batch group...`);
@@ -61,6 +140,9 @@ export async function collectLaptops() {
     }
 
     console.log('Collection process completed. Final statistics:', totalStats);
+    
+    // Clear the progress data when collection completes successfully
+    await saveCollectionProgress(-1, -1, totalStats, true);
     
     toast({
       title: "Collection Complete",
