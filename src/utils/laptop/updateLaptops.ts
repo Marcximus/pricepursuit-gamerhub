@@ -5,13 +5,13 @@ export const updateLaptops = async () => {
   try {
     console.log('Starting silent update for ALL laptops...');
     
-    // Get laptops with priority for those without prices
+    // Get laptops with priority for those that haven't been updated in the longest time
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
-      .select('id, asin, current_price, title')
+      .select('id, asin, current_price, title, last_checked')
       .eq('is_laptop', true)
       .not('update_status', 'eq', 'in_progress')
-      .order('current_price', { nullsFirst: true }) // Prioritize NULL prices
+      .order('last_checked', { nullsFirst: true }) // Prioritize laptops that have never been checked
       .limit(100); // Limit to a reasonable number
 
     if (fetchError) {
@@ -24,21 +24,36 @@ export const updateLaptops = async () => {
       return null;
     }
 
+    // Format timestamps for logging
+    const formattedLaptops = laptops.map(laptop => ({
+      ...laptop,
+      formattedLastChecked: laptop.last_checked ? new Date(laptop.last_checked).toLocaleString() : 'Never checked'
+    }));
+
     // Log detailed info about laptops to be updated
     console.log(`Found ${laptops.length} laptops to update with the following priority:`);
-    laptops.forEach((laptop, index) => {
-      console.log(`${index + 1}. ID: ${laptop.id}, ASIN: ${laptop.asin}, Title: ${laptop.title?.substring(0, 30)}..., Current Price: ${laptop.current_price === null ? 'NULL (High Priority)' : `$${laptop.current_price}`}`);
+    formattedLaptops.forEach((laptop, index) => {
+      console.log(`${index + 1}. ID: ${laptop.id}, ASIN: ${laptop.asin}, Title: ${laptop.title?.substring(0, 30)}..., Last Checked: ${laptop.formattedLastChecked}, Current Price: ${laptop.current_price === null ? 'NULL' : `$${laptop.current_price}`}`);
     });
 
-    // Group laptops by price status for better logging
-    const nullPriceLaptops = laptops.filter(l => l.current_price === null);
-    const zeroPriceLaptops = laptops.filter(l => l.current_price === 0);
-    const withPriceLaptops = laptops.filter(l => l.current_price !== null && l.current_price > 0);
+    // Group laptops by update status for better logging
+    const neverCheckedLaptops = formattedLaptops.filter(l => !l.last_checked);
+    const oldestCheckedLaptops = formattedLaptops.filter(l => l.last_checked).sort((a, b) => 
+      new Date(a.last_checked).getTime() - new Date(b.last_checked).getTime()
+    ).slice(0, 10);
+    const nullPriceLaptops = formattedLaptops.filter(l => l.current_price === null);
     
-    console.log('Price distribution of laptops to update:');
-    console.log(`- NULL price (highest priority): ${nullPriceLaptops.length} laptops`);
-    console.log(`- Zero price: ${zeroPriceLaptops.length} laptops`);
-    console.log(`- With price: ${withPriceLaptops.length} laptops`);
+    console.log('Laptop update priority distribution:');
+    console.log(`- Never checked (highest priority): ${neverCheckedLaptops.length} laptops`);
+    
+    if (oldestCheckedLaptops.length > 0) {
+      console.log('- Oldest checked laptops:');
+      oldestCheckedLaptops.forEach((l, i) => {
+        console.log(`  ${i+1}. Last checked: ${l.formattedLastChecked}, ASIN: ${l.asin}, Price: ${l.current_price === null ? 'NULL' : `$${l.current_price}`}`);
+      });
+    }
+    
+    console.log(`- NULL price laptops: ${nullPriceLaptops.length} laptops`);
 
     // Split laptops into chunks of 10
     const chunkSize = 10;
@@ -59,6 +74,7 @@ export const updateLaptops = async () => {
         console.log(`Chunk ${i + 1} laptops:`, chunk.map(l => ({ 
           id: l.id.substring(0, 8) + '...', 
           asin: l.asin, 
+          lastChecked: l.last_checked ? new Date(l.last_checked).toLocaleString() : 'Never',
           price: l.current_price === null ? 'NULL' : `$${l.current_price}`
         })));
 
@@ -82,7 +98,12 @@ export const updateLaptops = async () => {
           console.log(`Invoking update-laptops function for chunk ${i + 1} with ${chunk.length} laptops`);
           const { data, error } = await supabase.functions.invoke('update-laptops', {
             body: { 
-              laptops: chunk.map(l => ({ id: l.id, asin: l.asin, title: l.title }))
+              laptops: chunk.map(l => ({ 
+                id: l.id, 
+                asin: l.asin, 
+                title: l.title,
+                last_checked: l.last_checked
+              }))
             }
           });
           
