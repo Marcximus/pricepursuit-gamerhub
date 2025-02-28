@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,8 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
   const STANDARD_MAX_PRICE = 2000;
   const EXTENDED_MAX_PRICE = 10000;
   const MAX_POSSIBLE_PRICE = showExtendedRange ? EXTENDED_MAX_PRICE : STANDARD_MAX_PRICE;
+  
+  // Update isDefaultPriceRange calculation based on current MAX_POSSIBLE_PRICE
   const isDefaultPriceRange = minPrice === 0 && maxPrice === MAX_POSSIBLE_PRICE;
 
   // Create tick labels
@@ -77,7 +80,7 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
     // Adjust the max value when switching ranges
     const newMaxPrice = newExtendedState ? EXTENDED_MAX_PRICE : STANDARD_MAX_PRICE;
     
-    // If current maxPrice is greater than new max, adjust it
+    // If current max is greater than new max, adjust it
     if (localMax > newMaxPrice) {
       setLocalMax(newMaxPrice);
       onPriceChange(localMin, newMaxPrice);
@@ -88,7 +91,17 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
       // If at exactly 10000 and switching to standard, set to 2000
       setLocalMax(STANDARD_MAX_PRICE);
       onPriceChange(localMin, STANDARD_MAX_PRICE);
+    } else {
+      // In all other cases, just apply current values with new range
+      onPriceChange(localMin, localMax);
     }
+    
+    console.log("Toggle price range:", {
+      newExtendedState,
+      newMaxPrice,
+      localMin,
+      localMax: newExtendedState && localMax < STANDARD_MAX_PRICE ? localMax : newMaxPrice
+    });
   };
 
   // Format price for display
@@ -127,7 +140,7 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             } font-medium transition-colors`}
           >
-            {showExtendedRange ? '3+' : '3+'}
+            {showExtendedRange ? 'Standard' : '3+ K'}
           </button>
         </div>
       </div>
