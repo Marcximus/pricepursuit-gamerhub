@@ -6,7 +6,8 @@ import { parseValueWithUnit } from './commonMatchers';
  */
 export const matchesStorageFilter = (
   filterValue: string,
-  productValue: string | null | undefined
+  productValue: string | null | undefined,
+  productTitle?: string
 ): boolean => {
   if (!productValue) return false;
   

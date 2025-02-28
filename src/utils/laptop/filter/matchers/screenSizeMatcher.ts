@@ -4,7 +4,8 @@
  */
 export const matchesScreenSizeFilter = (
   filterValue: string,
-  productValue: string | null | undefined
+  productValue: string | null | undefined,
+  productTitle?: string
 ): boolean => {
   if (!productValue) return false;
   
