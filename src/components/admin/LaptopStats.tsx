@@ -1,12 +1,12 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import DatabaseOverview from './stats/DatabaseOverview';
-import AiProcessingStatus from './stats/AiProcessingStatus';
-import MissingInformation from './stats/MissingInformation';
+import { DatabaseOverview } from './stats/DatabaseOverview';
+import { AiProcessingStatus } from './stats/AiProcessingStatus';
+import { MissingInformation } from './stats/MissingInformation';
 import DuplicateAsinChecker from './stats/DuplicateAsinChecker';
 
-export default function LaptopStats() {
+const LaptopStats = () => {
   return (
     <div className="w-full space-y-4 mt-4">
       <Tabs defaultValue="overview" className="w-full">
@@ -31,4 +31,6 @@ export default function LaptopStats() {
       </Tabs>
     </div>
   );
-}
+};
+
+export default LaptopStats;

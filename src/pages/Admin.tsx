@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Search, RefreshCw, BrainCircuit, Filter } from "lucide-react";
 import { useLaptops } from "@/hooks/useLaptops";
 import { cleanupLaptopDatabase } from "@/utils/laptop/cleanupLaptops";
-import { LaptopStats } from "@/components/admin/LaptopStats";
+import LaptopStats from "@/components/admin/LaptopStats";
 
 const Admin = () => {
   const { collectLaptops, updateLaptops, processLaptopsAI } = useLaptops();
