@@ -41,6 +41,11 @@ export function MissingInformation({ stats }: MissingInformationProps) {
           label="Missing Graphics"
           percentage={calculateMissingPercentage(stats.missingInfo.noGraphics.count, stats.totalLaptops)}
         />
+
+        <MissingDataItem 
+          label="Missing Prices"
+          percentage={stats.missingInformation.prices.percentage}
+        />
       </div>
     </div>
   );
