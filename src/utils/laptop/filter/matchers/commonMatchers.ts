@@ -1,5 +1,11 @@
 
-import type { FilterableProductKeys, MatcherFunction } from "../filterTypes";
+import type { FilterableProductKeys } from "../filterTypes";
+import { matchesBrandFilter } from './brandMatcher';
+import { matchesGraphicsFilter } from './graphicsMatcher';
+import { matchesProcessorFilter } from './processorMatcher';
+import { matchesRamFilter } from './ramMatcher';
+import { matchesScreenSizeFilter } from './screenSizeMatcher';
+import { matchesStorageFilter } from './storageMatcher';
 
 /**
  * Common utility to parse value with unit from a string
@@ -30,28 +36,20 @@ export const matchesFilter = (
   productTitle?: string
 ): boolean => {
   try {
-    // Dynamically import the correct matcher based on filter type
-    let matcherModule;
-    
+    // Use direct function calls instead of dynamic imports
     switch (filterType) {
       case 'brand':
-        matcherModule = require('./brandMatcher');
-        return matcherModule.matchesBrandFilter(filterValue, productValue, productTitle);
+        return matchesBrandFilter(filterValue, productValue, productTitle);
       case 'graphics':
-        matcherModule = require('./graphicsMatcher');
-        return matcherModule.matchesGraphicsFilter(filterValue, productValue, productTitle);
+        return matchesGraphicsFilter(filterValue, productValue, productTitle);
       case 'processor':
-        matcherModule = require('./processorMatcher');
-        return matcherModule.matchesProcessorFilter(filterValue, productValue, productTitle);
+        return matchesProcessorFilter(filterValue, productValue, productTitle);
       case 'ram':
-        matcherModule = require('./ramMatcher');
-        return matcherModule.matchesRamFilter(filterValue, productValue, productTitle);
+        return matchesRamFilter(filterValue, productValue, productTitle);
       case 'screen_size':
-        matcherModule = require('./screenSizeMatcher');
-        return matcherModule.matchesScreenSizeFilter(filterValue, productValue, productTitle);
+        return matchesScreenSizeFilter(filterValue, productValue, productTitle);
       case 'storage':
-        matcherModule = require('./storageMatcher');
-        return matcherModule.matchesStorageFilter(filterValue, productValue, productTitle);
+        return matchesStorageFilter(filterValue, productValue, productTitle);
       default:
         console.warn(`No matcher found for filter type: ${filterType}`);
         return false;
