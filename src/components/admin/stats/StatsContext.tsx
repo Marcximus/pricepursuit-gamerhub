@@ -31,6 +31,9 @@ const StatsContext = createContext<StatsContextType>({
   fetchStats: async () => {},
 });
 
+// Create a context specifically for the refresh function to maintain backward compatibility
+export const StatsRefreshContext = createContext<() => Promise<void>>(async () => {});
+
 // Custom hook to use the stats context
 export const useStats = () => useContext(StatsContext);
 
@@ -147,6 +150,3 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     </StatsContext.Provider>
   );
 };
-
-// Create a context specifically for the refresh function to maintain backward compatibility
-export const StatsRefreshContext = createContext<() => Promise<void>>(async () => {});

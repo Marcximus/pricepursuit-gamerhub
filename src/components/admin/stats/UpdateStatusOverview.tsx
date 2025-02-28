@@ -4,7 +4,7 @@ import { CircleCheck, Clock, CircleAlert, RotateCw, AlertCircle } from "lucide-r
 import { Progress } from "@/components/ui/progress";
 import { StatItem } from "./StatItem";
 import { DatabaseStats } from "@/utils/laptop/stats/types";
-import { StatsRefreshContext } from "@/components/admin/LaptopStats";
+import { StatsRefreshContext } from "@/components/admin/stats/StatsContext";
 import { Button } from "@/components/ui/button";
 import { resetStalePendingUpdates } from "@/utils/laptop/stats/updateStatusQueries";
 import { toast } from "@/components/ui/use-toast";

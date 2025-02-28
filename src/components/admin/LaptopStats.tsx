@@ -1,17 +1,16 @@
 
-import React, { useCallback } from 'react';
-import { StatsProvider, StatsRefreshContext } from './stats/StatsContext';
+import React from 'react';
+import { StatsProvider, StatsRefreshContext, useStats } from './stats/StatsContext';
 import { StatsHeader } from './stats/StatsHeader';
 import { StatsAutoRefresh } from './stats/StatsAutoRefresh';
 import { StatsTabs } from './stats/StatsTabs';
 import { StatsInitializer } from './stats/StatsInitializer';
 import { LoadingState } from './stats/LoadingState';
 import { ErrorState } from './stats/ErrorState';
-import { useStats } from './stats/StatsContext';
 
 // Inner component to access context
 const StatsContent = () => {
-  const { loading, error, stats } = useStats();
+  const { loading, error, stats, fetchStats } = useStats();
 
   if (loading && !stats) {
     return <LoadingState message="Loading database statistics..." />;
@@ -22,12 +21,12 @@ const StatsContent = () => {
   }
 
   return (
-    <>
+    <StatsRefreshContext.Provider value={fetchStats}>
       <StatsHeader />
       <StatsAutoRefresh />
       <StatsInitializer />
       <StatsTabs />
-    </>
+    </StatsRefreshContext.Provider>
   );
 };
 
@@ -35,21 +34,10 @@ const StatsContent = () => {
 const LaptopStats = () => {
   return (
     <StatsProvider>
-      <LaptopStatsWithContext />
-    </StatsProvider>
-  );
-};
-
-// Helper component to wrap the content with the legacy context provider
-const LaptopStatsWithContext = () => {
-  const { fetchStats } = useStats();
-  
-  return (
-    <StatsRefreshContext.Provider value={fetchStats}>
       <div className="w-full space-y-4 mt-4">
         <StatsContent />
       </div>
-    </StatsRefreshContext.Provider>
+    </StatsProvider>
   );
 };
 
