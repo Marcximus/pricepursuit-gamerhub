@@ -26,6 +26,7 @@ export const matchesProcessorFilter = (
     const normalizedProcessor = productValue.toLowerCase();
     
     if (filterValue === 'Intel Celeron' && normalizedProcessor.includes('celeron')) {
+      // Match specific Celeron models like N9095
       return true;
     }
     
@@ -66,7 +67,18 @@ export const matchesProcessorFilter = (
     // Match Intel Core Ultra
     if (filterValue.startsWith('Intel Core Ultra') && normalizedProcessor.includes('core ultra')) {
       const ultraNumber = filterValue.split(' ').pop(); // Get the number (5,7,9)
-      if (normalizedProcessor.includes(`ultra ${ultraNumber}`) || normalizedProcessor.includes(`ultra${ultraNumber}`)) {
+      if (normalizedProcessor.includes(`ultra ${ultraNumber}`) || 
+          normalizedProcessor.includes(`ultra${ultraNumber}`) ||
+          normalizedProcessor.includes(`core ultra ${ultraNumber}`)) {
+        return true;
+      }
+    }
+    
+    // Also look for numeric-core ultra patterns (e.g., "16-Core Ultra 7")
+    if (filterValue.startsWith('Intel Core Ultra') && 
+        normalizedProcessor.match(/\d+-core\s+ultra\s+\d/i)) {
+      const ultraNumber = filterValue.split(' ').pop(); // Get the number (5,7,9)
+      if (normalizedProcessor.includes(`ultra ${ultraNumber}`)) {
         return true;
       }
     }
@@ -123,6 +135,22 @@ export const matchesProcessorFilter = (
   // Try to extract processor from title and standardize if available
   if (productTitle) {
     const normalizedTitle = productTitle.toLowerCase();
+    
+    // Specific Intel Core Ultra matching in title
+    if (filterValue.startsWith('Intel Core Ultra') && 
+        (normalizedTitle.includes('core ultra') || normalizedTitle.includes('-core ultra'))) {
+      const ultraNumber = filterValue.split(' ').pop(); // Get the number (5,7,9)
+      if (normalizedTitle.includes(`ultra ${ultraNumber}`) || 
+          normalizedTitle.includes(`core ultra ${ultraNumber}`)) {
+        return true;
+      }
+    }
+    
+    // Intel Celeron specific model matching
+    if (filterValue === 'Intel Celeron' && 
+        (normalizedTitle.includes('celeron') || normalizedTitle.match(/\bceleron\s+n\d{4}\b/i))) {
+      return true;
+    }
     
     // Try to match model numbers in title
     if (filterValue.includes('Intel Core i')) {
@@ -213,6 +241,24 @@ export const matchesProcessorFilter = (
       belongsToMainCategory = mainProcessorCategories.some(category => 
         productTitle.toLowerCase().includes(category.toLowerCase())
       );
+      
+      // Specific checks for patterns in title that imply known processor types
+      if (!belongsToMainCategory) {
+        // Check for Celeron model numbers
+        if (productTitle.match(/celeron\s+n\d{4}/i)) {
+          return false; // This should match Intel Celeron
+        }
+        
+        // Check for "X-Core Ultra Y" pattern (Intel Core Ultra)
+        if (productTitle.match(/\d+-core\s+ultra\s+[579]/i)) {
+          return false; // This should match Intel Core Ultra
+        }
+        
+        // Check for GHz core_i patterns
+        if (productTitle.match(/\d+(?:\.\d+)?\s*ghz\s*core_i[3579]/i)) {
+          return false; // This should match Intel Core i series
+        }
+      }
     }
     
     // Only categorize as "Other Processor" if it doesn't match any main category

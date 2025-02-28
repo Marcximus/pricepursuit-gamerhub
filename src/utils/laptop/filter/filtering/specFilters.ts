@@ -15,7 +15,7 @@ export const applyProcessorFilter = (
     return true;
   }
   
-  // First extract processor from title, with fallback to stored value
+  // First extract processor from title with fallback to stored value
   const extractedProcessor = extractProcessorFromTitle(laptop.title, laptop.processor);
   
   // If we can't determine the processor at all, exclude when processor filter is active
