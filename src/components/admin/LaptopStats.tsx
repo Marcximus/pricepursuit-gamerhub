@@ -65,8 +65,8 @@ const LaptopStats = () => {
   useEffect(() => {
     fetchStats();
 
-    // Set up a refresh interval (every 60 seconds)
-    const intervalId = setInterval(fetchStats, 60000);
+    // Set up a more frequent refresh interval when updates are happening (every 15 seconds)
+    const intervalId = setInterval(fetchStats, 15000);
     
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);

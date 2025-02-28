@@ -1,18 +1,44 @@
 
-import React from "react";
+import React, { useContext } from "react";
 import { CircleCheck, Clock, CircleAlert, RotateCw } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { StatItem } from "./StatItem";
 import { DatabaseStats } from "@/utils/laptop/stats/types";
+import { StatsRefreshContext } from "@/components/admin/LaptopStats";
+import { Button } from "@/components/ui/button";
 
 interface UpdateStatusOverviewProps {
   stats: DatabaseStats;
 }
 
 export function UpdateStatusOverview({ stats }: UpdateStatusOverviewProps) {
+  // Get the refresh function from context to allow manual refresh
+  const refreshStats = useContext(StatsRefreshContext);
+
+  // Get current timestamp for display
+  const lastUpdatedTime = new Date().toLocaleTimeString();
+
+  // Handle manual refresh click
+  const handleRefresh = () => {
+    if (refreshStats) {
+      refreshStats();
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Update Status</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Update Status</h3>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleRefresh} 
+          className="text-xs"
+        >
+          <RotateCw className="h-3 w-3 mr-1" />
+          Refresh Status
+        </Button>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white p-4 rounded-lg border shadow-sm">
@@ -92,6 +118,23 @@ export function UpdateStatusOverview({ stats }: UpdateStatusOverviewProps) {
             'bg-red-500'
           }`}
         />
+      </div>
+
+      <div className="mt-4 p-4 bg-gray-50 rounded-lg border text-xs text-gray-500">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="font-medium">Active updates:</span> {stats.updateStatus.inProgress.count}
+            {stats.updateStatus.inProgress.count > 0 && (
+              <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <RotateCw className="h-3 w-3 mr-1 animate-spin" />
+                Updating
+              </span>
+            )}
+          </div>
+          <div>
+            <span className="opacity-75">Last refresh: {lastUpdatedTime}</span>
+          </div>
+        </div>
       </div>
     </div>
   );

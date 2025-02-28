@@ -1,4 +1,3 @@
-
 import React, { useState, useContext } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { RefreshCw } from "lucide-react";
@@ -18,6 +17,31 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
   const [updateCount, setUpdateCount] = useState(0);
   const statsRefresh = useContext(StatsRefreshContext);
 
+  const [autoRefreshInterval, setAutoRefreshInterval] = useState<NodeJS.Timeout | null>(null);
+
+  const startAutoRefresh = () => {
+    if (autoRefreshInterval) {
+      clearInterval(autoRefreshInterval);
+    }
+    
+    const intervalId = setInterval(() => {
+      console.log('Auto-refreshing stats while updates are in progress...');
+      if (statsRefresh) {
+        statsRefresh();
+      }
+    }, 10000);
+    
+    setAutoRefreshInterval(intervalId);
+    return intervalId;
+  };
+
+  const stopAutoRefresh = () => {
+    if (autoRefreshInterval) {
+      clearInterval(autoRefreshInterval);
+      setAutoRefreshInterval(null);
+    }
+  };
+
   const handleUpdateLaptops = async () => {
     if (isUpdating) return;
     
@@ -30,7 +54,6 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
       console.log('Update result:', result);
       
       if (result && result.success) {
-        // Extract the count from the result message if available
         const countMatch = result.message.match(/Started updating (\d+) laptops/);
         const count = countMatch ? parseInt(countMatch[1]) : 0;
         setUpdateCount(count);
@@ -39,6 +62,19 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
           title: "Update Started",
           description: result.message || "Started updating laptop information. This may take a few minutes.",
         });
+
+        if (statsRefresh) {
+          await statsRefresh();
+        }
+        
+        startAutoRefresh();
+        
+        setTimeout(() => {
+          stopAutoRefresh();
+          if (statsRefresh) {
+            statsRefresh();
+          }
+        }, 5 * 60 * 1000);
       } else {
         toast({
           title: "Update Status",
@@ -48,13 +84,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
         console.error('Update finished with result:', result);
       }
       
-      // Refresh stats immediately after update request
       await refreshStats();
-      
-      // Also refresh the global stats context
-      if (statsRefresh) {
-        await statsRefresh();
-      }
     } catch (error: any) {
       console.error('Error updating laptops:', error);
       toast({
@@ -62,8 +92,11 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
         description: "Failed to start laptop updates: " + (error.message || "Unknown error"),
         variant: "destructive"
       });
+      stopAutoRefresh();
     } finally {
-      setIsUpdating(false);
+      if (!autoRefreshInterval) {
+        setIsUpdating(false);
+      }
     }
   };
 
