@@ -19,7 +19,13 @@ export function logProductDetails(product: any, isNew: boolean, extracted?: any)
   const availableSpecs = specFields.filter(field => product[field] && product[field].toString().trim() !== '').length;
   const specCompletionPercent = Math.round((availableSpecs / specFields.length) * 100);
   
-  console.log(`  🧮 Specs completion: ${specCompletionPercent}% (${availableSpecs}/${specFields.length} fields)`);
+  // Add emoji based on completion percentage
+  let completionEmoji = '🔴';
+  if (specCompletionPercent >= 75) completionEmoji = '🟢';
+  else if (specCompletionPercent >= 50) completionEmoji = '🟡';
+  else if (specCompletionPercent >= 25) completionEmoji = '🟠';
+  
+  console.log(`  ${completionEmoji} Specs completion: ${specCompletionPercent}% (${availableSpecs}/${specFields.length} fields)`);
   
   if (product.brand) console.log(`  🏷️ Brand: ${product.brand}`);
   if (product.model) console.log(`  📱 Model: ${product.model}`);
@@ -54,6 +60,14 @@ export function logProductDetails(product: any, isNew: boolean, extracted?: any)
   }
   if (product.rating && product.rating_count) console.log(`  ⭐ Rating: ${product.rating}/5 (${product.rating_count} reviews)`);
   
+  // Enhanced price analysis
+  if (product.current_price && product.original_price) {
+    const discount = Math.round(((product.original_price - product.current_price) / product.original_price) * 100);
+    if (discount > 0) {
+      console.log(`  🏷️ Discount: ${discount}% off original price of $${product.original_price}`);
+    }
+  }
+  
   // If we have extraction data, show attempts vs success
   if (extracted) {
     console.log(`  📊 Extraction details:`);
@@ -64,4 +78,7 @@ export function logProductDetails(product: any, isNew: boolean, extracted?: any)
   }
   
   console.log(`  ⏱️ Processed at: ${new Date().toLocaleTimeString()}`);
+  
+  // Add separator line for better readability
+  console.log(`  -----------------------------------------------`);
 }

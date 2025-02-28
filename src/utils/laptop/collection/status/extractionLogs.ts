@@ -28,8 +28,15 @@ export function logExtractionDetails(rawData: any, processed: any) {
   // Count successful extractions
   const successfulExtractions = specsChecklist.filter(item => !!item.processed).length;
   const totalSpecs = specsChecklist.length;
+  const extractionPercentage = Math.round((successfulExtractions/totalSpecs)*100);
   
-  console.log(`📊 Extraction rate: ${successfulExtractions}/${totalSpecs} specs (${Math.round((successfulExtractions/totalSpecs)*100)}%)`);
+  // Choose emoji based on extraction percentage
+  let extractionEmoji = '🔴';
+  if (extractionPercentage >= 75) extractionEmoji = '🟢';
+  else if (extractionPercentage >= 50) extractionEmoji = '🟡';
+  else if (extractionPercentage >= 25) extractionEmoji = '🟠';
+  
+  console.log(`${extractionEmoji} Extraction rate: ${successfulExtractions}/${totalSpecs} specs (${extractionPercentage}%)`);
   
   // Log each spec extraction attempt
   specsChecklist.forEach(spec => {
@@ -53,11 +60,13 @@ export function logExtractionDetails(rawData: any, processed: any) {
   console.log(`\n📋 EXTRACTION SOURCES:`);
   specsChecklist.forEach(spec => {
     if (spec.processed) {
-      const source = spec.raw ? 'Direct data' : 'Title extraction';
+      const source = spec.raw ? '📄 Direct data' : '🔍 Title extraction';
       console.log(`🔄 ${spec.name}: ${source}`);
     }
   });
   
+  // Add timestamp
+  console.log(`\n⏱️ Extraction completed at: ${new Date().toLocaleTimeString()}`);
   console.log(`\n`);
 }
 
@@ -108,14 +117,23 @@ export function logExtractionPerformance(products: any[]) {
   };
   
   console.log(`\n📊 EXTRACTION PERFORMANCE METRICS (${totalProducts} products):`);
-  console.log(`  🏷️ Missing Brand: ${missingFields.brand}/${totalProducts} (${percentages.brand}%)`);
-  console.log(`  📱 Missing Model: ${missingFields.model}/${totalProducts} (${percentages.model}%)`);
-  console.log(`  🧠 Missing Processor: ${missingFields.processor}/${totalProducts} (${percentages.processor}%)`);
-  console.log(`  🧮 Missing RAM: ${missingFields.ram}/${totalProducts} (${percentages.ram}%)`);
-  console.log(`  💾 Missing Storage: ${missingFields.storage}/${totalProducts} (${percentages.storage}%)`);
-  console.log(`  🎮 Missing Graphics: ${missingFields.graphics}/${totalProducts} (${percentages.graphics}%)`);
-  console.log(`  📱 Missing Screen Size: ${missingFields.screen_size}/${totalProducts} (${percentages.screen_size}%)`);
-  console.log(`  💰 Missing Price: ${missingFields.price}/${totalProducts} (${percentages.price}%)`);
+  
+  // Add emojis based on missing percentage
+  const getStatusEmoji = (percentage: number) => {
+    if (percentage <= 10) return '🟢';
+    if (percentage <= 30) return '🟡';
+    if (percentage <= 50) return '🟠';
+    return '🔴';
+  };
+  
+  console.log(`  ${getStatusEmoji(percentages.brand)} Missing Brand: ${missingFields.brand}/${totalProducts} (${percentages.brand}%)`);
+  console.log(`  ${getStatusEmoji(percentages.model)} Missing Model: ${missingFields.model}/${totalProducts} (${percentages.model}%)`);
+  console.log(`  ${getStatusEmoji(percentages.processor)} Missing Processor: ${missingFields.processor}/${totalProducts} (${percentages.processor}%)`);
+  console.log(`  ${getStatusEmoji(percentages.ram)} Missing RAM: ${missingFields.ram}/${totalProducts} (${percentages.ram}%)`);
+  console.log(`  ${getStatusEmoji(percentages.storage)} Missing Storage: ${missingFields.storage}/${totalProducts} (${percentages.storage}%)`);
+  console.log(`  ${getStatusEmoji(percentages.graphics)} Missing Graphics: ${missingFields.graphics}/${totalProducts} (${percentages.graphics}%)`);
+  console.log(`  ${getStatusEmoji(percentages.screen_size)} Missing Screen Size: ${missingFields.screen_size}/${totalProducts} (${percentages.screen_size}%)`);
+  console.log(`  ${getStatusEmoji(percentages.price)} Missing Price: ${missingFields.price}/${totalProducts} (${percentages.price}%)`);
   
   // Average completion rate
   const fields = Object.keys(missingFields).length;
@@ -123,8 +141,15 @@ export function logExtractionPerformance(products: any[]) {
   const averageMissingRate = Math.round(totalMissingPercentage / fields);
   const averageCompletionRate = 100 - averageMissingRate;
   
+  // Choose emoji based on completion rate
+  let completionEmoji = '🔴';
+  if (averageCompletionRate >= 90) completionEmoji = '🌟';
+  else if (averageCompletionRate >= 75) completionEmoji = '🟢';
+  else if (averageCompletionRate >= 50) completionEmoji = '🟡';
+  else if (averageCompletionRate >= 25) completionEmoji = '🟠';
+  
   console.log(`\n📈 OVERALL DATA QUALITY:`);
-  console.log(`  ${averageCompletionRate >= 70 ? '🟢' : averageCompletionRate >= 50 ? '🟡' : '🔴'} Average completion rate: ${averageCompletionRate}%`);
+  console.log(`  ${completionEmoji} Average completion rate: ${averageCompletionRate}%`);
   
   // Analysis of extraction issues
   console.log(`\n🔍 EXTRACTION ISSUE ANALYSIS:`);
@@ -136,7 +161,8 @@ export function logExtractionPerformance(products: any[]) {
   
   console.log(`  Most problematic fields:`);
   sortedFields.slice(0, 3).forEach((item, index) => {
-    console.log(`  ${index + 1}. ${item.field}: ${item.percentage}% missing`);
+    const problemEmoji = item.percentage >= 50 ? '🚨' : item.percentage >= 30 ? '⚠️' : '📝';
+    console.log(`  ${index + 1}. ${problemEmoji} ${item.field}: ${item.percentage}% missing`);
   });
   
   console.log(`\n🛠️ RECOMMENDED IMPROVEMENTS:`);
@@ -154,5 +180,7 @@ export function logExtractionPerformance(products: any[]) {
     console.log(`  ⚙️ Enhance graphics card recognition for integrated and discrete GPUs`);
   }
   
+  // Add timestamp
+  console.log(`\n⏱️ Analysis completed at: ${new Date().toLocaleTimeString()}`);
   console.log('\n');
 }
