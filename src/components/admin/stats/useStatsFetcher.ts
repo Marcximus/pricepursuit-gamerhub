@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { DatabaseStats } from "@/utils/laptop/stats/types";
 import { resetStalePendingUpdates } from "@/utils/laptop/stats/updateStatusQueries";
 import { getDatabaseStats } from "@/utils/laptop/getDatabaseStats";
@@ -91,13 +91,22 @@ export const useStatsFetcher = () => {
           variant: "destructive",
         });
       }
-      
-      // Re-throw the error so calling functions can handle it
-      throw err;
     } finally {
       setRefreshing(false);
     }
   }, [stats, toast, refreshing, refreshCount, errorCount, autoRefreshEnabled, checkAndResetStuckUpdates]);
+
+  // Perform an initial fetch on component mount
+  useEffect(() => {
+    console.log('useStatsFetcher: Initial mount effect running');
+    if (loading && !stats && !refreshing) {
+      console.log('useStatsFetcher: Performing initial automatic fetch');
+      fetchStats().catch(err => {
+        console.error('Initial fetch error in useStatsFetcher:', err);
+        setLoading(false); // Ensure we exit loading state even on error
+      });
+    }
+  }, [loading, stats, refreshing, fetchStats]);
 
   return {
     stats,

@@ -12,7 +12,13 @@ import { ErrorState } from './stats/ErrorState';
 const StatsContent = () => {
   const { loading, error, stats, fetchStats } = useStats();
 
-  if (loading && !stats) {
+  // Use StatsInitializer to fetch data on component mount
+  React.useEffect(() => {
+    // Log the current state to help with debugging
+    console.log('StatsContent state:', { loading, error, statsExists: !!stats });
+  }, [loading, error, stats]);
+
+  if (loading) {
     return <LoadingState message="Loading database statistics..." />;
   }
 
@@ -24,7 +30,6 @@ const StatsContent = () => {
     <StatsRefreshContext.Provider value={fetchStats}>
       <StatsHeader />
       <StatsAutoRefresh />
-      <StatsInitializer />
       <StatsTabs />
     </StatsRefreshContext.Provider>
   );
@@ -35,6 +40,7 @@ const LaptopStats = () => {
   return (
     <StatsProvider>
       <div className="w-full space-y-4 mt-4">
+        <StatsInitializer />
         <StatsContent />
       </div>
     </StatsProvider>

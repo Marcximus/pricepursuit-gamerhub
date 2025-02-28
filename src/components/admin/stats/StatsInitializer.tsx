@@ -3,16 +3,19 @@ import { useEffect } from 'react';
 import { useStats } from './StatsContext';
 
 export const StatsInitializer: React.FC = () => {
-  const { fetchStats, setLoading } = useStats();
+  const { fetchStats, setLoading, loading } = useStats();
 
   // Initial data fetch
   useEffect(() => {
     const initialFetch = async () => {
       try {
-        setLoading(true);
+        if (!loading) return; // Skip if not in loading state (already initialized)
+        
+        console.log('StatsInitializer: Starting initial fetch');
         await fetchStats();
+        console.log('StatsInitializer: Initial fetch completed');
       } catch (error) {
-        console.error("Initial fetch error:", error);
+        console.error("StatsInitializer: Initial fetch error:", error);
       } finally {
         setLoading(false);
       }

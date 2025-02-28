@@ -25,6 +25,17 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     fetchStats,
   } = useStatsFetcher();
 
+  // Log the current state for debugging
+  React.useEffect(() => {
+    console.log('StatsProvider state:', { 
+      hasStats: !!stats, 
+      loading, 
+      hasError: !!error, 
+      refreshing, 
+      autoRefreshEnabled 
+    });
+  }, [stats, loading, error, refreshing, autoRefreshEnabled]);
+
   // Context value
   const value: StatsContextType = {
     stats,
