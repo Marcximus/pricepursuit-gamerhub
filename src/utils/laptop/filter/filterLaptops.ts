@@ -30,7 +30,7 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     filters.screenSizes.size > 0 ||
     filters.brands.size > 0 ||
     filters.priceRange.min > 0 ||
-    filters.priceRange.max < 10000;
+    filters.priceRange.max < 2000;
     
   if (!hasActiveFilters) {
     console.log('No active filters, returning all laptops');

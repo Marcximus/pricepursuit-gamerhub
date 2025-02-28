@@ -15,13 +15,13 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
   const [localMin, setLocalMin] = useState(minPrice);
   const [localMax, setLocalMax] = useState(maxPrice);
   
-  const MAX_POSSIBLE_PRICE = 10000;
+  const MAX_POSSIBLE_PRICE = 2000;
   const isDefaultPriceRange = minPrice === 0 && maxPrice === MAX_POSSIBLE_PRICE;
 
   // Create tick labels
   const generateTickLabels = () => {
     const labels = [];
-    const tickCount = 6; // 0, 2000, 4000, 6000, 8000, 10000
+    const tickCount = 6; // 0, 400, 800, 1200, 1600, 2000
     for (let i = 0; i < tickCount; i++) {
       const value = Math.round(i * (MAX_POSSIBLE_PRICE / (tickCount - 1)));
       labels.push(formatPrice(value, true));
