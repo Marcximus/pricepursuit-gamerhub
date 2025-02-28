@@ -1,19 +1,10 @@
 
-// Re-export all normalizers from the new module structure
+// Re-export all normalizers from the normalizer module
 export {
-  normalizeBrand
-} from './normalizer/brandNormalizer';
-
-export {
+  normalizeBrand,
   normalizeProcessor,
-  normalizeGraphics
-} from './normalizer/hardwareNormalizer';
-
-export {
-  normalizeScreenSize
-} from './normalizer/screenNormalizer';
-
-export {
+  normalizeGraphics,
+  normalizeScreenSize,
   normalizeRam,
   normalizeStorage
-} from './normalizer/storageNormalizer';
+} from './normalizer';
