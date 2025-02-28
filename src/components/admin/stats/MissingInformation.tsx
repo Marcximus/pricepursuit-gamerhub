@@ -2,6 +2,7 @@
 import React from "react";
 import { MissingDataItem } from "./MissingDataItem";
 import { DatabaseStats } from "@/utils/laptop/stats/types";
+import { calculatePercentage } from "@/utils/laptop/stats/percentageCalculator";
 
 interface MissingInformationProps {
   stats: DatabaseStats;
@@ -44,7 +45,10 @@ export function MissingInformation({ stats }: MissingInformationProps) {
 
         <MissingDataItem 
           label="Missing Prices"
-          percentage={stats.missingInformation.prices.percentage}
+          percentage={calculateMissingPercentage(
+            stats.totalLaptops - (stats.totalLaptops * stats.missingInformation.prices.percentage / 100),
+            stats.totalLaptops
+          )}
         />
       </div>
     </div>

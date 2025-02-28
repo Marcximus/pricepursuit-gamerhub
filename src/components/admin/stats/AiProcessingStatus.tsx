@@ -9,6 +9,11 @@ interface AiProcessingStatusProps {
 }
 
 export function AiProcessingStatus({ stats }: AiProcessingStatusProps) {
+  // Calculate percentage based on actual count data
+  const completionPercentage = stats.totalLaptops > 0 
+    ? Math.round((stats.aiStatus.processed.count / stats.totalLaptops) * 100)
+    : 0;
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">AI Processing Status</h3>
@@ -41,17 +46,17 @@ export function AiProcessingStatus({ stats }: AiProcessingStatusProps) {
         <div className="mt-4">
           <div className="flex justify-between mb-1">
             <span className="text-sm">Processing Completion</span>
-            <span className="text-sm font-medium">{stats.percentages.processedAi}%</span>
+            <span className="text-sm font-medium">{completionPercentage}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
               className={`h-2 rounded-full ${
-                stats.percentages.processedAi >= 75 ? 'bg-green-500' : 
-                stats.percentages.processedAi >= 50 ? 'bg-blue-500' : 
-                stats.percentages.processedAi >= 25 ? 'bg-amber-500' : 
+                completionPercentage >= 75 ? 'bg-green-500' : 
+                completionPercentage >= 50 ? 'bg-blue-500' : 
+                completionPercentage >= 25 ? 'bg-amber-500' : 
                 'bg-red-500'
               }`}
-              style={{ width: `${stats.percentages.processedAi}%` }}
+              style={{ width: `${completionPercentage}%` }}
             ></div>
           </div>
         </div>
