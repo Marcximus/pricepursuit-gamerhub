@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { MissingDataOverview } from "./missing-data/MissingDataOverview";
 import { MissingDataDiagnostics } from "./missing-data/MissingDataDiagnostics";
-import { calculateAverageMissingPercentage } from "./missing-data/MissingDataUtils";
+import { calculateAverageMissingPercentage, logMissingDataStats } from "./missing-data/MissingDataUtils";
 
 interface MissingInformationProps {
   stats: DatabaseStats;
@@ -16,33 +16,10 @@ export function MissingInformation({ stats }: MissingInformationProps) {
   const { toast } = useToast();
   
   // Log detailed information about the missing data to help debug
-  console.log('Missing Information Analysis:', {
-    totalLaptops: stats.totalLaptops,
-    missingPrices: {
-      count: stats.missingInformation.prices.count,
-      percentage: stats.missingInformation.prices.percentage,
-    },
-    missingProcessor: {
-      count: stats.missingInformation.processor.count,
-      percentage: stats.missingInformation.processor.percentage,
-    },
-    missingRam: {
-      count: stats.missingInformation.ram.count,
-      percentage: stats.missingInformation.ram.percentage,
-    },
-    missingStorage: {
-      count: stats.missingInformation.storage.count,
-      percentage: stats.missingInformation.storage.percentage,
-    },
-    missingGraphics: {
-      count: stats.missingInformation.graphics.count,
-      percentage: stats.missingInformation.graphics.percentage,
-    },
-    missingScreenSize: {
-      count: stats.missingInformation.screenSize.count,
-      percentage: stats.missingInformation.screenSize.percentage,
-    }
-  });
+  React.useEffect(() => {
+    // Enhanced logging to debug missing data issues
+    logMissingDataStats(stats);
+  }, [stats]);
 
   // Calculate the average missing data percentage
   const avgMissingPercentage = calculateAverageMissingPercentage(

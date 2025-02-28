@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Search, RefreshCw, BrainCircuit, Filter } from "lucide-react";
 import { useLaptops } from "@/hooks/useLaptops";
 import { cleanupLaptopDatabase } from "@/utils/laptop/cleanupLaptops";
-import LaptopStats from "@/components/admin/LaptopStats";
+import LaptopStats, { StatsRefreshContext } from "@/components/admin/LaptopStats";
 import { CollectionProgress } from "@/components/admin/stats/CollectionProgress";
 import { useCollectionProgress } from "@/hooks/useCollectionProgress";
+import { useContext } from "react";
 
 const Admin = () => {
   const { collectLaptops, updateLaptops, processLaptopsAI } = useLaptops();
   const { isCollecting, progress } = useCollectionProgress();
+  const refreshStats = useContext(StatsRefreshContext);
 
   const handleCollectLaptops = async () => {
     try {
@@ -29,6 +31,8 @@ const Admin = () => {
           title: "Collection Started",
           description: "Started collecting new laptops. This may take a few minutes.",
         });
+        // Refresh stats immediately to show user progress has begun
+        await refreshStats();
       } else {
         console.log('Collection process returned null (possibly already in progress)');
       }
@@ -45,11 +49,14 @@ const Admin = () => {
 
   const handleUpdateLaptops = async () => {
     try {
-      await updateLaptops();
+      const result = await updateLaptops();
+      console.log('Update result:', result);
       toast({
         title: "Update Started",
         description: "Started updating laptop information. This may take a few minutes.",
       });
+      // Refresh stats immediately after update request
+      await refreshStats();
     } catch (error) {
       console.error('Error updating laptops:', error);
       toast({
@@ -68,6 +75,8 @@ const Admin = () => {
           title: "AI Processing Started",
           description: `Processing initiated for ${result.processed} laptops`,
         });
+        // Refresh stats immediately after AI processing request
+        await refreshStats();
       } else {
         toast({
           variant: "destructive",
@@ -93,6 +102,8 @@ const Admin = () => {
           title: "Cleanup Complete",
           description: `Successfully cleaned up the laptop database. ${result.removedForbiddenKeywords} products with forbidden keywords were removed.`,
         });
+        // Refresh stats immediately after cleanup
+        await refreshStats();
       }
     } catch (error) {
       console.error('Error cleaning up laptop database:', error);

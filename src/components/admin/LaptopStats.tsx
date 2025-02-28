@@ -11,6 +11,9 @@ import { LoadingState } from './stats/LoadingState';
 import { ErrorState } from './stats/ErrorState';
 import { useToast } from "@/components/ui/use-toast";
 
+// Create a context for refreshing stats that can be used anywhere in the app
+export const StatsRefreshContext = React.createContext<() => Promise<void>>(() => Promise.resolve());
+
 const LaptopStats = () => {
   const [stats, setStats] = useState<DatabaseStats | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -34,6 +37,9 @@ const LaptopStats = () => {
         missingGraphics: databaseStats.missingInformation.graphics,
         missingScreenSize: databaseStats.missingInformation.screenSize,
       });
+      
+      // Log sample data to inspect what's happening
+      console.log('Checking sample laptops in the database for diagnosis...');
       
       setStats(databaseStats);
       setError(null);
@@ -84,43 +90,45 @@ const LaptopStats = () => {
   // we'll show the stats but with a toast notification about the refresh error
 
   return (
-    <div className="w-full space-y-4 mt-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Database Statistics</h2>
-        <button 
-          onClick={handleManualRefresh} 
-          disabled={refreshing}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
-        >
-          {refreshing ? 'Refreshing...' : 'Refresh Stats'}
-        </button>
+    <StatsRefreshContext.Provider value={fetchStats}>
+      <div className="w-full space-y-4 mt-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-semibold">Database Statistics</h2>
+          <button 
+            onClick={handleManualRefresh} 
+            disabled={refreshing}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+          >
+            {refreshing ? 'Refreshing...' : 'Refresh Stats'}
+          </button>
+        </div>
+        
+        {stats ? (
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="ai-processing">AI Processing</TabsTrigger>
+              <TabsTrigger value="missing-data">Missing Data</TabsTrigger>
+              <TabsTrigger value="data-quality">Data Quality</TabsTrigger>
+            </TabsList>
+            <TabsContent value="overview" className="mt-4">
+              <DatabaseOverview stats={stats} />
+            </TabsContent>
+            <TabsContent value="ai-processing" className="mt-4">
+              <AiProcessingStatus stats={stats} />
+            </TabsContent>
+            <TabsContent value="missing-data" className="mt-4">
+              <MissingInformation stats={stats} />
+            </TabsContent>
+            <TabsContent value="data-quality" className="mt-4">
+              <DuplicateAsinChecker />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <ErrorState message="No database statistics available" />
+        )}
       </div>
-      
-      {stats ? (
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="ai-processing">AI Processing</TabsTrigger>
-            <TabsTrigger value="missing-data">Missing Data</TabsTrigger>
-            <TabsTrigger value="data-quality">Data Quality</TabsTrigger>
-          </TabsList>
-          <TabsContent value="overview" className="mt-4">
-            <DatabaseOverview stats={stats} />
-          </TabsContent>
-          <TabsContent value="ai-processing" className="mt-4">
-            <AiProcessingStatus stats={stats} />
-          </TabsContent>
-          <TabsContent value="missing-data" className="mt-4">
-            <MissingInformation stats={stats} />
-          </TabsContent>
-          <TabsContent value="data-quality" className="mt-4">
-            <DuplicateAsinChecker />
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <ErrorState message="No database statistics available" />
-      )}
-    </div>
+    </StatsRefreshContext.Provider>
   );
 };
 
