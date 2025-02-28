@@ -82,3 +82,77 @@ export async function upsertProduct(
     throw error;
   }
 }
+
+/**
+ * Insert or update multiple products in the database
+ * @param products An array of processed product data objects
+ * @param detailedLogging Whether to log detailed information
+ * @returns Statistics about the operation
+ */
+export async function insertOrUpdateProducts(products: any[], detailedLogging = false) {
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase credentials');
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    if (detailedLogging) {
+      console.log(`Starting database operations for ${products.length} products`);
+    }
+    
+    // Stats to track results
+    const stats = {
+      added: 0,
+      updated: 0,
+      failed: 0
+    };
+    
+    // Process each product
+    for (const product of products) {
+      try {
+        // Skip invalid products
+        if (!product || !product.asin) {
+          if (detailedLogging) {
+            console.log('Skipping invalid product:', product);
+          }
+          stats.failed++;
+          continue;
+        }
+        
+        const result = await upsertProduct(supabase, null, product);
+        
+        if (result.isNew) {
+          stats.added++;
+          if (detailedLogging) {
+            console.log(`Added new product: ${product.asin}`);
+          }
+        } else {
+          stats.updated++;
+          if (detailedLogging) {
+            console.log(`Updated existing product: ${product.asin}`);
+          }
+        }
+      } catch (error) {
+        console.error(`Error processing product ${product?.asin || 'unknown'}:`, error);
+        stats.failed++;
+      }
+    }
+    
+    if (detailedLogging) {
+      console.log('Database operations completed with stats:', stats);
+    }
+    
+    return stats;
+  } catch (error) {
+    console.error('Error in insertOrUpdateProducts:', error);
+    return {
+      added: 0,
+      updated: 0,
+      failed: products.length
+    };
+  }
+}
