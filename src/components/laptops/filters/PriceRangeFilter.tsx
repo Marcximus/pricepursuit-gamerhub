@@ -18,6 +18,17 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
   const MAX_POSSIBLE_PRICE = 10000;
   const isDefaultPriceRange = minPrice === 0 && maxPrice === MAX_POSSIBLE_PRICE;
 
+  // Create tick labels
+  const generateTickLabels = () => {
+    const labels = [];
+    const tickCount = 6; // 0, 2000, 4000, 6000, 8000, 10000
+    for (let i = 0; i < tickCount; i++) {
+      const value = Math.round(i * (MAX_POSSIBLE_PRICE / (tickCount - 1)));
+      labels.push(formatPrice(value, true));
+    }
+    return labels;
+  };
+
   // Update local state when props change
   useEffect(() => {
     setLocalMin(minPrice);
@@ -57,7 +68,10 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
   };
 
   // Format price for display
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number, short: boolean = false) => {
+    if (short && price >= 1000) {
+      return `${Math.floor(price / 1000)}k`;
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -82,19 +96,22 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
         )}
       </div>
 
-      <div className="pt-2 pb-6">
+      <div className="pt-2">
         <Slider
           defaultValue={[localMin, localMax]}
           value={[localMin, localMax]}
+          min={0}
           max={MAX_POSSIBLE_PRICE}
           step={50}
           onValueChange={handleSliderChange}
           onValueCommit={handleSliderCommit}
+          showTicks={true}
+          tickLabels={generateTickLabels()}
           className="my-5"
         />
       </div>
 
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center mt-8">
         <div className="relative flex-1">
           <Input
             type="number"
@@ -118,11 +135,6 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
           />
           <div className="absolute left-3 top-2.5 text-slate-500">$</div>
         </div>
-      </div>
-
-      <div className="flex justify-between mt-3 text-xs text-slate-500">
-        <span>{formatPrice(minPrice)}</span>
-        <span>{formatPrice(maxPrice)}</span>
       </div>
     </div>
   );
