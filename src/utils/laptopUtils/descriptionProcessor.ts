@@ -37,35 +37,35 @@ export const processLaptopDescription = (description: string | undefined, title:
   
   // Try to extract missing specs from description
   if (!enhancedSpecs.processor) {
-    enhancedSpecs.processor = processProcessor(undefined, title, cleanDescription);
+    enhancedSpecs.processor = processProcessor(undefined, `${title} ${cleanDescription}`);
   }
   
   if (!enhancedSpecs.ram) {
-    enhancedSpecs.ram = processRam(undefined, title, cleanDescription);
+    enhancedSpecs.ram = processRam(undefined, `${title} ${cleanDescription}`);
   }
   
   if (!enhancedSpecs.storage) {
-    enhancedSpecs.storage = processStorage(undefined, title, cleanDescription);
+    enhancedSpecs.storage = processStorage(undefined, `${title} ${cleanDescription}`);
   }
   
   if (!enhancedSpecs.graphics) {
-    enhancedSpecs.graphics = processGraphics(undefined, title + ' ' + cleanDescription);
+    enhancedSpecs.graphics = processGraphics(undefined, `${title} ${cleanDescription}`);
   }
   
   if (!enhancedSpecs.screen_size) {
-    enhancedSpecs.screen_size = processScreenSize(undefined, title, cleanDescription);
+    enhancedSpecs.screen_size = processScreenSize(undefined, `${title} ${cleanDescription}`);
   }
   
   if (!enhancedSpecs.screen_resolution) {
-    enhancedSpecs.screen_resolution = processScreenResolution(undefined, title, cleanDescription);
+    enhancedSpecs.screen_resolution = processScreenResolution(undefined, `${title} ${cleanDescription}`);
   }
   
   if (!enhancedSpecs.weight) {
-    enhancedSpecs.weight = processWeight(undefined, title, cleanDescription);
+    enhancedSpecs.weight = processWeight(undefined, `${title} ${cleanDescription}`);
   }
   
   if (!enhancedSpecs.battery_life) {
-    enhancedSpecs.battery_life = processBatteryLife(undefined, title, cleanDescription);
+    enhancedSpecs.battery_life = processBatteryLife(undefined, `${title} ${cleanDescription}`);
   }
   
   // Extract additional specs that might not be in the basic specs
@@ -77,7 +77,7 @@ export const processLaptopDescription = (description: string | undefined, title:
                             enhancedSpecs.touchscreen : 
                             specsProcessorTouchscreen(title, cleanDescription);
   if (enhancedSpecs.touchscreen === undefined) {
-    enhancedSpecs.touchscreen = physicalProcessorTouchscreen(undefined, title, cleanDescription);
+    enhancedSpecs.touchscreen = physicalProcessorTouchscreen(undefined, `${title} ${cleanDescription}`);
   }
   
   enhancedSpecs.operating_system = enhancedSpecs.operating_system || processOperatingSystem(title, cleanDescription);
@@ -85,7 +85,7 @@ export const processLaptopDescription = (description: string | undefined, title:
   // For color detection, try both processors
   enhancedSpecs.color = enhancedSpecs.color || specsProcessorColor(title, cleanDescription);
   if (!enhancedSpecs.color) {
-    enhancedSpecs.color = physicalProcessorColor(undefined, title, cleanDescription);
+    enhancedSpecs.color = physicalProcessorColor(undefined, `${title} ${cleanDescription}`);
   }
   
   enhancedSpecs.warranty = enhancedSpecs.warranty || processWarranty(title, cleanDescription);
@@ -98,12 +98,12 @@ export const processLaptopDescription = (description: string | undefined, title:
                                  enhancedSpecs.backlit_keyboard : 
                                  specsProcessorBacklitKeyboard(title, cleanDescription);
   if (enhancedSpecs.backlit_keyboard === undefined) {
-    enhancedSpecs.backlit_keyboard = physicalProcessorBacklitKeyboard(undefined, title, cleanDescription);
+    enhancedSpecs.backlit_keyboard = physicalProcessorBacklitKeyboard(undefined, `${title} ${cleanDescription}`);
   }
   
   // For ports detection, try both processors
   const specsProcessorPortsResult = specsProcessorPorts(title, cleanDescription);
-  const physicalProcessorPortsResult = physicalProcessorPorts(undefined, title, cleanDescription);
+  const physicalProcessorPortsResult = physicalProcessorPorts(undefined, `${title} ${cleanDescription}`);
   enhancedSpecs.ports = enhancedSpecs.ports || specsProcessorPortsResult || physicalProcessorPortsResult;
   
   // For fingerprint detection, try both processors
@@ -111,11 +111,11 @@ export const processLaptopDescription = (description: string | undefined, title:
                             enhancedSpecs.fingerprint : 
                             specsProcessorFingerprint(title, cleanDescription);
   if (enhancedSpecs.fingerprint === undefined) {
-    enhancedSpecs.fingerprint = physicalProcessorFingerprint(undefined, title, cleanDescription);
+    enhancedSpecs.fingerprint = physicalProcessorFingerprint(undefined, `${title} ${cleanDescription}`);
   }
   
   // Add camera information
-  enhancedSpecs.camera = enhancedSpecs.camera || processCamera(undefined, title, cleanDescription);
+  enhancedSpecs.camera = enhancedSpecs.camera || processCamera(undefined, `${title} ${cleanDescription}`);
   
   // Log enhanced specs for debugging
   console.log('Enhanced specs from description:', {
