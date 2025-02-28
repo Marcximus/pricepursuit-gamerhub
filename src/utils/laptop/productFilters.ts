@@ -1,107 +1,74 @@
 
-/**
- * Product filtering utilities for removing duplicate ASINs 
- * and products with forbidden keywords in titles
- */
-
-// List of keywords that indicate a product is not a laptop
+// Add iPad to the list of forbidden keywords
 const FORBIDDEN_KEYWORDS = [
-  // Accessories and peripherals
-  "Charger Block", "Battery Replacement", "Replacement Laptop", "Stylus", "Mouse",
-  "Messenger Case", "Protective Case", "Protective Sleeve", "Laptop Battery",
-  "Laptop Charger", "Headset", "Laptop Skin", "Mouse Pro", "Bag",
-  "External Hard Drive", "Power Adapter", "Mouse", "Headset", "Laptop Stand",
-  "Magic Keyboard", "Backpack", "Cooling pad", "External Enclosure", "Display Panel",
-  "Surface dock", "Surface docking", "Screen Extender", "Earbuds", "Screen Replacement",
-  "dock triple", "Bagpacks", "Bagoack", "Memory kit", "Soundbar", "Laptop AC Adapter",
-  "CPU FAN", "Replacement Keyboards", "Power Cord Cable", "Charging Cable",
-  "Hoodies", "Protector Cover", "Women's", "Women", "Pad Protector",
-  "Feet Replacement", "Sync Cable", "Insulation Wrapping", "Replacement Memory Ram",
-  "Cord Cable", "Screen Protector", "Charging Adapter", "Jack Connector", 
-  "Wireless Mouse", "Rubber Feet Replacement", "PortChanger", "Touchpad protector", 
-  "Touch pad protector", "Touch pad film protector", "Rubber Feet", "Laptop Sleeve", 
-  "Over-ear", "Computer Keyboard", "Docking Station", "Webcam for PC",
-  "External CD", "External DVD", "BDXL", "Printer Ink",
-  
-  // Charger-related keywords (commonly mixed with laptops)
-  "Charger fit", "Charger for", "Charger Fit For", "Adapter Laptop Charger",
-  "Adapter Charger", "Laptop Super Charger", "Car Charger", "Charger Replacement",
-  "Charger", "Charger:", "Adapter", "Car Jump", "Battery Jump",
-  
-  // Smartphone keywords (commonly mixed in with laptop searches)
-  "P40 Pro 5G", "P30 Pro",
-  
-  // Specific hardware parts (not full laptops)
-  "Cooling fan replacement", "Laptop Bottom Base Case", "PIN LCD Display",
-  
-  // Books and media
-  "Seniors Guide", "Drive Player", "Portable DVD Writer",
-  
-  // Vague/non-laptop descriptors
-  "Jump Starter", "New 90%"
+  'screen protector',
+  'keyboard',
+  'mouse',
+  'case',
+  'bag',
+  'power bank',
+  'charger',
+  'adapter',
+  'dock',
+  'docking station',
+  'stand',
+  'cooling pad',
+  'webcam',
+  'monitor',
+  'tablet', 
+  'smartphone',
+  'phone',
+  'projector',
+  'iPad', // Add iPad to the forbidden keywords
 ];
 
-/**
- * Check if a product title contains any forbidden keywords
- * 
- * @param title Product title to check
- * @returns true if the title contains any forbidden keywords
- */
-export const containsForbiddenKeywords = (title: string): boolean => {
+// Check if a title contains any forbidden keywords
+export const containsForbiddenKeywords = (title: string | null | undefined): boolean => {
   if (!title) return false;
   
-  const normalizedTitle = title.toLowerCase();
-  
+  const titleLower = title.toLowerCase();
   return FORBIDDEN_KEYWORDS.some(keyword => 
-    normalizedTitle.includes(keyword.toLowerCase())
+    titleLower.includes(keyword.toLowerCase())
   );
 };
 
-/**
- * Filter products to remove those with forbidden keywords in their titles
- * 
- * @param products Array of products to filter
- * @returns Array of products without forbidden keywords in titles
- */
-export const filterProductsByKeywords = <T extends { title?: string }>(products: T[]): T[] => {
-  return products.filter(product => !containsForbiddenKeywords(product.title || ''));
+// Check if a product is valid based on a variety of filters
+export const isValidLaptopProduct = (product: any): boolean => {
+  // Skip products without a title
+  if (!product.title) return false;
+  
+  // Skip products with forbidden keywords
+  if (containsForbiddenKeywords(product.title)) return false;
+  
+  // Skip products with model containing "iPad"
+  if (product.model && product.model.toLowerCase().includes('ipad')) return false;
+  
+  // Skip products without a price
+  if (!product.current_price) return false;
+  
+  // Skip products with unrealistic prices
+  if (product.current_price < 100 || product.current_price > 15000) return false;
+  
+  return true;
 };
 
-/**
- * Remove duplicate ASINs from an array of products, keeping the most recent one
- * 
- * @param products Array of products to deduplicate
- * @returns Array of products with unique ASINs
- */
-export const deduplicateProductsByAsin = <T extends { asin: string; last_checked?: string }>(products: T[]): T[] => {
-  const uniqueProducts = new Map<string, T>();
+// Apply all product filters to a collection of products
+export const applyAllProductFilters = (products: any[]): any[] => {
+  if (!products || !Array.isArray(products)) return [];
   
-  // Process products in order, potentially overwriting with more recent ones
-  for (const product of products) {
-    const existingProduct = uniqueProducts.get(product.asin);
+  // First filter out products that don't meet the basic criteria
+  const validProducts = products.filter(isValidLaptopProduct);
+  
+  // Filter out duplicate ASINs
+  const seenAsins = new Set<string>();
+  return validProducts.filter(product => {
+    if (!product.asin) return true;
     
-    // If this ASIN doesn't exist yet in our map, or if this product is more recent, use it
-    if (!existingProduct || (product.last_checked && existingProduct.last_checked && 
-        new Date(product.last_checked) > new Date(existingProduct.last_checked))) {
-      uniqueProducts.set(product.asin, product);
+    if (seenAsins.has(product.asin)) {
+      return false; // Skip duplicates
     }
-  }
-  
-  return Array.from(uniqueProducts.values());
-};
-
-/**
- * Apply all filtering rules to a list of products
- * 
- * @param products Array of products to filter
- * @returns Filtered products
- */
-export const applyAllProductFilters = <T extends { asin: string; title?: string; last_checked?: string }>(
-  products: T[]
-): T[] => {
-  // First remove products with forbidden keywords
-  const keywordFiltered = filterProductsByKeywords(products);
-  
-  // Then deduplicate ASINs
-  return deduplicateProductsByAsin(keywordFiltered);
+    
+    seenAsins.add(product.asin);
+    return true;
+  });
 };
