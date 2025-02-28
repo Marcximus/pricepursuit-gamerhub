@@ -62,7 +62,8 @@ export async function collectLaptops() {
       method: 'POST',
       body: { 
         brands: COLLECTION_CONFIG.LAPTOP_BRANDS,
-        pagesPerBrand: COLLECTION_CONFIG.PAGES_PER_BRAND
+        pagesPerBrand: COLLECTION_CONFIG.PAGES_PER_BRAND,
+        detailedLogging: true // Add flag to enable detailed logging on the server
       }
     });
     
@@ -82,7 +83,7 @@ export async function collectLaptops() {
     
     toast({
       title: "Collection Started",
-      description: `Started collection for ${COLLECTION_CONFIG.LAPTOP_BRANDS.length} brands. This may take some time to complete.`,
+      description: `Started collection for ${COLLECTION_CONFIG.LAPTOP_BRANDS.length} brands. This may take some time to complete. Check the console logs for detailed progress.`,
       variant: "default"
     });
     
