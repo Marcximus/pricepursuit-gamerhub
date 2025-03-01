@@ -3,8 +3,7 @@ import {
   matchesAppleProcessor, 
   matchesIntelProcessor,
   matchesAmdProcessor,
-  matchesOtherProcessor,
-  isMainCategoryProcessor
+  matchesOtherProcessor
 } from './';
 import { standardizeProcessorForFiltering } from "../../extractors/processor/processorStandardizer";
 
