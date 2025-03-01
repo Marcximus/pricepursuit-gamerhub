@@ -1,7 +1,12 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { updateSpecificLaptopRam, updateB07SRSSWH9Ram } from '@/utils/laptop/manualProductUpdates';
+import { 
+  updateSpecificLaptopRam, 
+  updateB07SRSSWH9Ram, 
+  updateAlienwareM18R2Ram,
+  refreshLaptopCache 
+} from '@/utils/laptop/manualProductUpdates';
 import { toast } from 'sonner';
 
 export function UpdateSpecificLaptops() {
@@ -49,6 +54,51 @@ export function UpdateSpecificLaptops() {
     }
   };
 
+  const handleUpdateAlienwareRam = async () => {
+    setIsUpdating(true);
+    toast.info('Starting update for Alienware M18 R2 RAM...');
+    
+    try {
+      const result = await updateAlienwareM18R2Ram();
+      
+      if (result.success) {
+        toast.success('Successfully updated Alienware M18 R2 laptop RAM to 32 GB DDR5!');
+        if (result.message) {
+          console.log(result.message);
+        }
+      } else {
+        toast.error('Failed to update Alienware laptop RAM. See console for details.');
+        console.error('Update error:', result.error);
+      }
+    } catch (error) {
+      toast.error('Error during update process. See console for details.');
+      console.error('Update process error:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleRefreshCache = async () => {
+    setIsUpdating(true);
+    toast.info('Refreshing laptop data cache...');
+    
+    try {
+      const result = await refreshLaptopCache();
+      
+      if (result.success) {
+        toast.success('Successfully refreshed laptop data cache!');
+      } else {
+        toast.error('Failed to refresh cache. See console for details.');
+        console.error('Refresh error:', result.error);
+      }
+    } catch (error) {
+      toast.error('Error during cache refresh. See console for details.');
+      console.error('Cache refresh error:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <h3 className="text-sm font-medium">Manual Product Updates</h3>
@@ -68,6 +118,22 @@ export function UpdateSpecificLaptops() {
           size="sm"
         >
           {isUpdating ? 'Updating...' : 'Update B07SRSSWH9 RAM to 64 GB DDR5'}
+        </Button>
+        <Button 
+          onClick={handleUpdateAlienwareRam}
+          disabled={isUpdating}
+          variant="outline"
+          size="sm"
+        >
+          {isUpdating ? 'Updating...' : 'Update Alienware M18 R2 RAM to 32 GB DDR5'}
+        </Button>
+        <Button 
+          onClick={handleRefreshCache}
+          disabled={isUpdating}
+          variant="outline"
+          size="sm"
+        >
+          {isUpdating ? 'Refreshing...' : 'Refresh Laptop Data Cache'}
         </Button>
       </div>
     </div>
