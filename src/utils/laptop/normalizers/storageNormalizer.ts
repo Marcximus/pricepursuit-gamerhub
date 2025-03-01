@@ -1,6 +1,4 @@
 
-import { getStorageValue } from '../valueParser';
-
 /**
  * Normalizes storage strings for consistent display and grouping
  */
@@ -29,7 +27,7 @@ export const normalizeStorage = (storage: string): string => {
   } else if (gbValue >= 200) {
     return '200 GB+';
   } else if (gbValue >= 100) {
-    return '100 GB+';
+    return '100 GB+';  // This now properly captures 100-199 GB
   }
   
   // For values below 100GB, we'll still return empty to filter out unrealistic values
