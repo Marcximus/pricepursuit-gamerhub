@@ -7,7 +7,8 @@ import {
   updateAlienwareM18R2Ram,
   refreshLaptopCache,
   updateB07SXVRQ6NRam,
-  updateB07TB8WP87Ram
+  updateB07TB8WP87Ram,
+  updateB09DDCDKZZRam
 } from '@/utils/laptop/manualProductUpdates';
 import { toast } from 'sonner';
 
@@ -123,6 +124,27 @@ export function UpdateSpecificLaptops() {
     }
   };
 
+  const handleUpdateB09DDCDKZZ = async () => {
+    setIsUpdating(true);
+    toast.info('Starting update for ASIN B09DDCDKZZ RAM...');
+    
+    try {
+      const result = await updateB09DDCDKZZRam();
+      
+      if (result.success) {
+        toast.success('Successfully updated laptop RAM to 12 GB DDR4!');
+      } else {
+        toast.error('Failed to update laptop RAM. See console for details.');
+        console.error('Update error:', result.error);
+      }
+    } catch (error) {
+      toast.error('Error during update process. See console for details.');
+      console.error('Update process error:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleRefreshCache = async () => {
     setIsUpdating(true);
     toast.info('Refreshing laptop data cache...');
@@ -187,6 +209,14 @@ export function UpdateSpecificLaptops() {
           size="sm"
         >
           {isUpdating ? 'Updating...' : 'Update B07TB8WP87 RAM to 32 GB DDR5'}
+        </Button>
+        <Button 
+          onClick={handleUpdateB09DDCDKZZ}
+          disabled={isUpdating}
+          variant="outline"
+          size="sm"
+        >
+          {isUpdating ? 'Updating...' : 'Update B09DDCDKZZ RAM to 12 GB DDR4'}
         </Button>
         <Button 
           onClick={handleRefreshCache}

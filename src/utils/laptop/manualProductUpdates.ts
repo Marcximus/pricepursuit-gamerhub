@@ -96,6 +96,17 @@ export const updateB07TB8WP87Ram = async () => {
   return result;
 };
 
+// Function to update the RAM for B09DDCDKZZ to 12 GB DDR4
+export const updateB09DDCDKZZRam = async () => {
+  const ASIN = 'B09DDCDKZZ';
+  const NEW_RAM = '12 GB DDR4';
+  
+  console.log(`Updating RAM for product ${ASIN} to "${NEW_RAM}"`);
+  const result = await updateProductRam(ASIN, NEW_RAM);
+  
+  return result;
+};
+
 // Function to update the Alienware M18 R2 RAM from 12 GB to 32 GB
 export const updateAlienwareM18R2Ram = async () => {
   // We need the ASIN for the Alienware M18 R2 model
