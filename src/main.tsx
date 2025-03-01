@@ -1,31 +1,22 @@
 
-import React from 'react'
-import ReactDOM from 'react-dom/client'
+import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
-import { BrowserRouter } from 'react-router-dom'
-import { Toaster } from "@/components/ui/toaster"
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-// Import quick updates for global access
-import '@/utils/laptop/quickUpdates';
+// Add console log to help debugging
+console.log('Initializing application');
 
-// Create a React Query client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-    },
-  },
-})
+// Make sure we find the root element
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  console.error("Cannot find root element");
+  throw new Error("Cannot find root element");
+}
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <App />
-        <Toaster />
-      </QueryClientProvider>
-    </BrowserRouter>
-  </React.StrictMode>,
-)
+// Render the app with error boundaries
+try {
+  createRoot(rootElement).render(<App />);
+  console.log('Application rendered successfully');
+} catch (error) {
+  console.error('Failed to render application:', error);
+}

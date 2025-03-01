@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -49,26 +50,6 @@ export const updateProductByAsin = async (
  */
 export const updateProductRam = async (asin: string, ramSpec: string) => {
   return updateProductByAsin(asin, { ram: ramSpec });
-};
-
-/**
- * Updates storage specification for a specific product by ASIN
- * @param asin The product ASIN
- * @param storageSpec The new storage specification
- */
-export const updateProductStorage = async (asin: string, storageSpec: string) => {
-  return updateProductByAsin(asin, { storage: storageSpec });
-};
-
-// Function to update the storage for product B07QQB7552 to 256GB SSD
-export const updateB07QQB7552Storage = async () => {
-  const ASIN = 'B07QQB7552';
-  const NEW_STORAGE = '256GB SSD';
-  
-  console.log(`Updating storage for product ${ASIN} to "${NEW_STORAGE}"`);
-  const result = await updateProductStorage(ASIN, NEW_STORAGE);
-  
-  return result;
 };
 
 // Function to update the RAM for product B07STVDB3N to 32 GB DDR5
