@@ -1,47 +1,82 @@
 
 import React from "react";
-import { toast } from "@/components/ui/use-toast";
-import { Filter } from "lucide-react";
-import ManagementCard from "./ManagementCard";
-import { cleanupLaptopDatabase } from "@/utils/laptop/cleanupLaptops";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { cleanupLaptops } from "@/utils/laptop/cleanupLaptops";
+import { refreshBrandModels } from "@/utils/laptop/refreshBrandModels";
+import { UpdateSpecificLaptops } from "./processors/UpdateSpecificLaptops";
 
-interface CleanupSectionProps {
-  refreshStats: () => Promise<void>;
-}
+type CleanupSectionProps = {
+  refreshStats: () => void;
+};
 
-const CleanupSection: React.FC<CleanupSectionProps> = ({
-  refreshStats
-}) => {
+const CleanupSection: React.FC<CleanupSectionProps> = ({ refreshStats }) => {
+  const [isWorking, setIsWorking] = React.useState(false);
+
   const handleCleanup = async () => {
     try {
-      const result = await cleanupLaptopDatabase();
-      if (result.success) {
-        toast({
-          title: "Cleanup Complete",
-          description: `Successfully cleaned up the laptop database. ${result.removedForbiddenKeywords} products with forbidden keywords were removed.`,
-        });
-        // Refresh stats immediately after cleanup
-        await refreshStats();
-      }
+      setIsWorking(true);
+      toast.info("Starting laptop database cleanup...");
+      const result = await cleanupLaptops();
+      console.log("Cleanup result:", result);
+      toast.success(`Database cleanup complete. ${result.removedCount} items removed.`);
+      refreshStats();
     } catch (error) {
-      console.error('Error cleaning up laptop database:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to clean up laptop database",
-      });
+      console.error("Error during cleanup:", error);
+      toast.error("Cleanup failed. See console for details.");
+    } finally {
+      setIsWorking(false);
+    }
+  };
+
+  const handleRefreshBrandModels = async () => {
+    try {
+      setIsWorking(true);
+      toast.info("Starting brand/model refresh...");
+      const result = await refreshBrandModels();
+      console.log("Brand/model refresh result:", result);
+      toast.success(`Brand/model refresh complete. ${result.updated} items updated.`);
+      refreshStats();
+    } catch (error) {
+      console.error("Error during brand/model refresh:", error);
+      toast.error("Brand/model refresh failed. See console for details.");
+    } finally {
+      setIsWorking(false);
     }
   };
 
   return (
-    <ManagementCard
-      title="Clean Database"
-      description="Remove accessories, duplicates and non-laptop products"
-      icon={Filter}
-      buttonText="Clean Database"
-      onClick={handleCleanup}
-      variant="outline"
-    />
+    <Card className="p-4">
+      <h3 className="text-md font-medium mb-2">Database Maintenance</h3>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <p className="text-sm text-gray-500">
+            Run occasional cleanup operations to remove outdated or incomplete laptop records.
+          </p>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleCleanup}
+              disabled={isWorking}
+              variant="outline"
+              size="sm"
+            >
+              {isWorking ? "Processing..." : "Remove Invalid Products"}
+            </Button>
+            <Button
+              onClick={handleRefreshBrandModels}
+              disabled={isWorking}
+              variant="outline"
+              size="sm"
+            >
+              {isWorking ? "Processing..." : "Refresh Brand & Model Data"}
+            </Button>
+          </div>
+        </div>
+
+        <UpdateSpecificLaptops />
+      </div>
+    </Card>
   );
 };
 
