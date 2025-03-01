@@ -13,6 +13,21 @@ export const normalizeStorage = (storage: string): string => {
   // Log normalizing process for debugging
   console.log(`Normalizing storage: "${storage}" -> ${gbValue} GB`);
   
+  // Add sanity check for unrealistic storage values (laptops typically don't have 100+ TB storage)
+  // This catches errors like "512 TB SSD" which should be "512 GB SSD"
+  if (storage.toLowerCase().includes('tb') && gbValue > 100000) {
+    console.warn(`Unrealistic storage value detected: "${storage}" (${gbValue} GB). Likely a typo in TB/GB.`);
+    
+    // Try to correct obviously wrong "TB" values that should be "GB"
+    const correctedValue = gbValue / 1024; // Convert back to the original number before TB multiplication
+    if (correctedValue >= 128 && correctedValue <= 2048) {
+      console.log(`Auto-correcting storage from ${gbValue} GB to ${correctedValue} GB (TB → GB conversion)`);
+      return normalizeStorage(storage.replace(/TB/i, 'GB'));
+    }
+    
+    return '';
+  }
+  
   // Filter out invalid or unrealistic storage values
   if (gbValue <= 0) {
     return '';

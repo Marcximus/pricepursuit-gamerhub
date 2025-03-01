@@ -1,10 +1,18 @@
-
 /**
  * Functions for processing and normalizing storage information
  */
 
 export const processStorage = (storage: string | undefined, title: string, description?: string): string | undefined => {
   if (storage && typeof storage === 'string' && !storage.includes('undefined')) {
+    // Check for and correct obviously wrong TB values
+    if (storage.match(/\b(256|512|128|1000|2000)\s*TB\b/i)) {
+      console.warn(`Found likely incorrect TB value in storage: "${storage}"`);
+      // Replace TB with GB for common laptop storage sizes
+      const correctedStorage = storage.replace(/(\b(?:256|512|128|1000|2000))\s*TB\b/i, '$1 GB');
+      console.log(`Corrected storage: "${storage}" → "${correctedStorage}"`);
+      storage = correctedStorage;
+    }
+    
     // Clean up existing storage string
     const cleanedStorage = storage.trim().replace(/\s+/g, ' ');
     if (cleanedStorage.length > 4) {
@@ -72,7 +80,23 @@ export const processStorage = (storage: string | undefined, title: string, descr
       
       // Process single storage
       const size = match[1];
-      const unit = match[0].includes('TB') ? 'TB' : 'GB';
+      let unit = match[0].includes('TB') ? 'TB' : 'GB';
+      
+      // Validate storage values for realism
+      // Common laptop SSD/HDD sizes are typically 128GB, 256GB, 512GB, 1TB, 2TB
+      // Catching unrealistic values like 512TB when it should be 512GB
+      const sizeNum = parseInt(size, 10);
+      if (unit.toLowerCase() === 'tb' && sizeNum > 16) {
+        console.warn(`Unrealistic TB storage value detected: ${sizeNum}TB. Likely a typo for GB.`);
+        // Auto-correct common laptop storage sizes
+        if (sizeNum === 128 || sizeNum === 256 || sizeNum === 512 || sizeNum === 1000 || sizeNum === 2000) {
+          unit = 'GB';
+          console.log(`Auto-corrected storage unit from TB to GB: ${sizeNum}${unit}`);
+        } else {
+          // Skip this match if it's unrealistic and we couldn't auto-correct it
+          continue;
+        }
+      }
       
       // Extract storage type information
       let type = 'SSD'; // Default to SSD for modern laptops
@@ -104,9 +128,12 @@ export const processStorage = (storage: string | undefined, title: string, descr
         }
       }
       
-      // Validate storage size is reasonable (minimum 100GB for modern laptops)
-      const sizeNum = parseInt(size, 10);
-      if ((unit === 'GB' && sizeNum < 100) || (unit === 'TB' && sizeNum > 16)) {
+      // Validate storage size is reasonable for laptops
+      // Common sizes: 128GB, 256GB, 512GB, 1TB, 2TB
+      const normalizedSizeGB = unit.toLowerCase() === 'tb' ? sizeNum * 1024 : sizeNum;
+      
+      if (normalizedSizeGB < 32 || normalizedSizeGB > 16384) { // 32GB to 16TB range
+        console.warn(`Storage value outside reasonable range: ${size}${unit} (${normalizedSizeGB}GB)`);
         continue; // Skip unrealistic storage values
       }
       
@@ -130,11 +157,20 @@ export const processStorage = (storage: string | undefined, title: string, descr
       
       // Validate storage size
       const sizeNum = parseInt(storageSize, 10);
-      if ((storageUnit === 'GB' && sizeNum < 100) || (storageUnit === 'TB' && sizeNum > 16)) {
-        return undefined; // Skip unrealistic storage values
+      
+      // Correct obvious errors (e.g., 512 TB should be 512 GB)
+      let correctedUnit = storageUnit;
+      if (storageUnit.toLowerCase() === 'tb' && sizeNum > 16) {
+        // Auto-correct common laptop storage sizes that would be unrealistic as TB
+        if (sizeNum === 128 || sizeNum === 256 || sizeNum === 512 || sizeNum === 1000 || sizeNum === 2000) {
+          correctedUnit = 'GB';
+          console.log(`Auto-corrected description storage from ${sizeNum}TB to ${sizeNum}GB`);
+        } else {
+          return undefined; // Skip unrealistic storage values
+        }
       }
       
-      return `${storageSize}${storageUnit} ${storageType}`;
+      return `${storageSize}${correctedUnit} ${storageType}`;
     }
   }
   
