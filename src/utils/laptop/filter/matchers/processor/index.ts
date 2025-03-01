@@ -3,6 +3,6 @@
 export * from './appleProcessor';
 export * from './amdProcessor';
 export * from './otherProcessor';
-export * from './intel';
+// Export the main Intel processor matcher function and avoid re-exporting the individual matchers
+export { matchesIntelProcessor } from './intel';
 export * from './processorMatcherCore';
-
