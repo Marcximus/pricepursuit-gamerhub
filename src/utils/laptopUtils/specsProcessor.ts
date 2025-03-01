@@ -126,7 +126,7 @@ export const processRam = (ram: string | undefined, title: string, description?:
   
   // Look for RAM in the text (more specific patterns first)
   const ramPatterns = [
-    // Match specific RAM mentions with DDR type
+    // Match specific RAM mentions with DDR type (highest priority)
     /\b(\d+)\s*GB\s*(?:DDR[345]|LPDDR[345][X]?)\s*(?:RAM|Memory)?\b/i,
     
     // Match RAM with DDR type
@@ -141,14 +141,23 @@ export const processRam = (ram: string | undefined, title: string, description?:
     /\bRAM:\s*(\d+)\s*GB\b/i,
     /\bMemory:\s*(\d+)\s*GB\b/i,
     
-    // Match RAM before storage or other specs
-    /\b(\d+)\s*GB\b(?=.*(?:SSD|HDD|Storage|RAM))/i,
-    
-    // Match RAM mentioned early in specs
+    // Match RAM before storage (must have RAM indicator)
+    /\b(\d+)\s*GB\b(?=\s*(?:RAM|Memory|DDR))/i,
+  ];
+  
+  // Check for storage mentions to avoid confusion
+  const hasStorageMention = /\b\d+\s*GB\s*(?:SSD|HDD|Storage|eMMC)\b/i.test(textToSearch);
+  
+  // If there are storage mentions, we need to be more careful with generic GB patterns
+  const genericRamPatterns = [
+    // Only use these if no storage mention or if there's clear separation
+    // Match RAM mentioned early in specs - be cautious
     /\b(\d+)\s*GB\b(?!.*(?:SSD|HDD|Storage|hard\s*drive))/i,
   ];
   
-  for (const pattern of ramPatterns) {
+  const allPatterns = hasStorageMention ? ramPatterns : [...ramPatterns, ...genericRamPatterns];
+  
+  for (const pattern of allPatterns) {
     const match = textToSearch.match(pattern);
     if (match) {
       const ramSize = match[1];
@@ -157,6 +166,20 @@ export const processRam = (ram: string | undefined, title: string, description?:
       const ramSizeNum = parseInt(ramSize, 10);
       if (ramSizeNum < 2 || ramSizeNum > 128) {
         continue; // Skip unrealistic RAM values
+      }
+      
+      // Double-check this isn't actually storage
+      // Look at surrounding text for storage indicators
+      const matchIndex = match.index || 0;
+      const surroundingText = textToSearch.substring(
+        Math.max(0, matchIndex - 20), 
+        Math.min(textToSearch.length, matchIndex + match[0].length + 20)
+      );
+      
+      // If there are storage indicators right next to this value, skip it
+      if (/SSD|HDD|Storage|hard\s*drive|eMMC/i.test(surroundingText) && 
+          !/RAM|Memory|DDR/i.test(surroundingText)) {
+        continue;
       }
       
       // Look for DDR type
