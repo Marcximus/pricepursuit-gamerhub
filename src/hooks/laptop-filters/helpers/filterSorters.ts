@@ -13,15 +13,15 @@ export const sortRamOptions = (values: string[]): string[] => {
  * Sorts storage options by capacity (descending)
  */
 export const sortStorageOptions = (options: string[]): string[] => {
-  // Define the order for standardized storage groups
+  // Define the order for standardized storage groups (reversed order to show largest first)
   const standardStorageGroups = [
-    '100GB+', 
-    '200GB+', 
-    '500GB+', 
-    '1TB+', 
+    '8TB+',
+    '4TB+',
     '2TB+', 
-    '4TB+', 
-    '8TB+'
+    '1TB+', 
+    '500GB+', 
+    '200GB+', 
+    '100GB+'
   ];
 
   // First check if these are the standardized groups
@@ -33,7 +33,7 @@ export const sortStorageOptions = (options: string[]): string[] => {
     });
   }
 
-  // For non-standardized storage values, use the existing logic
+  // For non-standardized storage values, use the existing logic but sort in descending order
   return options.sort((a, b) => {
     // Extract numeric value and unit
     const aMatch = a.match(/(\d+)\s*(GB|TB|gb|tb)/i);
@@ -52,7 +52,8 @@ export const sortStorageOptions = (options: string[]): string[] => {
     const aGB = aUnit === 'tb' ? aValue * 1024 : aValue;
     const bGB = bUnit === 'tb' ? bValue * 1024 : bValue;
     
-    return aGB - bGB;
+    // Reverse the comparison for descending order
+    return bGB - aGB;
   });
 };
 
