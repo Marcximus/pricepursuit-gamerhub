@@ -1,85 +1,8 @@
-/**
- * Intel processor matcher (Core i-series, Core Ultra, Celeron, Pentium)
- */
-export const matchesIntelProcessor = (
-  filterValue: string,
-  productValue: string | null | undefined,
-  productTitle?: string
-): boolean => {
-  if (!productValue && !productTitle) return false;
-  
-  // Match Intel Core Ultra series
-  if (filterValue.startsWith('Intel Core Ultra')) {
-    return matchesIntelCoreUltra(filterValue, productValue, productTitle);
-  }
-  
-  // Match Intel Core i-series with specific generation info
-  if (filterValue.includes('Intel Core i') && filterValue.includes('Gen')) {
-    return matchesIntelCoreWithGeneration(filterValue, productValue, productTitle);
-  }
-  
-  // Match Intel Celeron
-  if (filterValue === 'Intel Celeron') {
-    return matchesIntelCeleron(productValue, productTitle);
-  }
-  
-  // Match Intel Pentium
-  if (filterValue === 'Intel Pentium') {
-    return matchesIntelPentium(productValue, productTitle);
-  }
-  
-  return false;
-};
-
-/**
- * Intel Core Ultra series matcher
- */
-function matchesIntelCoreUltra(
-  filterValue: string,
-  productValue: string | null | undefined,
-  productTitle?: string
-): boolean {
-  const ultraNumber = filterValue.split(' ').pop(); // Get the number (5,7,9)
-  
-  // Check processor value
-  if (productValue) {
-    const normalizedProcessor = productValue.toLowerCase();
-    
-    if (normalizedProcessor.includes('core ultra') || 
-        normalizedProcessor.includes('intel ultra') ||
-        normalizedProcessor.match(/\d+-core\s+ultra/i)) {
-      
-      if (ultraNumber && 
-          (normalizedProcessor.includes(`ultra ${ultraNumber}`) || 
-           normalizedProcessor.includes(`ultra${ultraNumber}`) ||
-           normalizedProcessor.match(new RegExp(`\\bultra\\s*${ultraNumber}\\b`, 'i')) ||
-           normalizedProcessor.match(new RegExp(`\\bcore\\s*ultra\\s*${ultraNumber}\\b`, 'i')))) {
-        return true;
-      }
-    }
-  }
-  
-  // Check title
-  if (productTitle) {
-    const normalizedTitle = productTitle.toLowerCase();
-    
-    if (normalizedTitle.includes('core ultra') || normalizedTitle.includes('-core ultra')) {
-      
-      if (ultraNumber && 
-          (normalizedTitle.includes(`ultra ${ultraNumber}`) || 
-           normalizedTitle.includes(`core ultra ${ultraNumber}`))) {
-        return true;
-      }
-    }
-  }
-  
-  return false;
-}
 
 /**
  * Intel Core i-series with generation matcher, updated for consolidated generation groups
  */
-function matchesIntelCoreWithGeneration(
+export function matchesIntelCoreWithGeneration(
   filterValue: string,
   productValue: string | null | undefined,
   productTitle?: string
@@ -208,71 +131,6 @@ function matchesIntelCoreWithGeneration(
          normalizedTitle.match(new RegExp(`\\bcore_i${coreNumber}\\b`, 'i'))) && 
         !normalizedTitle.match(/\d+th\s+gen|\d+\s+gen|\d+th\s+generation/i) &&
         !normalizedTitle.match(/i${coreNumber}[\s-]\d{4,5}/i)) {
-      return true;
-    }
-  }
-  
-  return false;
-}
-
-/**
- * Intel Celeron matcher
- */
-function matchesIntelCeleron(
-  productValue: string | null | undefined,
-  productTitle?: string
-): boolean {
-  // Check processor value
-  if (productValue) {
-    const normalizedProcessor = productValue.toLowerCase();
-    
-    if (normalizedProcessor.includes('celeron') || 
-        normalizedProcessor.match(/\d+(?:\.\d+)?\s*ghz.*celeron/i) ||
-        normalizedProcessor.match(/celeron.*\d+(?:\.\d+)?\s*ghz/i)) {
-      return true;
-    }
-  }
-  
-  // Check title
-  if (productTitle) {
-    const normalizedTitle = productTitle.toLowerCase();
-    
-    if (normalizedTitle.includes('celeron') || 
-        normalizedTitle.match(/\bceleron\s+n\d{4}\b/i) ||
-        normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*celeron/i) ||
-        normalizedTitle.match(/celeron.*\d+(?:\.\d+)?\s*ghz/i)) {
-      return true;
-    }
-  }
-  
-  return false;
-}
-
-/**
- * Intel Pentium matcher
- */
-function matchesIntelPentium(
-  productValue: string | null | undefined,
-  productTitle?: string
-): boolean {
-  // Check processor value
-  if (productValue) {
-    const normalizedProcessor = productValue.toLowerCase();
-    
-    if (normalizedProcessor.includes('pentium') ||
-        normalizedProcessor.match(/\d+(?:\.\d+)?\s*ghz.*pentium/i) ||
-        normalizedProcessor.match(/pentium.*\d+(?:\.\d+)?\s*ghz/i)) {
-      return true;
-    }
-  }
-  
-  // Check title
-  if (productTitle) {
-    const normalizedTitle = productTitle.toLowerCase();
-    
-    if (normalizedTitle.includes('pentium') ||
-        normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*pentium/i) ||
-        normalizedTitle.match(/pentium.*\d+(?:\.\d+)?\s*ghz/i)) {
       return true;
     }
   }
