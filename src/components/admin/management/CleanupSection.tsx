@@ -3,7 +3,7 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { cleanupLaptops } from "@/utils/laptop/cleanupLaptops";
+import { cleanupLaptopDatabase } from "@/utils/laptop/cleanupLaptops";
 import { refreshBrandModels } from "@/utils/laptop/refreshBrandModels";
 import { UpdateSpecificLaptops } from "./processors/UpdateSpecificLaptops";
 
@@ -18,9 +18,9 @@ const CleanupSection: React.FC<CleanupSectionProps> = ({ refreshStats }) => {
     try {
       setIsWorking(true);
       toast.info("Starting laptop database cleanup...");
-      const result = await cleanupLaptops();
+      const result = await cleanupLaptopDatabase();
       console.log("Cleanup result:", result);
-      toast.success(`Database cleanup complete. ${result.removedCount} items removed.`);
+      toast.success(`Database cleanup complete. ${result.removedForbiddenKeywords} items removed.`);
       refreshStats();
     } catch (error) {
       console.error("Error during cleanup:", error);
