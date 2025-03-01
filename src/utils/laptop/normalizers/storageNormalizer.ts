@@ -11,7 +11,7 @@ export const normalizeStorage = (storage: string): string => {
   const gbValue = getStorageValue(storage);
   
   // Filter out invalid or unrealistic storage values (less than 100GB for modern laptops)
-  if (gbValue < 100) {
+  if (gbValue <= 0) {
     return '';
   }
   
@@ -28,7 +28,10 @@ export const normalizeStorage = (storage: string): string => {
     return '500 GB+';
   } else if (gbValue >= 200) {
     return '200 GB+';
-  } else {
+  } else if (gbValue >= 100) {
     return '100 GB+';
   }
+  
+  // For values below 100GB, we'll still return empty to filter out unrealistic values
+  return '';
 };
