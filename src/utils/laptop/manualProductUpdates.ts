@@ -62,3 +62,14 @@ export const updateSpecificLaptopRam = async () => {
   
   return result;
 };
+
+// Function to update the RAM for product B07SRSSWH9 to 64 GB DDR5
+export const updateB07SRSSWH9Ram = async () => {
+  const ASIN = 'B07SRSSWH9';
+  const NEW_RAM = '64 GB DDR5';
+  
+  console.log(`Updating RAM for product ${ASIN} to "${NEW_RAM}"`);
+  const result = await updateProductRam(ASIN, NEW_RAM);
+  
+  return result;
+};
