@@ -1,4 +1,3 @@
-
 import type { FilterableProductKeys } from "@/utils/laptop/filter";
 import { 
   normalizeRam,
@@ -22,7 +21,8 @@ export const validateRam = (value: string): boolean => {
  */
 export const validateStorage = (value: string): boolean => {
   const storageGB = getStorageValue(value);
-  return storageGB >= 128;
+  // Lower threshold to 80GB to potentially catch more laptops
+  return storageGB >= 80;
 };
 
 /**

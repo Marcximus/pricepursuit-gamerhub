@@ -10,12 +10,16 @@ export const normalizeStorage = (storage: string): string => {
   // Get storage value in GB
   const gbValue = getStorageValue(storage);
   
-  // Filter out invalid or unrealistic storage values (less than 100GB for modern laptops)
+  // Log normalizing process for debugging
+  console.log(`Normalizing storage: "${storage}" -> ${gbValue} GB`);
+  
+  // Filter out invalid or unrealistic storage values
   if (gbValue <= 0) {
     return '';
   }
   
-  // Standardize to specific storage groups with space between number and unit
+  // Ensure 100 GB+ is included by lowering the threshold
+  // Modern laptops typically start at 128 GB, which should be captured
   if (gbValue >= 8192) {
     return '8 TB+';
   } else if (gbValue >= 4096) {
@@ -29,9 +33,14 @@ export const normalizeStorage = (storage: string): string => {
   } else if (gbValue >= 200) {
     return '200 GB+';
   } else if (gbValue >= 100) {
-    return '100 GB+';  // This now properly captures 100-199 GB
+    // This captures values from 100 to 199
+    return '100 GB+';
+  } else if (gbValue >= 80) {
+    // Lower threshold to catch potential legacy/older laptop storage values
+    // between 80-99 GB that might be rounded to 100 GB in marketing
+    return '100 GB+';
   }
   
-  // For values below 100GB, we'll still return empty to filter out unrealistic values
+  // For very low values, we'll filter them out as they're likely errors
   return '';
 };

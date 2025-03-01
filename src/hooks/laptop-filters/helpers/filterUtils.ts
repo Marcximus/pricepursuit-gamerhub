@@ -34,6 +34,18 @@ export const getValidValues = (
     const before = laptops.filter(laptop => laptop.storage).length;
     const after = validValues.length;
     console.log(`Storage filtering: ${before} raw values, ${after} valid values`);
+    
+    // Additional logging to see if we have any "100 GB+" values
+    const has100GBPlus = validValues.includes('100 GB+');
+    console.log(`Has "100 GB+" in storage options: ${has100GBPlus}`);
+    if (!has100GBPlus) {
+      console.log('Storage values available:', validValues);
+      // Check if there are laptops with storage values between 100-199 GB
+      const storageRawValues = laptops
+        .filter(laptop => laptop.storage)
+        .map(laptop => ({ id: laptop.id, storage: laptop.storage }));
+      console.log('Sample of raw storage values:', storageRawValues.slice(0, 10));
+    }
   }
 
   // Return unique values
