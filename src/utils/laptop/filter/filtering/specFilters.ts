@@ -1,8 +1,8 @@
-
 import type { Product } from "@/types/product";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import { matchesFilter } from "../matchers";
-import { extractProcessorFromTitle, standardizeProcessorForFiltering } from "../extractors/processor";
+import { extractProcessorFromTitle } from "../extractors/processor/processorExtractor";
+import { standardizeProcessorForFiltering } from "../extractors/processor/processorStandardizer";
 
 /**
  * Apply processor filtering to a laptop with improved title extraction
@@ -120,4 +120,3 @@ export const applyScreenSizeFilter = (
     matchesFilter(selectedSize, laptop.screen_size, 'screen_size', laptop.title)
   );
 };
-

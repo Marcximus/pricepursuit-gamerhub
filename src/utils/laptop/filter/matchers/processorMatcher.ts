@@ -1,5 +1,4 @@
-
-import { standardizeProcessorForFiltering } from "../extractors/processorExtractor";
+import { standardizeProcessorForFiltering } from "../extractors/processor/processorStandardizer";
 import { normalizeProcessor } from "@/utils/laptop/normalizers/processorNormalizer";
 
 /**
@@ -371,4 +370,3 @@ export const matchesProcessorFilter = (
   
   return false;
 };
-

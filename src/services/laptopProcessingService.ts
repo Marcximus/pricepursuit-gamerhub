@@ -8,7 +8,7 @@ import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import type { SortOption } from "@/components/laptops/LaptopSort";
 import { normalizeBrand, normalizeModel } from "@/utils/laptop/valueNormalizer";
 import { applyAllProductFilters } from "@/utils/laptop/productFilters";
-import { extractProcessorFromTitle } from "@/utils/laptop/filter/extractors/processor";
+import { extractProcessorFromTitle } from "@/utils/laptop/filter/extractors/processor/processorExtractor";
 
 export const processAndFilterLaptops = (
   rawData: any[],

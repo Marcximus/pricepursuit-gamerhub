@@ -1,4 +1,3 @@
-
 import type { Product } from "@/types/product";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import { 
@@ -12,7 +11,7 @@ import {
   hasActiveFilters
 } from "./filtering";
 import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
-import { extractProcessorFromTitle } from "./extractors/processorExtractor";
+import { extractProcessorFromTitle } from "./extractors/processor/processorExtractor";
 
 /**
  * Filters laptops based on selected filter options with improved validation

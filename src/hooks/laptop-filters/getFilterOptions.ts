@@ -6,8 +6,8 @@ import {
   validatorMap 
 } from "./filterHelpers";
 import { sorterMap, sortDefaultOptions } from "./filterSorters";
-import { standardizeProcessorForFiltering } from "@/utils/laptop/filter/extractors/processor";
-import { extractProcessorFromTitle } from "@/utils/laptop/filter/extractors/processor";
+import { standardizeProcessorForFiltering } from "@/utils/laptop/filter/extractors/processor/processorStandardizer";
+import { extractProcessorFromTitle } from "@/utils/laptop/filter/extractors/processor/processorExtractor";
 
 /**
  * Gets unique, validated, and sorted filter options for a specific filter key
