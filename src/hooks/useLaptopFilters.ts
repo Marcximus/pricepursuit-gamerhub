@@ -1,7 +1,7 @@
 
 import { useMemo } from "react";
 import type { Product } from "@/types/product";
-import { getUniqueFilterValues, getGroupedBrandValues } from "./laptop-filters/getFilterOptions";
+import { getUniqueFilterValues, getGroupedBrandValues } from "./laptop-filters";
 
 /**
  * Hook for generating laptop filter options based on available laptop data
