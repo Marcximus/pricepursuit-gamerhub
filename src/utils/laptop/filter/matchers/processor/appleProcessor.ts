@@ -17,6 +17,21 @@ export const matchesAppleProcessor = (
   if (productTitle) {
     const normalizedTitle = productTitle.toLowerCase();
     
+    // Enhanced detection for MacBook Air/Pro with M-series chips mentioned in title
+    if (normalizedTitle.includes('macbook') && normalizedTitle.includes(`m${mVersion}`)) {
+      // For base model, make sure no variant is mentioned
+      if (!isVariant && 
+          !normalizedTitle.includes('pro') && 
+          !normalizedTitle.includes('max') && 
+          !normalizedTitle.includes('ultra')) {
+        return true;
+      }
+      // For variants, make sure the right variant is mentioned
+      else if (isVariant && normalizedTitle.includes(variant)) {
+        return true;
+      }
+    }
+    
     // Check for specific M-series mention with "chip" in title (highest priority pattern)
     if (normalizedTitle.match(new RegExp(`m${mVersion}\\s+chip`, 'i'))) {
       if (!isVariant) {
@@ -65,6 +80,13 @@ export const matchesAppleProcessor = (
           return true;
         }
       }
+    }
+  }
+  
+  // Special handling for when processor value is just "Apple"
+  if (productValue === 'Apple' && productTitle && productTitle.toLowerCase().includes('m2')) {
+    if (!isVariant) {
+      return true;
     }
   }
   

@@ -61,14 +61,22 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
   if (normalizedProcessor.match(/\bapple\s+m2\s+pro\b|\bm2\s+pro\b/i)) {
     return 'Apple M2 Pro';
   }
-  // More aggressive M2 detection - match even standalone "m2" reference when not about RAM/memory
+  
+  // More aggressive M2 detection - adding a stronger pattern specifically for "Apple M2 Chip" cases
   if (normalizedProcessor.match(/\bapple\s+m2\b|\bm2\s+chip\b/i) || 
+      normalizedProcessor.match(/\bmacbook.*m2(?:\s+chip)?\b/i) ||
+      normalizedProcessor.match(/\bapple.*m2(?:\s+chip)?\b/i) ||
       (normalizedProcessor.match(/\bm2\b/i) && 
        !normalizedProcessor.includes('ram') && 
        !normalizedProcessor.includes('memory') && 
        !normalizedProcessor.includes('ssd')) ||
       (normalizedProcessor.includes('m2') && normalizedProcessor.includes('chip'))) {
     return 'Apple M2';
+  }
+  
+  // If processor is just "Apple" and we're in a MacBook context, it might be an M-series chip
+  if (normalizedProcessor === 'apple') {
+    return 'Apple M-series';
   }
   
   // M1 Series - enhanced detection
@@ -81,6 +89,7 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
   if (normalizedProcessor.match(/\bapple\s+m1\s+pro\b|\bm1\s+pro\b/i)) {
     return 'Apple M1 Pro';
   }
+  
   // More aggressive M1 detection - match even standalone "m1" reference when not about RAM/memory
   if (normalizedProcessor.match(/\bapple\s+m1\b|\bm1\s+chip\b/i) || 
       (normalizedProcessor.match(/\bm1\b/i) && 
@@ -140,7 +149,7 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
     }
   }
   
-  // Check explicit generation mentions
+  // Check for explicit generation mentions
   if (normalizedProcessor.includes('13th gen') || normalizedProcessor.includes('14th gen')) {
     if (normalizedProcessor.includes('i9') || normalizedProcessor.includes('core i9') || 
         normalizedProcessor.includes('core_i9')) {

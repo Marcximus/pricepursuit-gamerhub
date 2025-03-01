@@ -1,4 +1,3 @@
-
 import {
   intelUltraPatterns,
   intelCorePatterns,
@@ -19,6 +18,47 @@ export const extractProcessorFromTitle = (
   if (!title) return existingProcessor || null;
   
   const normalizedTitle = title.toLowerCase();
+  
+  // Special handling for MacBook M2 titles
+  if ((normalizedTitle.includes('macbook') || normalizedTitle.includes('mac book')) && 
+      normalizedTitle.includes('m2')) {
+    // Check for variants
+    if (normalizedTitle.includes('pro') && !normalizedTitle.includes('m2 pro')) {
+      return 'Apple M2 Pro chip';
+    } else if (normalizedTitle.includes('max') && !normalizedTitle.includes('m2 max')) {
+      return 'Apple M2 Max chip';
+    } else if (normalizedTitle.includes('ultra') && !normalizedTitle.includes('m2 ultra')) {
+      return 'Apple M2 Ultra chip';
+    } else {
+      return 'Apple M2 Chip';
+    }
+  }
+  
+  // Special case for when the processor is just "Apple" in a MacBook context
+  if (existingProcessor === 'Apple' && 
+      (normalizedTitle.includes('macbook') || normalizedTitle.includes('mac book'))) {
+    if (normalizedTitle.includes('m2')) {
+      return 'Apple M2 Chip';
+    } else if (normalizedTitle.includes('m1')) {
+      return 'Apple M1 Chip';
+    } else if (normalizedTitle.includes('m3')) {
+      return 'Apple M3 Chip';
+    }
+  }
+  
+  // Try to extract Apple Silicon
+  const appleMatch = normalizedTitle.match(appleSiliconPatterns.appleWithVariant);
+  if (appleMatch) {
+    const variant = appleMatch[2] ? ` ${appleMatch[2].charAt(0).toUpperCase() + appleMatch[2].slice(1)}` : '';
+    return `Apple M${appleMatch[1]}${variant} Chip`;
+  }
+  
+  // Try to extract M-series without Apple prefix
+  const mSeriesMatch = normalizedTitle.match(appleSiliconPatterns.mSeriesWithVariant);
+  if (mSeriesMatch && !normalizedTitle.includes('ram') && !normalizedTitle.includes('memory')) {
+    const variant = mSeriesMatch[2] ? ` ${mSeriesMatch[2].charAt(0).toUpperCase() + mSeriesMatch[2].slice(1)}` : '';
+    return `Apple M${mSeriesMatch[1]}${variant} Chip`;
+  }
   
   // Try to extract Intel Core Ultra processors
   const ultraMatch = normalizedTitle.match(intelUltraPatterns.coreUltra);
@@ -88,20 +128,6 @@ export const extractProcessorFromTitle = (
     return 'Intel Pentium';
   }
   
-  // Try to extract Apple Silicon
-  const appleMatch = normalizedTitle.match(appleSiliconPatterns.appleWithVariant);
-  if (appleMatch) {
-    const variant = appleMatch[2] ? ` ${appleMatch[2].charAt(0).toUpperCase() + appleMatch[2].slice(1)}` : '';
-    return `Apple M${appleMatch[1]}${variant}`;
-  }
-  
-  // Try to extract M-series without Apple prefix
-  const mSeriesMatch = normalizedTitle.match(appleSiliconPatterns.mSeriesWithVariant);
-  if (mSeriesMatch && !normalizedTitle.includes('ram') && !normalizedTitle.includes('memory')) {
-    const variant = mSeriesMatch[2] ? ` ${mSeriesMatch[2].charAt(0).toUpperCase() + mSeriesMatch[2].slice(1)}` : '';
-    return `Apple M${mSeriesMatch[1]}${variant}`;
-  }
-  
   // Try to extract AMD Ryzen with model numbers
   const ryzenMatch = normalizedTitle.match(amdRyzenPatterns.ryzenWithModel);
   if (ryzenMatch) {
@@ -136,6 +162,17 @@ export const extractProcessorFromTitle = (
   
   // If we have an existing processor value, return that
   if (existingProcessor) {
+    // But if it's just "Apple" and we're in a MacBook context, attempt to specify the M-series
+    if (existingProcessor === 'Apple' && 
+        (normalizedTitle.includes('macbook') || normalizedTitle.includes('mac book'))) {
+      if (normalizedTitle.includes('m2')) {
+        return 'Apple M2 Chip';
+      } else if (normalizedTitle.includes('m1')) {
+        return 'Apple M1 Chip';
+      } else if (normalizedTitle.includes('m3')) {
+        return 'Apple M3 Chip';
+      }
+    }
     return existingProcessor;
   }
   

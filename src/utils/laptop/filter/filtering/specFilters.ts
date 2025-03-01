@@ -28,16 +28,39 @@ export const applyProcessorFilter = (
   // Log for debugging to see what processors are being extracted and standardized
   const standardizedProcessor = standardizeProcessorForFiltering(extractedProcessor);
   
-  // Special handling for Apple M-series in title - direct title check
-  if (laptop.title && laptop.title.match(/\bm[1234]\s+chip\b/i)) {
-    const mVersion = laptop.title.match(/\bm([1234])\s+chip\b/i)?.[1];
-    if (mVersion) {
-      // Check if any selected filter matches this Apple M-series
+  // Special handling for MacBooks with Apple Silicon in title
+  if (laptop.title) {
+    const normalizedTitle = laptop.title.toLowerCase();
+    
+    if (normalizedTitle.includes('macbook') && normalizedTitle.includes('m2')) {
+      // MacBook with M2 chip mentioned in title
       if (Array.from(filters.processors).some(filter => 
-          filter === `Apple M${mVersion}` || 
-          filter.startsWith(`Apple M${mVersion} `))) {
+          filter === 'Apple M2' || 
+          filter.startsWith('Apple M2 '))) {
         return true;
       }
+    }
+    
+    // Special handling for Apple M-series in title - direct title check
+    if (laptop.title.match(/\bm[1234]\s+chip\b/i)) {
+      const mVersion = laptop.title.match(/\bm([1234])\s+chip\b/i)?.[1];
+      if (mVersion) {
+        // Check if any selected filter matches this Apple M-series
+        if (Array.from(filters.processors).some(filter => 
+            filter === `Apple M${mVersion}` || 
+            filter.startsWith(`Apple M${mVersion} `))) {
+          return true;
+        }
+      }
+    }
+  }
+  
+  // Special handling for processor value "Apple" with MacBook in title
+  if (laptop.processor === 'Apple' && laptop.title && 
+      laptop.title.toLowerCase().includes('macbook') && 
+      laptop.title.toLowerCase().includes('m2')) {
+    if (Array.from(filters.processors).some(filter => filter === 'Apple M2')) {
+      return true;
     }
   }
   

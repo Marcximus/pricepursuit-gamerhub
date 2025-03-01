@@ -28,9 +28,9 @@ export const matchesOtherProcessor = (
       // Replace the problematic compound expression with a function that checks the same conditions
       (title: string) => {
         return /\bm[1234](?:\s+(?:pro|max|ultra))?\b/i.test(title) && 
-          (title.includes('apple') || 
-           title.includes('macbook') ||
-           title.includes('chip'));
+               (title.includes('apple') || 
+               title.includes('macbook') ||
+               title.includes('chip'));
       }
     ];
     
@@ -45,6 +45,12 @@ export const matchesOtherProcessor = (
           return false;
         }
       }
+    }
+    
+    // Special case: If the title contains "MacBook" and processor is just "Apple", 
+    // this is likely an Apple Silicon chip, not "Other Processor"
+    if (normalizedTitle.includes('macbook') && productValue === 'Apple') {
+      return false;
     }
   }
   
@@ -62,6 +68,13 @@ export const matchesOtherProcessor = (
       if (pattern.test(normalizedValue)) {
         return false;
       }
+    }
+    
+    // Special case: If processor is just "Apple" and title contains MacBook, 
+    // it's likely an Apple Silicon processor
+    if (normalizedValue === 'apple' && productTitle && 
+        productTitle.toLowerCase().includes('macbook')) {
+      return false;
     }
   }
   
