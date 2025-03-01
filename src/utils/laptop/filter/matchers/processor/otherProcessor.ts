@@ -28,12 +28,17 @@ export const matchesOtherProcessor = (
       /\bm[1234](?:\s+(?:pro|max|ultra))?\b/i && 
         (normalizedTitle.includes('apple') || 
          normalizedTitle.includes('macbook') ||
-         normalizedTitle.includes('chip')),  // Contextual M-series with Apple/MacBook/chip
+         normalizedTitle.includes('chip'))   // Contextual M-series with Apple/MacBook/chip
     ];
     
     // If any Apple pattern is found in the title, this is not "Other Processor"
     for (const pattern of appleTitlePatterns) {
-      if (typeof pattern === 'boolean' ? pattern : pattern.test(normalizedTitle)) {
+      if (pattern instanceof RegExp) {
+        if (pattern.test(normalizedTitle)) {
+          return false;
+        }
+      } else if (pattern) {
+        // This is a boolean condition from the compound expression
         return false;
       }
     }
