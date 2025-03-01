@@ -63,7 +63,8 @@ export function UpdateSpecificLaptops() {
       
       if (result.success) {
         toast.success('Successfully updated Alienware M18 R2 laptop RAM to 32 GB DDR5!');
-        if (result.message) {
+        // Only log the message if it exists
+        if (result && 'message' in result && result.message) {
           console.log(result.message);
         }
       } else {
