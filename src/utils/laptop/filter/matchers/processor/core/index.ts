@@ -5,3 +5,4 @@
  */
 export * from './processorMatcher';
 export * from './isMainCategoryProcessor';
+export * from './patterns';
