@@ -1,4 +1,3 @@
-
 import { 
   appleSiliconPatterns, 
   intelCorePatterns,
@@ -125,65 +124,73 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
     return 'Intel Core Ultra';
   }
   
-  // ENHANCED INTEL CORE DETECTION - PRIORITIZE GENERATION INFO
+  // SIMPLIFIED INTEL CORE DETECTION WITH CONSOLIDATED GENERATIONS
   
   // First check for explicit generation mentions in the processor string
-  if (normalizedProcessor.includes('13th gen') || normalizedProcessor.includes('14th gen') ||
+  if (normalizedProcessor.includes('11th gen') || normalizedProcessor.includes('12th gen') ||
+      normalizedProcessor.includes('13th gen') || normalizedProcessor.includes('14th gen') ||
+      normalizedProcessor.includes('11th generation') || normalizedProcessor.includes('12th generation') ||
       normalizedProcessor.includes('13th generation') || normalizedProcessor.includes('14th generation')) {
     if (normalizedProcessor.includes('i9') || normalizedProcessor.includes('core i9') || 
         normalizedProcessor.includes('core_i9')) {
-      return 'Intel Core i9 (13th/14th Gen)';
+      return 'Intel Core i9 (11th-14th Gen)';
     }
     if (normalizedProcessor.includes('i7') || normalizedProcessor.includes('core i7') || 
         normalizedProcessor.includes('core_i7')) {
-      return 'Intel Core i7 (13th/14th Gen)';
+      return 'Intel Core i7 (11th-14th Gen)';
     }
     if (normalizedProcessor.includes('i5') || normalizedProcessor.includes('core i5') || 
         normalizedProcessor.includes('core_i5')) {
-      return 'Intel Core i5 (13th/14th Gen)';
+      return 'Intel Core i5 (11th-14th Gen)';
     }
     if (normalizedProcessor.includes('i3') || normalizedProcessor.includes('core i3') || 
         normalizedProcessor.includes('core_i3')) {
-      return 'Intel Core i3 (13th/14th Gen)';
+      return 'Intel Core i3 (11th-14th Gen)';
     }
   }
   
-  if (normalizedProcessor.includes('11th gen') || normalizedProcessor.includes('12th gen') ||
-      normalizedProcessor.includes('11th generation') || normalizedProcessor.includes('12th generation')) {
+  if (normalizedProcessor.includes('8th gen') || normalizedProcessor.includes('9th gen') ||
+      normalizedProcessor.includes('10th gen') || normalizedProcessor.includes('8th generation') || 
+      normalizedProcessor.includes('9th generation') || normalizedProcessor.includes('10th generation')) {
     if (normalizedProcessor.includes('i9') || normalizedProcessor.includes('core i9') || 
         normalizedProcessor.includes('core_i9')) {
-      return 'Intel Core i9 (11th/12th Gen)';
+      return 'Intel Core i9 (8th-10th Gen)';
     }
     if (normalizedProcessor.includes('i7') || normalizedProcessor.includes('core i7') || 
         normalizedProcessor.includes('core_i7')) {
-      return 'Intel Core i7 (11th/12th Gen)';
+      return 'Intel Core i7 (8th-10th Gen)';
     }
     if (normalizedProcessor.includes('i5') || normalizedProcessor.includes('core i5') || 
         normalizedProcessor.includes('core_i5')) {
-      return 'Intel Core i5 (11th/12th Gen)';
+      return 'Intel Core i5 (8th-10th Gen)';
     }
     if (normalizedProcessor.includes('i3') || normalizedProcessor.includes('core i3') || 
         normalizedProcessor.includes('core_i3')) {
-      return 'Intel Core i3 (11th/12th Gen)';
+      return 'Intel Core i3 (8th-10th Gen)';
     }
   }
   
-  if (normalizedProcessor.includes('10th gen') || normalizedProcessor.includes('10th generation')) {
+  if (normalizedProcessor.includes('2nd gen') || normalizedProcessor.includes('3rd gen') ||
+      normalizedProcessor.includes('4th gen') || normalizedProcessor.includes('5th gen') ||
+      normalizedProcessor.includes('6th gen') || normalizedProcessor.includes('7th gen') ||
+      normalizedProcessor.includes('2nd generation') || normalizedProcessor.includes('3rd generation') ||
+      normalizedProcessor.includes('4th generation') || normalizedProcessor.includes('5th generation') ||
+      normalizedProcessor.includes('6th generation') || normalizedProcessor.includes('7th generation')) {
     if (normalizedProcessor.includes('i9') || normalizedProcessor.includes('core i9') || 
         normalizedProcessor.includes('core_i9')) {
-      return 'Intel Core i9 (10th Gen)';
+      return 'Intel Core i9 (8th-10th Gen)'; // i9 didn't exist before 8th gen
     }
     if (normalizedProcessor.includes('i7') || normalizedProcessor.includes('core i7') || 
         normalizedProcessor.includes('core_i7')) {
-      return 'Intel Core i7 (10th Gen)';
+      return 'Intel Core i7 (2nd-7th Gen)';
     }
     if (normalizedProcessor.includes('i5') || normalizedProcessor.includes('core i5') || 
         normalizedProcessor.includes('core_i5')) {
-      return 'Intel Core i5 (10th Gen)';
+      return 'Intel Core i5 (2nd-7th Gen)';
     }
     if (normalizedProcessor.includes('i3') || normalizedProcessor.includes('core i3') || 
         normalizedProcessor.includes('core_i3')) {
-      return 'Intel Core i3 (10th Gen)';
+      return 'Intel Core i3 (2nd-7th Gen)';
     }
   }
   
@@ -193,27 +200,18 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
     const coreNumber = intelGenMatch[1];
     const modelNumber = intelGenMatch[2];
     
-    // Enhanced generation detection from model numbers
-    if (modelNumber.startsWith('13') || modelNumber.startsWith('14')) {
-      return `Intel Core i${coreNumber} (13th/14th Gen)`;
+    // Enhanced generation detection from model numbers with consolidated ranges
+    if (modelNumber.startsWith('11') || modelNumber.startsWith('12') || 
+        modelNumber.startsWith('13') || modelNumber.startsWith('14')) {
+      return `Intel Core i${coreNumber} (11th-14th Gen)`;
     }
-    if (modelNumber.startsWith('11') || modelNumber.startsWith('12')) {
-      return `Intel Core i${coreNumber} (11th/12th Gen)`;
+    if (modelNumber.startsWith('8') || modelNumber.startsWith('9') || modelNumber.startsWith('10')) {
+      return `Intel Core i${coreNumber} (8th-10th Gen)`;
     }
-    if (modelNumber.startsWith('10')) {
-      return `Intel Core i${coreNumber} (10th Gen)`;
-    }
-    if (modelNumber.startsWith('8') || modelNumber.startsWith('9')) {
-      return `Intel Core i${coreNumber} (8th/9th Gen)`;
-    }
-    if (modelNumber.startsWith('6') || modelNumber.startsWith('7')) {
-      return `Intel Core i${coreNumber} (6th/7th Gen)`;
-    }
-    if (modelNumber.startsWith('4') || modelNumber.startsWith('5')) {
-      return `Intel Core i${coreNumber} (4th/5th Gen)`;
-    }
-    if (modelNumber.startsWith('2') || modelNumber.startsWith('3')) {
-      return `Intel Core i${coreNumber} (2nd/3rd Gen)`;
+    if (modelNumber.startsWith('2') || modelNumber.startsWith('3') || 
+        modelNumber.startsWith('4') || modelNumber.startsWith('5') ||
+        modelNumber.startsWith('6') || modelNumber.startsWith('7')) {
+      return `Intel Core i${coreNumber} (2nd-7th Gen)`;
     }
   }
   
@@ -222,7 +220,7 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
   if (normalizedProcessor.match(/\bcore_i([3579])\b/i)) {
     const coreNumber = normalizedProcessor.match(/core_i([3579])/i)?.[1];
     if (coreNumber) {
-      return `Intel Core i${coreNumber} (2nd/3rd Gen)`;
+      return `Intel Core i${coreNumber} (2nd-7th Gen)`;
     }
   }
   
@@ -234,22 +232,22 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
     const coreNumber = normalizedProcessor.match(/i([3579])/i)?.[1] || 
                       normalizedProcessor.match(/core_i([3579])/i)?.[1];
     if (coreNumber) {
-      return `Intel Core i${coreNumber} (2nd/3rd Gen)`;
+      return `Intel Core i${coreNumber} (2nd-7th Gen)`;
     }
   }
   
   // Generic Intel Core i-series without generation or model - now assigning to oldest generation
   if (normalizedProcessor.includes('i9') || normalizedProcessor.match(/\bcore\s*i9\b/)) {
-    return 'Intel Core i9 (8th/9th Gen)'; // i9 started in 8th gen
+    return 'Intel Core i9 (8th-10th Gen)'; // i9 started in 8th gen
   }
   if (normalizedProcessor.includes('i7') || normalizedProcessor.match(/\bcore\s*i7\b/)) {
-    return 'Intel Core i7 (2nd/3rd Gen)';
+    return 'Intel Core i7 (2nd-7th Gen)';
   }
   if (normalizedProcessor.includes('i5') || normalizedProcessor.match(/\bcore\s*i5\b/)) {
-    return 'Intel Core i5 (2nd/3rd Gen)';
+    return 'Intel Core i5 (2nd-7th Gen)';
   }
   if (normalizedProcessor.includes('i3') || normalizedProcessor.match(/\bcore\s*i3\b/)) {
-    return 'Intel Core i3 (2nd/3rd Gen)';
+    return 'Intel Core i3 (2nd-7th Gen)';
   }
   
   // Detect AMD Ryzen

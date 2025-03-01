@@ -1,4 +1,3 @@
-
 import type { Product } from "@/types/product";
 import type { FilterableProductKeys } from "@/utils/laptop/filter";
 import { 
@@ -69,7 +68,7 @@ const getStandardizedProcessorValues = (laptops: Product[]): Set<string> => {
     'Intel Core i9', 'Intel Core i7', 'Intel Core i5', 'Intel Core i3'
   ];
   
-  // Primary processor categories - include Apple M4 variants and Intel generations
+  // Primary processor categories - updated with simplified Intel generations
   const primaryCategories = [
     // Apple
     'Apple M4 Ultra', 'Apple M4 Max', 'Apple M4 Pro', 'Apple M4',
@@ -82,29 +81,15 @@ const getStandardizedProcessorValues = (laptops: Product[]): Set<string> => {
     'Intel Core Ultra 9', 'Intel Core Ultra 7', 'Intel Core Ultra 5',
     'Intel Core Ultra',
     
-    // Intel Core recent gens
-    'Intel Core i9 (13th/14th Gen)', 'Intel Core i7 (13th/14th Gen)', 
-    'Intel Core i5 (13th/14th Gen)', 'Intel Core i3 (13th/14th Gen)',
+    // Intel Core simplified generations
+    'Intel Core i9 (11th-14th Gen)', 'Intel Core i7 (11th-14th Gen)', 
+    'Intel Core i5 (11th-14th Gen)', 'Intel Core i3 (11th-14th Gen)',
     
-    // Intel Core previous gens
-    'Intel Core i9 (11th/12th Gen)', 'Intel Core i7 (11th/12th Gen)', 
-    'Intel Core i5 (11th/12th Gen)', 'Intel Core i3 (11th/12th Gen)',
+    'Intel Core i9 (8th-10th Gen)', 'Intel Core i7 (8th-10th Gen)', 
+    'Intel Core i5 (8th-10th Gen)', 'Intel Core i3 (8th-10th Gen)',
     
-    'Intel Core i9 (10th Gen)', 'Intel Core i7 (10th Gen)', 
-    'Intel Core i5 (10th Gen)', 'Intel Core i3 (10th Gen)',
-    
-    // Older Intel generations
-    'Intel Core i9 (8th/9th Gen)', 'Intel Core i7 (8th/9th Gen)',
-    'Intel Core i5 (8th/9th Gen)', 'Intel Core i3 (8th/9th Gen)',
-    
-    'Intel Core i7 (6th/7th Gen)', 'Intel Core i5 (6th/7th Gen)',
-    'Intel Core i3 (6th/7th Gen)',
-    
-    'Intel Core i7 (4th/5th Gen)', 'Intel Core i5 (4th/5th Gen)',
-    'Intel Core i3 (4th/5th Gen)',
-    
-    'Intel Core i7 (2nd/3rd Gen)', 'Intel Core i5 (2nd/3rd Gen)',
-    'Intel Core i3 (2nd/3rd Gen)',
+    'Intel Core i7 (2nd-7th Gen)', 'Intel Core i5 (2nd-7th Gen)',
+    'Intel Core i3 (2nd-7th Gen)',
     
     // AMD Ryzen
     'AMD Ryzen 9', 'AMD Ryzen 7', 'AMD Ryzen 5', 'AMD Ryzen 3',

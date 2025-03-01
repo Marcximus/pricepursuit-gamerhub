@@ -77,7 +77,7 @@ function matchesIntelCoreUltra(
 }
 
 /**
- * Intel Core i-series with generation matcher
+ * Intel Core i-series with generation matcher, updated for consolidated generation groups
  */
 function matchesIntelCoreWithGeneration(
   filterValue: string,
@@ -93,21 +93,13 @@ function matchesIntelCoreWithGeneration(
     coreNumber = coreMatch[1];
   }
   
-  // Extract generation info
-  if (filterValue.includes('13th/14th')) {
-    genInfo = ['13th', '14th', '13', '14'];
-  } else if (filterValue.includes('11th/12th')) {
-    genInfo = ['11th', '12th', '11', '12'];
-  } else if (filterValue.includes('10th')) {
-    genInfo = ['10th', '10'];
-  } else if (filterValue.includes('8th/9th')) {
-    genInfo = ['8th', '9th', '8', '9'];
-  } else if (filterValue.includes('6th/7th')) {
-    genInfo = ['6th', '7th', '6', '7'];
-  } else if (filterValue.includes('4th/5th')) {
-    genInfo = ['4th', '5th', '4', '5'];
-  } else if (filterValue.includes('2nd/3rd')) {
-    genInfo = ['2nd', '3rd', '2', '3'];
+  // Extract generation info based on the consolidated groups
+  if (filterValue.includes('11th-14th')) {
+    genInfo = ['11th', '12th', '13th', '14th', '11', '12', '13', '14'];
+  } else if (filterValue.includes('8th-10th')) {
+    genInfo = ['8th', '9th', '10th', '8', '9', '10'];
+  } else if (filterValue.includes('2nd-7th')) {
+    genInfo = ['2nd', '3rd', '4th', '5th', '6th', '7th', '2', '3', '4', '5', '6', '7'];
   }
   
   // Check processor value
@@ -132,38 +124,30 @@ function matchesIntelCoreWithGeneration(
         
         // Check first digits of model number to determine generation
         const firstDigit = modelNumber.charAt(0);
-        if ((genInfo.includes('13') || genInfo.includes('14')) && 
-            (firstDigit === '1' && (modelNumber.charAt(1) === '3' || modelNumber.charAt(1) === '4'))) {
+        
+        // 11th-14th Gen
+        if (filterValue.includes('11th-14th') && 
+            ((firstDigit === '1' && ['1', '2', '3', '4'].includes(modelNumber.charAt(1))))) {
           return true;
         }
-        if ((genInfo.includes('11') || genInfo.includes('12')) && 
-            (firstDigit === '1' && (modelNumber.charAt(1) === '1' || modelNumber.charAt(1) === '2'))) {
+        
+        // 8th-10th Gen
+        if (filterValue.includes('8th-10th') && 
+            (firstDigit === '8' || firstDigit === '9' || 
+             (firstDigit === '1' && modelNumber.charAt(1) === '0'))) {
           return true;
         }
-        if (genInfo.includes('10') && firstDigit === '1' && modelNumber.charAt(1) === '0') {
-          return true;
-        }
-        if ((genInfo.includes('8') || genInfo.includes('9')) && 
-            (firstDigit === '8' || firstDigit === '9')) {
-          return true;
-        }
-        if ((genInfo.includes('6') || genInfo.includes('7')) && 
-            (firstDigit === '6' || firstDigit === '7')) {
-          return true;
-        }
-        if ((genInfo.includes('4') || genInfo.includes('5')) && 
-            (firstDigit === '4' || firstDigit === '5')) {
-          return true;
-        }
-        if ((genInfo.includes('2') || genInfo.includes('3')) && 
-            (firstDigit === '2' || firstDigit === '3')) {
+        
+        // 2nd-7th Gen
+        if (filterValue.includes('2nd-7th') && 
+            ['2', '3', '4', '5', '6', '7'].includes(firstDigit)) {
           return true;
         }
       }
     }
     
     // For oldest generation, match processors without specific generation info
-    if (filterValue.includes('2nd/3rd') && 
+    if (filterValue.includes('2nd-7th') && 
         (normalizedProcessor.match(new RegExp(`\\bi${coreNumber}\\b`, 'i')) || 
          normalizedProcessor.match(new RegExp(`\\bcore\\s*i${coreNumber}\\b`, 'i')) ||
          normalizedProcessor.match(new RegExp(`\\bcore_i${coreNumber}\\b`, 'i'))) && 
@@ -195,38 +179,30 @@ function matchesIntelCoreWithGeneration(
         
         // Check first digits of model number to determine generation
         const firstDigit = modelNumber.charAt(0);
-        if ((genInfo.includes('13') || genInfo.includes('14')) && 
-            (firstDigit === '1' && (modelNumber.charAt(1) === '3' || modelNumber.charAt(1) === '4'))) {
+        
+        // 11th-14th Gen
+        if (filterValue.includes('11th-14th') && 
+            ((firstDigit === '1' && ['1', '2', '3', '4'].includes(modelNumber.charAt(1))))) {
           return true;
         }
-        if ((genInfo.includes('11') || genInfo.includes('12')) && 
-            (firstDigit === '1' && (modelNumber.charAt(1) === '1' || modelNumber.charAt(1) === '2'))) {
+        
+        // 8th-10th Gen
+        if (filterValue.includes('8th-10th') && 
+            (firstDigit === '8' || firstDigit === '9' || 
+             (firstDigit === '1' && modelNumber.charAt(1) === '0'))) {
           return true;
         }
-        if (genInfo.includes('10') && firstDigit === '1' && modelNumber.charAt(1) === '0') {
-          return true;
-        }
-        if ((genInfo.includes('8') || genInfo.includes('9')) && 
-            (firstDigit === '8' || firstDigit === '9')) {
-          return true;
-        }
-        if ((genInfo.includes('6') || genInfo.includes('7')) && 
-            (firstDigit === '6' || firstDigit === '7')) {
-          return true;
-        }
-        if ((genInfo.includes('4') || genInfo.includes('5')) && 
-            (firstDigit === '4' || firstDigit === '5')) {
-          return true;
-        }
-        if ((genInfo.includes('2') || genInfo.includes('3')) && 
-            (firstDigit === '2' || firstDigit === '3')) {
+        
+        // 2nd-7th Gen
+        if (filterValue.includes('2nd-7th') && 
+            ['2', '3', '4', '5', '6', '7'].includes(firstDigit)) {
           return true;
         }
       }
     }
     
     // For oldest generation, match titles without specific generation info
-    if (filterValue.includes('2nd/3rd') && 
+    if (filterValue.includes('2nd-7th') && 
         (normalizedTitle.match(new RegExp(`\\bi${coreNumber}\\b`, 'i')) || 
          normalizedTitle.match(new RegExp(`\\bcore\\s*i${coreNumber}\\b`, 'i')) ||
          normalizedTitle.match(new RegExp(`\\bcore_i${coreNumber}\\b`, 'i'))) && 

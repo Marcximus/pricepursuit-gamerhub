@@ -1,4 +1,3 @@
-
 import { 
   matchesAppleProcessor, 
   matchesIntelProcessor,
@@ -64,6 +63,22 @@ export const isMainCategoryProcessor = (
     
     // Direct check for M-series chip pattern in title (highest priority for Apple Silicon)
     if (normalizedTitle.match(/\bm[1234]\s+chip\b/i)) {
+      return true;
+    }
+    
+    // Check for Intel Core i-series with consolidated generation info in title
+    const genPatterns = [
+      /\b11th[\s-](?:gen|generation)/i, /\b12th[\s-](?:gen|generation)/i,
+      /\b13th[\s-](?:gen|generation)/i, /\b14th[\s-](?:gen|generation)/i,
+      /\b8th[\s-](?:gen|generation)/i, /\b9th[\s-](?:gen|generation)/i,
+      /\b10th[\s-](?:gen|generation)/i, /\b2nd[\s-](?:gen|generation)/i,
+      /\b3rd[\s-](?:gen|generation)/i, /\b4th[\s-](?:gen|generation)/i,
+      /\b5th[\s-](?:gen|generation)/i, /\b6th[\s-](?:gen|generation)/i,
+      /\b7th[\s-](?:gen|generation)/i
+    ];
+    
+    if (genPatterns.some(pattern => pattern.test(normalizedTitle)) && 
+        normalizedTitle.match(/i[3579]/i)) {
       return true;
     }
     
@@ -153,6 +168,22 @@ export const isMainCategoryProcessor = (
   // Fall back to checking the processor value
   if (processorValue) {
     const normalizedProcessor = processorValue.toLowerCase();
+    
+    // Check for Intel Core i-series with consolidated generation info
+    const genPatterns = [
+      /\b11th[\s-](?:gen|generation)/i, /\b12th[\s-](?:gen|generation)/i,
+      /\b13th[\s-](?:gen|generation)/i, /\b14th[\s-](?:gen|generation)/i,
+      /\b8th[\s-](?:gen|generation)/i, /\b9th[\s-](?:gen|generation)/i,
+      /\b10th[\s-](?:gen|generation)/i, /\b2nd[\s-](?:gen|generation)/i,
+      /\b3rd[\s-](?:gen|generation)/i, /\b4th[\s-](?:gen|generation)/i,
+      /\b5th[\s-](?:gen|generation)/i, /\b6th[\s-](?:gen|generation)/i,
+      /\b7th[\s-](?:gen|generation)/i
+    ];
+    
+    if (genPatterns.some(pattern => pattern.test(normalizedProcessor)) && 
+        normalizedProcessor.match(/i[3579]/i)) {
+      return true;
+    }
     
     // Check for Intel Core i-series with generation info
     if (normalizedProcessor.match(/\d+th\s+gen|\d+th\s+generation/i) && 
