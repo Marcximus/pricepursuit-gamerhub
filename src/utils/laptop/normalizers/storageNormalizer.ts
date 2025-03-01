@@ -15,20 +15,20 @@ export const normalizeStorage = (storage: string): string => {
     return '';
   }
   
-  // Standardize to specific storage groups
+  // Standardize to specific storage groups with space between number and unit
   if (gbValue >= 8192) {
-    return '8TB+';
+    return '8 TB+';
   } else if (gbValue >= 4096) {
-    return '4TB+';
+    return '4 TB+';
   } else if (gbValue >= 2048) {
-    return '2TB+';
+    return '2 TB+';
   } else if (gbValue >= 1024) {
-    return '1TB+';
+    return '1 TB+';
   } else if (gbValue >= 500) {
-    return '500GB+';
+    return '500 GB+';
   } else if (gbValue >= 200) {
-    return '200GB+';
+    return '200 GB+';
   } else {
-    return '100GB+';
+    return '100 GB+';
   }
 };

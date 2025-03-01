@@ -1,3 +1,4 @@
+
 import { getProcessorValue } from "@/utils/laptop/scoring/processor";
 import { getGraphicsValue } from "@/utils/laptop/scoring/graphics";
 import { getRamValue, getStorageValue, getScreenSizeValue } from "@/utils/laptop/valueParser";
@@ -15,13 +16,13 @@ export const sortRamOptions = (values: string[]): string[] => {
 export const sortStorageOptions = (options: string[]): string[] => {
   // Define the order for standardized storage groups (reversed order to show largest first)
   const standardStorageGroups = [
-    '8TB+',
-    '4TB+',
-    '2TB+', 
-    '1TB+', 
-    '500GB+', 
-    '200GB+', 
-    '100GB+'
+    '8 TB+',
+    '4 TB+',
+    '2 TB+', 
+    '1 TB+', 
+    '500 GB+', 
+    '200 GB+', 
+    '100 GB+'
   ];
 
   // First check if these are the standardized groups
