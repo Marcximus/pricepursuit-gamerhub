@@ -1,3 +1,4 @@
+
 import { 
   appleSiliconPatterns, 
   intelCorePatterns,
@@ -124,33 +125,11 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
     return 'Intel Core Ultra';
   }
   
-  // Detect core_i format (common in titles)
-  if (normalizedProcessor.match(/\bcore_i([3579])\b/i)) {
-    const coreNumber = normalizedProcessor.match(/core_i([3579])/i)?.[1];
-    if (coreNumber) {
-      return `Intel Core i${coreNumber}`;
-    }
-  }
+  // ENHANCED INTEL CORE DETECTION - PRIORITIZE GENERATION INFO
   
-  // Detect Intel Core i-series with generation info
-  const intelGenMatch = normalizedProcessor.match(/i([3579])[\s-](\d{4,5})/i);
-  if (intelGenMatch) {
-    const coreNumber = intelGenMatch[1];
-    const modelNumber = intelGenMatch[2];
-    
-    if (modelNumber.startsWith('13') || modelNumber.startsWith('14')) {
-      return `Intel Core i${coreNumber} (13th/14th Gen)`;
-    }
-    if (modelNumber.startsWith('11') || modelNumber.startsWith('12')) {
-      return `Intel Core i${coreNumber} (11th/12th Gen)`;
-    }
-    if (modelNumber.startsWith('10')) {
-      return `Intel Core i${coreNumber} (10th Gen)`;
-    }
-  }
-  
-  // Check for explicit generation mentions
-  if (normalizedProcessor.includes('13th gen') || normalizedProcessor.includes('14th gen')) {
+  // First check for explicit generation mentions in the processor string
+  if (normalizedProcessor.includes('13th gen') || normalizedProcessor.includes('14th gen') ||
+      normalizedProcessor.includes('13th generation') || normalizedProcessor.includes('14th generation')) {
     if (normalizedProcessor.includes('i9') || normalizedProcessor.includes('core i9') || 
         normalizedProcessor.includes('core_i9')) {
       return 'Intel Core i9 (13th/14th Gen)';
@@ -169,7 +148,8 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
     }
   }
   
-  if (normalizedProcessor.includes('11th gen') || normalizedProcessor.includes('12th gen')) {
+  if (normalizedProcessor.includes('11th gen') || normalizedProcessor.includes('12th gen') ||
+      normalizedProcessor.includes('11th generation') || normalizedProcessor.includes('12th generation')) {
     if (normalizedProcessor.includes('i9') || normalizedProcessor.includes('core i9') || 
         normalizedProcessor.includes('core_i9')) {
       return 'Intel Core i9 (11th/12th Gen)';
@@ -188,7 +168,7 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
     }
   }
   
-  if (normalizedProcessor.includes('10th gen')) {
+  if (normalizedProcessor.includes('10th gen') || normalizedProcessor.includes('10th generation')) {
     if (normalizedProcessor.includes('i9') || normalizedProcessor.includes('core i9') || 
         normalizedProcessor.includes('core_i9')) {
       return 'Intel Core i9 (10th Gen)';
@@ -207,7 +187,46 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
     }
   }
   
-  // Check for GHz processors with core numbers
+  // Check for model numbers that indicate generation
+  const intelGenMatch = normalizedProcessor.match(/i([3579])[\s-](\d{4,5})/i);
+  if (intelGenMatch) {
+    const coreNumber = intelGenMatch[1];
+    const modelNumber = intelGenMatch[2];
+    
+    // Enhanced generation detection from model numbers
+    if (modelNumber.startsWith('13') || modelNumber.startsWith('14')) {
+      return `Intel Core i${coreNumber} (13th/14th Gen)`;
+    }
+    if (modelNumber.startsWith('11') || modelNumber.startsWith('12')) {
+      return `Intel Core i${coreNumber} (11th/12th Gen)`;
+    }
+    if (modelNumber.startsWith('10')) {
+      return `Intel Core i${coreNumber} (10th Gen)`;
+    }
+    if (modelNumber.startsWith('8') || modelNumber.startsWith('9')) {
+      return `Intel Core i${coreNumber} (8th/9th Gen)`;
+    }
+    if (modelNumber.startsWith('6') || modelNumber.startsWith('7')) {
+      return `Intel Core i${coreNumber} (6th/7th Gen)`;
+    }
+    if (modelNumber.startsWith('4') || modelNumber.startsWith('5')) {
+      return `Intel Core i${coreNumber} (4th/5th Gen)`;
+    }
+    if (modelNumber.startsWith('2') || modelNumber.startsWith('3')) {
+      return `Intel Core i${coreNumber} (2nd/3rd Gen)`;
+    }
+  }
+  
+  // Try to detect core-i patterns without model numbers, now assigning to oldest generation
+  // Detect core_i format (common in titles)
+  if (normalizedProcessor.match(/\bcore_i([3579])\b/i)) {
+    const coreNumber = normalizedProcessor.match(/core_i([3579])/i)?.[1];
+    if (coreNumber) {
+      return `Intel Core i${coreNumber} (2nd/3rd Gen)`;
+    }
+  }
+  
+  // Check for GHz processors with core numbers, now assigning to oldest generation
   if (normalizedProcessor.match(/\d+(?:\.\d+)?\s*ghz.*i([3579])/i) ||
       normalizedProcessor.match(/i([3579]).*\d+(?:\.\d+)?\s*ghz/i) ||
       normalizedProcessor.match(/\d+(?:\.\d+)?\s*ghz.*core_i([3579])/i) ||
@@ -215,26 +234,22 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
     const coreNumber = normalizedProcessor.match(/i([3579])/i)?.[1] || 
                       normalizedProcessor.match(/core_i([3579])/i)?.[1];
     if (coreNumber) {
-      return `Intel Core i${coreNumber}`;
+      return `Intel Core i${coreNumber} (2nd/3rd Gen)`;
     }
   }
   
-  // Detect generic Intel Core i-series
-  if (normalizedProcessor.includes('i9') || normalizedProcessor.includes('core i9') || 
-      normalizedProcessor.match(/\bcore_i9\b/)) {
-    return 'Intel Core i9';
+  // Generic Intel Core i-series without generation or model - now assigning to oldest generation
+  if (normalizedProcessor.includes('i9') || normalizedProcessor.match(/\bcore\s*i9\b/)) {
+    return 'Intel Core i9 (8th/9th Gen)'; // i9 started in 8th gen
   }
-  if (normalizedProcessor.includes('i7') || normalizedProcessor.includes('core i7') || 
-      normalizedProcessor.match(/\bcore_i7\b/)) {
-    return 'Intel Core i7';
+  if (normalizedProcessor.includes('i7') || normalizedProcessor.match(/\bcore\s*i7\b/)) {
+    return 'Intel Core i7 (2nd/3rd Gen)';
   }
-  if (normalizedProcessor.includes('i5') || normalizedProcessor.includes('core i5') || 
-      normalizedProcessor.match(/\bcore_i5\b/)) {
-    return 'Intel Core i5';
+  if (normalizedProcessor.includes('i5') || normalizedProcessor.match(/\bcore\s*i5\b/)) {
+    return 'Intel Core i5 (2nd/3rd Gen)';
   }
-  if (normalizedProcessor.includes('i3') || normalizedProcessor.includes('core i3') || 
-      normalizedProcessor.match(/\bcore_i3\b/)) {
-    return 'Intel Core i3';
+  if (normalizedProcessor.includes('i3') || normalizedProcessor.match(/\bcore\s*i3\b/)) {
+    return 'Intel Core i3 (2nd/3rd Gen)';
   }
   
   // Detect AMD Ryzen
@@ -288,4 +303,11 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
   
   // If we can't categorize it, mark it as "Other"
   return 'Other Processor';
+};
+
+/**
+ * Get a simplified version of the processor for filtering purposes
+ */
+export const getProcessorFilterValue = (processor: string): string => {
+  return standardizeProcessorForFiltering(processor);
 };

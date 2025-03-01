@@ -1,3 +1,4 @@
+
 import type { Product } from "@/types/product";
 import type { FilterableProductKeys } from "@/utils/laptop/filter";
 import { 
@@ -63,16 +64,23 @@ const getStandardizedProcessorValues = (laptops: Product[]): Set<string> => {
     processorCounts[standardized] = (processorCounts[standardized] || 0) + 1;
   });
   
-  // Primary processor categories - include Apple M4 variants
+  // Excluded generic Intel categories that are now redistributed to generation-specific ones
+  const excludedCategories = [
+    'Intel Core i9', 'Intel Core i7', 'Intel Core i5', 'Intel Core i3'
+  ];
+  
+  // Primary processor categories - include Apple M4 variants and Intel generations
   const primaryCategories = [
     // Apple
     'Apple M4 Ultra', 'Apple M4 Max', 'Apple M4 Pro', 'Apple M4',
     'Apple M3 Ultra', 'Apple M3 Max', 'Apple M3 Pro', 'Apple M3',
     'Apple M2 Ultra', 'Apple M2 Max', 'Apple M2 Pro', 'Apple M2',
     'Apple M1 Ultra', 'Apple M1 Max', 'Apple M1 Pro', 'Apple M1',
+    'Apple M-series',
     
     // Intel Core Ultra
     'Intel Core Ultra 9', 'Intel Core Ultra 7', 'Intel Core Ultra 5',
+    'Intel Core Ultra',
     
     // Intel Core recent gens
     'Intel Core i9 (13th/14th Gen)', 'Intel Core i7 (13th/14th Gen)', 
@@ -85,8 +93,18 @@ const getStandardizedProcessorValues = (laptops: Product[]): Set<string> => {
     'Intel Core i9 (10th Gen)', 'Intel Core i7 (10th Gen)', 
     'Intel Core i5 (10th Gen)', 'Intel Core i3 (10th Gen)',
     
-    // Generic Intel Core (for older generations and GHz variations)
-    'Intel Core i9', 'Intel Core i7', 'Intel Core i5', 'Intel Core i3',
+    // Older Intel generations
+    'Intel Core i9 (8th/9th Gen)', 'Intel Core i7 (8th/9th Gen)',
+    'Intel Core i5 (8th/9th Gen)', 'Intel Core i3 (8th/9th Gen)',
+    
+    'Intel Core i7 (6th/7th Gen)', 'Intel Core i5 (6th/7th Gen)',
+    'Intel Core i3 (6th/7th Gen)',
+    
+    'Intel Core i7 (4th/5th Gen)', 'Intel Core i5 (4th/5th Gen)',
+    'Intel Core i3 (4th/5th Gen)',
+    
+    'Intel Core i7 (2nd/3rd Gen)', 'Intel Core i5 (2nd/3rd Gen)',
+    'Intel Core i3 (2nd/3rd Gen)',
     
     // AMD Ryzen
     'AMD Ryzen 9', 'AMD Ryzen 7', 'AMD Ryzen 5', 'AMD Ryzen 3',
@@ -103,6 +121,11 @@ const getStandardizedProcessorValues = (laptops: Product[]): Set<string> => {
   
   // Add categories with at least one matching laptop
   primaryCategories.forEach(category => {
+    // Skip excluded categories (generic Intel Core)
+    if (excludedCategories.includes(category)) {
+      return;
+    }
+    
     if (processorCounts[category] && processorCounts[category] > 0) {
       processorsSet.add(category);
     }

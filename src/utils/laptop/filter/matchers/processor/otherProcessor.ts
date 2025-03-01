@@ -20,7 +20,6 @@ export const matchesOtherProcessor = (
     const normalizedTitle = productTitle.toLowerCase();
     
     // Comprehensive Apple Silicon pattern detection in titles
-    // This is the most critical part for fixing the issue with M2 Chip MacBooks
     const appleTitlePatterns = [
       /\bm[1234]\s+chip\b/i,                // "M2 Chip"
       /\bmacbook.*m[1234]/i,                // "MacBook... M2"
@@ -47,6 +46,25 @@ export const matchesOtherProcessor = (
       }
     }
     
+    // Intel Core i-series pattern detection in titles
+    const intelTitlePatterns = [
+      /\d+th\s+gen.*i[3579]/i,              // "10th Gen... i7"
+      /i[3579].*\d+th\s+gen/i,              // "i7... 10th Gen"
+      /\d+th\s+generation.*i[3579]/i,       // "10th Generation... i7"
+      /i[3579].*\d+th\s+generation/i,       // "i7... 10th Generation"
+      /i[3579][\s-]\d{4,5}[a-z]*/i,         // "i7-1065G7"
+      /\bcore\s*i[3579]/i,                  // "Core i7"
+      /\bcore_i[3579]/i,                    // "core_i7"
+      /\bi[3579]\b/i,                       // standalone "i7"
+    ];
+    
+    // If any Intel pattern is found in the title, this is not "Other Processor"
+    for (const pattern of intelTitlePatterns) {
+      if (pattern.test(normalizedTitle)) {
+        return false;
+      }
+    }
+    
     // Special case: If the title contains "MacBook" and processor is just "Apple", 
     // this is likely an Apple Silicon chip, not "Other Processor"
     if (normalizedTitle.includes('macbook') && productValue === 'Apple') {
@@ -65,6 +83,24 @@ export const matchesOtherProcessor = (
     ];
     
     for (const pattern of applePatterns) {
+      if (pattern.test(normalizedValue)) {
+        return false;
+      }
+    }
+    
+    // Intel patterns
+    const intelPatterns = [
+      /\d+th\s+gen.*i[3579]/i,              // "10th Gen... i7"
+      /i[3579].*\d+th\s+gen/i,              // "i7... 10th Gen"
+      /\d+th\s+generation.*i[3579]/i,       // "10th Generation... i7"
+      /i[3579].*\d+th\s+generation/i,       // "i7... 10th Generation"
+      /i[3579][\s-]\d{4,5}[a-z]*/i,         // "i7-1065G7"
+      /\bcore\s*i[3579]/i,                  // "Core i7"
+      /\bcore_i[3579]/i,                    // "core_i7"
+      /\bi[3579]\b/i,                       // standalone "i7"
+    ];
+    
+    for (const pattern of intelPatterns) {
       if (pattern.test(normalizedValue)) {
         return false;
       }

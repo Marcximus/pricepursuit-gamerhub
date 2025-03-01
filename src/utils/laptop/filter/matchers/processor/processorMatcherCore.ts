@@ -1,3 +1,4 @@
+
 import { 
   matchesAppleProcessor, 
   matchesIntelProcessor,
@@ -88,6 +89,17 @@ export const isMainCategoryProcessor = (
       return true;
     }
     
+    // Check for Intel Core i-series with generation info
+    if (normalizedTitle.match(/\d+th\s+gen|\d+th\s+generation/i) && 
+        normalizedTitle.match(/i[3579]/i)) {
+      return true;
+    }
+    
+    // Check for Intel Core i-series with model numbers
+    if (normalizedTitle.match(/i[3579][\s-]\d{4,5}/i)) {
+      return true;
+    }
+    
     // Direct inclusion check in title for main categories
     const mainProcessorCategories = [
       'apple m', 'intel core i', 'intel core ultra', 'amd ryzen', 
@@ -141,6 +153,17 @@ export const isMainCategoryProcessor = (
   // Fall back to checking the processor value
   if (processorValue) {
     const normalizedProcessor = processorValue.toLowerCase();
+    
+    // Check for Intel Core i-series with generation info
+    if (normalizedProcessor.match(/\d+th\s+gen|\d+th\s+generation/i) && 
+        normalizedProcessor.match(/i[3579]/i)) {
+      return true;
+    }
+    
+    // Check for Intel Core i-series with model numbers
+    if (normalizedProcessor.match(/i[3579][\s-]\d{4,5}/i)) {
+      return true;
+    }
     
     // Direct inclusion check
     const mainProcessorCategories = [
