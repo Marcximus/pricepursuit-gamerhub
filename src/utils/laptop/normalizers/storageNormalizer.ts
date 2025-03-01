@@ -16,13 +16,13 @@ export const normalizeStorage = (storage: string): string => {
   }
   
   // Standardize to specific storage groups
-  if (gbValue >= 8000) {
+  if (gbValue >= 8192) {
     return '8TB+';
-  } else if (gbValue >= 4000) {
+  } else if (gbValue >= 4096) {
     return '4TB+';
-  } else if (gbValue >= 2000) {
+  } else if (gbValue >= 2048) {
     return '2TB+';
-  } else if (gbValue >= 1000) {
+  } else if (gbValue >= 1024) {
     return '1TB+';
   } else if (gbValue >= 500) {
     return '500GB+';

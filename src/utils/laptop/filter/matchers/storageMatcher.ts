@@ -27,8 +27,32 @@ export const matchesStorageFilter = (
     // Convert to GB for comparison if needed
     const minValueGB = filterUnit === 'TB' ? minValue * 1024 : minValue;
     
-    // Match if the product's storage is greater than or equal to the minimum
-    return storageGB >= minValueGB;
+    // Define the upper bound based on the filter
+    let maxValueGB: number | undefined;
+    
+    // Set upper bounds for each filter category
+    if (minValueGB === 100) {
+      maxValueGB = 200 - 1; // 100GB+ covers 100GB to 199GB
+    } else if (minValueGB === 200) {
+      maxValueGB = 500 - 1; // 200GB+ covers 200GB to 499GB
+    } else if (minValueGB === 500) {
+      maxValueGB = 1024 - 1; // 500GB+ covers 500GB to 1023GB (just under 1TB)
+    } else if (minValueGB === 1024) {
+      maxValueGB = 2048 - 1; // 1TB+ covers 1TB to 1.99TB
+    } else if (minValueGB === 2048) {
+      maxValueGB = 4096 - 1; // 2TB+ covers 2TB to 3.99TB
+    } else if (minValueGB === 4096) {
+      maxValueGB = 8192 - 1; // 4TB+ covers 4TB to 7.99TB
+    } 
+    // 8TB+ covers 8TB and above, so no upper bound needed
+    
+    // Match if the product's storage is within the range
+    if (maxValueGB) {
+      return storageGB >= minValueGB && storageGB <= maxValueGB;
+    } else {
+      // For 8TB+ (or any other case without an upper bound)
+      return storageGB >= minValueGB;
+    }
   }
   
   // For exact matches (legacy support)
