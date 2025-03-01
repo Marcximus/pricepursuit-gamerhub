@@ -1,4 +1,3 @@
-
 import { getProcessorValue } from "@/utils/laptop/scoring/processor";
 import { getGraphicsValue } from "@/utils/laptop/scoring/graphics";
 import { getRamValue, getStorageValue, getScreenSizeValue } from "@/utils/laptop/valueParser";
@@ -13,8 +12,48 @@ export const sortRamOptions = (values: string[]): string[] => {
 /**
  * Sorts storage options by capacity (descending)
  */
-export const sortStorageOptions = (values: string[]): string[] => {
-  return [...values].sort((a, b) => getStorageValue(b) - getStorageValue(a));
+export const sortStorageOptions = (options: string[]): string[] => {
+  // Define the order for standardized storage groups
+  const standardStorageGroups = [
+    '100GB+', 
+    '200GB+', 
+    '500GB+', 
+    '1TB+', 
+    '2TB+', 
+    '4TB+', 
+    '8TB+'
+  ];
+
+  // First check if these are the standardized groups
+  const standardGroupOptions = options.filter(opt => standardStorageGroups.includes(opt));
+  if (standardGroupOptions.length > 0) {
+    // Sort according to the predefined order
+    return standardGroupOptions.sort((a, b) => {
+      return standardStorageGroups.indexOf(a) - standardStorageGroups.indexOf(b);
+    });
+  }
+
+  // For non-standardized storage values, use the existing logic
+  return options.sort((a, b) => {
+    // Extract numeric value and unit
+    const aMatch = a.match(/(\d+)\s*(GB|TB|gb|tb)/i);
+    const bMatch = b.match(/(\d+)\s*(GB|TB|gb|tb)/i);
+    
+    if (!aMatch || !bMatch) {
+      return a.localeCompare(b);
+    }
+    
+    const aValue = parseInt(aMatch[1], 10);
+    const bValue = parseInt(bMatch[1], 10);
+    const aUnit = aMatch[2].toLowerCase();
+    const bUnit = bMatch[2].toLowerCase();
+    
+    // Convert to GB for comparison
+    const aGB = aUnit === 'tb' ? aValue * 1024 : aValue;
+    const bGB = bUnit === 'tb' ? bValue * 1024 : bValue;
+    
+    return aGB - bGB;
+  });
 };
 
 /**

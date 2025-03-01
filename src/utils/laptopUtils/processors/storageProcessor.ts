@@ -57,6 +57,16 @@ export const processStorage = (storage: string | undefined, title: string, descr
         const primaryType = textToSearch.substring(match.index, match.index + match[0].indexOf('+')).includes('SSD') ? 'SSD' : 'HDD';
         const secondaryType = textToSearch.substring(match.index + match[0].indexOf('+'), match.index + 50).includes('SSD') ? 'SSD' : 'HDD';
         
+        // For standardized filtering, format as the larger of the two storage values
+        const primarySizeNum = parseInt(primarySize, 10) * (primaryUnit === 'TB' ? 1024 : 1);
+        const secondarySizeNum = parseInt(secondarySize, 10) * (secondaryUnit === 'TB' ? 1024 : 1);
+        const totalStorageGB = primarySizeNum + secondarySizeNum;
+        
+        if (totalStorageGB >= 1024) {
+          const tbSize = (totalStorageGB / 1024).toFixed(1);
+          return `${primarySize}${primaryUnit} ${primaryType} + ${secondarySize}${secondaryUnit} ${secondaryType} (${tbSize}TB Total)`;
+        }
+        
         return `${primarySize}${primaryUnit} ${primaryType} + ${secondarySize}${secondaryUnit} ${secondaryType}`;
       }
       
@@ -94,9 +104,9 @@ export const processStorage = (storage: string | undefined, title: string, descr
         }
       }
       
-      // Validate storage size is reasonable
+      // Validate storage size is reasonable (minimum 100GB for modern laptops)
       const sizeNum = parseInt(size, 10);
-      if ((unit === 'GB' && sizeNum < 16) || (unit === 'TB' && sizeNum > 8)) {
+      if ((unit === 'GB' && sizeNum < 100) || (unit === 'TB' && sizeNum > 16)) {
         continue; // Skip unrealistic storage values
       }
       
@@ -116,6 +126,12 @@ export const processStorage = (storage: string | undefined, title: string, descr
       if (descStorageMatch[0].toLowerCase().includes('hdd') || 
           descStorageMatch[0].toLowerCase().includes('hard drive')) {
         storageType = 'HDD';
+      }
+      
+      // Validate storage size
+      const sizeNum = parseInt(storageSize, 10);
+      if ((storageUnit === 'GB' && sizeNum < 100) || (storageUnit === 'TB' && sizeNum > 16)) {
+        return undefined; // Skip unrealistic storage values
       }
       
       return `${storageSize}${storageUnit} ${storageType}`;
