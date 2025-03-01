@@ -1,4 +1,6 @@
 
+import { isMainCategoryProcessor } from './core/isMainCategoryProcessor';
+
 /**
  * "Other Processor" category matcher
  * Only matches processors that don't belong to any main category
@@ -7,9 +9,6 @@ export const matchesOtherProcessor = (
   productValue: string | null | undefined,
   productTitle?: string
 ): boolean => {
-  // Import here to avoid circular dependencies
-  const { isMainCategoryProcessor } = require('./processorMatcherCore');
-  
   // If there's no processor info at all, don't categorize as "Other Processor"
   if (!productValue && !productTitle) {
     return false;

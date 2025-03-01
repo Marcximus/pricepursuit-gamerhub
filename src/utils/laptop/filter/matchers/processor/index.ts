@@ -4,3 +4,5 @@ export * from './appleProcessor';
 export * from './amdProcessor';
 export * from './otherProcessor';
 export * from './intel';
+export * from './processorMatcherCore';
+
