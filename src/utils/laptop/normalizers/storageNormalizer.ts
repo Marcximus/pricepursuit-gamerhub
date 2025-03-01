@@ -2,6 +2,8 @@
 /**
  * Normalizes storage strings for consistent display and grouping
  */
+import { getStorageValue } from '../valueParser';
+
 export const normalizeStorage = (storage: string): string => {
   if (!storage) return '';
   
