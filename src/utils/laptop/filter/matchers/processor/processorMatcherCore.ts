@@ -1,4 +1,3 @@
-
 import { 
   matchesAppleProcessor, 
   matchesIntelProcessor,
@@ -74,6 +73,22 @@ export const isMainCategoryProcessor = (
       return true;
     }
     
+    // Improved Apple M-series patterns detection
+    if (normalizedProcessor.match(/\bm[1234](?:\s*(?:pro|max|ultra))?\b/i) &&
+        !normalizedProcessor.includes('ram') && 
+        !normalizedProcessor.includes('memory') &&
+        !normalizedProcessor.includes('ssd')) {
+      return true;
+    }
+    
+    // Special case for standalone "m1" or "m2" references when not about RAM
+    if ((normalizedProcessor.match(/\bm[12]\b/i) || normalizedProcessor.match(/\bm[12]\s+chip\b/i)) &&
+        !normalizedProcessor.includes('ram') && 
+        !normalizedProcessor.includes('memory') &&
+        !normalizedProcessor.includes('ssd')) {
+      return true;
+    }
+    
     // Check for Intel Core i-series patterns without "Intel" prefix
     if (normalizedProcessor.match(/\b(?:core\s*)?i[3579](?:[-\s]\d{4,5}[a-z]*)?/i) ||
         normalizedProcessor.match(/\bcore_i[3579]\b/i)) {
@@ -121,6 +136,22 @@ export const isMainCategoryProcessor = (
     if (mainProcessorCategories.some(category => 
       normalizedTitle.includes(category.toLowerCase())
     )) {
+      return true;
+    }
+    
+    // Improved Apple M-series patterns detection in title
+    if (normalizedTitle.match(/\bm[1234](?:\s*(?:pro|max|ultra))?\b/i) &&
+        !normalizedTitle.includes('ram') && 
+        !normalizedTitle.includes('memory') &&
+        !normalizedTitle.includes('ssd')) {
+      return true;
+    }
+    
+    // Special case for standalone "m1" or "m2" references in title when not about RAM
+    if ((normalizedTitle.match(/\bm[12]\b/i) || normalizedTitle.match(/\bm[12]\s+chip\b/i)) &&
+        !normalizedTitle.includes('ram') && 
+        !normalizedTitle.includes('memory') &&
+        !normalizedTitle.includes('ssd')) {
       return true;
     }
     

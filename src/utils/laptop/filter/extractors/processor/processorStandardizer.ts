@@ -21,58 +21,72 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
   
   const normalizedProcessor = processor.toLowerCase();
   
-  // Detect Apple Silicon
-  if (normalizedProcessor.includes('apple m4 ultra') || normalizedProcessor.includes('m4 ultra')) {
+  // Improved Apple Silicon detection with more specific patterns
+  // Check for specific models with variants first (most specific to least specific)
+  
+  // M4 Series
+  if (normalizedProcessor.match(/\bapple\s+m4\s+ultra\b|\bm4\s+ultra\b/i)) {
     return 'Apple M4 Ultra';
   }
-  if (normalizedProcessor.includes('apple m4 max') || normalizedProcessor.includes('m4 max')) {
+  if (normalizedProcessor.match(/\bapple\s+m4\s+max\b|\bm4\s+max\b/i)) {
     return 'Apple M4 Max';
   }
-  if (normalizedProcessor.includes('apple m4 pro') || normalizedProcessor.includes('m4 pro')) {
+  if (normalizedProcessor.match(/\bapple\s+m4\s+pro\b|\bm4\s+pro\b/i)) {
     return 'Apple M4 Pro';
   }
-  if (normalizedProcessor.includes('apple m4') || normalizedProcessor.includes('m4 chip')) {
+  if (normalizedProcessor.match(/\bapple\s+m4\b|\bm4\s+chip\b|\bm4\b/i)) {
     return 'Apple M4';
   }
   
-  if (normalizedProcessor.includes('apple m3 ultra') || normalizedProcessor.includes('m3 ultra')) {
+  // M3 Series
+  if (normalizedProcessor.match(/\bapple\s+m3\s+ultra\b|\bm3\s+ultra\b/i)) {
     return 'Apple M3 Ultra';
   }
-  if (normalizedProcessor.includes('apple m3 max') || normalizedProcessor.includes('m3 max')) {
+  if (normalizedProcessor.match(/\bapple\s+m3\s+max\b|\bm3\s+max\b/i)) {
     return 'Apple M3 Max';
   }
-  if (normalizedProcessor.includes('apple m3 pro') || normalizedProcessor.includes('m3 pro')) {
+  if (normalizedProcessor.match(/\bapple\s+m3\s+pro\b|\bm3\s+pro\b/i)) {
     return 'Apple M3 Pro';
   }
-  if (normalizedProcessor.includes('apple m3') || normalizedProcessor.includes('m3 chip')) {
+  if (normalizedProcessor.match(/\bapple\s+m3\b|\bm3\s+chip\b|\bm3\b/i)) {
     return 'Apple M3';
   }
   
-  if (normalizedProcessor.includes('apple m2 ultra') || normalizedProcessor.includes('m2 ultra')) {
+  // M2 Series - enhanced detection
+  if (normalizedProcessor.match(/\bapple\s+m2\s+ultra\b|\bm2\s+ultra\b/i)) {
     return 'Apple M2 Ultra';
   }
-  if (normalizedProcessor.includes('apple m2 max') || normalizedProcessor.includes('m2 max')) {
+  if (normalizedProcessor.match(/\bapple\s+m2\s+max\b|\bm2\s+max\b/i)) {
     return 'Apple M2 Max';
   }
-  if (normalizedProcessor.includes('apple m2 pro') || normalizedProcessor.includes('m2 pro')) {
+  if (normalizedProcessor.match(/\bapple\s+m2\s+pro\b|\bm2\s+pro\b/i)) {
     return 'Apple M2 Pro';
   }
-  if (normalizedProcessor.includes('apple m2') || normalizedProcessor.includes('m2 chip') || 
-      normalizedProcessor.match(/\bm2\b/)) {
+  // More aggressive M2 detection - match even standalone "m2" reference when not about RAM/memory
+  if (normalizedProcessor.match(/\bapple\s+m2\b|\bm2\s+chip\b/i) || 
+      (normalizedProcessor.match(/\bm2\b/i) && 
+       !normalizedProcessor.includes('ram') && 
+       !normalizedProcessor.includes('memory') && 
+       !normalizedProcessor.includes('ssd'))) {
     return 'Apple M2';
   }
   
-  if (normalizedProcessor.includes('apple m1 ultra') || normalizedProcessor.includes('m1 ultra')) {
+  // M1 Series - enhanced detection
+  if (normalizedProcessor.match(/\bapple\s+m1\s+ultra\b|\bm1\s+ultra\b/i)) {
     return 'Apple M1 Ultra';
   }
-  if (normalizedProcessor.includes('apple m1 max') || normalizedProcessor.includes('m1 max')) {
+  if (normalizedProcessor.match(/\bapple\s+m1\s+max\b|\bm1\s+max\b/i)) {
     return 'Apple M1 Max';
   }
-  if (normalizedProcessor.includes('apple m1 pro') || normalizedProcessor.includes('m1 pro')) {
+  if (normalizedProcessor.match(/\bapple\s+m1\s+pro\b|\bm1\s+pro\b/i)) {
     return 'Apple M1 Pro';
   }
-  if (normalizedProcessor.includes('apple m1') || normalizedProcessor.includes('m1 chip') || 
-      normalizedProcessor.match(/\bm1\b/)) {
+  // More aggressive M1 detection - match even standalone "m1" reference when not about RAM/memory
+  if (normalizedProcessor.match(/\bapple\s+m1\b|\bm1\s+chip\b/i) || 
+      (normalizedProcessor.match(/\bm1\b/i) && 
+       !normalizedProcessor.includes('ram') && 
+       !normalizedProcessor.includes('memory') && 
+       !normalizedProcessor.includes('ssd'))) {
     return 'Apple M1';
   }
   

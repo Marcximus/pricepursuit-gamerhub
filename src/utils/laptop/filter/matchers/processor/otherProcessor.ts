@@ -10,6 +10,23 @@ export const matchesOtherProcessor = (
   // Import here to avoid circular dependencies
   const { isMainCategoryProcessor } = require('./processorMatcherCore');
   
+  // If there's no processor info at all, don't categorize as "Other Processor"
+  if (!productValue && !productTitle) {
+    return false;
+  }
+  
+  // Explicitly check for known processor patterns that should never be in "Other"
+  const normalizedValue = (productValue || '').toLowerCase();
+  const normalizedTitle = (productTitle || '').toLowerCase();
+  
+  // Apple Silicon patterns to explicitly exclude
+  const applePatterns = [/\bm\d\b/, /\bm\d\s+chip\b/, /\bapple\s+m\d\b/, /\bm\d\s+(pro|max|ultra)\b/];
+  for (const pattern of applePatterns) {
+    if (pattern.test(normalizedValue) || pattern.test(normalizedTitle)) {
+      return false;
+    }
+  }
+  
   // Only categorize as "Other Processor" if it doesn't match any main category
   return !isMainCategoryProcessor(productValue, productTitle);
 };
