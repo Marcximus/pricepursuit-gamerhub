@@ -44,9 +44,8 @@ export const getGroupedBrandValues = (
     }
   });
   
-  // Sort main brands
-  const sorter = sorterMap['brand'] || ((values: string[]) => [...values].sort((a, b) => a.localeCompare(b)));
-  const sortedMainBrands = sorter(mainBrands);
+  // Sort main brands alphabetically
+  const sortedMainBrands = mainBrands.sort((a, b) => a.localeCompare(b));
   
   // Add "Other" category if there are any other brands
   if (otherBrands.length > 0) {
@@ -56,6 +55,7 @@ export const getGroupedBrandValues = (
     // Log the brands being grouped into "Other" for debugging
     console.log("Brands in Other category:", otherBrands);
     
+    // Always add "Other" at the end
     sortedMainBrands.push('Other');
   }
   
