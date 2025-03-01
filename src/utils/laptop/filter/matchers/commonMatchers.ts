@@ -2,7 +2,7 @@
 import type { FilterableProductKeys } from "../filterTypes";
 import { matchesBrandFilter } from './brandMatcher';
 import { matchesGraphicsFilter } from './graphicsMatcher';
-import { matchesProcessorFilter } from './processorMatcher';
+import { matchesProcessorFilter } from './processor/processorMatcherCore';
 import { matchesRamFilter } from './ramMatcher';
 import { matchesScreenSizeFilter } from './screenSizeMatcher';
 import { matchesStorageFilter } from './storageMatcher';

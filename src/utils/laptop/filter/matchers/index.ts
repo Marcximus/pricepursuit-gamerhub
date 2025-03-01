@@ -2,7 +2,7 @@
 // Export all matchers from their respective files
 export { matchesBrandFilter } from './brandMatcher';
 export { matchesGraphicsFilter } from './graphicsMatcher';
-export { matchesProcessorFilter } from './processorMatcher';
+export { matchesProcessorFilter } from './processor/processorMatcherCore';
 export { matchesRamFilter } from './ramMatcher';
 export { matchesScreenSizeFilter } from './screenSizeMatcher';
 export { matchesStorageFilter } from './storageMatcher';
