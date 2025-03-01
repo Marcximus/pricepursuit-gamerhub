@@ -1,4 +1,3 @@
-
 import { 
   matchesAppleProcessor, 
   matchesIntelProcessor,
@@ -58,16 +57,97 @@ export const isMainCategoryProcessor = (
 ): boolean => {
   if (!processorValue && !title) return false;
   
-  const mainProcessorCategories = [
-    'Apple M', 'Intel Core i', 'Intel Core Ultra', 'AMD Ryzen', 
-    'Intel Celeron', 'Intel Pentium', 'Qualcomm Snapdragon', 'MediaTek'
-  ];
+  // First prioritize checking the title
+  if (title) {
+    const normalizedTitle = title.toLowerCase();
+    
+    // Direct check for M-series chip pattern in title (highest priority for Apple Silicon)
+    if (normalizedTitle.match(/\bm[1234]\s+chip\b/i)) {
+      return true;
+    }
+    
+    // Check Apple context with M-series in title
+    if ((normalizedTitle.includes('apple') || normalizedTitle.includes('macbook')) && 
+        normalizedTitle.match(/\bm[1234]\b/i) &&
+        !normalizedTitle.includes('ram') && 
+        !normalizedTitle.includes('memory')) {
+      return true;
+    }
+    
+    // Improved Apple M-series patterns detection in title
+    if (normalizedTitle.match(/\bm[1234](?:\s*(?:pro|max|ultra))?\b/i) &&
+        !normalizedTitle.includes('ram') && 
+        !normalizedTitle.includes('memory') &&
+        !normalizedTitle.includes('ssd')) {
+      return true;
+    }
+    
+    // Check for explicit Apple Silicon mentions in title
+    if (normalizedTitle.includes('apple silicon') || 
+        (normalizedTitle.includes('apple') && normalizedTitle.includes('chip'))) {
+      return true;
+    }
+    
+    // Direct inclusion check in title for main categories
+    const mainProcessorCategories = [
+      'apple m', 'intel core i', 'intel core ultra', 'amd ryzen', 
+      'intel celeron', 'intel pentium', 'qualcomm snapdragon', 'mediatek'
+    ];
+    
+    if (mainProcessorCategories.some(category => 
+      normalizedTitle.includes(category.toLowerCase())
+    )) {
+      return true;
+    }
+    
+    // Check for Intel Core i-series patterns in title
+    if (normalizedTitle.match(/\b(?:core\s*)?i[3579](?:[-\s]\d{4,5}[a-z]*)?/i) ||
+        normalizedTitle.match(/\bcore_i[3579]\b/i)) {
+      return true;
+    }
+    
+    // Check for Celeron patterns in title
+    if (normalizedTitle.match(/\bceleron\s*n\d{4}/i) ||
+        normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*celeron/i) ||
+        normalizedTitle.match(/celeron.*\d+(?:\.\d+)?\s*ghz/i)) {
+      return true;
+    }
+    
+    // Check for Pentium patterns in title
+    if (normalizedTitle.match(/\bpentium\s*\w+/i) ||
+        normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*pentium/i) ||
+        normalizedTitle.match(/pentium.*\d+(?:\.\d+)?\s*ghz/i)) {
+      return true;
+    }
+    
+    // Check for AMD Ryzen patterns in title
+    if (normalizedTitle.match(/\bryzen[_\s-]*[3579](?:[_\s-]\d{4}[a-z]*)?\b/i)) {
+      return true;
+    }
+    
+    // Check for Intel Core Ultra patterns in title
+    if (normalizedTitle.match(/\bultra\s*[579]\b/i) ||
+        normalizedTitle.match(/\b\d+-core\s+ultra\b/i)) {
+      return true;
+    }
+    
+    // Check for GHz with core_i patterns in title
+    if (normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*core_i[3579]/i) ||
+        normalizedTitle.match(/core_i[3579].*\d+(?:\.\d+)?\s*ghz/i)) {
+      return true;
+    }
+  }
   
-  // Check against processor value
+  // Fall back to checking the processor value
   if (processorValue) {
     const normalizedProcessor = processorValue.toLowerCase();
     
     // Direct inclusion check
+    const mainProcessorCategories = [
+      'Apple M', 'Intel Core i', 'Intel Core Ultra', 'AMD Ryzen', 
+      'Intel Celeron', 'Intel Pentium', 'Qualcomm Snapdragon', 'MediaTek'
+    ];
+    
     if (mainProcessorCategories.some(category => 
       normalizedProcessor.includes(category.toLowerCase())
     )) {
@@ -83,9 +163,9 @@ export const isMainCategoryProcessor = (
     }
     
     // Special case for standalone "m1", "m2", etc. references when not about RAM
-    if ((normalizedProcessor.match(/\bm[12]\b/i) || 
-         normalizedProcessor.match(/\bm[12]\s+chip\b/i) ||
-         normalizedProcessor.match(/chip.*m[12]/i)) &&
+    if ((normalizedProcessor.match(/\bm[1234]\b/i) || 
+         normalizedProcessor.match(/\bm[1234]\s+chip\b/i) ||
+         normalizedProcessor.match(/chip.*m[1234]/i)) &&
         !normalizedProcessor.includes('ram') && 
         !normalizedProcessor.includes('memory') &&
         !normalizedProcessor.includes('ssd')) {
@@ -127,79 +207,6 @@ export const isMainCategoryProcessor = (
     // Check for Intel Core Ultra patterns without full prefix
     if (normalizedProcessor.match(/\bultra\s*[579]\b/i) ||
         normalizedProcessor.match(/\b\d+-core\s+ultra\b/i)) {
-      return true;
-    }
-  }
-  
-  // If not found in processor value, check title with similar patterns
-  if (title) {
-    const normalizedTitle = title.toLowerCase();
-    
-    // Direct inclusion check in title
-    if (mainProcessorCategories.some(category => 
-      normalizedTitle.includes(category.toLowerCase())
-    )) {
-      return true;
-    }
-    
-    // Improved Apple M-series patterns detection in title
-    if (normalizedTitle.match(/\bm[1234](?:\s*(?:pro|max|ultra))?\b/i) &&
-        !normalizedTitle.includes('ram') && 
-        !normalizedTitle.includes('memory') &&
-        !normalizedTitle.includes('ssd')) {
-      return true;
-    }
-    
-    // More comprehensive check for M-series references in titles
-    if (normalizedTitle.match(/\bm[12]\b/i) || 
-        normalizedTitle.match(/\bm[12]\s+chip\b/i) ||
-        normalizedTitle.match(/chip.*m[12]/i) ||
-        (normalizedTitle.includes('m2') && (
-          normalizedTitle.includes('apple') || 
-          normalizedTitle.includes('macbook') || 
-          normalizedTitle.includes('processor')
-        ))) {
-      if (!normalizedTitle.includes('ram') && 
-          !normalizedTitle.includes('memory') &&
-          !normalizedTitle.includes('ssd')) {
-        return true;
-      }
-    }
-    
-    // Check for Intel Core i-series patterns in title
-    if (normalizedTitle.match(/\b(?:core\s*)?i[3579](?:[-\s]\d{4,5}[a-z]*)?/i) ||
-        normalizedTitle.match(/\bcore_i[3579]\b/i)) {
-      return true;
-    }
-    
-    // Check for Celeron patterns in title
-    if (normalizedTitle.match(/\bceleron\s*n\d{4}/i) ||
-        normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*celeron/i) ||
-        normalizedTitle.match(/celeron.*\d+(?:\.\d+)?\s*ghz/i)) {
-      return true;
-    }
-    
-    // Check for Pentium patterns in title
-    if (normalizedTitle.match(/\bpentium\s*\w+/i) ||
-        normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*pentium/i) ||
-        normalizedTitle.match(/pentium.*\d+(?:\.\d+)?\s*ghz/i)) {
-      return true;
-    }
-    
-    // Check for AMD Ryzen patterns in title
-    if (normalizedTitle.match(/\bryzen[_\s-]*[3579](?:[_\s-]\d{4}[a-z]*)?\b/i)) {
-      return true;
-    }
-    
-    // Check for Intel Core Ultra patterns in title
-    if (normalizedTitle.match(/\bultra\s*[579]\b/i) ||
-        normalizedTitle.match(/\b\d+-core\s+ultra\b/i)) {
-      return true;
-    }
-    
-    // Check for GHz with core_i patterns in title
-    if (normalizedTitle.match(/\d+(?:\.\d+)?\s*ghz.*core_i[3579]/i) ||
-        normalizedTitle.match(/core_i[3579].*\d+(?:\.\d+)?\s*ghz/i)) {
       return true;
     }
   }

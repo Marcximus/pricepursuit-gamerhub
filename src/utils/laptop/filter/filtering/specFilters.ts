@@ -1,3 +1,4 @@
+
 import type { Product } from "@/types/product";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import { matchesFilter } from "../matchers";
@@ -16,6 +17,7 @@ export const applyProcessorFilter = (
   }
   
   // First extract processor from title with fallback to stored value
+  // This prioritizes title-based processor information
   const extractedProcessor = extractProcessorFromTitle(laptop.title, laptop.processor);
   
   // If we can't determine the processor at all, exclude when processor filter is active
@@ -23,8 +25,21 @@ export const applyProcessorFilter = (
     return false;
   }
   
-  // Get standardized processor category
+  // Log for debugging to see what processors are being extracted and standardized
   const standardizedProcessor = standardizeProcessorForFiltering(extractedProcessor);
+  
+  // Special handling for Apple M-series in title - direct title check
+  if (laptop.title && laptop.title.match(/\bm[1234]\s+chip\b/i)) {
+    const mVersion = laptop.title.match(/\bm([1234])\s+chip\b/i)?.[1];
+    if (mVersion) {
+      // Check if any selected filter matches this Apple M-series
+      if (Array.from(filters.processors).some(filter => 
+          filter === `Apple M${mVersion}` || 
+          filter.startsWith(`Apple M${mVersion} `))) {
+        return true;
+      }
+    }
+  }
   
   // Try direct match with standardized category first (most efficient)
   if (filters.processors.has(standardizedProcessor)) {

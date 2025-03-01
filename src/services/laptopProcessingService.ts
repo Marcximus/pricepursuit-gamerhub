@@ -1,3 +1,4 @@
+
 import type { Product } from "@/types/product";
 import { processLaptopData } from "@/utils/laptopUtils";
 import { logDataStatistics, analyzeFilteredResults } from "@/services/laptopAnalytics";
@@ -44,7 +45,13 @@ export const processAndFilterLaptops = (
     const normalizedModel = normalizeModel(laptop.model || '', laptop.title, normalizedBrand);
     
     // Extract processor from title first, fall back to database value
+    // This prioritizes title-based processor information
     const extractedProcessor = extractProcessorFromTitle(laptop.title, laptop.processor);
+    
+    // Log when we're using title-based processor extraction for debugging
+    if (extractedProcessor && extractedProcessor !== laptop.processor) {
+      console.log(`Title-based processor extraction: "${laptop.title}" -> "${extractedProcessor}" (was: "${laptop.processor}")`);
+    }
     
     // Apply the normalized values
     const laptopWithNormalizedValues = {

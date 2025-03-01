@@ -15,32 +15,47 @@ export const matchesOtherProcessor = (
     return false;
   }
   
-  // Explicitly check for known processor patterns that should never be in "Other"
-  const normalizedValue = (productValue || '').toLowerCase();
-  const normalizedTitle = (productTitle || '').toLowerCase();
-  
-  // Apple Silicon patterns to explicitly exclude
-  const applePatterns = [
-    /\bm\d\b/, /\bm\d\s+chip\b/, /\bapple\s+m\d\b/, /\bm\d\s+(pro|max|ultra)\b/,
-    /\bm\d[^\w]/, /\b[^\w]m\d\b/, /\bmacbook.*m\d\b/, /\bm\d.*chip\b/, /\bchip.*m\d\b/
-  ];
-  
-  for (const pattern of applePatterns) {
-    if (pattern.test(normalizedValue) || pattern.test(normalizedTitle)) {
-      return false;
+  // First, prioritize checking the title for clear processor information
+  if (productTitle) {
+    const normalizedTitle = productTitle.toLowerCase();
+    
+    // Comprehensive Apple Silicon pattern detection in titles
+    // This is the most critical part for fixing the issue with M2 Chip MacBooks
+    const appleTitlePatterns = [
+      /\bm[1234]\s+chip\b/i,                // "M2 Chip"
+      /\bmacbook.*m[1234]/i,                // "MacBook... M2"
+      /\bapple.*m[1234]/i,                  // "Apple... M2"
+      /\bm[1234](?:\s+(?:pro|max|ultra))?\b/i && 
+        (normalizedTitle.includes('apple') || 
+         normalizedTitle.includes('macbook') ||
+         normalizedTitle.includes('chip')),  // Contextual M-series with Apple/MacBook/chip
+    ];
+    
+    // If any Apple pattern is found in the title, this is not "Other Processor"
+    for (const pattern of appleTitlePatterns) {
+      if (typeof pattern === 'boolean' ? pattern : pattern.test(normalizedTitle)) {
+        return false;
+      }
     }
   }
   
-  // Check for Apple M-series references with more context
-  if (normalizedTitle.includes('m2') && (
-      normalizedTitle.includes('apple') || 
-      normalizedTitle.includes('macbook') || 
-      normalizedTitle.includes('chip') || 
-      normalizedTitle.includes('processor')
-    )) {
-    return false;
+  // Check for explicit processor patterns in the provided processor value
+  if (productValue) {
+    const normalizedValue = productValue.toLowerCase();
+    
+    // Explicitly check for known processor patterns that should never be in "Other"
+    const applePatterns = [
+      /\bm[1234]\b/, /\bm[1234]\s+chip\b/, /\bapple\s+m[1234]\b/, /\bm[1234]\s+(pro|max|ultra)\b/,
+      /\bm[1234][^\w]/, /\b[^\w]m[1234]\b/, /\bmacbook.*m[1234]\b/, /\bm[1234].*chip\b/, /\bchip.*m[1234]\b/
+    ];
+    
+    for (const pattern of applePatterns) {
+      if (pattern.test(normalizedValue)) {
+        return false;
+      }
+    }
   }
   
-  // Only categorize as "Other Processor" if it doesn't match any main category
+  // Finally, use the core matcher to check if it's a main category processor
   return !isMainCategoryProcessor(productValue, productTitle);
 };
