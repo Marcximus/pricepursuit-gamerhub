@@ -34,10 +34,12 @@ export function FilterSection({
     option.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Sort processor options in a logical order when the filter is for processors
+  // Sort options based on filter type
   const sortedOptions = title === "Processors" 
     ? sortProcessorOptions(filteredOptions)
-    : filteredOptions;
+    : title === "Brands" 
+      ? filteredOptions.sort((a, b) => a.localeCompare(b)) // Sort brands alphabetically
+      : filteredOptions;
 
   const handleCheckboxChange = useCallback((option: string, checked: boolean) => {
     const newSelected = new Set(selectedOptions);
