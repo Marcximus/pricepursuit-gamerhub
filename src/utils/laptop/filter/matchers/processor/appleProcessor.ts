@@ -1,6 +1,6 @@
 
 /**
- * Apple M-series processor matcher
+ * Apple M-series processor matcher - simplified for consolidated categories
  */
 export const matchesAppleProcessor = (
   filterValue: string,
@@ -9,9 +9,8 @@ export const matchesAppleProcessor = (
 ): boolean => {
   if (!productValue && !productTitle) return false;
   
-  const mVersion = filterValue.charAt(7); // Get the number (1-4)
-  const isVariant = filterValue.length > 8;
-  const variant = isVariant ? filterValue.substring(9).toLowerCase().trim() : '';
+  // Get the M-series version number (1-4)
+  const mVersion = filterValue.charAt(7); 
   
   // First check the title - prioritize this over the processor value
   if (productTitle) {
@@ -19,46 +18,18 @@ export const matchesAppleProcessor = (
     
     // Enhanced detection for MacBook Air/Pro with M-series chips mentioned in title
     if (normalizedTitle.includes('macbook') && normalizedTitle.includes(`m${mVersion}`)) {
-      // For base model, make sure no variant is mentioned
-      if (!isVariant && 
-          !normalizedTitle.includes('pro') && 
-          !normalizedTitle.includes('max') && 
-          !normalizedTitle.includes('ultra')) {
-        return true;
-      }
-      // For variants, make sure the right variant is mentioned
-      else if (isVariant && normalizedTitle.includes(variant)) {
-        return true;
-      }
+      return true;
     }
     
     // Check for specific M-series mention with "chip" in title (highest priority pattern)
     if (normalizedTitle.match(new RegExp(`m${mVersion}\\s+chip`, 'i'))) {
-      if (!isVariant) {
-        // For base model, make sure no variant is mentioned
-        return !normalizedTitle.includes('pro') && 
-               !normalizedTitle.includes('max') && 
-               !normalizedTitle.includes('ultra');
-      } else if (normalizedTitle.includes(variant)) {
-        // For variants, make sure the right variant is mentioned
-        return true;
-      }
+      return true;
     }
     
     // Look for M-series in context of Apple/MacBook
     if ((normalizedTitle.includes('apple') || normalizedTitle.includes('macbook')) && 
         normalizedTitle.includes(`m${mVersion}`)) {
-      // For base M-series, make sure it's not a Pro/Max/Ultra variant
-      if (!isVariant && 
-          !normalizedTitle.includes('pro') && 
-          !normalizedTitle.includes('max') && 
-          !normalizedTitle.includes('ultra')) {
-        return true;
-      }
-      // For variants (Pro/Max/Ultra)
-      else if (isVariant && normalizedTitle.includes(variant)) {
-        return true;
-      }
+      return true;
     }
     
     // General pattern matching for M-series in title
@@ -68,49 +39,42 @@ export const matchesAppleProcessor = (
       if (!normalizedTitle.includes('ram') && 
           !normalizedTitle.includes('memory') && 
           !normalizedTitle.includes('ssd')) {
-        // For base M-series, make sure it's not a Pro/Max/Ultra variant
-        if (!isVariant && 
-            !normalizedTitle.includes('pro') && 
-            !normalizedTitle.includes('max') && 
-            !normalizedTitle.includes('ultra')) {
-          return true;
-        }
-        // For variants (Pro/Max/Ultra)
-        else if (isVariant && normalizedTitle.includes(variant)) {
-          return true;
-        }
+        return true;
       }
+    }
+    
+    // Also check for variant mentions (Pro/Max/Ultra) with the same M-series version
+    if (normalizedTitle.includes(`m${mVersion} pro`) || 
+        normalizedTitle.includes(`m${mVersion} max`) || 
+        normalizedTitle.includes(`m${mVersion} ultra`)) {
+      return true;
     }
   }
   
   // Special handling for when processor value is just "Apple"
-  if (productValue === 'Apple' && productTitle && productTitle.toLowerCase().includes('m2')) {
-    if (!isVariant) {
-      return true;
-    }
+  if (productValue === 'Apple' && productTitle && productTitle.toLowerCase().includes(`m${mVersion}`)) {
+    return true;
   }
   
   // Fall back to checking the processor value if title doesn't match
   if (productValue) {
     const normalizedProcessor = productValue.toLowerCase();
-    const regex = new RegExp(`\\bm${mVersion}\\b|\\bapple\\s*m${mVersion}\\b`, 'i');
     
-    if (regex.test(normalizedProcessor)) {
-      // For base M-series, make sure it's not a Pro/Max/Ultra variant
-      if (!isVariant && 
-          !normalizedProcessor.includes('pro') && 
-          !normalizedProcessor.includes('max') && 
-          !normalizedProcessor.includes('ultra')) {
-        return true;
-      }
-      // For variants (Pro/Max/Ultra)
-      else if (isVariant && normalizedProcessor.includes(variant)) {
-        return true;
-      }
+    // Match main version or any variant (Pro/Max/Ultra)
+    if (normalizedProcessor.includes(`m${mVersion}`) || 
+        normalizedProcessor.includes(`apple m${mVersion}`)) {
+      return true;
     }
     
     // Check for "M{version} chip" pattern
-    if (!isVariant && normalizedProcessor.match(new RegExp(`m${mVersion}\\s+chip`, 'i'))) {
+    if (normalizedProcessor.match(new RegExp(`m${mVersion}\\s+chip`, 'i'))) {
+      return true;
+    }
+    
+    // Also check for variant mentions
+    if (normalizedProcessor.includes(`m${mVersion} pro`) || 
+        normalizedProcessor.includes(`m${mVersion} max`) || 
+        normalizedProcessor.includes(`m${mVersion} ultra`)) {
       return true;
     }
   }

@@ -68,14 +68,10 @@ const getStandardizedProcessorValues = (laptops: Product[]): Set<string> => {
     'Intel Core i9', 'Intel Core i7', 'Intel Core i5', 'Intel Core i3'
   ];
   
-  // Primary processor categories - updated with simplified Intel generations
+  // Primary processor categories - updated with consolidated Apple categories
   const primaryCategories = [
-    // Apple
-    'Apple M4 Ultra', 'Apple M4 Max', 'Apple M4 Pro', 'Apple M4',
-    'Apple M3 Ultra', 'Apple M3 Max', 'Apple M3 Pro', 'Apple M3',
-    'Apple M2 Ultra', 'Apple M2 Max', 'Apple M2 Pro', 'Apple M2',
-    'Apple M1 Ultra', 'Apple M1 Max', 'Apple M1 Pro', 'Apple M1',
-    'Apple M-series',
+    // Apple - simplified to just the main M-series versions
+    'Apple M4', 'Apple M3', 'Apple M2', 'Apple M1',
     
     // Intel Core Ultra
     'Intel Core Ultra 9', 'Intel Core Ultra 7', 'Intel Core Ultra 5',

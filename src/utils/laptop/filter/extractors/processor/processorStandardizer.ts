@@ -20,50 +20,23 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
   
   const normalizedProcessor = processor.toLowerCase();
   
-  // Improved Apple Silicon detection with more specific patterns
-  // Check for specific models with variants first (most specific to least specific)
+  // Simplified Apple Silicon detection - consolidate all variants into main versions
   
-  // M4 Series
-  if (normalizedProcessor.match(/\bapple\s+m4\s+ultra\b|\bm4\s+ultra\b/i)) {
-    return 'Apple M4 Ultra';
-  }
-  if (normalizedProcessor.match(/\bapple\s+m4\s+max\b|\bm4\s+max\b/i)) {
-    return 'Apple M4 Max';
-  }
-  if (normalizedProcessor.match(/\bapple\s+m4\s+pro\b|\bm4\s+pro\b/i)) {
-    return 'Apple M4 Pro';
-  }
-  if (normalizedProcessor.match(/\bapple\s+m4\b|\bm4\s+chip\b|\bm4\b/i)) {
+  // M4 Series - all variants map to just "Apple M4"
+  if (normalizedProcessor.match(/\bapple\s+m4\b|\bm4\s+chip\b|\bm4\b/i) ||
+      normalizedProcessor.match(/\bapple\s+m4\s+(ultra|max|pro)\b|\bm4\s+(ultra|max|pro)\b/i)) {
     return 'Apple M4';
   }
   
-  // M3 Series
-  if (normalizedProcessor.match(/\bapple\s+m3\s+ultra\b|\bm3\s+ultra\b/i)) {
-    return 'Apple M3 Ultra';
-  }
-  if (normalizedProcessor.match(/\bapple\s+m3\s+max\b|\bm3\s+max\b/i)) {
-    return 'Apple M3 Max';
-  }
-  if (normalizedProcessor.match(/\bapple\s+m3\s+pro\b|\bm3\s+pro\b/i)) {
-    return 'Apple M3 Pro';
-  }
-  if (normalizedProcessor.match(/\bapple\s+m3\b|\bm3\s+chip\b|\bm3\b/i)) {
+  // M3 Series - all variants map to just "Apple M3"
+  if (normalizedProcessor.match(/\bapple\s+m3\b|\bm3\s+chip\b|\bm3\b/i) ||
+      normalizedProcessor.match(/\bapple\s+m3\s+(ultra|max|pro)\b|\bm3\s+(ultra|max|pro)\b/i)) {
     return 'Apple M3';
   }
   
-  // M2 Series - enhanced detection
-  if (normalizedProcessor.match(/\bapple\s+m2\s+ultra\b|\bm2\s+ultra\b/i)) {
-    return 'Apple M2 Ultra';
-  }
-  if (normalizedProcessor.match(/\bapple\s+m2\s+max\b|\bm2\s+max\b/i)) {
-    return 'Apple M2 Max';
-  }
-  if (normalizedProcessor.match(/\bapple\s+m2\s+pro\b|\bm2\s+pro\b/i)) {
-    return 'Apple M2 Pro';
-  }
-  
-  // More aggressive M2 detection - adding a stronger pattern specifically for "Apple M2 Chip" cases
-  if (normalizedProcessor.match(/\bapple\s+m2\b|\bm2\s+chip\b/i) || 
+  // M2 Series - all variants map to just "Apple M2"
+  if (normalizedProcessor.match(/\bapple\s+m2\b|\bm2\s+chip\b/i) ||
+      normalizedProcessor.match(/\bapple\s+m2\s+(ultra|max|pro)\b|\bm2\s+(ultra|max|pro)\b/i) ||
       normalizedProcessor.match(/\bmacbook.*m2(?:\s+chip)?\b/i) ||
       normalizedProcessor.match(/\bapple.*m2(?:\s+chip)?\b/i) ||
       (normalizedProcessor.match(/\bm2\b/i) && 
@@ -74,30 +47,20 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
     return 'Apple M2';
   }
   
-  // If processor is just "Apple" and we're in a MacBook context, it might be an M-series chip
-  if (normalizedProcessor === 'apple') {
-    return 'Apple M-series';
-  }
-  
-  // M1 Series - enhanced detection
-  if (normalizedProcessor.match(/\bapple\s+m1\s+ultra\b|\bm1\s+ultra\b/i)) {
-    return 'Apple M1 Ultra';
-  }
-  if (normalizedProcessor.match(/\bapple\s+m1\s+max\b|\bm1\s+max\b/i)) {
-    return 'Apple M1 Max';
-  }
-  if (normalizedProcessor.match(/\bapple\s+m1\s+pro\b|\bm1\s+pro\b/i)) {
-    return 'Apple M1 Pro';
-  }
-  
-  // More aggressive M1 detection - match even standalone "m1" reference when not about RAM/memory
-  if (normalizedProcessor.match(/\bapple\s+m1\b|\bm1\s+chip\b/i) || 
+  // M1 Series - all variants map to just "Apple M1"
+  if (normalizedProcessor.match(/\bapple\s+m1\b|\bm1\s+chip\b/i) ||
+      normalizedProcessor.match(/\bapple\s+m1\s+(ultra|max|pro)\b|\bm1\s+(ultra|max|pro)\b/i) ||
       (normalizedProcessor.match(/\bm1\b/i) && 
        !normalizedProcessor.includes('ram') && 
        !normalizedProcessor.includes('memory') && 
        !normalizedProcessor.includes('ssd')) ||
       (normalizedProcessor.includes('m1') && normalizedProcessor.includes('chip'))) {
     return 'Apple M1';
+  }
+  
+  // If processor is just "Apple" and we're in a MacBook context, it might be an M-series chip
+  if (normalizedProcessor === 'apple') {
+    return 'Apple M-series';
   }
   
   // Check for Apple context without explicit M-series number
