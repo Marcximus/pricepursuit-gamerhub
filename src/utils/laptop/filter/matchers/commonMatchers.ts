@@ -1,7 +1,7 @@
 
 import type { FilterableProductKeys } from "../filterTypes";
 import { matchesBrandFilter } from './brandMatcher';
-import { matchesGraphicsFilter } from './graphicsMatcher';
+import { matchesGraphicsFilter } from './graphics/graphicsMatcherCore';
 import { matchesProcessorFilter } from './processor/processorMatcherCore';
 import { matchesRamFilter } from './ramMatcher';
 import { matchesScreenSizeFilter } from './screenSizeMatcher';
