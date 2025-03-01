@@ -1,19 +1,43 @@
+/**
+ * Process laptop description to extract additional specifications
+ * that might not be present in the title
+ */
 
-import { processProcessor, processRam, processStorage, processScreenResolution, 
-        processRefreshRate, processTouchscreen as specsProcessorTouchscreen, 
-        processOperatingSystem, processColor as specsProcessorColor, 
-        processWarranty, processOfficeIncluded, 
-        processBacklitKeyboard as specsProcessorBacklitKeyboard, 
-        processPorts as specsProcessorPorts, 
-        processFingerprint as specsProcessorFingerprint } from './specsProcessor';
+import { 
+  processProcessor, 
+  processRam, 
+  processStorage, 
+  processScreenResolution, 
+  processRefreshRate, 
+  processTouchscreen, 
+  processOperatingSystem, 
+  processColor, 
+  processWarranty, 
+  processOfficeIncluded,
+  processBacklitKeyboard, 
+  processPorts, 
+  processFingerprint 
+} from './processors';
 
 import { processGraphics } from './graphicsProcessor';
-import { processScreenSize, processWeight, processBatteryLife, 
-         processCamera, processColor as physicalProcessorColor,
+import { 
+  processScreenSize, 
+  processWeight, 
+  processBatteryLife, 
+  processCamera,
+} from './physicalSpecsProcessor';
+
+import { processColor as physicalProcessorColor,
          processTouchscreen as physicalProcessorTouchscreen,
          processBacklitKeyboard as physicalProcessorBacklitKeyboard,
          processFingerprint as physicalProcessorFingerprint,
          processPorts as physicalProcessorPorts } from './physicalSpecsProcessor';
+
+import { processTouchscreen as specsProcessorTouchscreen,
+         processColor as specsProcessorColor,
+         processBacklitKeyboard as specsProcessorBacklitKeyboard,
+         processPorts as specsProcessorPorts,
+         processFingerprint as specsProcessorFingerprint } from './processors';
 
 /**
  * Process laptop description to extract additional specifications
