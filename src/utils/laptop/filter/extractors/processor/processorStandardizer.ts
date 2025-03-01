@@ -1,4 +1,3 @@
-
 import { 
   appleSiliconPatterns, 
   intelCorePatterns,
@@ -67,7 +66,8 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
       (normalizedProcessor.match(/\bm2\b/i) && 
        !normalizedProcessor.includes('ram') && 
        !normalizedProcessor.includes('memory') && 
-       !normalizedProcessor.includes('ssd'))) {
+       !normalizedProcessor.includes('ssd')) ||
+      (normalizedProcessor.includes('m2') && normalizedProcessor.includes('chip'))) {
     return 'Apple M2';
   }
   
@@ -86,8 +86,19 @@ export const standardizeProcessorForFiltering = (processor: string | null | unde
       (normalizedProcessor.match(/\bm1\b/i) && 
        !normalizedProcessor.includes('ram') && 
        !normalizedProcessor.includes('memory') && 
-       !normalizedProcessor.includes('ssd'))) {
+       !normalizedProcessor.includes('ssd')) ||
+      (normalizedProcessor.includes('m1') && normalizedProcessor.includes('chip'))) {
     return 'Apple M1';
+  }
+  
+  // Check for Apple context without explicit M-series number
+  if ((normalizedProcessor.includes('apple') || normalizedProcessor.includes('macbook')) && 
+      (normalizedProcessor.includes('chip') || normalizedProcessor.includes('silicon'))) {
+    // Look for M-series number anywhere in the string
+    if (normalizedProcessor.match(/m2/i)) return 'Apple M2';
+    if (normalizedProcessor.match(/m1/i)) return 'Apple M1';
+    if (normalizedProcessor.match(/m3/i)) return 'Apple M3';
+    if (normalizedProcessor.match(/m4/i)) return 'Apple M4';
   }
   
   // Detect Intel Core Ultra

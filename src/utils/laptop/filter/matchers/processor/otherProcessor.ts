@@ -20,11 +20,25 @@ export const matchesOtherProcessor = (
   const normalizedTitle = (productTitle || '').toLowerCase();
   
   // Apple Silicon patterns to explicitly exclude
-  const applePatterns = [/\bm\d\b/, /\bm\d\s+chip\b/, /\bapple\s+m\d\b/, /\bm\d\s+(pro|max|ultra)\b/];
+  const applePatterns = [
+    /\bm\d\b/, /\bm\d\s+chip\b/, /\bapple\s+m\d\b/, /\bm\d\s+(pro|max|ultra)\b/,
+    /\bm\d[^\w]/, /\b[^\w]m\d\b/, /\bmacbook.*m\d\b/, /\bm\d.*chip\b/, /\bchip.*m\d\b/
+  ];
+  
   for (const pattern of applePatterns) {
     if (pattern.test(normalizedValue) || pattern.test(normalizedTitle)) {
       return false;
     }
+  }
+  
+  // Check for Apple M-series references with more context
+  if (normalizedTitle.includes('m2') && (
+      normalizedTitle.includes('apple') || 
+      normalizedTitle.includes('macbook') || 
+      normalizedTitle.includes('chip') || 
+      normalizedTitle.includes('processor')
+    )) {
+    return false;
   }
   
   // Only categorize as "Other Processor" if it doesn't match any main category

@@ -1,3 +1,4 @@
+
 import { 
   matchesAppleProcessor, 
   matchesIntelProcessor,
@@ -81,8 +82,10 @@ export const isMainCategoryProcessor = (
       return true;
     }
     
-    // Special case for standalone "m1" or "m2" references when not about RAM
-    if ((normalizedProcessor.match(/\bm[12]\b/i) || normalizedProcessor.match(/\bm[12]\s+chip\b/i)) &&
+    // Special case for standalone "m1", "m2", etc. references when not about RAM
+    if ((normalizedProcessor.match(/\bm[12]\b/i) || 
+         normalizedProcessor.match(/\bm[12]\s+chip\b/i) ||
+         normalizedProcessor.match(/chip.*m[12]/i)) &&
         !normalizedProcessor.includes('ram') && 
         !normalizedProcessor.includes('memory') &&
         !normalizedProcessor.includes('ssd')) {
@@ -147,12 +150,20 @@ export const isMainCategoryProcessor = (
       return true;
     }
     
-    // Special case for standalone "m1" or "m2" references in title when not about RAM
-    if ((normalizedTitle.match(/\bm[12]\b/i) || normalizedTitle.match(/\bm[12]\s+chip\b/i)) &&
-        !normalizedTitle.includes('ram') && 
-        !normalizedTitle.includes('memory') &&
-        !normalizedTitle.includes('ssd')) {
-      return true;
+    // More comprehensive check for M-series references in titles
+    if (normalizedTitle.match(/\bm[12]\b/i) || 
+        normalizedTitle.match(/\bm[12]\s+chip\b/i) ||
+        normalizedTitle.match(/chip.*m[12]/i) ||
+        (normalizedTitle.includes('m2') && (
+          normalizedTitle.includes('apple') || 
+          normalizedTitle.includes('macbook') || 
+          normalizedTitle.includes('processor')
+        ))) {
+      if (!normalizedTitle.includes('ram') && 
+          !normalizedTitle.includes('memory') &&
+          !normalizedTitle.includes('ssd')) {
+        return true;
+      }
     }
     
     // Check for Intel Core i-series patterns in title
@@ -177,13 +188,6 @@ export const isMainCategoryProcessor = (
     
     // Check for AMD Ryzen patterns in title
     if (normalizedTitle.match(/\bryzen[_\s-]*[3579](?:[_\s-]\d{4}[a-z]*)?\b/i)) {
-      return true;
-    }
-    
-    // Check for Apple M-series patterns in title
-    if (normalizedTitle.match(/\bm[1234](?:\s*(?:pro|max|ultra))?\b/i) &&
-        !normalizedTitle.includes('ram') && 
-        !normalizedTitle.includes('memory')) {
       return true;
     }
     
