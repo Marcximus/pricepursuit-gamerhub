@@ -5,7 +5,9 @@ import {
   updateSpecificLaptopRam, 
   updateB07SRSSWH9Ram, 
   updateAlienwareM18R2Ram,
-  refreshLaptopCache 
+  refreshLaptopCache,
+  updateB07SXVRQ6NRam,
+  updateB07TB8WP87Ram
 } from '@/utils/laptop/manualProductUpdates';
 import { toast } from 'sonner';
 
@@ -79,6 +81,48 @@ export function UpdateSpecificLaptops() {
     }
   };
 
+  const handleUpdateB07SXVRQ6N = async () => {
+    setIsUpdating(true);
+    toast.info('Starting update for ASIN B07SXVRQ6N RAM...');
+    
+    try {
+      const result = await updateB07SXVRQ6NRam();
+      
+      if (result.success) {
+        toast.success('Successfully updated laptop RAM to 32 GB DDR5!');
+      } else {
+        toast.error('Failed to update laptop RAM. See console for details.');
+        console.error('Update error:', result.error);
+      }
+    } catch (error) {
+      toast.error('Error during update process. See console for details.');
+      console.error('Update process error:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleUpdateB07TB8WP87 = async () => {
+    setIsUpdating(true);
+    toast.info('Starting update for ASIN B07TB8WP87 RAM...');
+    
+    try {
+      const result = await updateB07TB8WP87Ram();
+      
+      if (result.success) {
+        toast.success('Successfully updated laptop RAM to 32 GB DDR5!');
+      } else {
+        toast.error('Failed to update laptop RAM. See console for details.');
+        console.error('Update error:', result.error);
+      }
+    } catch (error) {
+      toast.error('Error during update process. See console for details.');
+      console.error('Update process error:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleRefreshCache = async () => {
     setIsUpdating(true);
     toast.info('Refreshing laptop data cache...');
@@ -127,6 +171,22 @@ export function UpdateSpecificLaptops() {
           size="sm"
         >
           {isUpdating ? 'Updating...' : 'Update Alienware M18 R2 RAM to 32 GB DDR5'}
+        </Button>
+        <Button 
+          onClick={handleUpdateB07SXVRQ6N}
+          disabled={isUpdating}
+          variant="outline"
+          size="sm"
+        >
+          {isUpdating ? 'Updating...' : 'Update B07SXVRQ6N RAM to 32 GB DDR5'}
+        </Button>
+        <Button 
+          onClick={handleUpdateB07TB8WP87}
+          disabled={isUpdating}
+          variant="outline"
+          size="sm"
+        >
+          {isUpdating ? 'Updating...' : 'Update B07TB8WP87 RAM to 32 GB DDR5'}
         </Button>
         <Button 
           onClick={handleRefreshCache}

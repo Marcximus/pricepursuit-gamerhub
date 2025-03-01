@@ -74,6 +74,28 @@ export const updateB07SRSSWH9Ram = async () => {
   return result;
 };
 
+// Function to update the RAM for B07SXVRQ6N to 32 GB DDR5
+export const updateB07SXVRQ6NRam = async () => {
+  const ASIN = 'B07SXVRQ6N';
+  const NEW_RAM = '32 GB DDR5';
+  
+  console.log(`Updating RAM for product ${ASIN} to "${NEW_RAM}"`);
+  const result = await updateProductRam(ASIN, NEW_RAM);
+  
+  return result;
+};
+
+// Function to update the RAM for B07TB8WP87 to 32 GB DDR5
+export const updateB07TB8WP87Ram = async () => {
+  const ASIN = 'B07TB8WP87';
+  const NEW_RAM = '32 GB DDR5';
+  
+  console.log(`Updating RAM for product ${ASIN} to "${NEW_RAM}"`);
+  const result = await updateProductRam(ASIN, NEW_RAM);
+  
+  return result;
+};
+
 // Function to update the Alienware M18 R2 RAM from 12 GB to 32 GB
 export const updateAlienwareM18R2Ram = async () => {
   // We need the ASIN for the Alienware M18 R2 model
