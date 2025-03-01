@@ -20,12 +20,16 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       };
     }
 
+    // Get storage options and log them to debug the issue
+    const storageOptions = getUniqueFilterValues(laptops, 'storage');
+    console.log('Generated storage options:', Array.from(storageOptions));
+
     return {
       // Use grouped brands instead of all individual brands
       brands: getGroupedBrandValues(laptops, 15),  // Group brands with fewer than 15 laptops
       processors: getUniqueFilterValues(laptops, 'processor'),
       ramSizes: getUniqueFilterValues(laptops, 'ram'),
-      storageOptions: getUniqueFilterValues(laptops, 'storage'),
+      storageOptions: storageOptions,
       graphicsCards: getUniqueFilterValues(laptops, 'graphics'),
       screenSizes: getUniqueFilterValues(laptops, 'screen_size'),
     };

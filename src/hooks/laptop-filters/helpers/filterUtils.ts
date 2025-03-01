@@ -29,6 +29,13 @@ export const getValidValues = (
     })
     .filter((value): value is string => value !== null && value !== '');
 
+  // Special debug for storage values
+  if (key === 'storage') {
+    const before = laptops.filter(laptop => laptop.storage).length;
+    const after = validValues.length;
+    console.log(`Storage filtering: ${before} raw values, ${after} valid values`);
+  }
+
   // Return unique values
   return Array.from(new Set(validValues));
 };

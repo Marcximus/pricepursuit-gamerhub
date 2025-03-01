@@ -29,6 +29,15 @@ export const getUniqueFilterValues = (
   // Get validated values
   const values = getValidValues(laptops, key, normalizer, validator);
   
+  // Add specific logging for storage to help debug the issue
+  if (key === 'storage') {
+    console.log(`Storage values before sorting: ${values.length} values`);
+    // Log some sample values to understand what's coming in
+    if (values.length > 0) {
+      console.log('Sample storage values:', values.slice(0, 10));
+    }
+  }
+  
   // Sort values using the appropriate sorter
   const sortedValues = sorter(values);
   
