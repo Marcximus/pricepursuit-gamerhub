@@ -30,9 +30,16 @@ export const FilterOptionsList = memo(function FilterOptionsList({
     ];
   }, [options, selectedOptions]);
 
+  // Determine the max height based on the number of options
+  const getScrollAreaHeight = () => {
+    if (options.length <= 8) return '';
+    if (options.length <= 15) return 'h-[240px]';
+    return 'h-[320px]'; // Taller for many options
+  };
+
   return (
     <div className="flex flex-col">
-      <ScrollArea className={`${options.length > 8 ? 'h-[240px]' : ''} rounded-md`}>
+      <ScrollArea className={`${getScrollAreaHeight()} rounded-md`}>
         <div className="space-y-1">
           {options.length > 0 ? (
             sortedOptions.map((option) => (

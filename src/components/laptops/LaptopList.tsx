@@ -130,6 +130,13 @@ export function LaptopList({
           <span>Refreshing laptop data...</span>
         </div>
       )}
+      
+      {/* Add result count indicator */}
+      <div className="text-sm text-slate-600">
+        Showing {laptops.length} {laptops.length === 1 ? 'laptop' : 'laptops'}
+        {totalCount > 0 && laptops.length !== totalCount && ` of ${totalCount} total`}
+        {currentPage > 1 && ` (Page ${currentPage})`}
+      </div>
     
       <div className="space-y-4">
         {laptops.map((laptop) => (

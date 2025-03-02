@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { processAndFilterLaptops } from "@/services/laptopProcessingService";
 import { fetchAllLaptops } from "@/services/laptopService";
@@ -21,7 +20,7 @@ export {
   clearLaptopCache
 };
 
-export const ITEMS_PER_PAGE = 50;
+export const ITEMS_PER_PAGE = 500;
 
 const defaultFilters: FilterOptions = {
   priceRange: { min: 0, max: 10000 },
@@ -33,14 +32,11 @@ const defaultFilters: FilterOptions = {
   brands: new Set<string>()
 };
 
-// Improved useLaptops hook with React Query and client-side caching
 export const useLaptops = (
   page: number = 1, 
   sortBy: SortOption = 'rating-desc',
   filters: FilterOptions = defaultFilters
 ) => {
-  // Convert filter format for the optimized endpoint
-  // Include ALL filter types for complete filtering
   const apiFilters = {
     brand: Array.from(filters.brands || []).join(',') || undefined,
     minPrice: filters.priceRange.min > 0 ? filters.priceRange.min : undefined,
@@ -54,10 +50,8 @@ export const useLaptops = (
 
   console.log('API Filters for laptop query:', apiFilters);
 
-  // Convert sort format
   const [sortField, sortDirection] = sortBy.split('-') as [string, 'asc' | 'desc'];
   
-  // Use React Query with the optimized fetch
   const query = useQuery({
     queryKey: ['optimized-laptops', { page, sortBy, filters: JSON.stringify(apiFilters) }],
     queryFn: () => fetchOptimizedLaptops({
@@ -71,7 +65,6 @@ export const useLaptops = (
     gcTime: 1000 * 60 * 10, // 10 minutes
   });
 
-  // For backwards compatibility, transform the response to match the old format
   const transformedData = query.data ? {
     laptops: query.data.data || [],
     totalCount: query.data.meta.totalCount || 0,

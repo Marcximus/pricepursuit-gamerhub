@@ -32,7 +32,7 @@ export interface LaptopFilterParams {
 
 /**
  * Fetches laptops with optimized performance using serverless function
- * Now with client-side caching for better performance
+ * Now with client-side caching for better performance and support for larger result sets
  */
 export async function fetchOptimizedLaptops({
   brand = '',
@@ -46,7 +46,7 @@ export async function fetchOptimizedLaptops({
   sortBy = 'wilson_score',
   sortDir = 'desc',
   page = 1,
-  pageSize = 20
+  pageSize = 500
 }: LaptopFilterParams): Promise<PaginatedResponse<Product>> {
   // Build query parameters
   const params = new URLSearchParams();
@@ -70,11 +70,11 @@ export async function fetchOptimizedLaptops({
   const queryString = params.toString();
   console.log(`Fetching laptops with params: ${queryString}`);
   
-  // Determine cache time based on filter specificity
+  // Determine cache time based on filter specificity - shorter cache for filtered results
   const filterCount = [brand, minPrice, maxPrice, ram, processor, storage, graphics, screenSize].filter(Boolean).length;
-  const cacheTime = filterCount > 2 
-    ? 10 * 60 * 1000  // 10 minutes for specific filters
-    : 2 * 60 * 1000;  // 2 minutes for general listings
+  const cacheTime = filterCount > 0 
+    ? 5 * 60 * 1000   // 5 minutes for filtered results
+    : 10 * 60 * 1000; // 10 minutes for unfiltered results
 
   try {
     // Check if we have a cached version first

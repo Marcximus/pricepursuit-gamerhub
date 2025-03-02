@@ -4,6 +4,7 @@ import type { FilterableProductKeys } from "@/utils/laptop/filter";
 
 /**
  * Generic utility to get valid values for a specific laptop property
+ * Now improved to handle more edge cases and extract values more effectively
  */
 export const getValidValues = (
   laptops: Product[], 
@@ -12,6 +13,11 @@ export const getValidValues = (
   validator?: (value: string) => boolean
 ): string[] => {
   console.log(`Processing ${laptops.length} laptops for ${key} filter values`);
+  
+  if (!laptops || laptops.length === 0) {
+    console.log(`No laptops to process for ${key} filter values`);
+    return [];
+  }
   
   // Track statistics for debugging
   let totalValues = 0;
@@ -59,6 +65,50 @@ export const getValidValues = (
         const unit = capacityMatch[2].toUpperCase();
         const standardizedValue = `${capacity}${unit}`;
         allValues.add(standardizedValue);
+      }
+      
+      // Also extract SSD/HDD type information
+      const typeMatch = valueString.match(/(SSD|HDD|eMMC|NVMe)/i);
+      if (typeMatch) {
+        // Add storage type as a filter option
+        const storageType = typeMatch[1].toUpperCase();
+        
+        // For SSD, also add with capacity if available
+        if (capacityMatch && storageType === 'SSD') {
+          const capacity = capacityMatch[1];
+          const unit = capacityMatch[2].toUpperCase();
+          allValues.add(`${capacity}${unit} ${storageType}`);
+        }
+      }
+    }
+    
+    // For RAM, also try to extract and standardize common sizes
+    if (key === 'ram') {
+      const ramMatch = valueString.match(/(\d+)\s*(GB|gb)/i);
+      if (ramMatch) {
+        const size = ramMatch[1];
+        allValues.add(`${size}GB`);
+      }
+    }
+    
+    // For processors, try to extract common model families
+    if (key === 'processor') {
+      // Check for Intel Core i-series
+      const intelMatch = valueString.match(/core\s+i(\d+)/i);
+      if (intelMatch) {
+        allValues.add(`Intel Core i${intelMatch[1]}`);
+      }
+      
+      // Check for AMD Ryzen series
+      const ryzenMatch = valueString.match(/ryzen\s+(\d+)/i);
+      if (ryzenMatch) {
+        allValues.add(`AMD Ryzen ${ryzenMatch[1]}`);
+      }
+      
+      // Check for Apple M-series
+      const appleMatch = valueString.match(/apple\s+m(\d+)/i);
+      if (appleMatch) {
+        allValues.add(`Apple M${appleMatch[1]}`);
       }
     }
   });
