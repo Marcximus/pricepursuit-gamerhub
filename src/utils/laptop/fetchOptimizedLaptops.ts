@@ -85,17 +85,29 @@ export async function fetchOptimizedLaptops({
 
     if (error) {
       console.error('Error invoking function with POST:', error);
-      // If POST fails, try GET as a fallback
-      const functionEndpoint = 'fetch-laptops';
-      const response = await fetch(`${window.location.origin}/.supabase/functions/v1/${functionEndpoint}?${queryString}`, {
+      
+      // Get access token for the request
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token || '';
+      
+      // If POST fails, try GET with the actual Supabase URL as a fallback
+      // Use the actual Supabase URL rather than window.location.origin
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://kkebyebrhdpcwqnxhjcx.supabase.co';
+      const functionEndpoint = `${supabaseUrl}/functions/v1/fetch-laptops?${queryString}`;
+      
+      console.log(`Trying GET fallback with direct Supabase URL: ${functionEndpoint}`);
+      
+      const response = await fetch(functionEndpoint, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.auth.getSession().then(({ data }) => data?.session?.access_token || '')}`
+          'Authorization': `Bearer ${accessToken}`
         }
       });
       
       if (!response.ok) {
+        const responseText = await response.text();
+        console.error(`GET request failed: ${response.status} ${response.statusText}`, responseText);
         throw new Error(`GET request failed: ${response.status} ${response.statusText}`);
       }
       
