@@ -40,9 +40,18 @@ export const useLaptops = (
     queryFn: fetchAllLaptops,
     staleTime: Infinity, // Never consider cached data stale (we'll handle expiry ourselves)
     gcTime: Infinity, // Never garbage collect this query
+    // Immediately use embedded data if available
     initialData: () => {
       try {
-        // Try to get data from localStorage as initialData
+        // First check for embedded data in window object
+        if (window.EMBEDDED_LAPTOP_DATA && 
+            Array.isArray(window.EMBEDDED_LAPTOP_DATA) && 
+            window.EMBEDDED_LAPTOP_DATA.length > 0) {
+          console.log(`Using ${window.EMBEDDED_LAPTOP_DATA.length} laptops from embedded data as initialData`);
+          return window.EMBEDDED_LAPTOP_DATA;
+        }
+        
+        // Fall back to localStorage cache
         const cacheExpiryStr = localStorage.getItem('preloaded-laptops-expiry');
         const cachedDataStr = localStorage.getItem('preloaded-laptops-data');
         if (cacheExpiryStr && cachedDataStr) {
@@ -54,7 +63,7 @@ export const useLaptops = (
           }
         }
       } catch (err) {
-        console.error('Error accessing localStorage for initialData:', err);
+        console.error('Error accessing initial data sources:', err);
       }
       return undefined;
     },

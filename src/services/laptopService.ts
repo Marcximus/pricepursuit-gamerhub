@@ -6,6 +6,13 @@ const CACHE_KEY = 'preloaded-laptops-data';
 const CACHE_EXPIRY_KEY = 'preloaded-laptops-expiry';
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
+// Global window property for embedded laptop data
+declare global {
+  interface Window {
+    EMBEDDED_LAPTOP_DATA?: any[];
+  }
+}
+
 /**
  * Store laptop data in localStorage with expiration
  */
@@ -55,17 +62,36 @@ function getCachedLaptops(): any[] | null {
 }
 
 /**
+ * Get embedded laptop data from window object if available
+ */
+function getEmbeddedLaptops(): any[] | null {
+  if (window.EMBEDDED_LAPTOP_DATA && Array.isArray(window.EMBEDDED_LAPTOP_DATA) && window.EMBEDDED_LAPTOP_DATA.length > 0) {
+    console.log(`Using ${window.EMBEDDED_LAPTOP_DATA.length} laptops from embedded data`);
+    // Once we've used the embedded data, we can cache it for future visits
+    cacheLaptops(window.EMBEDDED_LAPTOP_DATA);
+    return window.EMBEDDED_LAPTOP_DATA;
+  }
+  return null;
+}
+
+/**
  * Fetch all laptops with batching strategy, with client-side caching
  */
 export async function fetchAllLaptops() {
-  // First try to get data from cache
+  // First check for embedded data (fastest, available on first page load)
+  const embeddedLaptops = getEmbeddedLaptops();
+  if (embeddedLaptops && embeddedLaptops.length > 0) {
+    return embeddedLaptops;
+  }
+
+  // Next try to get data from cache
   const cachedLaptops = getCachedLaptops();
   if (cachedLaptops && cachedLaptops.length > 0) {
     console.log('Using cached laptop data');
     return cachedLaptops;
   }
 
-  console.log('Cache miss - fetching all laptops from server...');
+  console.log('No embedded or cached data - fetching all laptops from server...');
   
   let allLaptops: any[] = [];
   let lastId: string | null = null;
@@ -170,6 +196,12 @@ export async function fetchAllLaptops() {
  * Initialize preloading of laptop data
  */
 export function preloadLaptopData(): Promise<void> {
+  // If we already have embedded data, no need to preload
+  if (window.EMBEDDED_LAPTOP_DATA && Array.isArray(window.EMBEDDED_LAPTOP_DATA) && window.EMBEDDED_LAPTOP_DATA.length > 0) {
+    console.log(`Already have ${window.EMBEDDED_LAPTOP_DATA.length} embedded laptops, skipping preload`);
+    return Promise.resolve();
+  }
+
   console.log('Preloading laptop data...');
   return fetchAllLaptops()
     .then(data => {
@@ -178,4 +210,13 @@ export function preloadLaptopData(): Promise<void> {
     .catch(error => {
       console.error('Failed to preload laptop data:', error);
     });
+}
+
+/**
+ * Create script tag content to embed laptop data in HTML
+ */
+export function generateEmbeddedDataScript(laptops: any[]): string {
+  // Create a safe serialized version of the laptop data
+  const safeJson = JSON.stringify(laptops).replace(/<\/script>/g, '<\\/script>');
+  return `window.EMBEDDED_LAPTOP_DATA = ${safeJson};`;
 }
