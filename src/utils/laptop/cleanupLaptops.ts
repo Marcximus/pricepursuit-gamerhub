@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { containsForbiddenKeywords } from "./productFilters";
@@ -79,7 +78,7 @@ export const cleanupLaptopDatabase = async () => {
         toast({
           title: "Cleanup Partial Success",
           description: `Deleted ${successfullyDeletedCount} out of ${forbiddenIds.length} products with forbidden keywords`,
-          variant: "warning"
+          variant: "destructive"
         });
       } else {
         console.log(`Successfully deleted all ${forbiddenIds.length} products with forbidden keywords`);
