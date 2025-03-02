@@ -2,7 +2,7 @@
 import type { SortOption } from "@/components/laptops/LaptopSort";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import { sortLaptops } from "@/utils/laptopSort";
-import { filterLaptopsBySpecs } from "@/utils/laptop/filter/filterLaptops";
+import { filterLaptops } from "@/utils/laptop/filter/filterLaptops";
 
 export function processAndFilterLaptops(
   allLaptops: any[],
@@ -32,7 +32,7 @@ export function processAndFilterLaptops(
   }
 
   // Step 2: Apply regular filters to the already search-filtered results
-  const filteredBySpecsLaptops = filterLaptopsBySpecs(filteredLaptops, filters);
+  const filteredBySpecsLaptops = filterLaptops(filteredLaptops, filters);
   
   // Step 3: Sort the filtered results
   const sortedLaptops = sortLaptops(filteredBySpecsLaptops, sortBy);

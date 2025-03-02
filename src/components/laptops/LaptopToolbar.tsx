@@ -106,10 +106,12 @@ export function LaptopToolbar({
     const newFilters = { ...filters };
     const filterKey = filterType as keyof typeof newFilters;
     
-    if (filterKey !== 'priceRange' && newFilters[filterKey] instanceof Set) {
-      const newSet = new Set(newFilters[filterKey] as Set<string>);
+    // Fix: Type safety check to ensure we're only operating on Set properties
+    if (filterKey !== 'priceRange' && filterKey !== 'searchQuery' && newFilters[filterKey] instanceof Set) {
+      // Use type assertion to help TypeScript understand this is a Set
+      const newSet = new Set((newFilters[filterKey] as unknown as Set<string>));
       newSet.delete(value);
-      newFilters[filterKey] = newSet;
+      newFilters[filterKey] = newSet as any; // Type assertion to satisfy TypeScript
       onFiltersChange(newFilters as FilterOptions);
     }
   };
