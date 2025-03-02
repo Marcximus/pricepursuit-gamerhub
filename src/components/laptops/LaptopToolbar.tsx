@@ -1,5 +1,5 @@
 
-import { ArrowUpDown, Filter } from "lucide-react";
+import { ArrowUpDown, Filter, XCircle } from "lucide-react";
 import { LaptopSort, type SortOption } from "./LaptopSort";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -53,13 +53,89 @@ export function LaptopToolbar({
   };
   
   const activeFiltersCount = getActiveFiltersCount();
+
+  // Get all active filter selections for displaying in the toolbar
+  const getActiveFilterSelections = () => {
+    if (!filters || !onFiltersChange) return [];
+    
+    const selections = [];
+    
+    if (filters.brands.size > 0) {
+      Array.from(filters.brands).forEach(brand => 
+        selections.push({ type: 'brands', value: brand })
+      );
+    }
+    
+    if (filters.processors.size > 0) {
+      Array.from(filters.processors).forEach(processor => 
+        selections.push({ type: 'processors', value: processor })
+      );
+    }
+    
+    if (filters.ramSizes.size > 0) {
+      Array.from(filters.ramSizes).forEach(ram => 
+        selections.push({ type: 'ramSizes', value: ram })
+      );
+    }
+    
+    if (filters.storageOptions.size > 0) {
+      Array.from(filters.storageOptions).forEach(storage => 
+        selections.push({ type: 'storageOptions', value: storage })
+      );
+    }
+    
+    if (filters.graphicsCards.size > 0) {
+      Array.from(filters.graphicsCards).forEach(gpu => 
+        selections.push({ type: 'graphicsCards', value: gpu })
+      );
+    }
+    
+    if (filters.screenSizes.size > 0) {
+      Array.from(filters.screenSizes).forEach(screen => 
+        selections.push({ type: 'screenSizes', value: screen })
+      );
+    }
+    
+    return selections;
+  };
+  
+  // Handle removing a filter
+  const handleRemoveFilter = (filterType: string, value: string) => {
+    if (!filters || !onFiltersChange) return;
+    
+    const newFilters = { ...filters };
+    const filterKey = filterType as keyof typeof newFilters;
+    
+    if (filterKey !== 'priceRange' && newFilters[filterKey] instanceof Set) {
+      const newSet = new Set(newFilters[filterKey] as Set<string>);
+      newSet.delete(value);
+      newFilters[filterKey] = newSet;
+      onFiltersChange(newFilters as FilterOptions);
+    }
+  };
   
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 bg-white border-b border-slate-200 rounded-lg shadow-sm">
-      <div className="flex items-center gap-2 text-slate-700">
+      <div className="flex flex-wrap items-center gap-2 text-slate-700">
         <span className="text-sm font-medium">
           {isLoading || isRefetching ? 'Loading...' : `${totalLaptops} laptops found`}
         </span>
+        
+        {/* Show active filter selections inline */}
+        {filters && onFiltersChange && getActiveFilterSelections().length > 0 && (
+          <div className="flex flex-wrap gap-1.5 ml-2">
+            {getActiveFilterSelections().map(({ type, value }, index) => (
+              <button
+                key={`toolbar-filter-${type}-${value}-${index}`}
+                onClick={() => handleRemoveFilter(type, value)}
+                className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 transition-colors"
+              >
+                {value}
+                <XCircle className="h-3 w-3" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       
       <div className="flex items-center gap-3 w-full sm:w-auto">
