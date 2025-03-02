@@ -119,11 +119,6 @@ export const processLaptopData = (laptop: any): Product => {
     specs.benchmark_score = generateLaptopScore(specs);
   }
   
-  // Convert complex objects to strings for database storage compatibility
-  const portsString = specs.ports ? JSON.stringify(specs.ports) : null;
-  // Convert boolean to string representation for database compatibility
-  const fingerprintString = specs.fingerprint !== null ? String(specs.fingerprint) : null;
-  
   // Process and create the laptop product object
   return {
     id: laptop.id,
@@ -151,13 +146,7 @@ export const processLaptopData = (laptop: any): Product => {
     model: detectedModel,
     total_reviews: total_reviews,
     average_rating: rating,
-    review_data: {
-      // Fix type issues: ensure the review_data structure matches what's expected in Product type
-      rating_breakdown: review_data.rating_breakdown || {},
-      recent_reviews: Array.isArray(review_data.recent_reviews) 
-        ? review_data.recent_reviews 
-        : []
-    },
+    review_data: review_data,
     update_status: laptop.update_status || 'pending',
     collection_status: laptop.collection_status || 'pending',
     wilson_score: laptop.wilson_score || null

@@ -48,11 +48,12 @@ export async function fetchLaptopsInBatches(minimalForFilters = false): Promise<
             laptop !== null && typeof laptop === 'object' && 'id' in laptop
           )
           .map((laptop) => {
-            // Additional null check to satisfy TypeScript
             if (laptop === null) {
               throw new Error("Unexpected null laptop after filtering");
             }
-            return laptop as unknown as Product;
+            // TypeScript still thinks laptop could be null here despite the filter and the check above
+            // So we need to use a non-null assertion to tell TypeScript this is safe
+            return laptop! as unknown as Product;
           });
         
         allLaptops = [...allLaptops, ...validLaptops];
