@@ -20,6 +20,7 @@ const ComparePriceLaptops = () => {
     graphicsCards: new Set<string>(),
     screenSizes: new Set<string>(),
     brands: new Set<string>(),
+    searchQuery: "",
   });
 
   // Add debugging useEffect to track filter changes
@@ -32,6 +33,7 @@ const ComparePriceLaptops = () => {
       screenSizes: Array.from(filters.screenSizes),
       brands: Array.from(filters.brands),
       priceRange: filters.priceRange,
+      searchQuery: filters.searchQuery,
     });
   }, [filters]);
 
@@ -68,6 +70,7 @@ const ComparePriceLaptops = () => {
       graphicsCards: new Set(newFilters.graphicsCards),
       screenSizes: new Set(newFilters.screenSizes),
       brands: new Set(newFilters.brands),
+      searchQuery: newFilters.searchQuery || "",
     };
     
     setFilters(updatedFilters);

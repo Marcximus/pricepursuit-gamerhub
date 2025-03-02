@@ -5,6 +5,7 @@ import { Accordion } from "@/components/ui/accordion";
 import { FilterSection } from "./filters/FilterSection";
 import { PriceRangeFilter } from "./filters/PriceRangeFilter";
 import { Filter, SlidersHorizontal, X } from "lucide-react";
+import { SearchBar } from "./components/SearchBar";
 
 export type FilterOptions = {
   priceRange: { min: number; max: number };
@@ -14,6 +15,7 @@ export type FilterOptions = {
   graphicsCards: Set<string>;
   screenSizes: Set<string>;
   brands: Set<string>;
+  searchQuery?: string;
 };
 
 type LaptopFiltersProps = {
@@ -46,10 +48,18 @@ export function LaptopFilters({
   }, [filters, onFiltersChange]);
 
   // Handle filter changes for a specific category
-  const handleFilterChange = useCallback((category: keyof Omit<FilterOptions, 'priceRange'>, newOptions: Set<string>) => {
+  const handleFilterChange = useCallback((category: keyof Omit<FilterOptions, 'priceRange' | 'searchQuery'>, newOptions: Set<string>) => {
     onFiltersChange({
       ...filters,
       [category]: newOptions
+    });
+  }, [filters, onFiltersChange]);
+
+  // Handle search query changes
+  const handleSearch = useCallback((query: string) => {
+    onFiltersChange({
+      ...filters,
+      searchQuery: query
     });
   }, [filters, onFiltersChange]);
 
@@ -61,7 +71,8 @@ export function LaptopFilters({
     filters.ramSizes.size + 
     filters.storageOptions.size + 
     filters.graphicsCards.size + 
-    filters.screenSizes.size;
+    filters.screenSizes.size +
+    (filters.searchQuery && filters.searchQuery.trim() !== "" ? 1 : 0);
 
   // Determine which filters have active selections for defaultExpanded
   const hasActiveBrandFilters = filters.brands.size > 0;
@@ -101,26 +112,23 @@ export function LaptopFilters({
       graphicsCards: new Set<string>(),
       screenSizes: new Set<string>(),
       brands: new Set<string>(),
+      searchQuery: ""
     });
   };
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-5 px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg border-b border-slate-200">
-        <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
-            <SlidersHorizontal className="h-4 w-4" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-slate-800">Filters</h3>
-            <p className="text-xs text-slate-500">Refine your search</p>
-          </div>
-        </div>
+      <div className="p-4 bg-white border-b border-slate-200">
+        <SearchBar 
+          onSearch={handleSearch}
+          placeholder="Search laptops by name, specs..."
+        />
+        
         {totalActiveFilters > 0 && (
-          <div className="flex items-center">
-            <span className="inline-flex items-center justify-center bg-blue-100 text-blue-800 text-xs font-medium rounded-full h-6 min-w-[24px] px-1.5 mr-2">
-              {totalActiveFilters}
-            </span>
+          <div className="flex items-center justify-between mt-3">
+            <div className="text-xs text-slate-500">
+              {totalActiveFilters} active {totalActiveFilters === 1 ? 'filter' : 'filters'}
+            </div>
             <button
               onClick={handleResetAllFilters}
               className="text-xs flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 font-medium transition-colors"
@@ -133,7 +141,7 @@ export function LaptopFilters({
       </div>
 
       <ScrollArea className="flex-1 px-4 pb-4">
-        <div className="space-y-5">
+        <div className="space-y-5 pt-4">
           <PriceRangeFilter 
             minPrice={filters.priceRange.min}
             maxPrice={filters.priceRange.max}
