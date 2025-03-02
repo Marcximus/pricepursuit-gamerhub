@@ -1,8 +1,8 @@
-
 import { useMemo } from "react";
 import type { Product } from "@/types/product";
 import type { FilterOptions, FilterCategoryKey } from "../types";
 import { matchesFilter } from "@/utils/laptop/filter/matchers";
+import type { FilterableProductKeys } from "@/utils/laptop/filter/filterTypes";
 
 /**
  * Efficient cache for computing available options based on current filters
