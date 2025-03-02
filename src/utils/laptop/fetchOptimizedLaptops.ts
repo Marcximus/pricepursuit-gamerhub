@@ -12,6 +12,14 @@ interface PaginatedResponse<T> {
     pageSize: number;
     totalPages: number;
   };
+  filterOptions?: {
+    brands: Set<string>;
+    processors: Set<string>;
+    ramSizes: Set<string>;
+    storageOptions: Set<string>;
+    graphicsCards: Set<string>;
+    screenSizes: Set<string>;
+  };
 }
 
 // Export the filter params interface with all possible filter fields
@@ -28,6 +36,7 @@ export interface LaptopFilterParams {
   sortDir?: 'asc' | 'desc';
   page?: number;
   pageSize?: number;
+  includeFilterOptions?: boolean;
 }
 
 /**
@@ -46,7 +55,8 @@ export async function fetchOptimizedLaptops({
   sortBy = 'wilson_score',
   sortDir = 'desc',
   page = 1,
-  pageSize = 500
+  pageSize = 500,
+  includeFilterOptions = false
 }: LaptopFilterParams): Promise<PaginatedResponse<Product>> {
   // Build query parameters
   const params = new URLSearchParams();
@@ -65,6 +75,11 @@ export async function fetchOptimizedLaptops({
   params.append('sortDir', sortDir);
   params.append('page', page.toString());
   params.append('pageSize', pageSize.toString());
+  
+  // Add flag to request filter options
+  if (includeFilterOptions) {
+    params.append('includeFilterOptions', 'true');
+  }
 
   // Convert params to string for caching key
   const queryString = params.toString();
@@ -76,9 +91,13 @@ export async function fetchOptimizedLaptops({
     ? 5 * 60 * 1000   // 5 minutes for filtered results
     : 10 * 60 * 1000; // 10 minutes for unfiltered results
 
+  // Special shorter cache time for filter options query
+  const filterOptionsCacheTime = 5 * 60 * 1000; // 5 minutes
+
   try {
-    // Check if we have a cached version first
-    const cachedData = cache.get<PaginatedResponse<Product>>(`fetch-laptops-${queryString}`);
+    // Check if we have a cached version first - use appropriate cache time based on query type
+    const cacheKey = `fetch-laptops-${queryString}`;
+    const cachedData = cache.get<PaginatedResponse<Product>>(cacheKey);
     if (cachedData) {
       console.log('Using cached laptop data');
       return cachedData;
@@ -87,7 +106,10 @@ export async function fetchOptimizedLaptops({
     // Try invoking the serverless function with POST method
     const { data, error } = await supabase.functions.invoke('fetch-laptops', {
       method: 'POST',
-      body: { query: Object.fromEntries(params) },
+      body: { 
+        query: Object.fromEntries(params),
+        includeFilterOptions 
+      },
       headers: {
         'Content-Type': 'application/json'
       }
@@ -122,15 +144,46 @@ export async function fetchOptimizedLaptops({
       }
       
       const data = await response.json();
-      // Cache the result for future use
-      cache.set(`fetch-laptops-${queryString}`, data, { expiry: cacheTime });
+      
+      // If the data includes filter options, convert arrays to Sets
+      if (data.filterOptions) {
+        Object.keys(data.filterOptions).forEach(key => {
+          data.filterOptions[key] = new Set(data.filterOptions[key]);
+        });
+      }
+      
+      // Cache the result for future use - use appropriate cache time
+      const appropriateCacheTime = includeFilterOptions ? filterOptionsCacheTime : cacheTime;
+      cache.set(cacheKey, data, { expiry: appropriateCacheTime });
+      
       return data as PaginatedResponse<Product>;
     }
 
-    // Cache the result for future use
-    cache.set(`fetch-laptops-${queryString}`, data, { expiry: cacheTime });
+    // If the data includes filter options, convert arrays to Sets
+    if (data?.filterOptions) {
+      Object.keys(data.filterOptions).forEach(key => {
+        data.filterOptions[key] = new Set(data.filterOptions[key]);
+      });
+    }
+
+    // Cache the result for future use - use appropriate cache time
+    const appropriateCacheTime = includeFilterOptions ? filterOptionsCacheTime : cacheTime;
+    cache.set(cacheKey, data, { expiry: appropriateCacheTime });
     
     console.log(`Successfully fetched ${data?.data?.length || 0} laptops out of ${data?.meta?.totalCount || 0} total`);
+    
+    // Log filter options if present
+    if (data?.filterOptions) {
+      console.log('Filter options counts:', {
+        brands: data.filterOptions.brands?.size,
+        processors: data.filterOptions.processors?.size,
+        ramSizes: data.filterOptions.ramSizes?.size,
+        storage: data.filterOptions.storageOptions?.size,
+        graphics: data.filterOptions.graphicsCards?.size,
+        screenSizes: data.filterOptions.screenSizes?.size
+      });
+    }
+    
     return data as PaginatedResponse<Product>;
   } catch (error) {
     console.error('Error fetching optimized laptops:', error);

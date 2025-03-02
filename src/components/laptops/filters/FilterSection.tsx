@@ -28,8 +28,8 @@ export function FilterSection({
   const optionsArray = useMemo(() => Array.from(options), [options]);
   const hasSelections = selectedOptions.size > 0;
 
-  // Log for debugging
-  console.log(`Rendering ${title} filter section with ${optionsArray.length} options`);
+  // Log total options count for debugging
+  console.log(`${title} filter has ${optionsArray.length} total options`);
   
   // Memoize filtered options to prevent recalculation on every render
   const filteredOptions = useMemo(() => {
@@ -103,6 +103,9 @@ export function FilterSection({
     onChange(new Set());
   }, [onChange]);
 
+  // Determine if search should be shown based on number of options
+  const showSearch = optionsArray.length > 8;
+
   return (
     <AccordionItem value={title} className="border-b border-slate-200">
       <AccordionTrigger 
@@ -128,7 +131,7 @@ export function FilterSection({
         </div>
       </AccordionTrigger>
       <AccordionContent className="pt-3 pb-4 px-3">
-        {options.size > 8 && (
+        {showSearch && (
           <SearchInput
             placeholder={`Search ${title.toLowerCase()}...`}
             value={searchQuery}

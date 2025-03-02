@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { processAndFilterLaptops } from "@/services/laptopProcessingService";
 import { fetchAllLaptops } from "@/services/laptopService";
@@ -52,6 +53,20 @@ export const useLaptops = (
 
   const [sortField, sortDirection] = sortBy.split('-') as [string, 'asc' | 'desc'];
   
+  // Use a separate query to fetch ALL filter options (not paginated)
+  const filterOptionsQuery = useQuery({
+    queryKey: ['filter-options'],
+    queryFn: () => fetchOptimizedLaptops({
+      // No filters here - we want ALL possible options
+      includeFilterOptions: true,
+      page: 1,
+      pageSize: 1 // We only need the filter options, not the actual data
+    }),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
+  });
+
+  // Main query for filtered/paginated data
   const query = useQuery({
     queryKey: ['optimized-laptops', { page, sortBy, filters: JSON.stringify(apiFilters) }],
     queryFn: () => fetchOptimizedLaptops({
@@ -65,6 +80,9 @@ export const useLaptops = (
     gcTime: 1000 * 60 * 10, // 10 minutes
   });
 
+  // Get filter options from the dedicated query if available, otherwise from the main query
+  const filterOptions = filterOptionsQuery.data?.filterOptions || query.data?.filterOptions;
+
   const transformedData = query.data ? {
     laptops: query.data.data || [],
     totalCount: query.data.meta.totalCount || 0,
@@ -75,17 +93,27 @@ export const useLaptops = (
     refreshBrandModels,
     processLaptopsAI,
     getDatabaseStats,
-    clearLaptopCache
+    clearLaptopCache,
+    filterOptions: filterOptions || {
+      brands: new Set<string>(),
+      processors: new Set<string>(),
+      ramSizes: new Set<string>(),
+      storageOptions: new Set<string>(),
+      graphicsCards: new Set<string>(),
+      screenSizes: new Set<string>()
+    }
   } : null;
 
   return {
     ...query,
+    filterOptionsLoading: filterOptionsQuery.isLoading,
     data: transformedData,
     collectLaptops,
     updateLaptops,
     refreshBrandModels,
     processLaptopsAI,
     getDatabaseStats,
-    clearLaptopCache
+    clearLaptopCache,
+    filterOptions
   };
 };
