@@ -40,20 +40,17 @@ export const processAndFilterLaptops = (
   
   // Process filtered laptop data
   const processedLaptops = filteredRawData.map(laptop => {
-    // Ensure title is defined to avoid toLowerCase() errors
-    const safeTitle = laptop.title || '';
-    
     // Normalize brand and model before processing
-    const normalizedBrand = normalizeBrand(laptop.brand || '', safeTitle);
-    const normalizedModel = normalizeModel(laptop.model || '', safeTitle, normalizedBrand);
+    const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title);
+    const normalizedModel = normalizeModel(laptop.model || '', laptop.title, normalizedBrand);
     
     // Extract processor from title first, fall back to database value
     // This prioritizes title-based processor information
-    const extractedProcessor = extractProcessorFromTitle(safeTitle, laptop.processor);
+    const extractedProcessor = extractProcessorFromTitle(laptop.title, laptop.processor);
     
     // Log when we're using title-based processor extraction for debugging
     if (extractedProcessor && extractedProcessor !== laptop.processor) {
-      console.log(`Title-based processor extraction: "${safeTitle}" -> "${extractedProcessor}" (was: "${laptop.processor}")`);
+      console.log(`Title-based processor extraction: "${laptop.title}" -> "${extractedProcessor}" (was: "${laptop.processor}")`);
     }
     
     // Apply the normalized values

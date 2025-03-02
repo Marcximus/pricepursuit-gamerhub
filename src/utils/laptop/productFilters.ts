@@ -1,3 +1,4 @@
+
 /**
  * Product filtering utilities for removing duplicate ASINs 
  * and products with forbidden keywords in titles
@@ -39,7 +40,6 @@ const FORBIDDEN_KEYWORDS = [
   
   // Specific hardware parts (not full laptops)
   "Cooling fan replacement", "Laptop Bottom Base Case", "PIN LCD Display",
-  "Mechanical Hard Disk", // Added new forbidden keyword
   
   // Books and media
   "Seniors Guide", "Drive Player", "Portable DVD Writer",

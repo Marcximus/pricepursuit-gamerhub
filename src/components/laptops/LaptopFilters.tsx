@@ -5,7 +5,6 @@ import { Accordion } from "@/components/ui/accordion";
 import { FilterSection } from "./filters/FilterSection";
 import { PriceRangeFilter } from "./filters/PriceRangeFilter";
 import { Filter, SlidersHorizontal, X } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export type FilterOptions = {
   priceRange: { min: number; max: number };
@@ -26,7 +25,6 @@ type LaptopFiltersProps = {
   graphicsCards: Set<string>;
   screenSizes: Set<string>;
   brands: Set<string>;
-  isLoading?: boolean;
 };
 
 export function LaptopFilters({
@@ -38,7 +36,6 @@ export function LaptopFilters({
   graphicsCards,
   screenSizes,
   brands,
-  isLoading = false
 }: LaptopFiltersProps) {
   // Handle price range changes
   const handlePriceChange = useCallback((min: number, max: number) => {
@@ -106,45 +103,6 @@ export function LaptopFilters({
       brands: new Set<string>(),
     });
   };
-
-  // Loading state for filters
-  if (isLoading) {
-    return (
-      <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between mb-5 px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg border-b border-slate-200">
-          <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 flex items-center justify-center rounded-full bg-blue-100">
-              <Skeleton className="h-4 w-4 rounded-full" />
-            </div>
-            <div>
-              <Skeleton className="h-4 w-24 mb-1" />
-              <Skeleton className="h-3 w-32" />
-            </div>
-          </div>
-        </div>
-
-        <ScrollArea className="flex-1 px-4 pb-4">
-          <div className="space-y-5">
-            <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm mb-5">
-              <Skeleton className="h-4 w-32 mb-6" />
-              <Skeleton className="h-8 w-full mb-8" />
-              <div className="flex gap-3 items-center mt-8">
-                <Skeleton className="h-10 w-full" />
-                <span className="px-2">to</span>
-                <Skeleton className="h-10 w-full" />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden space-y-2 p-2">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          </div>
-        </ScrollArea>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-full">
