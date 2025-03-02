@@ -75,9 +75,9 @@ export const processLaptopData = (laptop: any): Product => {
   const total_reviews = laptop.total_reviews || review_data.recent_reviews.length || laptop.rating_count || null;
 
   // Detect the correct brand from title and stored brand
-  const detectedBrand = normalizeBrand(laptop.brand || '', laptop.title);
+  const detectedBrand = normalizeBrand(laptop.brand || '', laptop.title || '');
   
-  // Extract model from title if not provided
+  // Extract model from title if not provided - ensure we don't pass undefined to normalizeModel
   const detectedModel = normalizeModel(laptop.model || '', laptop.title || '', detectedBrand);
 
   // Extract primary specifications from title and any existing stored data
@@ -120,10 +120,10 @@ export const processLaptopData = (laptop: any): Product => {
   }
   
   // Convert ports to string for database compatibility if it exists
-  const portsString = specs.ports ? JSON.stringify(specs.ports) : null;
+  const portsString: string | null = specs.ports ? JSON.stringify(specs.ports) : null;
   
   // Convert fingerprint boolean to string if needed
-  const fingerprintString = specs.fingerprint !== null && specs.fingerprint !== undefined 
+  const fingerprintString: string | null = specs.fingerprint !== null && specs.fingerprint !== undefined 
     ? String(specs.fingerprint) 
     : null;
   

@@ -68,7 +68,7 @@ export async function fetchPaginatedLaptops(page = 1, pageSize = 50, sortBy = 'r
           if (laptop === null) {
             throw new Error("Unexpected null laptop after filtering");
           }
-          // Use a type assertion after the null check
+          // Use type assertion after null check
           return laptop as unknown as Product;
         });
     } else {
