@@ -75,6 +75,7 @@ const ComparePriceLaptops = () => {
   const totalPages = data?.totalPages ?? 1;
 
   // Use laptop filters from data or empty fallback
+  // Use data.allLaptops which now exists in both query paths
   const filterOptions = useLaptopFilters(data?.allLaptops || []);
 
   const handleSortChange = (newSortBy: SortOption) => {

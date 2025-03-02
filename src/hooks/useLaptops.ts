@@ -55,7 +55,15 @@ export const useLaptops = (
   // Query for paginated data (when no filters are applied)
   const paginatedQuery = useQuery({
     queryKey: ['paginated-laptops', page, sortBy],
-    queryFn: () => fetchPaginatedLaptops(page, ITEMS_PER_PAGE, sortBy),
+    queryFn: async () => {
+      const result = await fetchPaginatedLaptops(page, ITEMS_PER_PAGE, sortBy);
+      // Return a consistent data structure with both queries
+      return {
+        ...result,
+        // Include empty allLaptops array for filter generation
+        allLaptops: result.laptops || []
+      };
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
     enabled: useDirectPagination, // Only run this query if no filters are active
@@ -69,14 +77,7 @@ export const useLaptops = (
     gcTime: 1000 * 60 * 60 * 24, // 24 hours
     select: (data) => {
       const processedData = processAndFilterLaptops(data, filters, sortBy, page, ITEMS_PER_PAGE);
-      return {
-        ...processedData,
-        collectLaptops,
-        updateLaptops,
-        refreshBrandModels,
-        processLaptopsAI,
-        getDatabaseStats
-      };
+      return processedData;
     },
     enabled: !useDirectPagination, // Only run this query if filters are active
   });
