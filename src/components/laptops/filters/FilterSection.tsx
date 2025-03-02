@@ -4,15 +4,9 @@ import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "./components/SearchInput";
 import { ClearFilterButton } from "./components/ClearFilterButton";
-import { FilterOptionsList } from "./components/FilterOptionsList";
+import { FilterOptionsList, type FilterOption } from "./components/FilterOptionsList";
 import { FilterIcon } from "./components/FilterIcon";
 import { sortProcessorOptions } from "./utils/processorSort";
-
-type FilterOption = {
-  name: string;
-  count: number;
-  disabled: boolean;
-};
 
 type FilterSectionProps = {
   title: string;
@@ -52,7 +46,7 @@ export function FilterSection({
   }, [optionsArray, searchQuery]);
 
   // Sort options based on filter type
-  const sortedOptions = useMemo(() => {
+  const sortedOptions: FilterOption[] = useMemo(() => {
     if (title === "Processor") {
       return sortProcessorOptions(filteredOptions);
     } else if (title === "Brand") {

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LaptopFilters, type FilterOptions } from "./LaptopFilters";
+import type { Product } from "@/types/product";
 
 interface LaptopToolbarProps {
   totalLaptops: number;
@@ -23,6 +24,7 @@ interface LaptopToolbarProps {
     screenSizes: Set<string>;
     brands: Set<string>;
   };
+  allLaptops?: Product[]; // Add optional allLaptops prop
 }
 
 export function LaptopToolbar({
@@ -34,6 +36,7 @@ export function LaptopToolbar({
   filters,
   onFiltersChange,
   filterOptions,
+  allLaptops,
 }: LaptopToolbarProps) {
   const [open, setOpen] = useState(false);
   
@@ -95,6 +98,7 @@ export function LaptopToolbar({
                   graphicsCards={filterOptions.graphicsCards}
                   screenSizes={filterOptions.screenSizes}
                   brands={filterOptions.brands}
+                  allLaptops={allLaptops}
                 />
               </div>
             </SheetContent>

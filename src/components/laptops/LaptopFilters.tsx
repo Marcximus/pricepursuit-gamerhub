@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion } from "@/components/ui/accordion";
@@ -28,7 +29,7 @@ type LaptopFiltersProps = {
   graphicsCards: Set<string>;
   screenSizes: Set<string>;
   brands: Set<string>;
-  allLaptops: Product[];
+  allLaptops?: Product[]; // Make allLaptops optional
 };
 
 export function LaptopFilters({
@@ -40,7 +41,7 @@ export function LaptopFilters({
   graphicsCards,
   screenSizes,
   brands,
-  allLaptops,
+  allLaptops = [], // Default to empty array if not provided
 }: LaptopFiltersProps) {
   // Calculate option counts based on current filters
   const {
@@ -66,6 +67,48 @@ export function LaptopFilters({
     const graphicsCounts = initCounts(graphicsCards);
     const screenSizeCounts = initCounts(screenSizes);
     const brandCounts = initCounts(brands);
+
+    // If we don't have allLaptops data, just return empty counts
+    if (!allLaptops || allLaptops.length === 0) {
+      // If no filters are active, set all options as available (count > 0)
+      const isAnyFilterActive = 
+        filters.processors.size > 0 || 
+        filters.ramSizes.size > 0 ||
+        filters.storageOptions.size > 0 ||
+        filters.graphicsCards.size > 0 ||
+        filters.screenSizes.size > 0 ||
+        filters.brands.size > 0 ||
+        filters.priceRange.min > 0 ||
+        filters.priceRange.max < 10000;
+        
+      if (!isAnyFilterActive) {
+        // Set all counts to 1 to show as available
+        const setNonZeroCounts = (counts: OptionCounts) => {
+          Object.keys(counts).forEach(key => {
+            counts[key] = 1;
+          });
+          return counts;
+        };
+        
+        return {
+          processorCounts: setNonZeroCounts(processorCounts),
+          ramCounts: setNonZeroCounts(ramCounts),
+          storageCounts: setNonZeroCounts(storageCounts),
+          graphicsCounts: setNonZeroCounts(graphicsCounts),
+          screenSizeCounts: setNonZeroCounts(screenSizeCounts),
+          brandCounts: setNonZeroCounts(brandCounts)
+        };
+      }
+      
+      return {
+        processorCounts,
+        ramCounts,
+        storageCounts,
+        graphicsCounts,
+        screenSizeCounts,
+        brandCounts
+      };
+    }
 
     // For each option, create a filter set where we test that option
     // with all other current filters
