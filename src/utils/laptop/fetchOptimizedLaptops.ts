@@ -51,10 +51,15 @@ export async function fetchOptimizedLaptops(filters: LaptopFilterParams = {}): P
   params.append('page', page.toString());
   params.append('pageSize', pageSize.toString());
 
+  // Convert params to string for the URL
+  const queryString = params.toString();
+
   try {
     const { data, error } = await supabase.functions.invoke('fetch-laptops', {
       method: 'GET',
-      query: Object.fromEntries(params)
+      headers: {
+        'Content-Type': 'application/json',
+      }
     });
 
     if (error) {
