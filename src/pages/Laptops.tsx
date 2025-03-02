@@ -1,6 +1,6 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { useLaptops, ITEMS_PER_PAGE } from "@/hooks/useLaptops";
+import { useState, useEffect } from "react";
+import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
 import { LaptopFilters, type FilterOptions } from "@/components/laptops/LaptopFilters";
 import type { SortOption } from "@/components/laptops/LaptopSort";
@@ -8,7 +8,6 @@ import { LaptopList } from "@/components/laptops/LaptopList";
 import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
-import { useQueryClient } from "@tanstack/react-query";
 
 const ComparePriceLaptops = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,10 +22,19 @@ const ComparePriceLaptops = () => {
     brands: new Set<string>(),
   });
 
-  // Pre-fetch additional pages for smoother navigation
-  const queryClient = useQueryClient();
-  
-  // Get the first page of laptops with current filters
+  // Add debugging useEffect to track filter changes
+  useEffect(() => {
+    console.log('Filter state updated:', {
+      processors: Array.from(filters.processors),
+      ramSizes: Array.from(filters.ramSizes),
+      storageOptions: Array.from(filters.storageOptions),
+      graphicsCards: Array.from(filters.graphicsCards),
+      screenSizes: Array.from(filters.screenSizes),
+      brands: Array.from(filters.brands),
+      priceRange: filters.priceRange,
+    });
+  }, [filters]);
+
   const { 
     data, 
     isLoading: isLaptopsLoading, 
@@ -39,38 +47,18 @@ const ComparePriceLaptops = () => {
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
-  // Prefetch next page when current page changes
-  useEffect(() => {
-    if (currentPage < totalPages) {
-      const nextPage = currentPage + 1;
-      queryClient.prefetchQuery({
-        queryKey: ['laptops-batch', nextPage, sortBy, JSON.stringify(filters)],
-        queryFn: () => new Promise((resolve) => {
-          // Delay prefetching slightly to prioritize current page
-          setTimeout(() => {
-            import('@/services/laptopService').then(({ fetchLaptopsBatch }) => {
-              fetchLaptopsBatch(nextPage, ITEMS_PER_PAGE).then(resolve);
-            });
-          }, 500);
-        }),
-      });
-    }
-  }, [currentPage, totalPages, sortBy, filters, queryClient]);
-
   const filterOptions = useLaptopFilters(data?.allLaptops);
 
-  const handleSortChange = useCallback((newSortBy: SortOption) => {
+  const handleSortChange = (newSortBy: SortOption) => {
     setSortBy(newSortBy);
     setCurrentPage(1); // Reset page when sort changes
-  }, []);
+  };
 
-  const handlePageChange = useCallback((page: number) => {
+  const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // Scroll to top for better UX when changing pages
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  };
 
-  const handleFiltersChange = useCallback((newFilters: FilterOptions) => {
+  const handleFiltersChange = (newFilters: FilterOptions) => {
     // Create a deep copy of the filter sets to avoid reference issues
     const updatedFilters: FilterOptions = {
       priceRange: { ...newFilters.priceRange },
@@ -84,11 +72,11 @@ const ComparePriceLaptops = () => {
     
     setFilters(updatedFilters);
     setCurrentPage(1); // Reset to first page when filters change
-  }, []);
+  };
 
-  const handleRetry = useCallback(() => {
+  const handleRetry = () => {
     refetch();
-  }, [refetch]);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">

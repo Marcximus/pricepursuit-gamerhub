@@ -3,7 +3,6 @@ import { ReloadIcon, ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-i
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LaptopCard } from "@/components/laptops/LaptopCard";
-import { Skeleton } from "@/components/ui/skeleton";
 import type { Product } from "@/types/product";
 
 type LaptopListProps = {
@@ -39,28 +38,9 @@ export function LaptopList({
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i} className="border border-gray-200">
-            <CardContent className="p-4">
-              <div className="flex gap-4">
-                <Skeleton className="h-[160px] w-[160px] rounded-md" />
-                <div className="flex-1 space-y-3">
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-1/3" />
-                    <Skeleton className="h-4 w-1/4" />
-                    <Skeleton className="h-4 w-1/5" />
-                  </div>
-                  <div className="flex justify-end">
-                    <Skeleton className="h-9 w-24 rounded-md" />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="text-center py-12">
+        <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
+        <p className="mt-2 text-gray-600">Loading laptops...</p>
       </div>
     );
   }
