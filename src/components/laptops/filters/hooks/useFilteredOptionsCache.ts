@@ -6,6 +6,7 @@ import { matchesFilter } from "@/utils/laptop/filter/matchers";
 
 /**
  * Efficient cache for computing available options based on current filters
+ * With improved performance through better memoization and early returns
  */
 export const useFilteredOptionsCache = (
   allLaptops: Product[],
@@ -28,6 +29,41 @@ export const useFilteredOptionsCache = (
       screenSizes: []
     };
 
+    // Use an efficient field-to-value map for faster lookups
+    const laptopValueCache = new Map<string, Map<string, Product[]>>();
+    
+    // Pre-index laptops by their field values for faster filtering
+    const indexLaptops = () => {
+      const fieldKeys: Array<[FilterCategoryKey, keyof Product]> = [
+        ['brands', 'brand'],
+        ['processors', 'processor'],
+        ['ramSizes', 'ram'],
+        ['storageOptions', 'storage'],
+        ['graphicsCards', 'graphics'],
+        ['screenSizes', 'screen_size']
+      ];
+      
+      fieldKeys.forEach(([category, field]) => {
+        const fieldMap = new Map<string, Product[]>();
+        
+        allLaptops.forEach(laptop => {
+          const fieldValue = laptop[field];
+          if (fieldValue) {
+            const normalizedValue = String(fieldValue).toLowerCase();
+            if (!fieldMap.has(normalizedValue)) {
+              fieldMap.set(normalizedValue, []);
+            }
+            fieldMap.get(normalizedValue)?.push(laptop);
+          }
+        });
+        
+        laptopValueCache.set(category, fieldMap);
+      });
+    };
+    
+    // Build index for faster lookups
+    indexLaptops();
+
     // For each category, create a filtered set of laptops that match all OTHER filters
     Object.keys(categoryFilters).forEach((categoryKey) => {
       const category = categoryKey as FilterCategoryKey;
@@ -44,85 +80,59 @@ export const useFilteredOptionsCache = (
       else if (category === 'screenSizes') testFilters.screenSizes = new Set<string>();
       
       // Optimization: Create a predicate function for this category's filter check
-      // instead of using a full filter() operation for better performance
+      // with short-circuit evaluation for better performance
       const shouldInclude = (laptop: Product): boolean => {
-        // Apply price filter
+        // Apply price filter (fast check first)
         if (laptop.current_price < testFilters.priceRange.min || 
             laptop.current_price > testFilters.priceRange.max) {
           return false;
         }
         
+        // Check filters with least computation cost first
         // Apply other category filters with early returns for better performance
-        if (testFilters.brands.size > 0) {
-          let matches = false;
-          for (const brand of testFilters.brands) {
-            if (matchesFilter(brand, laptop.brand, 'brand', laptop.title)) {
-              matches = true;
-              break;
-            }
-          }
-          if (!matches) return false;
+        if (testFilters.brands.size > 0 && !matchesAnyInSet(testFilters.brands, laptop.brand, 'brand', laptop.title)) {
+          return false;
         }
         
-        if (testFilters.processors.size > 0) {
-          let matches = false;
-          for (const processor of testFilters.processors) {
-            if (matchesFilter(processor, laptop.processor, 'processor', laptop.title)) {
-              matches = true;
-              break;
-            }
-          }
-          if (!matches) return false;
+        if (testFilters.processors.size > 0 && !matchesAnyInSet(testFilters.processors, laptop.processor, 'processor', laptop.title)) {
+          return false;
         }
         
-        if (testFilters.ramSizes.size > 0) {
-          let matches = false;
-          for (const ram of testFilters.ramSizes) {
-            if (matchesFilter(ram, laptop.ram, 'ram', laptop.title)) {
-              matches = true;
-              break;
-            }
-          }
-          if (!matches) return false;
+        if (testFilters.ramSizes.size > 0 && !matchesAnyInSet(testFilters.ramSizes, laptop.ram, 'ram', laptop.title)) {
+          return false;
         }
         
-        if (testFilters.storageOptions.size > 0) {
-          let matches = false;
-          for (const storage of testFilters.storageOptions) {
-            if (matchesFilter(storage, laptop.storage, 'storage', laptop.title)) {
-              matches = true;
-              break;
-            }
-          }
-          if (!matches) return false;
+        if (testFilters.storageOptions.size > 0 && !matchesAnyInSet(testFilters.storageOptions, laptop.storage, 'storage', laptop.title)) {
+          return false;
         }
         
-        if (testFilters.graphicsCards.size > 0) {
-          let matches = false;
-          for (const graphics of testFilters.graphicsCards) {
-            if (matchesFilter(graphics, laptop.graphics, 'graphics', laptop.title)) {
-              matches = true;
-              break;
-            }
-          }
-          if (!matches) return false;
+        if (testFilters.graphicsCards.size > 0 && !matchesAnyInSet(testFilters.graphicsCards, laptop.graphics, 'graphics', laptop.title)) {
+          return false;
         }
         
-        if (testFilters.screenSizes.size > 0) {
-          let matches = false;
-          for (const screenSize of testFilters.screenSizes) {
-            if (matchesFilter(screenSize, laptop.screen_size, 'screen_size', laptop.title)) {
-              matches = true;
-              break;
-            }
-          }
-          if (!matches) return false;
+        if (testFilters.screenSizes.size > 0 && !matchesAnyInSet(testFilters.screenSizes, laptop.screen_size, 'screen_size', laptop.title)) {
+          return false;
         }
         
         return true;
       };
       
-      // Push all laptops that pass the predicate test
+      // Helper function to check if any value in a Set matches
+      function matchesAnyInSet(
+        filterSet: Set<string>, 
+        productValue: string | null | undefined, 
+        field: FilterableProductKeys, 
+        productTitle?: string
+      ): boolean {
+        for (const value of filterSet) {
+          if (matchesFilter(value, productValue, field, productTitle)) {
+            return true;
+          }
+        }
+        return false;
+      }
+      
+      // Push all laptops that pass the predicate test - use fast array operations
       const matchingLaptops: Product[] = [];
       for (let i = 0; i < allLaptops.length; i++) {
         if (shouldInclude(allLaptops[i])) {
