@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { processAndFilterLaptops } from "@/services/laptopProcessingService";
 import { fetchAllLaptops } from "@/services/laptopService";
@@ -52,17 +53,18 @@ export const useLaptops = (
 
   const [sortField, sortDirection] = sortBy.split('-') as [string, 'asc' | 'desc'];
   
-  // Use a separate query to fetch ALL filter options (not paginated)
+  // Completely separate query just for filter options - independent of pagination or filters
+  // This ensures we always have ALL filter options from the entire database
   const filterOptionsQuery = useQuery({
-    queryKey: ['filter-options'],
+    queryKey: ['all-filter-options'],
     queryFn: () => fetchOptimizedLaptops({
-      // No filters here - we want ALL possible options
+      // No filters - we want ALL possible options from the entire database
       includeFilterOptions: true,
       page: 1,
       pageSize: 1 // We only need the filter options, not the actual data
     }),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 30, // 30 minutes - longer cache for filter options
+    gcTime: 1000 * 60 * 60, // 60 minutes
   });
 
   // Main query for filtered/paginated data
@@ -73,14 +75,16 @@ export const useLaptops = (
       sortBy: sortField,
       sortDir: sortDirection,
       page,
-      pageSize: ITEMS_PER_PAGE
+      pageSize: ITEMS_PER_PAGE,
+      // Don't need filter options in this query since we have a separate query for that
+      includeFilterOptions: false
     }),
     staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes
   });
 
-  // Get filter options from the dedicated query if available, otherwise from the main query
-  const filterOptions = filterOptionsQuery.data?.filterOptions || query.data?.filterOptions;
+  // Always use the dedicated filter options query for filters, never fall back to the main query
+  const filterOptions = filterOptionsQuery.data?.filterOptions;
 
   const transformedData = query.data ? {
     laptops: query.data.data || [],
@@ -106,6 +110,7 @@ export const useLaptops = (
   return {
     ...query,
     filterOptionsLoading: filterOptionsQuery.isLoading,
+    filterOptionsError: filterOptionsQuery.error,
     data: transformedData,
     collectLaptops,
     updateLaptops,

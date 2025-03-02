@@ -41,7 +41,7 @@ export interface LaptopFilterParams {
 
 /**
  * Fetches laptops with optimized performance using serverless function
- * Now with client-side caching for better performance and support for larger result sets
+ * Now with client-side caching for better performance and separate filter options query
  */
 export async function fetchOptimizedLaptops({
   brand = '',
@@ -55,7 +55,7 @@ export async function fetchOptimizedLaptops({
   sortBy = 'wilson_score',
   sortDir = 'desc',
   page = 1,
-  pageSize = 500,
+  pageSize = 30,
   includeFilterOptions = false
 }: LaptopFilterParams): Promise<PaginatedResponse<Product>> {
   // Build query parameters
@@ -79,6 +79,52 @@ export async function fetchOptimizedLaptops({
   // Add flag to request filter options
   if (includeFilterOptions) {
     params.append('includeFilterOptions', 'true');
+    
+    // If this is just a filter options request (indicated by pageSize=1), we create a special 
+    // cache key to ensure it's cached separately and for a longer time
+    if (pageSize === 1) {
+      const cacheKey = 'filter-options-only';
+      const cachedOptions = cache.get<PaginatedResponse<Product>>(cacheKey);
+      if (cachedOptions) {
+        console.log('Using cached filter options');
+        return cachedOptions;
+      }
+      
+      console.log('Fetching ALL filter options from database');
+      
+      try {
+        // Special request for ALL filter options
+        const { data: filterOptionsData, error } = await supabase.functions.invoke('fetch-laptops', {
+          method: 'POST',
+          body: { 
+            query: { includeFilterOptions: true, pageSize: 1, page: 1 },
+          },
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (error) {
+          console.error('Error fetching filter options:', error);
+          throw error;
+        }
+        
+        // Convert arrays to Sets for filter options
+        if (filterOptionsData?.filterOptions) {
+          Object.keys(filterOptionsData.filterOptions).forEach(key => {
+            filterOptionsData.filterOptions[key] = new Set(filterOptionsData.filterOptions[key]);
+          });
+        }
+        
+        // Cache filter options for a longer time (30 minutes)
+        cache.set(cacheKey, filterOptionsData, { expiry: 30 * 60 * 1000 });
+        
+        return filterOptionsData as PaginatedResponse<Product>;
+      } catch (error) {
+        console.error('Error fetching filter options:', error);
+        throw error;
+      }
+    }
   }
 
   // Convert params to string for caching key
@@ -204,4 +250,5 @@ export async function fetchOptimizedLaptops({
  */
 export const clearLaptopCache = () => {
   cache.clear('fetch-laptops-');
+  cache.clear('filter-options-only');
 };
