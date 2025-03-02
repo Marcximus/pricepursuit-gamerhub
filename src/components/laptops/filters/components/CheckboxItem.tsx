@@ -7,24 +7,38 @@ type CheckboxItemProps = {
   label: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
+  disabled?: boolean;
 };
 
-export function CheckboxItem({ id, label, checked, onCheckedChange }: CheckboxItemProps) {
+export function CheckboxItem({ 
+  id, 
+  label, 
+  checked, 
+  onCheckedChange, 
+  disabled = false 
+}: CheckboxItemProps) {
   const handleCheckedChange = useCallback((checked: boolean | "indeterminate") => {
     onCheckedChange(checked === true);
   }, [onCheckedChange]);
 
   return (
-    <div className="flex items-center space-x-2 py-1.5 px-2 rounded hover:bg-blue-50 transition-colors">
+    <div className={`flex items-center space-x-2 py-1.5 px-2 rounded transition-colors ${
+      disabled 
+        ? 'opacity-50 cursor-not-allowed' 
+        : 'hover:bg-blue-50 cursor-pointer'
+    }`}>
       <Checkbox
         id={id}
         checked={checked}
         onCheckedChange={handleCheckedChange}
+        disabled={disabled}
         className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 border-slate-300"
       />
       <label
         htmlFor={id}
-        className="text-sm leading-none cursor-pointer flex-1 text-slate-700 font-medium"
+        className={`text-sm leading-none flex-1 font-medium ${
+          disabled ? 'text-slate-400' : 'text-slate-700 cursor-pointer'
+        }`}
       >
         {label}
       </label>

@@ -8,7 +8,7 @@ type FilterOptionsListProps = {
   options: string[];
   selectedOptions: Set<string>;
   onOptionChange: (option: string, checked: boolean) => void;
-  showClearButtons?: boolean;
+  disabledOptions?: Set<string>;
 };
 
 export function FilterOptionsList({ 
@@ -16,7 +16,7 @@ export function FilterOptionsList({
   options, 
   selectedOptions, 
   onOptionChange,
-  showClearButtons = false
+  disabledOptions = new Set()
 }: FilterOptionsListProps) {
   return (
     <div className="flex flex-col">
@@ -30,6 +30,7 @@ export function FilterOptionsList({
                 label={option}
                 checked={selectedOptions.has(option)}
                 onCheckedChange={(checked) => onOptionChange(option, checked)}
+                disabled={disabledOptions.has(option)}
               />
             ))
           ) : (
