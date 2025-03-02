@@ -57,11 +57,10 @@ export const useDisabledOptions = (
       allOptions: Set<string>,
       laptops: Product[]
     ) => {
-      // First collect all available options
+      // First collect all available options using an optimized approach
       const availableOptions = new Set<string>();
       
-      // Instead of nested loops for each laptop and each option,
-      // build a map of options that match at least one laptop
+      // Get the field name corresponding to the category
       const optionField = {
         'brands': 'brand',
         'processors': 'processor',
@@ -71,21 +70,60 @@ export const useDisabledOptions = (
         'screenSizes': 'screen_size'
       }[category] as 'brand' | 'processor' | 'ram' | 'storage' | 'graphics' | 'screen_size';
       
-      // Process in batches to avoid blocking UI
-      const batchSize = 100;
-      for (let i = 0; i < laptops.length; i += batchSize) {
-        const batch = laptops.slice(i, i + batchSize);
-        
-        batch.forEach(laptop => {
-          Array.from(allOptions).forEach(option => {
-            if (matchesFilter(option, laptop[optionField], optionField, laptop.title)) {
-              availableOptions.add(option);
-            }
-          });
-        });
-      }
+      // Optimize by creating a Map to track which options we've already checked for each laptop
+      const checkedOptionsMap = new Map<string, Set<string>>();
       
-      // Now create the disabled options set
+      // Create an index of laptops by their values for this category
+      const laptopsByValue = new Map<string, Product[]>();
+      
+      // Index laptops by their field values (only once)
+      laptops.forEach(laptop => {
+        const fieldValue = laptop[optionField];
+        if (fieldValue) {
+          const normalizedValue = String(fieldValue).toLowerCase();
+          if (!laptopsByValue.has(normalizedValue)) {
+            laptopsByValue.set(normalizedValue, []);
+          }
+          laptopsByValue.get(normalizedValue)?.push(laptop);
+        }
+      });
+      
+      // Now check which options match laptops using the index
+      Array.from(allOptions).forEach(option => {
+        // Skip if we've already determined this option is available
+        if (availableOptions.has(option)) return;
+        
+        // Check if any laptop matches this option
+        let isAvailable = false;
+        
+        for (const [fieldValue, laptopsWithValue] of laptopsByValue.entries()) {
+          // Skip if we've already checked this combination
+          const optionLower = option.toLowerCase();
+          if (!checkedOptionsMap.has(optionLower)) {
+            checkedOptionsMap.set(optionLower, new Set());
+          }
+          
+          const checkedValues = checkedOptionsMap.get(optionLower)!;
+          if (checkedValues.has(fieldValue)) continue;
+          
+          // Mark as checked
+          checkedValues.add(fieldValue);
+          
+          // Only need to check the first laptop with this value since the matcher behavior
+          // will be the same for all laptops with the same field value
+          const laptop = laptopsWithValue[0];
+          if (matchesFilter(option, laptop[optionField], optionField, laptop.title)) {
+            isAvailable = true;
+            break;
+          }
+        }
+        
+        if (isAvailable) {
+          availableOptions.add(option);
+        }
+      });
+      
+      // Create the set of disabled options
       const disabledOptions = new Set<string>();
       Array.from(allOptions).forEach(option => {
         if (!availableOptions.has(option)) {
