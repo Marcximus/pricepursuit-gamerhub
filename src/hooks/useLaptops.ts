@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { processAndFilterLaptops } from "@/services/laptopProcessingService";
 import { fetchAllLaptops } from "@/services/laptopService";
@@ -21,7 +20,7 @@ export {
   clearLaptopCache
 };
 
-export const ITEMS_PER_PAGE = 500;
+export const ITEMS_PER_PAGE = 30;
 
 const defaultFilters: FilterOptions = {
   priceRange: { min: 0, max: 10000 },
