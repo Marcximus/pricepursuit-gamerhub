@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { useLaptops } from "@/hooks/useLaptops";
+import { useLaptops, clearLaptopCache } from "@/hooks/useLaptops";
 import { useFilteredLaptops } from "@/hooks/useFilteredLaptops";
 import Navigation from "@/components/Navigation";
 import { LaptopFilters, type FilterOptions } from "@/components/laptops/LaptopFilters";
@@ -98,6 +99,9 @@ const ComparePriceLaptops = () => {
   };
 
   const handleRetry = () => {
+    // Clear cache before refetching to ensure fresh data
+    clearLaptopCache();
+    
     toast.promise(
       refetch(),
       {
@@ -111,8 +115,8 @@ const ComparePriceLaptops = () => {
   useEffect(() => {
     if (currentPage < totalPages) {
       queryClient.prefetchQuery({
-        queryKey: ['all-laptops', { page: currentPage + 1, sortBy, filters }],
-        queryFn: fetchAllLaptops
+        queryKey: ['optimized-laptops', { page: currentPage + 1, sortBy, filters }],
+        queryFn: () => fetchAllLaptops()
       });
     }
   }, [currentPage, sortBy, filters, totalPages, queryClient]);

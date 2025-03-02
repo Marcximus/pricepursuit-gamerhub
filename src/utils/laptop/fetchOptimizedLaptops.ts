@@ -1,7 +1,34 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import type { Product } from "@/types/product";
+import { cachedFetch, cache } from "@/lib/cache";
 
-export type LaptopFilterParams = {
+// Add TypeScript interface for the paginated response
+interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
+}
+
+/**
+ * Fetches laptops with optimized performance using serverless function
+ * Now with client-side caching for better performance
+ */
+export async function fetchOptimizedLaptops({
+  brand = '',
+  minPrice = undefined,
+  maxPrice = undefined,
+  ram = '',
+  processor = '',
+  sortBy = 'wilson_score',
+  sortDir = 'desc',
+  page = 1,
+  pageSize = 20
+}: {
   brand?: string;
   minPrice?: number;
   maxPrice?: number;
@@ -11,41 +38,16 @@ export type LaptopFilterParams = {
   sortDir?: 'asc' | 'desc';
   page?: number;
   pageSize?: number;
-};
-
-export type OptimizedLaptopResult = {
-  data: any[];
-  meta: {
-    totalCount: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
-  };
-};
-
-/**
- * Fetches laptops using the optimized serverless function
- */
-export async function fetchOptimizedLaptops(filters: LaptopFilterParams = {}): Promise<OptimizedLaptopResult> {
-  const {
-    brand,
-    minPrice,
-    maxPrice,
-    ram,
-    processor,
-    sortBy = 'wilson_score',
-    sortDir = 'desc',
-    page = 1,
-    pageSize = 20
-  } = filters;
-
-  // Build query params
+}): Promise<PaginatedResponse<Product>> {
+  // Build query parameters
   const params = new URLSearchParams();
+  
   if (brand) params.append('brand', brand);
-  if (minPrice !== undefined && minPrice !== null) params.append('minPrice', minPrice.toString());
-  if (maxPrice !== undefined && maxPrice !== null) params.append('maxPrice', maxPrice.toString());
+  if (minPrice !== undefined) params.append('minPrice', minPrice.toString());
+  if (maxPrice !== undefined) params.append('maxPrice', maxPrice.toString());
   if (ram) params.append('ram', ram);
   if (processor) params.append('processor', processor);
+  
   params.append('sortBy', sortBy);
   params.append('sortDir', sortDir);
   params.append('page', page.toString());
@@ -53,23 +55,37 @@ export async function fetchOptimizedLaptops(filters: LaptopFilterParams = {}): P
 
   // Convert params to string for the URL
   const queryString = params.toString();
+  
+  // Determine cache time based on filter specificity
+  const filterCount = [brand, minPrice, maxPrice, ram, processor].filter(Boolean).length;
+  const cacheTime = filterCount > 2 
+    ? 10 * 60 * 1000  // 10 minutes for specific filters
+    : 2 * 60 * 1000;  // 2 minutes for general listings
 
   try {
-    const { data, error } = await supabase.functions.invoke('fetch-laptops', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-
-    if (error) {
-      console.error('Error fetching optimized laptops:', error);
-      throw error;
-    }
-
-    return data as OptimizedLaptopResult;
+    // Get the function URL
+    const functionUrl = `${supabase.functions.url('fetch-laptops')}?${queryString}`;
+    
+    // Use our cached fetch implementation
+    return await cachedFetch<PaginatedResponse<Product>>(
+      functionUrl,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabase.auth.getSession()}`
+        }
+      },
+      { expiry: cacheTime }
+    );
   } catch (error) {
-    console.error('Error in fetchOptimizedLaptops:', error);
+    console.error('Error fetching optimized laptops:', error);
     throw error;
   }
 }
+
+/**
+ * Function to clear product cache on specific actions
+ */
+export const clearLaptopCache = () => {
+  cache.clear('fetch-');
+};
