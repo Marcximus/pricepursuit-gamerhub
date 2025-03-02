@@ -1,11 +1,8 @@
 
 import { parseValueWithUnit } from './commonMatchers';
 
-// Cache for RAM matching results to avoid redundant calculations
-const ramMatchCache = new Map<string, boolean>();
-
 /**
- * Matcher for RAM filter values with improved performance
+ * Matcher for RAM filter values with improved accuracy
  */
 export const matchesRamFilter = (
   filterValue: string,
@@ -13,20 +10,6 @@ export const matchesRamFilter = (
   productTitle?: string
 ): boolean => {
   if (!productValue) return false;
-  
-  // Create a cache key for this specific match operation
-  const cacheKey = `${filterValue}|${productValue}|${productTitle || ''}`;
-  
-  // Check if we have a cached result
-  if (ramMatchCache.has(cacheKey)) {
-    return ramMatchCache.get(cacheKey)!;
-  }
-  
-  // Fast path: direct equality check first
-  if (filterValue.toLowerCase() === productValue.toLowerCase()) {
-    ramMatchCache.set(cacheKey, true);
-    return true;
-  }
   
   // Enhanced check: verify this value is actually RAM and not storage/GPU
   // Check for RAM indicators in the value or title
@@ -40,11 +23,16 @@ export const matchesRamFilter = (
     const match = productValue.match(/(\d+)\s*GB/i);
     if (match) {
       const valueInTitle = match[1];
-      // Simplified pattern matching for better performance
-      if (productTitle.toLowerCase().includes(`${valueInTitle} gb ssd`) || 
-          productTitle.toLowerCase().includes(`${valueInTitle}gb ssd`)) {
-        ramMatchCache.set(cacheKey, false);
-        return false; // This is likely storage, not RAM
+      // Look for this value in title with RAM indicators
+      const ramRegex = new RegExp(`\\b${valueInTitle}\\s*GB\\s*(DDR\\d?|RAM|Memory)\\b`, 'i');
+      
+      // If we don't find RAM indicators near this value in title,
+      // check if it looks like storage instead
+      if (!ramRegex.test(productTitle)) {
+        const storageRegex = new RegExp(`\\b${valueInTitle}\\s*GB\\s*(SSD|HDD|Storage|eMMC)\\b`, 'i');
+        if (storageRegex.test(productTitle)) {
+          return false; // This is likely storage, not RAM
+        }
       }
     }
   }
@@ -52,10 +40,7 @@ export const matchesRamFilter = (
   const filterRAM = parseValueWithUnit(filterValue);
   const productRAM = parseValueWithUnit(productValue);
   
-  if (!filterRAM || !productRAM) {
-    ramMatchCache.set(cacheKey, false);
-    return false;
-  }
+  if (!filterRAM || !productRAM) return false;
   
   // Convert to consistent unit (GB)
   const filterGB = filterRAM.unit === 'gb' ? filterRAM.value : filterRAM.value * 1024;
@@ -63,10 +48,5 @@ export const matchesRamFilter = (
   
   // RAM sizes should match precisely for filtering purposes
   // With a small tolerance for rounding errors
-  const matches = Math.abs(filterGB - productGB) < 0.5;
-  
-  // Cache the result
-  ramMatchCache.set(cacheKey, matches);
-  
-  return matches;
+  return Math.abs(filterGB - productGB) < 0.5;
 };

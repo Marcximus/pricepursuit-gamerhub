@@ -3,7 +3,6 @@ import { ReloadIcon, ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-i
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LaptopCard } from "@/components/laptops/LaptopCard";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Product } from "@/types/product";
 
 type LaptopListProps = {
@@ -12,8 +11,6 @@ type LaptopListProps = {
   currentPage: number;
   totalPages: number;
   isLoading: boolean;
-  isPartialData?: boolean;
-  isFullDataLoaded?: boolean;
   error: Error | null;
   onRetry: () => void;
   isRefetching: boolean;
@@ -26,8 +23,6 @@ export function LaptopList({
   currentPage,
   totalPages,
   isLoading, 
-  isPartialData,
-  isFullDataLoaded,
   error, 
   onRetry,
   isRefetching,
@@ -37,13 +32,11 @@ export function LaptopList({
     laptopCount: laptops?.length || 0,
     totalCount,
     isLoading,
-    isPartialData,
-    isFullDataLoaded,
     hasError: !!error,
     isRefetching
   });
 
-  if (isLoading && (!laptops || laptops.length === 0)) {
+  if (isLoading) {
     return (
       <div className="text-center py-12">
         <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
@@ -107,27 +100,11 @@ export function LaptopList({
 
   return (
     <div className="space-y-8">
-      {isPartialData && !isFullDataLoaded && (
-        <Alert className="bg-blue-50 border-blue-200">
-          <AlertDescription className="flex items-center justify-between">
-            <span>Loading full laptop catalog in the background...</span>
-            <ReloadIcon className="h-4 w-4 animate-spin text-blue-500" />
-          </AlertDescription>
-        </Alert>
-      )}
-
       <div className="space-y-4">
         {laptops.map((laptop) => (
           <LaptopCard key={laptop.id} laptop={laptop} />
         ))}
       </div>
-
-      {isRefetching && (
-        <div className="text-center py-2">
-          <ReloadIcon className="inline-block h-4 w-4 animate-spin text-gray-400 mr-2" />
-          <span className="text-sm text-gray-500">Updating results...</span>
-        </div>
-      )}
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
