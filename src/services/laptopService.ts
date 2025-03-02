@@ -5,7 +5,7 @@ import { QueryClient } from "@tanstack/react-query";
 const BATCH_SIZE = 1000;
 
 // This function can be called directly or through React Query
-export async function fetchAllLaptops() {
+export async function fetchAllLaptops(options = {}) {
   // Check if we have this data in the React Query cache
   const queryClient = new QueryClient();
   const cachedData = queryClient.getQueryData(['all-laptops-raw']);

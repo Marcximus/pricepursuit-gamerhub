@@ -71,11 +71,11 @@ export const useLaptops = (
         
         // If that fails, fallback to direct database fetch
         console.log('Falling back to direct database fetch for filter options');
-        return fetchAllLaptops({ fetchFilterOptionsOnly: true });
+        return fetchAllLaptops();
       } catch (error) {
         console.error('Error fetching filter options:', error);
         // Fallback to direct database fetch on error
-        return fetchAllLaptops({ fetchFilterOptionsOnly: true });
+        return fetchAllLaptops();
       }
     },
     staleTime: 1000 * 60 * 60, // 60 minutes - long cache time
@@ -100,23 +100,23 @@ export const useLaptops = (
       } catch (error) {
         console.error('Error using optimized fetch, falling back to direct fetch:', error);
         // Fallback to fetching directly from database if the function fails
-        const allLaptops = await fetchAllLaptops({ 
-          page, 
-          pageSize: ITEMS_PER_PAGE, 
-          sortBy, 
-          filters: apiFilters 
-        });
+        const allLaptops = await fetchAllLaptops();
         
-        // Format response to match the expected structure
-        return {
-          data: allLaptops.data,
-          meta: {
-            totalCount: allLaptops.totalCount,
-            totalPages: Math.ceil(allLaptops.totalCount / ITEMS_PER_PAGE),
-            page: page,
-            pageSize: ITEMS_PER_PAGE
-          }
-        };
+        // Make sure we have the expected structure for the response
+        if (Array.isArray(allLaptops)) {
+          // Format response to match the expected structure
+          return {
+            data: allLaptops,
+            meta: {
+              totalCount: allLaptops.length,
+              totalPages: Math.ceil(allLaptops.length / ITEMS_PER_PAGE),
+              page: page,
+              pageSize: ITEMS_PER_PAGE
+            }
+          };
+        } else {
+          throw new Error('Invalid response from fetchAllLaptops');
+        }
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes cache
