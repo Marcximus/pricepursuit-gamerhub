@@ -119,6 +119,14 @@ export const processLaptopData = (laptop: any): Product => {
     specs.benchmark_score = generateLaptopScore(specs);
   }
   
+  // Convert ports to string for database compatibility if it exists
+  const portsString = specs.ports ? JSON.stringify(specs.ports) : null;
+  
+  // Convert fingerprint boolean to string if needed
+  const fingerprintString = specs.fingerprint !== null && specs.fingerprint !== undefined 
+    ? String(specs.fingerprint) 
+    : null;
+  
   // Process and create the laptop product object
   return {
     id: laptop.id,

@@ -68,9 +68,8 @@ export async function fetchPaginatedLaptops(page = 1, pageSize = 50, sortBy = 'r
           if (laptop === null) {
             throw new Error("Unexpected null laptop after filtering");
           }
-          // TypeScript still thinks laptop could be null here despite the filter and the check above
-          // So we need to use a non-null assertion to tell TypeScript this is safe
-          return laptop! as unknown as Product;
+          // Use a type assertion after the null check
+          return laptop as unknown as Product;
         });
     } else {
       console.error('Invalid data format received:', laptopData);
