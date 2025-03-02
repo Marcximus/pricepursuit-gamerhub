@@ -71,7 +71,7 @@ export async function fetchOptimizedLaptops({
     const { data, error } = await supabase.functions.invoke('fetch-laptops', {
       method: 'GET',
       // The correct way to pass query parameters in Supabase JS v2
-      params: Object.fromEntries(params),
+      body: { query: Object.fromEntries(params) },
       headers: {
         'Content-Type': 'application/json'
       }

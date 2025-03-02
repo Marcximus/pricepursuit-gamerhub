@@ -13,18 +13,20 @@ serve(async (req) => {
   }
 
   try {
-    // Parse filter params from request
-    const url = new URL(req.url);
+    // Parse the request body for the query parameters
+    const { query } = await req.json();
+    
+    // Use the query parameters
     const filterParams = {
-      brand: url.searchParams.get('brand'),
-      minPrice: url.searchParams.get('minPrice') ? parseFloat(url.searchParams.get('minPrice')) : null,
-      maxPrice: url.searchParams.get('maxPrice') ? parseFloat(url.searchParams.get('maxPrice')) : null,
-      ram: url.searchParams.get('ram'),
-      processor: url.searchParams.get('processor'),
-      sortBy: url.searchParams.get('sortBy') || 'wilson_score',
-      sortDir: url.searchParams.get('sortDir') || 'desc',
-      page: url.searchParams.get('page') ? parseInt(url.searchParams.get('page')) : 1,
-      pageSize: url.searchParams.get('pageSize') ? parseInt(url.searchParams.get('pageSize')) : 20
+      brand: query.brand || null,
+      minPrice: query.minPrice ? parseFloat(query.minPrice) : null,
+      maxPrice: query.maxPrice ? parseFloat(query.maxPrice) : null,
+      ram: query.ram || null,
+      processor: query.processor || null,
+      sortBy: query.sortBy || 'wilson_score',
+      sortDir: query.sortDir || 'desc',
+      page: query.page ? parseInt(query.page) : 1,
+      pageSize: query.pageSize ? parseInt(query.pageSize) : 20
     };
 
     const supabase = createClient(
