@@ -3,13 +3,27 @@
  * Functions for processing laptop descriptions
  */
 
+interface EnhancedSpecs {
+  processor?: string | null;
+  processor_score?: number | null;
+  ram?: string | null;
+  storage?: string | null;
+  screen_size?: string | null;
+  screen_resolution?: string | null;
+  graphics?: string | null;
+  weight?: string | null;
+  battery_life?: string | null;
+  benchmark_score?: number | null;
+  [key: string]: any;
+}
+
 export const processLaptopDescription = (
   description: string, 
   title: string, 
   specs: Record<string, any>
-): Record<string, any> => {
+): EnhancedSpecs => {
   // Clone specs to avoid mutation
-  const enhancedSpecs = { ...specs };
+  const enhancedSpecs: EnhancedSpecs = { ...specs };
   
   // Try to fill in missing specifications from the description
   if (!enhancedSpecs.processor) {

@@ -129,8 +129,8 @@ export const processLaptopData = (laptop: any): Product => {
   // Enhance with additional specs from description if available
   if (laptop.description) {
     const enhancedSpecs = processLaptopDescription(laptop.description, processedTitle, specs);
-    // Type assertion to ensure enhancedSpecs matches the LaptopSpecs interface
-    Object.assign(specs, enhancedSpecs as Partial<LaptopSpecs>);
+    // Merge the enhanced specs with our existing specs
+    Object.assign(specs, enhancedSpecs);
   }
   
   // Calculate a benchmark score if not already provided
