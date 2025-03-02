@@ -66,22 +66,35 @@ export async function fetchOptimizedLaptops({
     : 2 * 60 * 1000;  // 2 minutes for general listings
 
   try {
-    // Get the function URL properly using import.meta.env instead of process.env
-    const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-laptops?${queryString}`;
+    // Instead of trying to call the edge function via URL, use the Supabase client
+    // This ensures proper authentication and error handling
+    const { data, error } = await supabase.functions.invoke('fetch-laptops', {
+      method: 'GET',
+      query: params,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (error) {
+      console.error('Error invoking function:', error);
+      throw error;
+    }
+
+    // Cache the result for future use
+    cache.set(`fetch-laptops-${queryString}`, data, { expiry: cacheTime });
     
-    // Use our cached fetch implementation
-    return await cachedFetch<PaginatedResponse<Product>>(
-      functionUrl,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-        }
-      },
-      { expiry: cacheTime }
-    );
+    return data as PaginatedResponse<Product>;
   } catch (error) {
     console.error('Error fetching optimized laptops:', error);
+    
+    // Try to get from cache even if the request failed
+    const cachedData = cache.get<PaginatedResponse<Product>>(`fetch-laptops-${queryString}`);
+    if (cachedData) {
+      console.log('Using cached data due to request failure');
+      return cachedData;
+    }
+    
     throw error;
   }
 }
