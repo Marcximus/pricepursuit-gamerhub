@@ -42,88 +42,45 @@ const BRAND_CORRECTIONS: {[key: string]: string} = {
   'acemagic': 'ACEMAGIC'
 };
 
-// Cache for brand normalization
-const brandNormalizationCache = new Map<string, string>();
-
 /**
- * Extract brand from title or stored brand with improved performance via caching
+ * Extract brand from title or stored brand with better normalization
  */
 export const normalizeBrand = (brand: string, title?: string): string => {
-  // Create a unique cache key
-  const cacheKey = `${brand}|${title || ''}`;
+  if (!brand && !title) return 'Unknown Brand';
   
-  // Check if we have a cached result
-  if (brandNormalizationCache.has(cacheKey)) {
-    return brandNormalizationCache.get(cacheKey)!;
-  }
-  
-  let result: string;
-  
-  if (!brand && !title) {
-    result = 'Unknown Brand';
-  } else {
-    // First check if title contains known brand keywords
-    if (title) {
-      const titleLower = title.toLowerCase();
-      let brandFound = false;
-      
-      for (const [brandName, patterns] of Object.entries(BRAND_PATTERNS)) {
-        for (const pattern of patterns) {
-          if (pattern.test(titleLower)) {
-            result = brandName;
-            brandFound = true;
-            break;
-          }
-        }
-        if (brandFound) break;
-      }
-      
-      // If no brand found in title, try the stored brand
-      if (!brandFound) {
-        if (brand) {
-          const normalizedBrand = brand.toLowerCase().trim();
-          if (BRAND_CORRECTIONS[normalizedBrand]) {
-            result = BRAND_CORRECTIONS[normalizedBrand];
-          } else {
-            // Detect known brands in the stored brand string
-            let brandDetected = false;
-            for (const [brandName, patterns] of Object.entries(BRAND_PATTERNS)) {
-              for (const pattern of patterns) {
-                if (pattern.test(normalizedBrand)) {
-                  result = brandName;
-                  brandDetected = true;
-                  break;
-                }
-              }
-              if (brandDetected) break;
-            }
-            
-            // If not a known brand, capitalize first letter
-            if (!brandDetected) {
-              result = brand.charAt(0).toUpperCase() + brand.slice(1).toLowerCase();
-            }
-          }
-        } else {
-          result = 'Unknown Brand';
+  // First check if title contains known brand keywords
+  if (title) {
+    const titleLower = title.toLowerCase();
+    for (const [brandName, patterns] of Object.entries(BRAND_PATTERNS)) {
+      for (const pattern of patterns) {
+        if (pattern.test(titleLower)) {
+          return brandName;
         }
       }
-    } else if (brand) {
-      // Only have brand, no title
-      const normalizedBrand = brand.toLowerCase().trim();
-      if (BRAND_CORRECTIONS[normalizedBrand]) {
-        result = BRAND_CORRECTIONS[normalizedBrand];
-      } else {
-        // If not a known brand, capitalize first letter
-        result = brand.charAt(0).toUpperCase() + brand.slice(1).toLowerCase();
-      }
-    } else {
-      result = 'Unknown Brand';
     }
   }
   
-  // Cache the result
-  brandNormalizationCache.set(cacheKey, result);
-  return result;
+  // If no brand found in title, try the stored brand
+  if (brand) {
+    const normalizedBrand = brand.toLowerCase().trim();
+    if (BRAND_CORRECTIONS[normalizedBrand]) {
+      return BRAND_CORRECTIONS[normalizedBrand];
+    }
+    
+    // Detect known brands in the stored brand string
+    for (const [brandName, patterns] of Object.entries(BRAND_PATTERNS)) {
+      for (const pattern of patterns) {
+        if (pattern.test(normalizedBrand)) {
+          return brandName;
+        }
+      }
+    }
+    
+    // If not a known brand, capitalize first letter
+    return brand.charAt(0).toUpperCase() + brand.slice(1).toLowerCase();
+  }
+  
+  return 'Unknown Brand';
 };
 
 export { BRAND_PATTERNS, BRAND_CORRECTIONS };

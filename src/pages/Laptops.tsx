@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
 import { LaptopFilters, type FilterOptions } from "@/components/laptops/LaptopFilters";
@@ -8,25 +8,6 @@ import { LaptopList } from "@/components/laptops/LaptopList";
 import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
-
-// Debounce helper function
-const debounce = <T extends (...args: any[]) => any>(
-  fn: T,
-  delay: number
-): ((...args: Parameters<T>) => void) => {
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
-  
-  return (...args: Parameters<T>) => {
-    if (timeoutId !== null) {
-      clearTimeout(timeoutId);
-    }
-    
-    timeoutId = setTimeout(() => {
-      fn(...args);
-      timeoutId = null;
-    }, delay);
-  };
-};
 
 const ComparePriceLaptops = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,24 +21,6 @@ const ComparePriceLaptops = () => {
     screenSizes: new Set<string>(),
     brands: new Set<string>(),
   });
-  
-  // State for debounced filters
-  const [debouncedFilters, setDebouncedFilters] = useState<FilterOptions>(filters);
-
-  // Create a debounced filter update function
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debouncedSetFilters = useCallback(
-    debounce((newFilters: FilterOptions) => {
-      setDebouncedFilters(newFilters);
-      setCurrentPage(1); // Reset to first page when filters change
-    }, 300), // 300ms debounce delay
-    []
-  );
-
-  // Update debounced filters when filters change
-  useEffect(() => {
-    debouncedSetFilters(filters);
-  }, [filters, debouncedSetFilters]);
 
   // Add debugging useEffect to track filter changes
   useEffect(() => {
@@ -72,14 +35,13 @@ const ComparePriceLaptops = () => {
     });
   }, [filters]);
 
-  // Use the debounced filters for data fetching
   const { 
     data, 
     isLoading: isLaptopsLoading, 
     error: laptopsError,
     isRefetching,
     refetch
-  } = useLaptops(currentPage, sortBy, debouncedFilters);
+  } = useLaptops(currentPage, sortBy, filters);
 
   const laptops = data?.laptops ?? [];
   const totalCount = data?.totalCount ?? 0;
@@ -109,7 +71,7 @@ const ComparePriceLaptops = () => {
     };
     
     setFilters(updatedFilters);
-    // The actual data fetching will be triggered by the debounced filters
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const handleRetry = () => {

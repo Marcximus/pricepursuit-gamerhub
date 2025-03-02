@@ -1,4 +1,3 @@
-
 import type { Product } from "@/types/product";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import { 
@@ -14,14 +13,8 @@ import {
 import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
 import { extractProcessorFromTitle } from "./extractors/processor/processorExtractor";
 
-// Cache for brand normalization
-const brandNormalizationCache = new Map<string, string>();
-
-// Cache for processor extraction
-const processorExtractionCache = new Map<string, string>();
-
 /**
- * Filters laptops based on selected filter options with improved performance
+ * Filters laptops based on selected filter options with improved validation
  */
 export const filterLaptops = (laptops: Product[], filters: FilterOptions): Product[] => {
   console.log('Starting filtering with:', {
@@ -37,7 +30,7 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     }
   });
 
-  // Skip filtering if no filters are applied (fast path)
+  // Skip filtering if no filters are applied
   if (!hasActiveFilters(filters)) {
     console.log('No active filters, returning all laptops');
     return laptops;
@@ -46,23 +39,13 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
   // Create a set of major brands (brands with 15+ items)
   const mainBrandsSet = new Set<string>();
   
-  // Count occurrences of each brand - do this once upfront
+  // Count occurrences of each brand
   const brandCounts: Record<string, number> = {};
   
   laptops.forEach(laptop => {
     if (!laptop.brand && !laptop.title) return;
     
-    // Use cached brand normalization if available
-    const cacheKey = `${laptop.brand || ''}|${laptop.title || ''}`;
-    let normalizedBrand: string;
-    
-    if (brandNormalizationCache.has(cacheKey)) {
-      normalizedBrand = brandNormalizationCache.get(cacheKey)!;
-    } else {
-      normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title).toLowerCase();
-      brandNormalizationCache.set(cacheKey, normalizedBrand);
-    }
-    
+    const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title).toLowerCase();
     brandCounts[normalizedBrand] = (brandCounts[normalizedBrand] || 0) + 1;
   });
   
@@ -80,54 +63,53 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     }
   });
 
-  // Filter laptops in order of filter complexity (fastest first)
+  console.log('Main brands set:', mainBrandsSet);
+
+  // Pre-extract processors for all laptops to improve filtering performance
+  const processorsCache = new Map<string, string>();
+  laptops.forEach(laptop => {
+    if (laptop.id) {
+      const extractedProcessor = extractProcessorFromTitle(laptop.title, laptop.processor);
+      if (extractedProcessor) {
+        processorsCache.set(laptop.id, extractedProcessor);
+      }
+    }
+  });
+
   const filteredLaptops = laptops.filter(laptop => {
     // Early return if laptop has no title or key specs
     if (!laptop.title || (!laptop.processor && !laptop.ram && !laptop.storage && !laptop.graphics)) {
       return false;
     }
     
-    // Apply filters in order of computational complexity (fastest first)
-    
-    // 1. Price filter (simple numeric comparison, very fast)
+    // Apply all filters in sequence (price first as it's fastest to check)
     if (!applyPriceFilter(laptop, filters)) return false;
-    
-    // 2. Brand filter (string comparison with caching)
     if (!applyBrandFilter(laptop, filters, mainBrandsSet)) return false;
-    
-    // 3. RAM filter (regex but simpler patterns)
-    if (!applyRamFilter(laptop, filters)) return false;
-    
-    // 4. Storage filter 
-    if (!applyStorageFilter(laptop, filters)) return false;
-    
-    // 5. Screen size filter
-    if (!applyScreenSizeFilter(laptop, filters)) return false;
-    
-    // 6. Graphics filter (more complex regex patterns)
-    if (!applyGraphicsFilter(laptop, filters)) return false;
-    
-    // 7. Processor filter (most complex with many patterns and fallbacks)
-    // Use cached processor extraction if available
-    if (laptop.id) {
-      let extractedProcessor: string | undefined;
-      
-      if (processorExtractionCache.has(laptop.id)) {
-        extractedProcessor = processorExtractionCache.get(laptop.id);
-      } else {
-        extractedProcessor = extractProcessorFromTitle(laptop.title, laptop.processor);
-        if (laptop.id && extractedProcessor) {
-          processorExtractionCache.set(laptop.id, extractedProcessor);
-        }
-      }
-    }
-    
     if (!applyProcessorFilter(laptop, filters)) return false;
+    if (!applyRamFilter(laptop, filters)) return false;
+    if (!applyStorageFilter(laptop, filters)) return false;
+    if (!applyGraphicsFilter(laptop, filters)) return false;
+    if (!applyScreenSizeFilter(laptop, filters)) return false;
 
     return true;
   });
 
   console.log(`Filtering complete: ${filteredLaptops.length} out of ${laptops.length} laptops matched filters`);
+  
+  // Log a sample of filtered laptops for debugging
+  if (filteredLaptops.length > 0) {
+    console.log('Sample of matching laptops:', filteredLaptops.slice(0, 3).map(l => ({
+      title: l.title?.substring(0, 50) + '...',
+      price: l.current_price,
+      brand: l.brand,
+      ram: l.ram,
+      storage: l.storage,
+      processor: l.processor,
+      extractedProcessor: l.id ? processorsCache.get(l.id) : undefined,
+      screen_size: l.screen_size,
+      graphics: l.graphics
+    })));
+  }
   
   return filteredLaptops;
 };

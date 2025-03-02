@@ -12,66 +12,56 @@ const MODEL_PATTERNS: {[key: string]: RegExp} = {
   'MSI': /(?:Stealth|Raider|Titan|Prestige|Sword|Katana)\s+([A-Z0-9]+(?:-[A-Z0-9]+)?)/i
 };
 
-// Cache for model normalization results
-const modelNormalizationCache = new Map<string, string>();
-
 /**
- * Extract and normalize model from title with caching
+ * Extract and normalize model from title
  */
 export const normalizeModel = (model: string | null, title: string, brand?: string): string => {
-  // Use the input as a cache key
-  const cacheKey = `${model || ''}|${title}|${brand || ''}`;
-  
-  // Check if we have a cached result
-  if (modelNormalizationCache.has(cacheKey)) {
-    return modelNormalizationCache.get(cacheKey)!;
-  }
-  
-  let result = '';
-  
   if (model && model.trim() !== '') {
-    result = model.trim();
-  } else if (brand && brand !== 'Unknown Brand') {
-    // If no model provided, try to extract from title based on brand
-    const titleLower = title.toLowerCase();
-    const brandLower = brand.toLowerCase();
-    
-    switch (brandLower) {
-      case 'apple':
-        if (titleLower.includes('macbook')) {
-          const macbookMatch = title.match(/MacBook\s+(Air|Pro)(\s+\d+\.\d+")?/i);
-          result = macbookMatch ? macbookMatch[0] : '';
-        }
-        break;
-        
-      case 'dell':
-        const dellMatch = title.match(/\b(XPS|Inspiron|Latitude|Precision)\s+\d+/i);
-        result = dellMatch ? dellMatch[0] : '';
-        break;
-        
-      case 'hp':
-        const hpMatch = title.match(/\b(Spectre|Pavilion|Envy|Omen|EliteBook)\s+\w+(-\w+)?/i);
-        result = hpMatch ? hpMatch[0] : '';
-        break;
-        
-      case 'lenovo':
-        const lenovoMatch = title.match(/\b(ThinkPad|IdeaPad|Yoga|Legion)\s+\w+(-\w+)?/i);
-        result = lenovoMatch ? lenovoMatch[0] : '';
-        break;
-        
-      case 'asus':
-        const asusMatch = title.match(/\b(ZenBook|ROG|VivoBook|TUF)\s+\w+(-\w+)?/i);
-        result = asusMatch ? asusMatch[0] : '';
-        break;
-        
-      default:
-        result = '';
-    }
+    return model.trim();
   }
   
-  // Cache the result
-  modelNormalizationCache.set(cacheKey, result);
-  return result;
+  // If no model provided, try to extract from title based on brand
+  if (!brand || brand === 'Unknown Brand') {
+    return '';
+  }
+  
+  const titleLower = title.toLowerCase();
+  const brandLower = brand.toLowerCase();
+  
+  switch (brandLower) {
+    case 'apple':
+      if (titleLower.includes('macbook')) {
+        // Extract MacBook model (Air, Pro, etc.)
+        const macbookMatch = title.match(/MacBook\s+(Air|Pro)(\s+\d+\.\d+")?/i);
+        return macbookMatch ? macbookMatch[0] : '';
+      }
+      break;
+      
+    case 'dell':
+      // Extract Dell model (XPS, Inspiron, etc.)
+      const dellMatch = title.match(/\b(XPS|Inspiron|Latitude|Precision)\s+\d+/i);
+      return dellMatch ? dellMatch[0] : '';
+      
+    case 'hp':
+      // Extract HP model (Spectre, Pavilion, Envy, etc.)
+      const hpMatch = title.match(/\b(Spectre|Pavilion|Envy|Omen|EliteBook)\s+\w+(-\w+)?/i);
+      return hpMatch ? hpMatch[0] : '';
+      
+    case 'lenovo':
+      // Extract Lenovo model (ThinkPad, IdeaPad, Yoga, etc.)
+      const lenovoMatch = title.match(/\b(ThinkPad|IdeaPad|Yoga|Legion)\s+\w+(-\w+)?/i);
+      return lenovoMatch ? lenovoMatch[0] : '';
+      
+    case 'asus':
+      // Extract ASUS model (ZenBook, ROG, VivoBook, etc.)
+      const asusMatch = title.match(/\b(ZenBook|ROG|VivoBook|TUF)\s+\w+(-\w+)?/i);
+      return asusMatch ? asusMatch[0] : '';
+      
+    default:
+      return '';
+  }
+  
+  return '';
 };
 
 export { MODEL_PATTERNS };
