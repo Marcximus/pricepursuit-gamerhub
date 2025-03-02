@@ -59,10 +59,12 @@ export async function fetchPaginatedLaptops(page = 1, pageSize = 50, sortBy = 'r
     let laptops: Product[] = [];
     
     if (Array.isArray(laptopData)) {
-      // Filter out any potentially invalid data
-      laptops = laptopData.filter(laptop => 
-        laptop && typeof laptop === 'object' && 'id' in laptop
-      ) as Product[];
+      // Filter out any potentially invalid data and safely cast to Product type
+      laptops = laptopData
+        .filter(laptop => 
+          laptop && typeof laptop === 'object' && 'id' in laptop
+        )
+        .map(laptop => laptop as unknown as Product);
     } else {
       console.error('Invalid data format received:', laptopData);
     }

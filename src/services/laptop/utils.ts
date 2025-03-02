@@ -7,9 +7,8 @@ export const getLaptopColumns = (minimalForFilters = false): string => {
     'id, processor, ram, storage, graphics, screen_size, brand, current_price' : 
     'id, title, current_price, original_price, rating, rating_count, image_url, ' +
     'processor, ram, storage, graphics, screen_size, screen_resolution, weight, ' + 
-    'processor_score, brand, model, asin, product_url, last_checked, created_at, ' +
-    'wilson_score, product_reviews (id, rating, title, content, reviewer_name, review_date, ' +
-    'verified_purchase, helpful_votes)';
+    'processor_score, brand, model, asin, product_url, last_checked, created_at, ' + 
+    'wilson_score, battery_life, update_status, collection_status, benchmark_score';
 };
 
 // Logging utility

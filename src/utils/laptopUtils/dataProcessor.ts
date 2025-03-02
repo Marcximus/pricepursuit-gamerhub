@@ -63,6 +63,7 @@ export const processLaptopData = (laptop: any): Product => {
     }
   }
 
+  // Ensure the review_data object has the expected structure
   if (!review_data.rating_breakdown) {
     review_data.rating_breakdown = {};
   }
@@ -145,7 +146,13 @@ export const processLaptopData = (laptop: any): Product => {
     model: detectedModel,
     total_reviews: total_reviews,
     average_rating: rating,
-    review_data: review_data,
+    review_data: {
+      // Fix type issues: ensure the review_data structure matches what's expected in Product type
+      rating_breakdown: review_data.rating_breakdown || {},
+      recent_reviews: Array.isArray(review_data.recent_reviews) 
+        ? review_data.recent_reviews 
+        : []
+    },
     update_status: laptop.update_status || 'pending',
     collection_status: laptop.collection_status || 'pending',
     wilson_score: laptop.wilson_score || null
