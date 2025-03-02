@@ -18,11 +18,7 @@ export const cleanupLaptopDatabase = async () => {
     // 1. First identify products with forbidden keywords
     const { data: products, error: fetchError } = await supabase
       .from('products')
-      .select(`
-        id, 
-        title, 
-        asin
-      `)
+      .select('id, title, asin')
       .eq('is_laptop', true);
 
     if (fetchError) {
@@ -41,47 +37,23 @@ export const cleanupLaptopDatabase = async () => {
     );
 
     console.log(`Found ${productsWithForbiddenKeywords.length} products with forbidden keywords`);
-    console.log('Sample products with forbidden keywords:', 
-      productsWithForbiddenKeywords.slice(0, 5).map(p => ({
-        id: p.id,
-        title: p.title
-      }))
-    );
 
     // 2. Delete products with forbidden keywords
     if (productsWithForbiddenKeywords.length > 0) {
       const forbiddenIds = productsWithForbiddenKeywords.map(p => p.id);
       
-      // Use a more reliable batch delete approach
-      // Delete in batches of 100 to avoid overwhelming the database
-      const BATCH_SIZE = 100;
-      let successfullyDeletedCount = 0;
-      
-      for (let i = 0; i < forbiddenIds.length; i += BATCH_SIZE) {
-        const batchIds = forbiddenIds.slice(i, i + BATCH_SIZE);
-        
-        const { error: deleteError } = await supabase
-          .from('products')
-          .delete()
-          .in('id', batchIds);
+      const { error: deleteError } = await supabase
+        .from('products')
+        .delete()
+        .in('id', forbiddenIds);
 
-        if (deleteError) {
-          console.error(`Error deleting batch ${i / BATCH_SIZE + 1}:`, deleteError);
-        } else {
-          successfullyDeletedCount += batchIds.length;
-          console.log(`Successfully deleted batch ${i / BATCH_SIZE + 1} (${batchIds.length} products)`);
-        }
-      }
-
-      if (successfullyDeletedCount !== forbiddenIds.length) {
-        console.warn(`Only deleted ${successfullyDeletedCount} out of ${forbiddenIds.length} products with forbidden keywords`);
+      if (deleteError) {
+        console.error('Error deleting products with forbidden keywords:', deleteError);
         toast({
-          title: "Cleanup Partial Success",
-          description: `Deleted ${successfullyDeletedCount} out of ${forbiddenIds.length} products with forbidden keywords`,
+          title: "Cleanup Partial Failure",
+          description: `Failed to delete some products: ${deleteError.message}`,
           variant: "destructive"
         });
-      } else {
-        console.log(`Successfully deleted all ${forbiddenIds.length} products with forbidden keywords`);
       }
     }
 

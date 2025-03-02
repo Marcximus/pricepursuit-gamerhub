@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
 import { LaptopFilters, type FilterOptions } from "@/components/laptops/LaptopFilters";
@@ -8,18 +8,6 @@ import { LaptopList } from "@/components/laptops/LaptopList";
 import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
-
-// Debounce helper function
-const debounce = <T extends (...args: any[]) => any>(
-  fn: T,
-  delay: number
-) => {
-  let timeoutId: ReturnType<typeof setTimeout>;
-  return (...args: Parameters<T>): void => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn(...args), delay);
-  };
-};
 
 const ComparePriceLaptops = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,9 +21,6 @@ const ComparePriceLaptops = () => {
     screenSizes: new Set<string>(),
     brands: new Set<string>(),
   });
-  
-  // Use state to track pending filter changes
-  const [pendingFilters, setPendingFilters] = useState<FilterOptions>(filters);
 
   // Add debugging useEffect to track filter changes
   useEffect(() => {
@@ -72,15 +57,6 @@ const ComparePriceLaptops = () => {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
-  
-  // Debounced filter update to avoid excessive re-renders
-  const debouncedUpdateFilters = useCallback(
-    debounce((newFilters: FilterOptions) => {
-      setFilters(newFilters);
-      setCurrentPage(1); // Reset to first page when filters change
-    }, 300),
-    []
-  );
 
   const handleFiltersChange = (newFilters: FilterOptions) => {
     // Create a deep copy of the filter sets to avoid reference issues
@@ -94,11 +70,8 @@ const ComparePriceLaptops = () => {
       brands: new Set(newFilters.brands),
     };
     
-    // Update pending filters immediately for UI feedback
-    setPendingFilters(updatedFilters);
-    
-    // Debounce the actual filter application
-    debouncedUpdateFilters(updatedFilters);
+    setFilters(updatedFilters);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const handleRetry = () => {
@@ -114,7 +87,7 @@ const ComparePriceLaptops = () => {
           <LaptopLayout
             filters={
               <LaptopFilters
-                filters={pendingFilters}
+                filters={filters}
                 onFiltersChange={handleFiltersChange}
                 processors={filterOptions.processors}
                 ramSizes={filterOptions.ramSizes}
@@ -131,7 +104,7 @@ const ComparePriceLaptops = () => {
                 onSortChange={handleSortChange}
                 isLoading={isLaptopsLoading}
                 isRefetching={isRefetching}
-                filters={pendingFilters}
+                filters={filters}
                 onFiltersChange={handleFiltersChange}
                 filterOptions={filterOptions}
               />

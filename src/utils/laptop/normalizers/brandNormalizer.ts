@@ -43,20 +43,19 @@ const BRAND_CORRECTIONS: {[key: string]: string} = {
 };
 
 /**
- * Extract brand from title or stored brand with better normalization and null safety
+ * Extract brand from title or stored brand with better normalization
  */
-export const normalizeBrand = (brand?: string | null, title?: string | null): string => {
-  // Handle null/undefined properly
+export const normalizeBrand = (brand: string, title?: string): string => {
   if (!brand && !title) return 'Unknown Brand';
   
   // First check if title contains known brand keywords
   if (title) {
     const titleLower = title.toLowerCase();
-    // Use cached results for better performance
     for (const [brandName, patterns] of Object.entries(BRAND_PATTERNS)) {
-      // Check patterns without unnecessary loop iterations
-      if (patterns.some(pattern => pattern.test(titleLower))) {
-        return brandName;
+      for (const pattern of patterns) {
+        if (pattern.test(titleLower)) {
+          return brandName;
+        }
       }
     }
   }
@@ -68,10 +67,12 @@ export const normalizeBrand = (brand?: string | null, title?: string | null): st
       return BRAND_CORRECTIONS[normalizedBrand];
     }
     
-    // Detect known brands in the stored brand string without unnecessary iterations
+    // Detect known brands in the stored brand string
     for (const [brandName, patterns] of Object.entries(BRAND_PATTERNS)) {
-      if (patterns.some(pattern => pattern.test(normalizedBrand))) {
-        return brandName;
+      for (const pattern of patterns) {
+        if (pattern.test(normalizedBrand)) {
+          return brandName;
+        }
       }
     }
     
