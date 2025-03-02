@@ -67,16 +67,18 @@ const ComparePriceLaptops = () => {
     isLoading: isLaptopsLoading, 
     error: laptopsError,
     isRefetching,
-    refetch
+    refetch,
+    filterOptionsData,
+    isFilterOptionsLoading
   } = useLaptops(currentPage, sortBy, filters);
 
   const laptops = data?.laptops ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
-  // Use laptop filters from data or empty fallback
-  // Use data.allLaptops which now exists in both query paths
-  const filterOptions = useLaptopFilters(data?.allLaptops || []);
+  // Use laptop filters from either source
+  const filterData = filterOptionsData || data?.allLaptops || [];
+  const filterOptions = useLaptopFilters(filterData);
 
   const handleSortChange = (newSortBy: SortOption) => {
     setSortBy(newSortBy);
@@ -108,6 +110,10 @@ const ComparePriceLaptops = () => {
     refetch();
   };
 
+  // Calculate loading states
+  const isFiltersLoading = isFilterOptionsLoading;
+  const isContentLoading = isLaptopsLoading || isRefetching;
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Navigation />
@@ -125,6 +131,7 @@ const ComparePriceLaptops = () => {
                 graphicsCards={filterOptions.graphicsCards}
                 screenSizes={filterOptions.screenSizes}
                 brands={filterOptions.brands}
+                isLoading={isFiltersLoading}
               />
             }
             toolbar={
@@ -132,7 +139,7 @@ const ComparePriceLaptops = () => {
                 totalLaptops={totalCount}
                 sortBy={sortBy}
                 onSortChange={handleSortChange}
-                isLoading={isLaptopsLoading}
+                isLoading={isContentLoading}
                 isRefetching={isRefetching}
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
@@ -145,7 +152,7 @@ const ComparePriceLaptops = () => {
                 totalCount={totalCount}
                 currentPage={currentPage}
                 totalPages={totalPages}
-                isLoading={isLaptopsLoading}
+                isLoading={isContentLoading}
                 error={laptopsError}
                 isRefetching={isRefetching}
                 onPageChange={handlePageChange}

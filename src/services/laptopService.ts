@@ -5,51 +5,64 @@ const BATCH_SIZE = 1000;
 
 /**
  * Fetches all laptops for filtering (used for generating filter options)
+ * If minimalForFilters is true, fetches only the data needed for filters
  */
-export async function fetchAllLaptops() {
+export async function fetchAllLaptops(minimalForFilters = false) {
   let allLaptops: any[] = [];
   let lastId: string | null = null;
   let hasMore = true;
 
-  console.log('Starting to fetch all laptops in batches...');
+  console.log(`Starting to fetch ${minimalForFilters ? 'minimal' : 'all'} laptops in batches...`);
+
+  // Select only the columns needed for filtering if minimal mode is enabled
+  const columns = minimalForFilters ? `
+    id,
+    processor,
+    ram,
+    storage,
+    graphics,
+    screen_size,
+    brand,
+    current_price
+  ` : `
+    id,
+    title,
+    current_price,
+    original_price,
+    rating,
+    rating_count,
+    image_url,
+    processor,
+    ram,
+    storage,
+    graphics,
+    screen_size,
+    screen_resolution,
+    weight,
+    processor_score,
+    brand,
+    model,
+    asin,
+    product_url,
+    last_checked,
+    created_at,
+    wilson_score,
+    product_reviews (
+      id,
+      rating,
+      title,
+      content,
+      reviewer_name,
+      review_date,
+      verified_purchase,
+      helpful_votes
+    )
+  `;
 
   while (hasMore) {
     let query = supabase
       .from('products')
-      .select(`
-        id,
-        title,
-        current_price,
-        original_price,
-        rating,
-        rating_count,
-        image_url,
-        processor,
-        ram,
-        storage,
-        graphics,
-        screen_size,
-        screen_resolution,
-        weight,
-        processor_score,
-        brand,
-        model,
-        asin,
-        product_url,
-        last_checked,
-        created_at,
-        wilson_score,
-        product_reviews (
-          id,
-          rating,
-          title,
-          content,
-          reviewer_name,
-          review_date,
-          verified_purchase,
-          helpful_votes
-        )
-      `)
+      .select(columns)
       .eq('is_laptop', true)
       .order('id', { ascending: true })
       .limit(BATCH_SIZE);
@@ -80,7 +93,7 @@ export async function fetchAllLaptops() {
     console.log(`Fetched batch of ${laptops.length} laptops, total so far: ${allLaptops.length}`);
   }
 
-  console.log(`Completed fetching all laptops. Total count: ${allLaptops.length}`);
+  console.log(`Completed fetching ${minimalForFilters ? 'minimal' : 'all'} laptops. Total count: ${allLaptops.length}`);
   return allLaptops;
 }
 

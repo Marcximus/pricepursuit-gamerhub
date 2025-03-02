@@ -52,6 +52,19 @@ export const useLaptops = (
   // If we don't have any active filters, use direct pagination for better performance
   const useDirectPagination = !hasActiveFilters(filters);
 
+  // Query to get filter options - this is kept separate from pagination
+  // to allow fast loading of initial page while filters load in the background
+  const filterOptionsQuery = useQuery({
+    queryKey: ['laptop-filter-options'],
+    queryFn: async () => {
+      // Fetch just enough data to generate filter options
+      const filterData = await fetchAllLaptops(true); // Pass true to get minimal data for filters
+      return filterData;
+    },
+    staleTime: 1000 * 60 * 30, // 30 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
+  });
+
   // Query for paginated data (when no filters are applied)
   const paginatedQuery = useQuery({
     queryKey: ['paginated-laptops', page, sortBy],
@@ -60,8 +73,8 @@ export const useLaptops = (
       // Return a consistent data structure with both queries
       return {
         ...result,
-        // Include empty allLaptops array for filter generation
-        allLaptops: result.laptops || []
+        // For filter generation, use either the filter-specific data or the current page data
+        allLaptops: filterOptionsQuery.data || result.laptops || []
       };
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -71,22 +84,27 @@ export const useLaptops = (
 
   // Query for all laptops (when filters are applied)
   const allLaptopsQuery = useQuery({
-    queryKey: ['all-laptops'],
-    queryFn: fetchAllLaptops,
-    staleTime: 1000 * 60 * 60, // 1 hour
-    gcTime: 1000 * 60 * 60 * 24, // 24 hours
-    select: (data) => {
-      const processedData = processAndFilterLaptops(data, filters, sortBy, page, ITEMS_PER_PAGE);
+    queryKey: ['all-laptops', filters],
+    queryFn: async () => {
+      const allLaptops = filterOptionsQuery.data || await fetchAllLaptops();
+      const processedData = processAndFilterLaptops(allLaptops, filters, sortBy, page, ITEMS_PER_PAGE);
       return processedData;
     },
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
     enabled: !useDirectPagination, // Only run this query if filters are active
   });
 
   // Return the appropriate query result based on which one is active
   const activeQuery = useDirectPagination ? paginatedQuery : allLaptopsQuery;
+  const isLoading = activeQuery.isLoading || filterOptionsQuery.isLoading;
 
   return {
     ...activeQuery,
+    // Add the filter options data to ensure it's always available
+    filterOptionsData: filterOptionsQuery.data,
+    isFilterOptionsLoading: filterOptionsQuery.isLoading,
+    isLoading, // Combined loading state
     collectLaptops,
     updateLaptops,
     refreshBrandModels,
