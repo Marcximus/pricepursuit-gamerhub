@@ -70,7 +70,7 @@ export const processLaptopData = (laptop: any): Product => {
   }
 
   // Process review data
-  let review_data = laptop.review_data || {
+  let review_data: any = laptop.review_data || {
     rating_breakdown: {},
     recent_reviews: []
   };
@@ -130,7 +130,7 @@ export const processLaptopData = (laptop: any): Product => {
   if (laptop.description) {
     const enhancedSpecs = processLaptopDescription(laptop.description, processedTitle, specs);
     // Type assertion to ensure enhancedSpecs matches the LaptopSpecs interface
-    Object.assign(specs, enhancedSpecs);
+    Object.assign(specs, enhancedSpecs as Partial<LaptopSpecs>);
   }
   
   // Calculate a benchmark score if not already provided

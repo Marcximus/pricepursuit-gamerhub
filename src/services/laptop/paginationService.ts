@@ -55,8 +55,17 @@ export async function fetchPaginatedLaptops(page = 1, pageSize = 50, sortBy = 'r
     
     console.timeEnd('fetchPaginatedLaptops');
     
-    // Ensure we have an array of laptops and properly type it
-    const laptops: Product[] = Array.isArray(laptopData) ? (laptopData as Product[]) : [];
+    // Validate and ensure we have an array of laptops with the right type
+    let laptops: Product[] = [];
+    
+    if (Array.isArray(laptopData)) {
+      // Filter out any potentially invalid data
+      laptops = laptopData.filter(laptop => 
+        laptop && typeof laptop === 'object' && 'id' in laptop
+      ) as Product[];
+    } else {
+      console.error('Invalid data format received:', laptopData);
+    }
     
     // Calculate the total pages
     const totalPages = Math.ceil((count || 0) / pageSize);

@@ -40,20 +40,23 @@ export async function fetchLaptopsInBatches(minimalForFilters = false): Promise<
         break;
       }
 
-      // Validate laptops before adding them to the result array
+      // Validate the data is what we expect before using it
       if (Array.isArray(laptops)) {
-        // Ensure we're working with a valid Product array
-        const typedLaptops = laptops as Product[];
-        allLaptops = [...allLaptops, ...typedLaptops];
+        // Convert to proper Product type and validate the data has required fields
+        const validLaptops = laptops.filter(laptop => 
+          laptop && typeof laptop === 'object' && 'id' in laptop
+        ) as Product[];
+        
+        allLaptops = [...allLaptops, ...validLaptops];
         
         // Get last ID for pagination
-        lastId = getLastIdFromBatch(typedLaptops);
+        lastId = getLastIdFromBatch(validLaptops);
         
         if (laptops.length < BATCH_SIZE) {
           hasMore = false;
         }
 
-        logFetchProgress(`Fetched batch of ${typedLaptops.length} laptops, total so far: ${allLaptops.length}`);
+        logFetchProgress(`Fetched batch of ${validLaptops.length} laptops, total so far: ${allLaptops.length}`);
       } else {
         console.error('Invalid laptops data returned from database:', laptops);
         hasMore = false;

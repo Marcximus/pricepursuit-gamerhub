@@ -95,7 +95,7 @@ export const generateLaptopScore = (specs: Record<string, any>): number => {
   
   // Add points for processor
   if (specs.processor) {
-    const proc = specs.processor.toLowerCase();
+    const proc = String(specs.processor).toLowerCase();
     if (proc.includes('i9') || proc.includes('ryzen 9') || 
         proc.includes('m3 max') || proc.includes('m2 max') || 
         proc.includes('m1 max') || proc.includes('threadripper') ||
@@ -116,7 +116,7 @@ export const generateLaptopScore = (specs: Record<string, any>): number => {
   
   // Add points for RAM
   if (specs.ram) {
-    const ram = specs.ram.toLowerCase();
+    const ram = String(specs.ram).toLowerCase();
     if (ram.includes('64gb')) {
       score += 20;
     } else if (ram.includes('32gb')) {
@@ -130,7 +130,7 @@ export const generateLaptopScore = (specs: Record<string, any>): number => {
   
   // Add points for graphics
   if (specs.graphics) {
-    const gpu = specs.graphics.toLowerCase();
+    const gpu = String(specs.graphics).toLowerCase();
     if (gpu.includes('rtx 40') || gpu.includes('radeon rx 7')) {
       score += 20;
     } else if (gpu.includes('rtx 30') || gpu.includes('radeon rx 6')) {
@@ -146,7 +146,7 @@ export const generateLaptopScore = (specs: Record<string, any>): number => {
   
   // Add points for storage (only if it specifically mentions SSD)
   if (specs.storage) {
-    const storage = specs.storage.toLowerCase();
+    const storage = String(specs.storage).toLowerCase();
     if (storage.includes('ssd')) {
       if (storage.includes('2tb') || storage.includes('2 tb')) {
         score += 15;
