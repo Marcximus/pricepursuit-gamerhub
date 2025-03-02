@@ -46,8 +46,9 @@ const ComparePriceLaptops = () => {
   const laptops = data?.laptops ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
+  const allLaptops = data?.allLaptops ?? [];
 
-  const filterOptions = useLaptopFilters(data?.allLaptops);
+  const filterOptions = useLaptopFilters(allLaptops);
 
   const handleSortChange = (newSortBy: SortOption) => {
     setSortBy(newSortBy);
@@ -95,6 +96,7 @@ const ComparePriceLaptops = () => {
                 graphicsCards={filterOptions.graphicsCards}
                 screenSizes={filterOptions.screenSizes}
                 brands={filterOptions.brands}
+                allLaptops={allLaptops}
               />
             }
             toolbar={

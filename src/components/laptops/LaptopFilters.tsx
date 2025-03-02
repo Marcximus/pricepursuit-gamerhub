@@ -75,70 +75,7 @@ export function LaptopFilters({
   const hasActiveGraphicsFilters = filters.graphicsCards.size > 0;
   const hasActiveScreenSizeFilters = filters.screenSizes.size > 0;
 
-  // Calculate which laptops pass the current filters
-  const filteredLaptops = useMemo(() => {
-    if (totalActiveFilters === 0) return allLaptops;
-    
-    return allLaptops.filter(laptop => {
-      // Price filter
-      const price = laptop.current_price;
-      if (price < filters.priceRange.min || price > filters.priceRange.max) {
-        return false;
-      }
-      
-      // Brand filter
-      if (filters.brands.size > 0) {
-        const brandMatches = Array.from(filters.brands).some(brand => 
-          matchesFilter(brand, laptop.brand, 'brand', laptop.title)
-        );
-        if (!brandMatches) return false;
-      }
-      
-      // Processor filter
-      if (filters.processors.size > 0) {
-        const processorMatches = Array.from(filters.processors).some(processor => 
-          matchesFilter(processor, laptop.processor, 'processor', laptop.title)
-        );
-        if (!processorMatches) return false;
-      }
-      
-      // RAM filter
-      if (filters.ramSizes.size > 0) {
-        const ramMatches = Array.from(filters.ramSizes).some(ram => 
-          matchesFilter(ram, laptop.ram, 'ram', laptop.title)
-        );
-        if (!ramMatches) return false;
-      }
-      
-      // Storage filter
-      if (filters.storageOptions.size > 0) {
-        const storageMatches = Array.from(filters.storageOptions).some(storage => 
-          matchesFilter(storage, laptop.storage, 'storage', laptop.title)
-        );
-        if (!storageMatches) return false;
-      }
-      
-      // Graphics filter
-      if (filters.graphicsCards.size > 0) {
-        const graphicsMatches = Array.from(filters.graphicsCards).some(graphics => 
-          matchesFilter(graphics, laptop.graphics, 'graphics', laptop.title)
-        );
-        if (!graphicsMatches) return false;
-      }
-      
-      // Screen size filter
-      if (filters.screenSizes.size > 0) {
-        const screenSizeMatches = Array.from(filters.screenSizes).some(screenSize => 
-          matchesFilter(screenSize, laptop.screen_size, 'screen_size', laptop.title)
-        );
-        if (!screenSizeMatches) return false;
-      }
-      
-      return true;
-    });
-  }, [allLaptops, filters, totalActiveFilters]);
-
-  // Calculate disabled options for each filter based on other active filters
+  // Calculate which options should be disabled for each filter based on other active filters
   const disabledOptions = useMemo(() => {
     if (totalActiveFilters === 0 || allLaptops.length === 0) {
       return {
@@ -151,153 +88,160 @@ export function LaptopFilters({
       };
     }
     
-    // Create a copy of the filters with each category removed one at a time
-    // to check which options would still have matches if selected
-    const getAvailableOptionsForCategory = (category: keyof Omit<FilterOptions, 'priceRange'>) => {
-      // Create filters without the current category
-      const filtersWithoutCategory = { 
-        ...filters,
-        [category]: new Set<string>() 
-      };
+    // For each filter category, find which options would have no matches
+    const calculateDisabledOptionsForCategory = (category: keyof Omit<FilterOptions, 'priceRange'>) => {
+      // Create a test filter set that includes all currently selected filters EXCEPT this category
+      const testFilters = { ...filters };
       
-      // Find laptops that match all other filters
+      // Clear the current category we're testing to see which values would match
+      if (category === 'brands') testFilters.brands = new Set<string>();
+      else if (category === 'processors') testFilters.processors = new Set<string>();
+      else if (category === 'ramSizes') testFilters.ramSizes = new Set<string>();
+      else if (category === 'storageOptions') testFilters.storageOptions = new Set<string>();
+      else if (category === 'graphicsCards') testFilters.graphicsCards = new Set<string>();
+      else if (category === 'screenSizes') testFilters.screenSizes = new Set<string>();
+      
+      // Get all laptops that match the other selected filters
       const laptopsMatchingOtherFilters = allLaptops.filter(laptop => {
         // Price filter
-        const price = laptop.current_price;
-        if (price < filtersWithoutCategory.priceRange.min || price > filtersWithoutCategory.priceRange.max) {
+        if (laptop.current_price < testFilters.priceRange.min || 
+            laptop.current_price > testFilters.priceRange.max) {
           return false;
         }
         
-        // Brand filter
-        if (filtersWithoutCategory.brands.size > 0 && category !== 'brands') {
-          const brandMatches = Array.from(filtersWithoutCategory.brands).some(brand => 
-            matchesFilter(brand, laptop.brand, 'brand', laptop.title)
-          );
-          if (!brandMatches) return false;
+        // Apply other filters
+        if (testFilters.brands.size > 0 && 
+            !Array.from(testFilters.brands).some(brand => 
+              matchesFilter(brand, laptop.brand, 'brand', laptop.title))) {
+          return false;
         }
         
-        // Processor filter
-        if (filtersWithoutCategory.processors.size > 0 && category !== 'processors') {
-          const processorMatches = Array.from(filtersWithoutCategory.processors).some(processor => 
-            matchesFilter(processor, laptop.processor, 'processor', laptop.title)
-          );
-          if (!processorMatches) return false;
+        if (testFilters.processors.size > 0 && 
+            !Array.from(testFilters.processors).some(processor => 
+              matchesFilter(processor, laptop.processor, 'processor', laptop.title))) {
+          return false;
         }
         
-        // RAM filter
-        if (filtersWithoutCategory.ramSizes.size > 0 && category !== 'ramSizes') {
-          const ramMatches = Array.from(filtersWithoutCategory.ramSizes).some(ram => 
-            matchesFilter(ram, laptop.ram, 'ram', laptop.title)
-          );
-          if (!ramMatches) return false;
+        if (testFilters.ramSizes.size > 0 && 
+            !Array.from(testFilters.ramSizes).some(ram => 
+              matchesFilter(ram, laptop.ram, 'ram', laptop.title))) {
+          return false;
         }
         
-        // Storage filter
-        if (filtersWithoutCategory.storageOptions.size > 0 && category !== 'storageOptions') {
-          const storageMatches = Array.from(filtersWithoutCategory.storageOptions).some(storage => 
-            matchesFilter(storage, laptop.storage, 'storage', laptop.title)
-          );
-          if (!storageMatches) return false;
+        if (testFilters.storageOptions.size > 0 && 
+            !Array.from(testFilters.storageOptions).some(storage => 
+              matchesFilter(storage, laptop.storage, 'storage', laptop.title))) {
+          return false;
         }
         
-        // Graphics filter
-        if (filtersWithoutCategory.graphicsCards.size > 0 && category !== 'graphicsCards') {
-          const graphicsMatches = Array.from(filtersWithoutCategory.graphicsCards).some(graphics => 
-            matchesFilter(graphics, laptop.graphics, 'graphics', laptop.title)
-          );
-          if (!graphicsMatches) return false;
+        if (testFilters.graphicsCards.size > 0 && 
+            !Array.from(testFilters.graphicsCards).some(graphics => 
+              matchesFilter(graphics, laptop.graphics, 'graphics', laptop.title))) {
+          return false;
         }
         
-        // Screen size filter
-        if (filtersWithoutCategory.screenSizes.size > 0 && category !== 'screenSizes') {
-          const screenSizeMatches = Array.from(filtersWithoutCategory.screenSizes).some(screenSize => 
-            matchesFilter(screenSize, laptop.screen_size, 'screen_size', laptop.title)
-          );
-          if (!screenSizeMatches) return false;
+        if (testFilters.screenSizes.size > 0 && 
+            !Array.from(testFilters.screenSizes).some(screenSize => 
+              matchesFilter(screenSize, laptop.screen_size, 'screen_size', laptop.title))) {
+          return false;
         }
         
         return true;
       });
       
-      // Calculate which options in this category have matching laptops
-      const availableOptions = new Set<string>();
-      
-      if (category === 'brands') {
-        laptopsMatchingOtherFilters.forEach(laptop => {
-          Array.from(brands).forEach(brand => {
-            if (matchesFilter(brand, laptop.brand, 'brand', laptop.title)) {
-              availableOptions.add(brand);
-            }
-          });
-        });
-      } else if (category === 'processors') {
-        laptopsMatchingOtherFilters.forEach(laptop => {
-          Array.from(processors).forEach(processor => {
-            if (matchesFilter(processor, laptop.processor, 'processor', laptop.title)) {
-              availableOptions.add(processor);
-            }
-          });
-        });
-      } else if (category === 'ramSizes') {
-        laptopsMatchingOtherFilters.forEach(laptop => {
-          Array.from(ramSizes).forEach(ram => {
-            if (matchesFilter(ram, laptop.ram, 'ram', laptop.title)) {
-              availableOptions.add(ram);
-            }
-          });
-        });
-      } else if (category === 'storageOptions') {
-        laptopsMatchingOtherFilters.forEach(laptop => {
-          Array.from(storageOptions).forEach(storage => {
-            if (matchesFilter(storage, laptop.storage, 'storage', laptop.title)) {
-              availableOptions.add(storage);
-            }
-          });
-        });
-      } else if (category === 'graphicsCards') {
-        laptopsMatchingOtherFilters.forEach(laptop => {
-          Array.from(graphicsCards).forEach(graphics => {
-            if (matchesFilter(graphics, laptop.graphics, 'graphics', laptop.title)) {
-              availableOptions.add(graphics);
-            }
-          });
-        });
-      } else if (category === 'screenSizes') {
-        laptopsMatchingOtherFilters.forEach(laptop => {
-          Array.from(screenSizes).forEach(screenSize => {
-            if (matchesFilter(screenSize, laptop.screen_size, 'screen_size', laptop.title)) {
-              availableOptions.add(screenSize);
-            }
-          });
-        });
-      }
-      
-      // Calculate which options should be disabled
+      // For each option in this category, check if there's at least one laptop that would match
       const disabledOptions = new Set<string>();
       
+      // Efficiently collect all available options that would have matches
+      const availableOptions = new Set<string>();
+      
+      // For each laptop that matches other filters, collect which options in this category would work
+      laptopsMatchingOtherFilters.forEach(laptop => {
+        if (category === 'brands') {
+          Array.from(brands).forEach(option => {
+            if (matchesFilter(option, laptop.brand, 'brand', laptop.title)) {
+              availableOptions.add(option);
+            }
+          });
+        } 
+        else if (category === 'processors') {
+          Array.from(processors).forEach(option => {
+            if (matchesFilter(option, laptop.processor, 'processor', laptop.title)) {
+              availableOptions.add(option);
+            }
+          });
+        }
+        else if (category === 'ramSizes') {
+          Array.from(ramSizes).forEach(option => {
+            if (matchesFilter(option, laptop.ram, 'ram', laptop.title)) {
+              availableOptions.add(option);
+            }
+          });
+        }
+        else if (category === 'storageOptions') {
+          Array.from(storageOptions).forEach(option => {
+            if (matchesFilter(option, laptop.storage, 'storage', laptop.title)) {
+              availableOptions.add(option);
+            }
+          });
+        }
+        else if (category === 'graphicsCards') {
+          Array.from(graphicsCards).forEach(option => {
+            if (matchesFilter(option, laptop.graphics, 'graphics', laptop.title)) {
+              availableOptions.add(option);
+            }
+          });
+        }
+        else if (category === 'screenSizes') {
+          Array.from(screenSizes).forEach(option => {
+            if (matchesFilter(option, laptop.screen_size, 'screen_size', laptop.title)) {
+              availableOptions.add(option);
+            }
+          });
+        }
+      });
+      
+      // Now mark as disabled any option that's not in the available options
       if (category === 'brands') {
         Array.from(brands).forEach(option => {
-          if (!availableOptions.has(option)) disabledOptions.add(option);
+          if (!availableOptions.has(option)) {
+            disabledOptions.add(option);
+          }
         });
-      } else if (category === 'processors') {
+      }
+      else if (category === 'processors') {
         Array.from(processors).forEach(option => {
-          if (!availableOptions.has(option)) disabledOptions.add(option);
+          if (!availableOptions.has(option)) {
+            disabledOptions.add(option);
+          }
         });
-      } else if (category === 'ramSizes') {
+      }
+      else if (category === 'ramSizes') {
         Array.from(ramSizes).forEach(option => {
-          if (!availableOptions.has(option)) disabledOptions.add(option);
+          if (!availableOptions.has(option)) {
+            disabledOptions.add(option);
+          }
         });
-      } else if (category === 'storageOptions') {
+      }
+      else if (category === 'storageOptions') {
         Array.from(storageOptions).forEach(option => {
-          if (!availableOptions.has(option)) disabledOptions.add(option);
+          if (!availableOptions.has(option)) {
+            disabledOptions.add(option);
+          }
         });
-      } else if (category === 'graphicsCards') {
+      }
+      else if (category === 'graphicsCards') {
         Array.from(graphicsCards).forEach(option => {
-          if (!availableOptions.has(option)) disabledOptions.add(option);
+          if (!availableOptions.has(option)) {
+            disabledOptions.add(option);
+          }
         });
-      } else if (category === 'screenSizes') {
+      }
+      else if (category === 'screenSizes') {
         Array.from(screenSizes).forEach(option => {
-          if (!availableOptions.has(option)) disabledOptions.add(option);
+          if (!availableOptions.has(option)) {
+            disabledOptions.add(option);
+          }
         });
       }
       
@@ -305,14 +249,14 @@ export function LaptopFilters({
     };
     
     return {
-      brands: getAvailableOptionsForCategory('brands'),
-      processors: getAvailableOptionsForCategory('processors'),
-      ramSizes: getAvailableOptionsForCategory('ramSizes'),
-      storageOptions: getAvailableOptionsForCategory('storageOptions'),
-      graphicsCards: getAvailableOptionsForCategory('graphicsCards'),
-      screenSizes: getAvailableOptionsForCategory('screenSizes'),
+      brands: calculateDisabledOptionsForCategory('brands'),
+      processors: calculateDisabledOptionsForCategory('processors'),
+      ramSizes: calculateDisabledOptionsForCategory('ramSizes'),
+      storageOptions: calculateDisabledOptionsForCategory('storageOptions'),
+      graphicsCards: calculateDisabledOptionsForCategory('graphicsCards'),
+      screenSizes: calculateDisabledOptionsForCategory('screenSizes'),
     };
-  }, [allLaptops, filters, totalActiveFilters, brands, processors, ramSizes, storageOptions, graphicsCards, screenSizes]);
+  }, [allLaptops, filters, brands, processors, ramSizes, storageOptions, graphicsCards, screenSizes, totalActiveFilters]);
 
   // User-focused ordering of filter sections
   const filterSections = [
@@ -347,6 +291,7 @@ export function LaptopFilters({
     });
   };
 
+  // The rest of the rendering code...
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-5 px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg border-b border-slate-200">
