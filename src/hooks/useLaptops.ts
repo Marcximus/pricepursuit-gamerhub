@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { processAndFilterLaptops } from "@/services/laptopProcessingService";
-import { fetchAllLaptops } from "@/services/laptopService";
+import { fetchLaptopsBatch } from "@/services/laptopService";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import type { SortOption } from "@/components/laptops/LaptopSort";
 import { collectLaptops } from "@/utils/laptop/collectLaptops";
@@ -18,7 +18,8 @@ export {
   getDatabaseStats
 };
 
-export const ITEMS_PER_PAGE = 50;
+// Reduced number of items per page for faster loading
+export const ITEMS_PER_PAGE = 20;
 
 const defaultFilters: FilterOptions = {
   priceRange: { min: 0, max: 10000 },
@@ -36,10 +37,10 @@ export const useLaptops = (
   filters: FilterOptions = defaultFilters
 ) => {
   const query = useQuery({
-    queryKey: ['all-laptops'],
-    queryFn: fetchAllLaptops,
-    staleTime: 1000 * 60 * 60, // 1 hour
-    gcTime: 1000 * 60 * 60 * 24, // 24 hours
+    queryKey: ['laptops-batch', page, sortBy, JSON.stringify(filters)],
+    queryFn: () => fetchLaptopsBatch(page, ITEMS_PER_PAGE),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
     select: (data) => {
       const processedData = processAndFilterLaptops(data, filters, sortBy, page, ITEMS_PER_PAGE);
       return {
