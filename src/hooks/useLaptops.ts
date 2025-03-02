@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { processAndFilterLaptops } from "@/services/laptopProcessingService";
 import { fetchAllLaptops } from "@/services/laptopService";
@@ -43,6 +42,18 @@ interface FilterOptionsData {
   screenSizes: Set<string>;
 }
 
+// Define the interface for our optimized response to ensure correct typing
+interface OptimizedLaptopResponse {
+  data: any[];
+  meta: {
+    totalCount: number;
+    totalPages: number;
+    page: number;
+    pageSize: number;
+  };
+  filterOptions?: FilterOptionsData;
+}
+
 export const useLaptops = (
   page: number = 1, 
   sortBy: SortOption = 'rating-desc',
@@ -65,7 +76,7 @@ export const useLaptops = (
   
   // Fetch ALL filter options from the entire database using a direct Supabase query
   // This ensures we get all possible filter values regardless of pagination or current filters
-  const filterOptionsQuery = useQuery({
+  const filterOptionsQuery = useQuery<OptimizedLaptopResponse, Error>({
     queryKey: ['all-filter-options'],
     queryFn: async () => {
       try {
@@ -92,7 +103,7 @@ export const useLaptops = (
           };
         }
         
-        return laptopData;
+        return laptopData as OptimizedLaptopResponse;
       } catch (error) {
         console.error('Error fetching filter options:', error);
         // Fallback to direct database fetch on error
@@ -108,7 +119,7 @@ export const useLaptops = (
             };
           }
           
-          return laptopData;
+          return laptopData as OptimizedLaptopResponse;
         } catch (fallbackError) {
           console.error('Fallback also failed:', fallbackError);
           return {
@@ -132,7 +143,7 @@ export const useLaptops = (
   });
 
   // Main query for filtered/paginated data
-  const query = useQuery({
+  const query = useQuery<OptimizedLaptopResponse, Error>({
     queryKey: ['optimized-laptops', { page, sortBy, filters: JSON.stringify(apiFilters) }],
     queryFn: async () => {
       try {
@@ -195,8 +206,8 @@ export const useLaptops = (
     return options;
   }
 
-  // Get filterOptions from the filterOptionsQuery if available
-  const filterOptions = filterOptionsQuery.data?.filterOptions as FilterOptionsData | undefined;
+  // Get filterOptions from the filterOptionsQuery if available - properly typed now
+  const filterOptions = filterOptionsQuery.data?.filterOptions;
 
   const transformedData = query.data ? {
     laptops: query.data.data || [],
