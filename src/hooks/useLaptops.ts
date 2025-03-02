@@ -33,6 +33,16 @@ const defaultFilters: FilterOptions = {
   brands: new Set<string>()
 };
 
+// Define an interface for the filter options structure
+interface FilterOptionsData {
+  brands: Set<string>;
+  processors: Set<string>;
+  ramSizes: Set<string>;
+  storageOptions: Set<string>;
+  graphicsCards: Set<string>;
+  screenSizes: Set<string>;
+}
+
 export const useLaptops = (
   page: number = 1, 
   sortBy: SortOption = 'rating-desc',
@@ -71,11 +81,49 @@ export const useLaptops = (
         
         // If that fails, fallback to direct database fetch
         console.log('Falling back to direct database fetch for filter options');
-        return fetchAllLaptops();
+        const laptopData = await fetchAllLaptops();
+        
+        // If we get an array of laptops, we need to convert it to the expected format
+        if (Array.isArray(laptopData)) {
+          return {
+            data: [],
+            meta: { totalCount: 0, totalPages: 0, page: 1, pageSize: 1 },
+            filterOptions: createFilterOptionsFromLaptops(laptopData)
+          };
+        }
+        
+        return laptopData;
       } catch (error) {
         console.error('Error fetching filter options:', error);
         // Fallback to direct database fetch on error
-        return fetchAllLaptops();
+        try {
+          const laptopData = await fetchAllLaptops();
+          
+          // If we get an array of laptops, we need to convert it to the expected format
+          if (Array.isArray(laptopData)) {
+            return {
+              data: [],
+              meta: { totalCount: 0, totalPages: 0, page: 1, pageSize: 1 },
+              filterOptions: createFilterOptionsFromLaptops(laptopData)
+            };
+          }
+          
+          return laptopData;
+        } catch (fallbackError) {
+          console.error('Fallback also failed:', fallbackError);
+          return {
+            data: [],
+            meta: { totalCount: 0, totalPages: 0, page: 1, pageSize: 1 },
+            filterOptions: {
+              brands: new Set<string>(),
+              processors: new Set<string>(),
+              ramSizes: new Set<string>(),
+              storageOptions: new Set<string>(),
+              graphicsCards: new Set<string>(),
+              screenSizes: new Set<string>()
+            }
+          };
+        }
       }
     },
     staleTime: 1000 * 60 * 60, // 60 minutes - long cache time
@@ -124,8 +172,31 @@ export const useLaptops = (
     retry: 1, // Retry failed requests once
   });
 
-  // Always use the filter options from the dedicated query
-  const filterOptions = filterOptionsQuery.data?.filterOptions;
+  // Helper function to create filter options from an array of laptops
+  function createFilterOptionsFromLaptops(laptops: any[]): FilterOptionsData {
+    const options: FilterOptionsData = {
+      brands: new Set<string>(),
+      processors: new Set<string>(),
+      ramSizes: new Set<string>(),
+      storageOptions: new Set<string>(),
+      graphicsCards: new Set<string>(),
+      screenSizes: new Set<string>()
+    };
+    
+    laptops.forEach(laptop => {
+      if (laptop.brand) options.brands.add(laptop.brand);
+      if (laptop.processor) options.processors.add(laptop.processor);
+      if (laptop.ram) options.ramSizes.add(laptop.ram);
+      if (laptop.storage) options.storageOptions.add(laptop.storage);
+      if (laptop.graphics) options.graphicsCards.add(laptop.graphics);
+      if (laptop.screen_size) options.screenSizes.add(laptop.screen_size);
+    });
+    
+    return options;
+  }
+
+  // Get filterOptions from the filterOptionsQuery if available
+  const filterOptions = filterOptionsQuery.data?.filterOptions as FilterOptionsData | undefined;
 
   const transformedData = query.data ? {
     laptops: query.data.data || [],
