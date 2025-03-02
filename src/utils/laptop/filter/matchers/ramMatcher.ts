@@ -1,5 +1,6 @@
 
 import { parseValueWithUnit } from './commonMatchers';
+import { containsForbiddenKeywords } from '../../productFilters';
 
 // Cache for RAM value parsing to avoid redundant operations
 const ramValueCache = new Map<string, {value: number; unit: string} | null>();
@@ -12,6 +13,12 @@ export const matchesRamFilter = (
   productValue: string | null | undefined,
   productTitle?: string
 ): boolean => {
+  // First check if the product title contains forbidden keywords
+  // This is an extra safety check during filtering
+  if (productTitle && containsForbiddenKeywords(productTitle)) {
+    return false;
+  }
+  
   if (!productValue) return false;
 
   // Get parsed RAM values from cache or compute them

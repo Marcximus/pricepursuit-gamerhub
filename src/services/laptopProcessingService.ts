@@ -8,7 +8,7 @@ import { paginateLaptops } from "@/utils/laptopPagination";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import type { SortOption } from "@/components/laptops/LaptopSort";
 import { normalizeBrand, normalizeModel } from "@/utils/laptop/valueNormalizer";
-import { applyAllProductFilters } from "@/utils/laptop/productFilters";
+import { applyAllProductFilters, containsForbiddenKeywords } from "@/utils/laptop/productFilters";
 import { extractProcessorFromTitle } from "@/utils/laptop/filter/extractors/processor/processorExtractor";
 
 export const processAndFilterLaptops = (
@@ -33,10 +33,18 @@ export const processAndFilterLaptops = (
     page
   });
 
-  // First apply product filtering to remove forbidden keywords and duplicate ASINs
-  const filteredRawData = applyAllProductFilters(rawData);
+  // First ensure no products with forbidden keywords are included
+  // This is a safeguard in case the database cleanup wasn't run
+  const noForbiddenKeywords = rawData.filter(product => 
+    !containsForbiddenKeywords(product.title || '')
+  );
   
-  console.log(`Filtered out ${rawData.length - filteredRawData.length} products based on keywords and duplicate ASINs`);
+  console.log(`Filtered out ${rawData.length - noForbiddenKeywords.length} products with forbidden keywords at processing time`);
+  
+  // Then apply product filtering to remove duplicate ASINs
+  const filteredRawData = applyAllProductFilters(noForbiddenKeywords);
+  
+  console.log(`After all filtering: ${filteredRawData.length} products remain from original ${rawData.length}`);
   
   // Process filtered laptop data
   const processedLaptops = filteredRawData.map(laptop => {

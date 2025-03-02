@@ -51,6 +51,7 @@ const FORBIDDEN_KEYWORDS = [
 
 /**
  * Check if a product title contains any forbidden keywords
+ * Case insensitive and with improved performance
  * 
  * @param title Product title to check
  * @returns true if the title contains any forbidden keywords
@@ -60,9 +61,16 @@ export const containsForbiddenKeywords = (title: string): boolean => {
   
   const normalizedTitle = title.toLowerCase();
   
-  return FORBIDDEN_KEYWORDS.some(keyword => 
-    normalizedTitle.includes(keyword.toLowerCase())
-  );
+  // Use a more efficient approach by looping through keywords
+  // and returning early as soon as a match is found
+  for (const keyword of FORBIDDEN_KEYWORDS) {
+    if (normalizedTitle.includes(keyword.toLowerCase())) {
+      console.log(`Found forbidden keyword "${keyword}" in title: "${title}"`);
+      return true;
+    }
+  }
+  
+  return false;
 };
 
 /**
@@ -83,7 +91,15 @@ export const isIPad = (model: string | undefined): boolean => {
  * @returns Array of products without forbidden keywords in titles
  */
 export const filterProductsByKeywords = <T extends { title?: string }>(products: T[]): T[] => {
-  return products.filter(product => !containsForbiddenKeywords(product.title || ''));
+  const startCount = products.length;
+  const filtered = products.filter(product => !containsForbiddenKeywords(product.title || ''));
+  
+  const removedCount = startCount - filtered.length;
+  if (removedCount > 0) {
+    console.log(`Removed ${removedCount} products with forbidden keywords`);
+  }
+  
+  return filtered;
 };
 
 /**
@@ -128,6 +144,8 @@ export const filterOutIPads = <T extends { model?: string }>(products: T[]): T[]
 export const applyAllProductFilters = <T extends { asin: string; title?: string; model?: string; last_checked?: string }>(
   products: T[]
 ): T[] => {
+  const startingCount = products.length;
+  
   // First remove products with forbidden keywords
   const keywordFiltered = filterProductsByKeywords(products);
   
@@ -135,5 +153,9 @@ export const applyAllProductFilters = <T extends { asin: string; title?: string;
   const withoutIPads = filterOutIPads(keywordFiltered);
   
   // Then deduplicate ASINs
-  return deduplicateProductsByAsin(withoutIPads);
+  const result = deduplicateProductsByAsin(withoutIPads);
+  
+  console.log(`Product filtering: ${startingCount} -> ${result.length} products`);
+  
+  return result;
 };
