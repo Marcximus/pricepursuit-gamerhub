@@ -14,6 +14,19 @@ interface PaginatedResponse<T> {
   };
 }
 
+// Export the filter params interface
+export interface LaptopFilterParams {
+  brand?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  ram?: string;
+  processor?: string;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
+  page?: number;
+  pageSize?: number;
+}
+
 /**
  * Fetches laptops with optimized performance using serverless function
  * Now with client-side caching for better performance
@@ -28,17 +41,7 @@ export async function fetchOptimizedLaptops({
   sortDir = 'desc',
   page = 1,
   pageSize = 20
-}: {
-  brand?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  ram?: string;
-  processor?: string;
-  sortBy?: string;
-  sortDir?: 'asc' | 'desc';
-  page?: number;
-  pageSize?: number;
-}): Promise<PaginatedResponse<Product>> {
+}: LaptopFilterParams): Promise<PaginatedResponse<Product>> {
   // Build query parameters
   const params = new URLSearchParams();
   
@@ -63,8 +66,8 @@ export async function fetchOptimizedLaptops({
     : 2 * 60 * 1000;  // 2 minutes for general listings
 
   try {
-    // Get the function URL
-    const functionUrl = `${supabase.functions.url('fetch-laptops')}?${queryString}`;
+    // Get the function URL properly
+    const functionUrl = `${process.env.VITE_SUPABASE_URL}/functions/v1/fetch-laptops?${queryString}`;
     
     // Use our cached fetch implementation
     return await cachedFetch<PaginatedResponse<Product>>(
@@ -72,7 +75,7 @@ export async function fetchOptimizedLaptops({
       {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.auth.getSession()}`
+          'Authorization': `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`
         }
       },
       { expiry: cacheTime }
