@@ -66,8 +66,8 @@ export async function fetchOptimizedLaptops({
     : 2 * 60 * 1000;  // 2 minutes for general listings
 
   try {
-    // Get the function URL properly
-    const functionUrl = `${process.env.VITE_SUPABASE_URL}/functions/v1/fetch-laptops?${queryString}`;
+    // Get the function URL properly using import.meta.env instead of process.env
+    const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-laptops?${queryString}`;
     
     // Use our cached fetch implementation
     return await cachedFetch<PaginatedResponse<Product>>(
@@ -75,7 +75,7 @@ export async function fetchOptimizedLaptops({
       {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
         }
       },
       { expiry: cacheTime }
