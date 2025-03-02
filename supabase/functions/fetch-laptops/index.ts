@@ -13,34 +13,87 @@ serve(async (req) => {
   }
 
   try {
+    // Parse filter params from request
+    const url = new URL(req.url);
+    const filterParams = {
+      brand: url.searchParams.get('brand'),
+      minPrice: url.searchParams.get('minPrice') ? parseFloat(url.searchParams.get('minPrice')) : null,
+      maxPrice: url.searchParams.get('maxPrice') ? parseFloat(url.searchParams.get('maxPrice')) : null,
+      ram: url.searchParams.get('ram'),
+      processor: url.searchParams.get('processor'),
+      sortBy: url.searchParams.get('sortBy') || 'wilson_score',
+      sortDir: url.searchParams.get('sortDir') || 'desc',
+      page: url.searchParams.get('page') ? parseInt(url.searchParams.get('page')) : 1,
+      pageSize: url.searchParams.get('pageSize') ? parseInt(url.searchParams.get('pageSize')) : 20
+    };
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-
-    console.log('Fetching laptops from database...');
     
-    const { data, error } = await supabase
+    // Build query with performance optimizations
+    let query = supabase
       .from('products')
-      .select('*')
-      .eq('is_laptop', true)
-      .order('created_at', { ascending: false });
+      .select('id, asin, title, brand, model, current_price, original_price, processor, ram, storage, graphics, screen_size, image_url, rating, wilson_score', { count: 'exact' })
+      .eq('is_laptop', true);
+    
+    // Only include non-null filters
+    if (filterParams.brand) {
+      query = query.eq('brand', filterParams.brand);
+    }
+    
+    if (filterParams.ram) {
+      query = query.eq('ram', filterParams.ram);
+    }
+    
+    if (filterParams.minPrice !== null) {
+      query = query.gte('current_price', filterParams.minPrice);
+    }
+    
+    if (filterParams.maxPrice !== null) {
+      query = query.lte('current_price', filterParams.maxPrice);
+    }
+    
+    if (filterParams.processor) {
+      query = query.ilike('processor', `%${filterParams.processor}%`);
+    }
+    
+    // Add pagination
+    const from = (filterParams.page - 1) * filterParams.pageSize;
+    const to = from + filterParams.pageSize - 1;
+    
+    // Add sorting
+    const sortDirection = filterParams.sortDir === 'asc' ? true : false;
+    query = query.order(filterParams.sortBy, { ascending: sortDirection, nullsFirst: false });
+    
+    // Execute query with pagination
+    const { data, error, count } = await query.range(from, to);
 
     if (error) {
       console.error('Error fetching laptops:', error);
       throw error;
     }
 
-    console.log(`Returning ${data?.length || 0} laptops`);
+    // Add cache headers
+    const headers = { 
+      ...corsHeaders,
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=60, s-maxage=300', // Cache for 1 minute client-side, 5 minutes CDN
+    };
 
+    // Return paginated data with metadata
     return new Response(
-      JSON.stringify(data),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
-      }
+      JSON.stringify({
+        data,
+        meta: {
+          totalCount: count,
+          page: filterParams.page,
+          pageSize: filterParams.pageSize,
+          totalPages: Math.ceil((count || 0) / filterParams.pageSize)
+        }
+      }),
+      { headers }
     );
 
   } catch (error) {
@@ -49,10 +102,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500
       }
     );
