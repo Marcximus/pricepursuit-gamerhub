@@ -15,7 +15,7 @@ const MODEL_PATTERNS: {[key: string]: RegExp} = {
 /**
  * Extract and normalize model from title
  */
-export const normalizeModel = (model: string | null, title: string, brand?: string): string => {
+export const normalizeModel = (model: string | null | undefined, title: string, brand?: string): string => {
   if (model && model.trim() !== '') {
     return model.trim();
   }

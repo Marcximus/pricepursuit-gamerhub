@@ -29,6 +29,7 @@ const FORBIDDEN_KEYWORDS = [
   
   // New forbidden keywords added from user request
   "Keyboard cover", "Privacy Screen For", "Handheld Dock", "Charging Station",
+  "Mechanical Hard Disk", // Added "Mechanical Hard Disk" to the list
   
   // Charger-related keywords (commonly mixed with laptops)
   "Charger fit", "Charger for", "Charger Fit For", "Adapter Laptop Charger",

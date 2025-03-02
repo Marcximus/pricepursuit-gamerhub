@@ -45,7 +45,7 @@ const BRAND_CORRECTIONS: {[key: string]: string} = {
 /**
  * Extract brand from title or stored brand with better normalization
  */
-export const normalizeBrand = (brand: string, title?: string): string => {
+export const normalizeBrand = (brand?: string, title?: string): string => {
   if (!brand && !title) return 'Unknown Brand';
   
   // First check if title contains known brand keywords
