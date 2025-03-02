@@ -1,9 +1,8 @@
 
 import { useEffect, useState } from "react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
-import { DollarSign, X } from "lucide-react";
+import { PriceRangeHeader } from "./components/PriceRangeHeader";
+import { PriceSlider } from "./components/PriceSlider";
+import { PriceInputs } from "./components/PriceInputs";
 
 type PriceRangeFilterProps = {
   minPrice: number;
@@ -31,23 +30,6 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
     setLocalMax(maxPrice);
     setIsExtendedPrice(maxPrice > STANDARD_MAX_PRICE);
   }, [minPrice, maxPrice]);
-
-  // Create tick labels
-  const generateTickLabels = () => {
-    const labels = [];
-    // Show 5 ticks for standard range: 0, 500, 1000, 1500, 2000+
-    const tickCount = 5; 
-    
-    for (let i = 0; i < tickCount - 1; i++) {
-      const value = Math.round(i * (STANDARD_MAX_PRICE / (tickCount - 1)));
-      labels.push(formatPrice(value, true));
-    }
-    
-    // Always add the last label with a plus sign to indicate higher prices are available
-    labels.push(formatPrice(STANDARD_MAX_PRICE, true) + "+");
-    
-    return labels;
-  };
 
   // Handle slider changes
   const handleSliderChange = (values: number[]) => {
@@ -87,7 +69,26 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
     }
   };
 
-  // Handle input changes with debounce
+  // Handle min input change
+  const handleMinChange = (value: number) => {
+    setLocalMin(value);
+  };
+
+  // Handle max input change
+  const handleMaxChange = (value: number) => {
+    setLocalMax(value);
+  };
+
+  // Handle reset price button click
+  const handleResetPrice = () => {
+    setLocalMin(0);
+    // Reset to standard price range
+    setIsExtendedPrice(false);
+    setLocalMax(STANDARD_MAX_PRICE);
+    onPriceChange(0, STANDARD_MAX_PRICE);
+  };
+
+  // Apply price filter after input changes
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (localMin !== minPrice || localMax !== maxPrice) {
@@ -107,89 +108,28 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
     return () => clearTimeout(timeoutId);
   }, [localMin, localMax, minPrice, maxPrice, onPriceChange, isExtendedPrice]);
 
-  const handleResetPrice = () => {
-    setLocalMin(0);
-    // Reset to standard price range
-    setIsExtendedPrice(false);
-    setLocalMax(STANDARD_MAX_PRICE);
-    onPriceChange(0, STANDARD_MAX_PRICE);
-  };
-
-  // Format price for display
-  const formatPrice = (price: number, short: boolean = false) => {
-    if (short && price >= 1000) {
-      return `${Math.floor(price / 1000)}k`;
-    }
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
-
-  // Check if price filter is active
-  const isPriceFilterActive = !isDefaultPriceRange;
-
   return (
     <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm mb-5">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-          <div className="h-6 w-6 flex items-center justify-center rounded-full bg-blue-50 text-blue-600">
-            <DollarSign className="h-3.5 w-3.5" />
-          </div>
-          <Label className="text-sm font-medium">Price Range</Label>
-        </div>
-        {isPriceFilterActive && (
-          <button
-            onClick={handleResetPrice}
-            className="text-xs flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 font-medium transition-colors"
-          >
-            <X className="h-3 w-3" />
-            Reset
-          </button>
-        )}
-      </div>
+      <PriceRangeHeader
+        isFilterActive={!isDefaultPriceRange}
+        onReset={handleResetPrice}
+      />
 
-      <div className="pt-2">
-        <Slider
-          defaultValue={[localMin, localMax]}
-          value={[localMin, Math.min(localMax, STANDARD_MAX_PRICE)]} // Visually cap at 2000
-          min={0}
-          max={STANDARD_MAX_PRICE}
-          step={50}
-          onValueChange={handleSliderChange}
-          onValueCommit={handleSliderCommit}
-          showTicks={true}
-          tickLabels={generateTickLabels()}
-          className="my-5"
-        />
-      </div>
+      <PriceSlider
+        localMin={localMin}
+        localMax={localMax}
+        currentMaxPrice={STANDARD_MAX_PRICE}
+        onSliderChange={handleSliderChange}
+        onSliderCommit={handleSliderCommit}
+      />
 
-      <div className="flex gap-3 items-center mt-8">
-        <div className="relative flex-1">
-          <Input
-            type="number"
-            value={localMin}
-            onChange={(e) => setLocalMin(Number(e.target.value))}
-            min={0}
-            max={localMax - 50}
-            className="pl-8 h-10 text-sm rounded-md border-slate-300 focus:border-blue-300 focus:ring-blue-200"
-          />
-          <div className="absolute left-3 top-2.5 text-slate-500">$</div>
-        </div>
-        <span className="text-slate-400">to</span>
-        <div className="relative flex-1">
-          <Input
-            type="number"
-            value={localMax}
-            onChange={(e) => setLocalMax(Number(e.target.value))}
-            min={localMin + 50}
-            max={EXTENDED_MAX_PRICE}
-            className="pl-8 h-10 text-sm rounded-md border-slate-300 focus:border-blue-300 focus:ring-blue-200"
-          />
-          <div className="absolute left-3 top-2.5 text-slate-500">$</div>
-        </div>
-      </div>
+      <PriceInputs
+        localMin={localMin}
+        localMax={localMax}
+        extendedMaxPrice={EXTENDED_MAX_PRICE}
+        onMinChange={handleMinChange}
+        onMaxChange={handleMaxChange}
+      />
     </div>
   );
 }
