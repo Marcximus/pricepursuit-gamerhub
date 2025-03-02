@@ -1,4 +1,3 @@
-
 import { useCallback, useState } from "react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
@@ -85,7 +84,6 @@ export function FilterSection({
           options={sortedOptions}
           selectedOptions={selectedOptions}
           onOptionChange={handleCheckboxChange}
-          showClearButtons={true}
         />
       </AccordionContent>
     </AccordionItem>

@@ -2,7 +2,6 @@
 import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CheckboxItem } from "./CheckboxItem";
-import { XCircle } from "lucide-react";
 
 type FilterOptionsListProps = {
   title: string;
@@ -21,26 +20,6 @@ export function FilterOptionsList({
 }: FilterOptionsListProps) {
   return (
     <div className="flex flex-col">
-      {/* Fixed height container for selected filters */}
-      {showClearButtons && (
-        <div className="min-h-[36px] mb-2">
-          {selectedOptions.size > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {Array.from(selectedOptions).map(option => (
-                <button
-                  key={`clear-${option}`}
-                  onClick={() => onOptionChange(option, false)}
-                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 transition-colors"
-                >
-                  {option}
-                  <XCircle className="h-3 w-3" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-      
       <ScrollArea className={`${options.length > 8 ? 'h-[240px]' : ''} rounded-md`}>
         <div className="space-y-1">
           {options.length > 0 ? (
