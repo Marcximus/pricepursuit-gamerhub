@@ -3,9 +3,15 @@ import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CheckboxItem } from "./CheckboxItem";
 
+type FilterOption = {
+  name: string;
+  count: number;
+  disabled: boolean;
+};
+
 type FilterOptionsListProps = {
   title: string;
-  options: string[];
+  options: FilterOption[];
   selectedOptions: Set<string>;
   onOptionChange: (option: string, checked: boolean) => void;
 };
@@ -22,11 +28,13 @@ export function FilterOptionsList({
         {options.length > 0 ? (
           options.map((option) => (
             <CheckboxItem
-              key={option}
-              id={`${title}-${option}`}
-              label={option}
-              checked={selectedOptions.has(option)}
-              onCheckedChange={(checked) => onOptionChange(option, checked)}
+              key={option.name}
+              id={`${title}-${option.name}`}
+              label={option.name}
+              checked={selectedOptions.has(option.name)}
+              onCheckedChange={(checked) => onOptionChange(option.name, checked)}
+              disabled={option.disabled}
+              count={option.count}
             />
           ))
         ) : (

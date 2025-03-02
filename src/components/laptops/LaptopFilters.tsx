@@ -1,10 +1,11 @@
-
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion } from "@/components/ui/accordion";
 import { FilterSection } from "./filters/FilterSection";
 import { PriceRangeFilter } from "./filters/PriceRangeFilter";
 import { Filter, SlidersHorizontal, X } from "lucide-react";
+import type { Product } from "@/types/product";
+import { filterLaptops } from "@/utils/laptop/filter/filterLaptops";
 
 export type FilterOptions = {
   priceRange: { min: number; max: number };
@@ -16,6 +17,8 @@ export type FilterOptions = {
   brands: Set<string>;
 };
 
+type OptionCounts = Record<string, number>;
+
 type LaptopFiltersProps = {
   filters: FilterOptions;
   onFiltersChange: (filters: FilterOptions) => void;
@@ -25,6 +28,7 @@ type LaptopFiltersProps = {
   graphicsCards: Set<string>;
   screenSizes: Set<string>;
   brands: Set<string>;
+  allLaptops: Product[];
 };
 
 export function LaptopFilters({
@@ -36,7 +40,101 @@ export function LaptopFilters({
   graphicsCards,
   screenSizes,
   brands,
+  allLaptops,
 }: LaptopFiltersProps) {
+  // Calculate option counts based on current filters
+  const {
+    processorCounts,
+    ramCounts,
+    storageCounts,
+    graphicsCounts,
+    screenSizeCounts,
+    brandCounts
+  } = useMemo(() => {
+    // Initialize counts with all options set to 0
+    const initCounts = (options: Set<string>): OptionCounts => {
+      const counts: OptionCounts = {};
+      options.forEach(option => {
+        counts[option] = 0;
+      });
+      return counts;
+    };
+
+    const processorCounts = initCounts(processors);
+    const ramCounts = initCounts(ramSizes);
+    const storageCounts = initCounts(storageOptions);
+    const graphicsCounts = initCounts(graphicsCards);
+    const screenSizeCounts = initCounts(screenSizes);
+    const brandCounts = initCounts(brands);
+
+    // For each option, create a filter set where we test that option
+    // with all other current filters
+    Object.keys(processorCounts).forEach(processor => {
+      const testFilter = { ...filters };
+      // If this processor is already selected, we use the current selection
+      // otherwise we temporarily add it to see if it would yield results
+      if (!filters.processors.has(processor)) {
+        testFilter.processors = new Set([...filters.processors, processor]);
+      }
+      const filtered = filterLaptops(allLaptops, testFilter);
+      processorCounts[processor] = filtered.length;
+    });
+
+    Object.keys(ramCounts).forEach(ram => {
+      const testFilter = { ...filters };
+      if (!filters.ramSizes.has(ram)) {
+        testFilter.ramSizes = new Set([...filters.ramSizes, ram]);
+      }
+      const filtered = filterLaptops(allLaptops, testFilter);
+      ramCounts[ram] = filtered.length;
+    });
+
+    Object.keys(storageCounts).forEach(storage => {
+      const testFilter = { ...filters };
+      if (!filters.storageOptions.has(storage)) {
+        testFilter.storageOptions = new Set([...filters.storageOptions, storage]);
+      }
+      const filtered = filterLaptops(allLaptops, testFilter);
+      storageCounts[storage] = filtered.length;
+    });
+
+    Object.keys(graphicsCounts).forEach(graphics => {
+      const testFilter = { ...filters };
+      if (!filters.graphicsCards.has(graphics)) {
+        testFilter.graphicsCards = new Set([...filters.graphicsCards, graphics]);
+      }
+      const filtered = filterLaptops(allLaptops, testFilter);
+      graphicsCounts[graphics] = filtered.length;
+    });
+
+    Object.keys(screenSizeCounts).forEach(screenSize => {
+      const testFilter = { ...filters };
+      if (!filters.screenSizes.has(screenSize)) {
+        testFilter.screenSizes = new Set([...filters.screenSizes, screenSize]);
+      }
+      const filtered = filterLaptops(allLaptops, testFilter);
+      screenSizeCounts[screenSize] = filtered.length;
+    });
+
+    Object.keys(brandCounts).forEach(brand => {
+      const testFilter = { ...filters };
+      if (!filters.brands.has(brand)) {
+        testFilter.brands = new Set([...filters.brands, brand]);
+      }
+      const filtered = filterLaptops(allLaptops, testFilter);
+      brandCounts[brand] = filtered.length;
+    });
+
+    return {
+      processorCounts,
+      ramCounts,
+      storageCounts,
+      graphicsCounts,
+      screenSizeCounts,
+      brandCounts
+    };
+  }, [filters, allLaptops, processors, ramSizes, storageOptions, graphicsCards, screenSizes, brands]);
+
   // Handle price range changes
   const handlePriceChange = useCallback((min: number, max: number) => {
     onFiltersChange({
@@ -143,7 +241,7 @@ export function LaptopFilters({
           <Accordion type="multiple" defaultValue={defaultValues} className="w-full bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
             <FilterSection
               title="Brand"
-              options={brands}
+              options={brandCounts}
               selectedOptions={filters.brands}
               onChange={(newBrands) => handleFilterChange('brands', newBrands)}
               defaultExpanded={hasActiveBrandFilters || defaultValues.includes("Brand")}
@@ -151,7 +249,7 @@ export function LaptopFilters({
             />
             <FilterSection
               title="Processor"
-              options={processors}
+              options={processorCounts}
               selectedOptions={filters.processors}
               onChange={(newProcessors) => handleFilterChange('processors', newProcessors)}
               defaultExpanded={hasActiveProcessorFilters}
@@ -159,7 +257,7 @@ export function LaptopFilters({
             />
             <FilterSection
               title="RAM"
-              options={ramSizes}
+              options={ramCounts}
               selectedOptions={filters.ramSizes}
               onChange={(newRamSizes) => handleFilterChange('ramSizes', newRamSizes)}
               defaultExpanded={hasActiveRamFilters}
@@ -167,7 +265,7 @@ export function LaptopFilters({
             />
             <FilterSection
               title="Storage"
-              options={storageOptions}
+              options={storageCounts}
               selectedOptions={filters.storageOptions}
               onChange={(newStorageOptions) => handleFilterChange('storageOptions', newStorageOptions)}
               defaultExpanded={hasActiveStorageFilters}
@@ -175,7 +273,7 @@ export function LaptopFilters({
             />
             <FilterSection
               title="Graphics"
-              options={graphicsCards}
+              options={graphicsCounts}
               selectedOptions={filters.graphicsCards}
               onChange={(newGraphicsCards) => handleFilterChange('graphicsCards', newGraphicsCards)}
               defaultExpanded={hasActiveGraphicsFilters}
@@ -183,7 +281,7 @@ export function LaptopFilters({
             />
             <FilterSection
               title="Screen Size"
-              options={screenSizes}
+              options={screenSizeCounts}
               selectedOptions={filters.screenSizes}
               onChange={(newScreenSizes) => handleFilterChange('screenSizes', newScreenSizes)}
               defaultExpanded={hasActiveScreenSizeFilters}

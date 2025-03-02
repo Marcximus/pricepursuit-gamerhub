@@ -1,5 +1,5 @@
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "./components/SearchInput";
@@ -8,9 +8,15 @@ import { FilterOptionsList } from "./components/FilterOptionsList";
 import { FilterIcon } from "./components/FilterIcon";
 import { sortProcessorOptions } from "./utils/processorSort";
 
+type FilterOption = {
+  name: string;
+  count: number;
+  disabled: boolean;
+};
+
 type FilterSectionProps = {
   title: string;
-  options: Set<string>;
+  options: Record<string, number>; // option name -> count mapping
   selectedOptions: Set<string>;
   onChange: (options: Set<string>) => void;
   defaultExpanded?: boolean;
@@ -26,20 +32,43 @@ export function FilterSection({
   icon = "box"
 }: FilterSectionProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const optionsArray = Array.from(options);
   const hasSelections = selectedOptions.size > 0;
 
+  // Convert options record to array
+  const optionsArray = useMemo(() => {
+    return Object.entries(options).map(([name, count]) => ({
+      name,
+      count,
+      // No options are disabled if nothing is selected
+      disabled: hasSelections ? count === 0 : false
+    }));
+  }, [options, hasSelections]);
+
   // Filter options based on search query
-  const filteredOptions = optionsArray.filter(option => 
-    option.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredOptions = useMemo(() => {
+    return optionsArray.filter(option => 
+      option.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [optionsArray, searchQuery]);
 
   // Sort options based on filter type
-  const sortedOptions = title === "Processors" 
-    ? sortProcessorOptions(filteredOptions)
-    : title === "Brands" 
-      ? filteredOptions.sort((a, b) => a.localeCompare(b)) // Sort brands alphabetically
-      : filteredOptions;
+  const sortedOptions = useMemo(() => {
+    if (title === "Processor") {
+      return sortProcessorOptions(filteredOptions);
+    } else if (title === "Brand") {
+      return filteredOptions.sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+      // Sort by enabled status first, then by name
+      return filteredOptions.sort((a, b) => {
+        // Place enabled options before disabled ones
+        if (a.disabled !== b.disabled) {
+          return a.disabled ? 1 : -1;
+        }
+        // If both are enabled or both disabled, sort by name
+        return a.name.localeCompare(b.name);
+      });
+    }
+  }, [filteredOptions, title]);
 
   const handleCheckboxChange = useCallback((option: string, checked: boolean) => {
     const newSelected = new Set(selectedOptions);
@@ -73,7 +102,7 @@ export function FilterSection({
         </div>
       </AccordionTrigger>
       <AccordionContent className="pt-3 pb-4 px-3">
-        {options.size > 8 && (
+        {optionsArray.length > 8 && (
           <SearchInput
             placeholder={`Search ${title.toLowerCase()}...`}
             value={searchQuery}
