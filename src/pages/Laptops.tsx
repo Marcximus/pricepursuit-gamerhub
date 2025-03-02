@@ -8,6 +8,7 @@ import { LaptopList } from "@/components/laptops/LaptopList";
 import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ComparePriceLaptops = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,6 +23,9 @@ const ComparePriceLaptops = () => {
     brands: new Set<string>(),
   });
 
+  // Get query client for prefetching
+  const queryClient = useQueryClient();
+
   // Add debugging useEffect to track filter changes
   useEffect(() => {
     console.log('Filter state updated:', {
@@ -35,6 +39,29 @@ const ComparePriceLaptops = () => {
     });
   }, [filters]);
 
+  // Determine if we have active filters
+  const hasActiveFilters = 
+    filters.processors.size > 0 ||
+    filters.ramSizes.size > 0 ||
+    filters.storageOptions.size > 0 ||
+    filters.graphicsCards.size > 0 ||
+    filters.screenSizes.size > 0 ||
+    filters.brands.size > 0 ||
+    filters.priceRange.min !== 0 ||
+    filters.priceRange.max !== 10000;
+
+  // Prefetch next page when not filtering
+  useEffect(() => {
+    if (!hasActiveFilters && currentPage < 100) { // Don't prefetch beyond reasonable limits
+      queryClient.prefetchQuery({
+        queryKey: ['paginated-laptops', currentPage + 1, sortBy],
+        queryFn: () => import('@/services/laptopService').then(module => 
+          module.fetchPaginatedLaptops(currentPage + 1, 50, sortBy)
+        )
+      });
+    }
+  }, [currentPage, sortBy, hasActiveFilters, queryClient]);
+
   const { 
     data, 
     isLoading: isLaptopsLoading, 
@@ -47,7 +74,8 @@ const ComparePriceLaptops = () => {
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
-  const filterOptions = useLaptopFilters(data?.allLaptops);
+  // Use laptop filters from data or empty fallback
+  const filterOptions = useLaptopFilters(data?.allLaptops || []);
 
   const handleSortChange = (newSortBy: SortOption) => {
     setSortBy(newSortBy);
@@ -56,6 +84,7 @@ const ComparePriceLaptops = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleFiltersChange = (newFilters: FilterOptions) => {

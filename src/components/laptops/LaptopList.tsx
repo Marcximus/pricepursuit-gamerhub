@@ -3,6 +3,7 @@ import { ReloadIcon, ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-i
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LaptopCard } from "@/components/laptops/LaptopCard";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Product } from "@/types/product";
 
 type LaptopListProps = {
@@ -38,9 +39,32 @@ export function LaptopList({
 
   if (isLoading) {
     return (
-      <div className="text-center py-12">
-        <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
-        <p className="mt-2 text-gray-600">Loading laptops...</p>
+      <div className="space-y-4">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Card key={index} className="overflow-hidden">
+            <div className="flex flex-col md:flex-row gap-4 p-4">
+              <Skeleton className="h-40 w-48 rounded-md" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <div className="py-2">
+                  <Skeleton className="h-5 w-28 mb-2" />
+                  <Skeleton className="h-4 w-full max-w-md" />
+                  <Skeleton className="h-4 w-full max-w-md mt-1" />
+                </div>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-8 w-16" />
+                </div>
+              </div>
+              <div className="md:w-48 flex flex-col justify-between">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-8 w-full mt-2" />
+              </div>
+            </div>
+          </Card>
+        ))}
       </div>
     );
   }
@@ -113,7 +137,7 @@ export function LaptopList({
             variant="outline"
             size="sm"
             onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage <= 1 || isLoading}
+            disabled={currentPage <= 1 || isLoading || isRefetching}
           >
             <ChevronLeftIcon className="h-4 w-4" />
           </Button>
@@ -124,7 +148,7 @@ export function LaptopList({
             variant="outline"
             size="sm"
             onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages || isLoading}
+            disabled={currentPage >= totalPages || isLoading || isRefetching}
           >
             <ChevronRightIcon className="h-4 w-4" />
           </Button>
