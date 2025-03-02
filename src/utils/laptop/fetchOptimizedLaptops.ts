@@ -54,7 +54,7 @@ export async function fetchOptimizedLaptops(filters: LaptopFilterParams = {}): P
   try {
     const { data, error } = await supabase.functions.invoke('fetch-laptops', {
       method: 'GET',
-      queryParams: params
+      query: Object.fromEntries(params)
     });
 
     if (error) {
