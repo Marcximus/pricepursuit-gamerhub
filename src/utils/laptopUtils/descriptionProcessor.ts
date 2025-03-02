@@ -2,8 +2,9 @@
 /**
  * Functions for processing laptop descriptions
  */
+import { LaptopSpecs } from './types';
 
-interface EnhancedSpecs {
+export interface EnhancedSpecs {
   processor?: string | null;
   processor_score?: number | null;
   ram?: string | null;
