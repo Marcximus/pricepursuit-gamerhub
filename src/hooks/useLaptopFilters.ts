@@ -1,68 +1,62 @@
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import type { Product } from "@/types/product";
 import { getUniqueFilterValues, getGroupedBrandValues } from "./laptop-filters";
 
+// Global cache for filter options by laptop count
+const filterOptionsCache = new Map<number, any>();
+
 /**
  * Hook for generating laptop filter options based on available laptop data
+ * With improved performance and caching
  */
 export const useLaptopFilters = (laptops: Product[] | undefined) => {
+  // Unique key based on laptop count to use for caching
+  const cacheKey = laptops?.length || 0;
+  
+  // Memoized callback for generating filter options
+  const generateFilterOptions = useCallback((laptopsData: Product[]) => {
+    console.log('Generating filter options for', laptopsData.length, 'laptops');
+    
+    // Get storage options with optimized performance
+    const storageOptions = getUniqueFilterValues(laptopsData, 'storage');
+    
+    return {
+      // Use grouped brands instead of all individual brands for better performance
+      brands: getGroupedBrandValues(laptopsData, 15),
+      processors: getUniqueFilterValues(laptopsData, 'processor'),
+      ramSizes: getUniqueFilterValues(laptopsData, 'ram'),
+      storageOptions,
+      graphicsCards: getUniqueFilterValues(laptopsData, 'graphics'),
+      screenSizes: getUniqueFilterValues(laptopsData, 'screen_size'),
+    };
+  }, []);
+  
   return useMemo(() => {
+    // Return empty sets if no data
     if (!laptops || laptops.length === 0) {
       console.log('No laptops available for generating filter options');
       return {
-        brands: new Set<string>(),        // First - most important
-        processors: new Set<string>(),    // Second - key spec
-        ramSizes: new Set<string>(),      // Third - key spec
-        storageOptions: new Set<string>(), // Fourth - key spec
-        graphicsCards: new Set<string>(),  // Fifth - key spec
-        screenSizes: new Set<string>(),    // Last - less critical
+        brands: new Set<string>(),
+        processors: new Set<string>(),
+        ramSizes: new Set<string>(),
+        storageOptions: new Set<string>(),
+        graphicsCards: new Set<string>(),
+        screenSizes: new Set<string>(),
       };
     }
-
-    // Log sample laptops to check storage values
-    console.log('Sample laptop storage values:', 
-      laptops.slice(0, 10)
-        .map(laptop => ({ 
-          id: laptop.id, 
-          storage: laptop.storage,
-          price: laptop.current_price
-        }))
-    );
-
-    // Get storage options and log them to debug the issue
-    const storageOptions = getUniqueFilterValues(laptops, 'storage');
-    console.log('Generated storage options:', Array.from(storageOptions));
-
-    // Count laptops with storage between 100-199 GB
-    const laptopsWith100To199GB = laptops.filter(laptop => {
-      if (!laptop.storage) return false;
-      const storageMatch = laptop.storage.match(/(\d+)\s*(GB|TB|gb|tb)/i);
-      if (!storageMatch) return false;
-      
-      const value = parseInt(storageMatch[1], 10);
-      const unit = storageMatch[2].toLowerCase();
-      const gbValue = unit === 'tb' ? value * 1024 : value;
-      
-      return gbValue >= 100 && gbValue < 200;
-    });
     
-    console.log(`Found ${laptopsWith100To199GB.length} laptops with storage between 100-199 GB`);
-    if (laptopsWith100To199GB.length > 0) {
-      console.log('Sample of 100-199 GB laptops:', 
-        laptopsWith100To199GB.slice(0, 5)
-          .map(laptop => ({ id: laptop.id, storage: laptop.storage }))
-      );
+    // Check if we have cached this result
+    if (filterOptionsCache.has(cacheKey)) {
+      return filterOptionsCache.get(cacheKey);
     }
-
-    return {
-      // Use grouped brands instead of all individual brands
-      brands: getGroupedBrandValues(laptops, 15),  // Group brands with fewer than 15 laptops
-      processors: getUniqueFilterValues(laptops, 'processor'),
-      ramSizes: getUniqueFilterValues(laptops, 'ram'),
-      storageOptions: storageOptions,
-      graphicsCards: getUniqueFilterValues(laptops, 'graphics'),
-      screenSizes: getUniqueFilterValues(laptops, 'screen_size'),
-    };
-  }, [laptops]);
+    
+    // Generate new options
+    const options = generateFilterOptions(laptops);
+    
+    // Cache the result for future use
+    filterOptionsCache.set(cacheKey, options);
+    
+    return options;
+  }, [laptops, cacheKey, generateFilterOptions]);
 };
