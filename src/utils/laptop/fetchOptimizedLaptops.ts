@@ -70,7 +70,9 @@ export async function fetchOptimizedLaptops({
     // This ensures proper authentication and error handling
     const { data, error } = await supabase.functions.invoke('fetch-laptops', {
       method: 'GET',
-      query: params,
+      // The 'query' property is causing the TypeScript error
+      // Replace it with the correct property 'queryParams'
+      queryParams: Object.fromEntries(params),
       headers: {
         'Content-Type': 'application/json'
       }
