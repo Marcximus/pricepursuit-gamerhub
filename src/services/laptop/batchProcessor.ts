@@ -1,14 +1,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { logFetchProgress, getLaptopColumns } from "./utils";
+import type { Product } from "@/types/product";
 
 export const BATCH_SIZE = 1000;
 
 /**
  * Processes laptops in batches with pagination
  */
-export async function fetchLaptopsInBatches(minimalForFilters = false) {
-  let allLaptops: any[] = [];
+export async function fetchLaptopsInBatches(minimalForFilters = false): Promise<Product[]> {
+  let allLaptops: Product[] = [];
   let lastId: string | null = null;
   let hasMore = true;
 
@@ -38,16 +39,18 @@ export async function fetchLaptopsInBatches(minimalForFilters = false) {
       break;
     }
 
-    allLaptops = [...allLaptops, ...laptops];
+    // Ensure we're working with a valid Product array
+    const typedLaptops = laptops as Product[];
+    allLaptops = [...allLaptops, ...typedLaptops];
     
     // Get last ID for pagination
-    lastId = getLastIdFromBatch(laptops);
+    lastId = getLastIdFromBatch(typedLaptops);
     
     if (laptops.length < BATCH_SIZE) {
       hasMore = false;
     }
 
-    logFetchProgress(`Fetched batch of ${laptops.length} laptops, total so far: ${allLaptops.length}`);
+    logFetchProgress(`Fetched batch of ${typedLaptops.length} laptops, total so far: ${allLaptops.length}`);
   }
 
   logFetchProgress(`Completed fetching ${minimalForFilters ? 'minimal' : 'all'} laptops. Total count: ${allLaptops.length}`);
@@ -57,7 +60,7 @@ export async function fetchLaptopsInBatches(minimalForFilters = false) {
 /**
  * Extracts the last ID from a batch of laptops for pagination
  */
-function getLastIdFromBatch(laptops: any[]): string | null {
+function getLastIdFromBatch(laptops: Product[]): string | null {
   if (!laptops || laptops.length === 0) {
     return null;
   }
@@ -71,13 +74,8 @@ function getLastIdFromBatch(laptops: any[]): string | null {
     return null;
   }
   
-  // Then verify it's an object with a valid ID property
-  if (typeof potentialLastLaptop !== 'object' || potentialLastLaptop === null) {
-    console.warn('Last laptop is not a valid object, stopping pagination');
-    return null;
-  }
-  
-  if (!('id' in potentialLastLaptop) || !potentialLastLaptop.id) {
+  // Verify it has a valid ID property
+  if (!potentialLastLaptop.id) {
     console.warn('No valid ID found in the last laptop of the batch, stopping pagination');
     return null;
   }

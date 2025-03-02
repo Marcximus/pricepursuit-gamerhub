@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { getLaptopColumns } from "./utils";
+import type { Product } from "@/types/product";
 
 /**
  * Fetches laptops with pagination directly from the database
@@ -39,7 +40,7 @@ export async function fetchPaginatedLaptops(page = 1, pageSize = 50, sortBy = 'r
   }
   
   // Fetch the laptops for current page
-  const { data: laptops, error } = await supabase
+  const { data: laptopData, error } = await supabase
     .from('products')
     .select(getLaptopColumns())
     .eq('is_laptop', true)
@@ -53,11 +54,14 @@ export async function fetchPaginatedLaptops(page = 1, pageSize = 50, sortBy = 'r
   
   console.timeEnd('fetchPaginatedLaptops');
   
+  // Ensure we have an array of laptops, even if the query returned null
+  const laptops: Product[] = laptopData || [];
+  
   // Calculate the total pages
   const totalPages = Math.ceil((count || 0) / pageSize);
   
   return {
-    laptops: laptops || [],
+    laptops,
     totalCount: count || 0,
     currentPage: page,
     totalPages: totalPages
