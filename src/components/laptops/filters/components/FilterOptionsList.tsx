@@ -22,11 +22,14 @@ export function FilterOptionsList({
   selectedOptions, 
   onOptionChange 
 }: FilterOptionsListProps) {
+  // Ensure options is always an array
+  const safeOptions = Array.isArray(options) ? options : [];
+  
   return (
-    <ScrollArea className={`${options.length > 8 ? 'h-[240px]' : ''} rounded-md`}>
+    <ScrollArea className={`${safeOptions.length > 8 ? 'h-[240px]' : ''} rounded-md`}>
       <div className="space-y-1">
-        {options.length > 0 ? (
-          options.map((option) => (
+        {safeOptions.length > 0 ? (
+          safeOptions.map((option) => (
             <CheckboxItem
               key={option.name}
               id={`${title}-${option.name}`}

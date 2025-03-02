@@ -1,3 +1,4 @@
+
 import type { Product } from "@/types/product";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import { 
@@ -18,7 +19,7 @@ import { extractProcessorFromTitle } from "./extractors/processor/processorExtra
  */
 export const filterLaptops = (laptops: Product[], filters: FilterOptions): Product[] => {
   console.log('Starting filtering with:', {
-    totalLaptops: laptops.length,
+    totalLaptops: laptops?.length || 0,
     activeFilters: {
       priceRange: filters.priceRange,
       processors: filters.processors.size,
@@ -29,6 +30,12 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
       brands: filters.brands.size
     }
   });
+
+  // Safeguard against undefined laptops
+  if (!laptops || !Array.isArray(laptops)) {
+    console.warn('No laptops array provided to filterLaptops or invalid format');
+    return [];
+  }
 
   // Skip filtering if no filters are applied
   if (!hasActiveFilters(filters)) {
