@@ -7,7 +7,13 @@ import type { Product } from "@/types/product";
  * If minimalForFilters is true, fetches only the data needed for filters
  */
 export async function fetchAllLaptops(minimalForFilters = false): Promise<Product[]> {
-  return fetchLaptopsInBatches(minimalForFilters);
+  try {
+    return await fetchLaptopsInBatches(minimalForFilters);
+  } catch (error) {
+    console.error('Error in fetchAllLaptops:', error);
+    // Return empty array in case of error to prevent app crashes
+    return [];
+  }
 }
 
 /**

@@ -15,42 +15,54 @@ export async function fetchLaptopsInBatches(minimalForFilters = false): Promise<
 
   logFetchProgress(`Starting to fetch ${minimalForFilters ? 'minimal' : 'all'} laptops in batches...`);
 
-  while (hasMore) {
-    let query = supabase
-      .from('products')
-      .select(getLaptopColumns(minimalForFilters))
-      .eq('is_laptop', true)
-      .order('id', { ascending: true })
-      .limit(BATCH_SIZE);
+  try {
+    while (hasMore) {
+      let query = supabase
+        .from('products')
+        .select(getLaptopColumns(minimalForFilters))
+        .eq('is_laptop', true)
+        .order('id', { ascending: true })
+        .limit(BATCH_SIZE);
 
-    if (lastId) {
-      query = query.gt('id', lastId);
+      if (lastId) {
+        query = query.gt('id', lastId);
+      }
+
+      const { data: laptops, error } = await query;
+
+      if (error) {
+        console.error('Error fetching laptops batch:', error);
+        throw error;
+      }
+
+      if (!laptops || laptops.length === 0) {
+        hasMore = false;
+        break;
+      }
+
+      // Validate laptops before adding them to the result array
+      if (Array.isArray(laptops)) {
+        // Ensure we're working with a valid Product array
+        const typedLaptops = laptops as Product[];
+        allLaptops = [...allLaptops, ...typedLaptops];
+        
+        // Get last ID for pagination
+        lastId = getLastIdFromBatch(typedLaptops);
+        
+        if (laptops.length < BATCH_SIZE) {
+          hasMore = false;
+        }
+
+        logFetchProgress(`Fetched batch of ${typedLaptops.length} laptops, total so far: ${allLaptops.length}`);
+      } else {
+        console.error('Invalid laptops data returned from database:', laptops);
+        hasMore = false;
+      }
     }
-
-    const { data: laptops, error } = await query;
-
-    if (error) {
-      console.error('Error fetching laptops batch:', error);
-      throw error;
-    }
-
-    if (!laptops || laptops.length === 0) {
-      hasMore = false;
-      break;
-    }
-
-    // Ensure we're working with a valid Product array
-    const typedLaptops = laptops as Product[];
-    allLaptops = [...allLaptops, ...typedLaptops];
-    
-    // Get last ID for pagination
-    lastId = getLastIdFromBatch(typedLaptops);
-    
-    if (laptops.length < BATCH_SIZE) {
-      hasMore = false;
-    }
-
-    logFetchProgress(`Fetched batch of ${typedLaptops.length} laptops, total so far: ${allLaptops.length}`);
+  } catch (err) {
+    console.error('Error in fetchLaptopsInBatches:', err);
+    // Return the laptops we managed to get before the error
+    logFetchProgress(`Error occurred after fetching ${allLaptops.length} laptops. Returning partial data.`);
   }
 
   logFetchProgress(`Completed fetching ${minimalForFilters ? 'minimal' : 'all'} laptops. Total count: ${allLaptops.length}`);

@@ -11,6 +11,30 @@ import { normalizeBrand } from '@/utils/laptop/normalizers/brandNormalizer';
 import { normalizeModel } from '@/utils/laptop/normalizers/modelNormalizer';
 import type { Product } from "@/types/product";
 
+// Define a type for the specs object to ensure it has all required properties
+interface LaptopSpecs {
+  processor: string | null;
+  processor_score: number | null;
+  ram: string | null;
+  storage: string | null;
+  screen_size: string | null;
+  screen_resolution: string | null;
+  graphics: string | null;
+  weight: string | null;
+  battery_life: string | null;
+  camera: string | null;
+  color: string | null;
+  touchscreen: boolean | null;
+  backlit_keyboard: boolean | null;
+  fingerprint: boolean | null;
+  ports: string | null;
+  refresh_rate: string | null;
+  operating_system: string | null;
+  warranty: string | null;
+  office_included: boolean | null;
+  benchmark_score: number | null;
+}
+
 /**
  * Process and create the laptop product object with improved specification extraction
  */
@@ -78,8 +102,8 @@ export const processLaptopData = (laptop: any): Product => {
   // Extract primary specifications from title and any existing stored data
   const processedTitle = processTitle(laptop.title || '');
   
-  // Create initial specs object with basic information
-  let specs = {
+  // Create initial specs object with all required properties initialized
+  const specs: LaptopSpecs = {
     processor: processProcessor(laptop.processor, processedTitle, laptop.description),
     processor_score: laptop.processor_score || null,
     ram: processRam(laptop.ram, processedTitle, laptop.description),
@@ -99,12 +123,14 @@ export const processLaptopData = (laptop: any): Product => {
     operating_system: processOperatingSystem(processedTitle, laptop.description),
     warranty: processWarranty(processedTitle, laptop.description),
     office_included: processOfficeIncluded(processedTitle, laptop.description),
-    benchmark_score: null // Adding benchmark_score property
+    benchmark_score: null
   };
   
   // Enhance with additional specs from description if available
   if (laptop.description) {
-    specs = processLaptopDescription(laptop.description, processedTitle, specs);
+    const enhancedSpecs = processLaptopDescription(laptop.description, processedTitle, specs);
+    // Type assertion to ensure enhancedSpecs matches the LaptopSpecs interface
+    Object.assign(specs, enhancedSpecs);
   }
   
   // Calculate a benchmark score if not already provided

@@ -28,42 +28,53 @@ export async function fetchPaginatedLaptops(page = 1, pageSize = 50, sortBy = 'r
   // Calculate offset
   const offset = (page - 1) * pageSize;
   
-  // Fetch count first for pagination
-  const { count, error: countError } = await supabase
-    .from('products')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_laptop', true);
-  
-  if (countError) {
-    console.error('Error fetching laptop count:', countError);
-    throw countError;
-  }
-  
-  // Fetch the laptops for current page
-  const { data: laptopData, error } = await supabase
-    .from('products')
-    .select(getLaptopColumns())
-    .eq('is_laptop', true)
-    .order(sortColumn, { ascending: sortDirection === 'asc' })
-    .range(offset, offset + pageSize - 1);
+  try {
+    // Fetch count first for pagination
+    const { count, error: countError } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_laptop', true);
     
-  if (error) {
-    console.error('Error fetching paginated laptops:', error);
-    throw error;
+    if (countError) {
+      console.error('Error fetching laptop count:', countError);
+      throw countError;
+    }
+    
+    // Fetch the laptops for current page
+    const { data: laptopData, error } = await supabase
+      .from('products')
+      .select(getLaptopColumns())
+      .eq('is_laptop', true)
+      .order(sortColumn, { ascending: sortDirection === 'asc' })
+      .range(offset, offset + pageSize - 1);
+      
+    if (error) {
+      console.error('Error fetching paginated laptops:', error);
+      throw error;
+    }
+    
+    console.timeEnd('fetchPaginatedLaptops');
+    
+    // Ensure we have an array of laptops and properly type it
+    const laptops: Product[] = Array.isArray(laptopData) ? (laptopData as Product[]) : [];
+    
+    // Calculate the total pages
+    const totalPages = Math.ceil((count || 0) / pageSize);
+    
+    return {
+      laptops,
+      totalCount: count || 0,
+      currentPage: page,
+      totalPages: totalPages
+    };
+  } catch (err) {
+    console.error('Error in fetchPaginatedLaptops:', err);
+    // Return empty results in case of error
+    return {
+      laptops: [] as Product[],
+      totalCount: 0,
+      currentPage: page,
+      totalPages: 0
+    };
   }
-  
-  console.timeEnd('fetchPaginatedLaptops');
-  
-  // Ensure we have an array of laptops, even if the query returned null
-  const laptops: Product[] = laptopData || [];
-  
-  // Calculate the total pages
-  const totalPages = Math.ceil((count || 0) / pageSize);
-  
-  return {
-    laptops,
-    totalCount: count || 0,
-    currentPage: page,
-    totalPages: totalPages
-  };
 }
