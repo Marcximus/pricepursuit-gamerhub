@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { memo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CheckboxItem } from "./CheckboxItem";
 
@@ -11,7 +11,8 @@ type FilterOptionsListProps = {
   showClearButtons?: boolean;
 };
 
-export function FilterOptionsList({ 
+// Memoize the entire component to prevent unnecessary re-renders
+export const FilterOptionsList = memo(function FilterOptionsList({ 
   title, 
   options, 
   selectedOptions, 
@@ -41,4 +42,4 @@ export function FilterOptionsList({
       </ScrollArea>
     </div>
   );
-}
+});

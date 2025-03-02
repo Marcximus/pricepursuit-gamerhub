@@ -1,5 +1,5 @@
 
-import React, { useCallback } from "react";
+import React, { useCallback, memo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 type CheckboxItemProps = {
@@ -9,7 +9,13 @@ type CheckboxItemProps = {
   onCheckedChange: (checked: boolean) => void;
 };
 
-export function CheckboxItem({ id, label, checked, onCheckedChange }: CheckboxItemProps) {
+// Memoize the checkbox item to prevent unnecessary re-renders
+export const CheckboxItem = memo(function CheckboxItem({ 
+  id, 
+  label, 
+  checked, 
+  onCheckedChange 
+}: CheckboxItemProps) {
   const handleCheckedChange = useCallback((checked: boolean | "indeterminate") => {
     onCheckedChange(checked === true);
   }, [onCheckedChange]);
@@ -30,4 +36,4 @@ export function CheckboxItem({ id, label, checked, onCheckedChange }: CheckboxIt
       </label>
     </div>
   );
-}
+});

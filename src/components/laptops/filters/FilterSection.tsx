@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+
+import { useCallback, useState, useMemo } from "react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "./components/SearchInput";
@@ -24,29 +25,35 @@ export function FilterSection({
   icon = "box"
 }: FilterSectionProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const optionsArray = Array.from(options);
+  const optionsArray = useMemo(() => Array.from(options), [options]);
   const hasSelections = selectedOptions.size > 0;
 
-  // Filter options based on search query
-  const filteredOptions = optionsArray.filter(option => 
-    option.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Memoize filtered options to prevent recalculation on every render
+  const filteredOptions = useMemo(() => {
+    // Early return if no search query
+    if (!searchQuery) return optionsArray;
+    
+    const lowerQuery = searchQuery.toLowerCase();
+    return optionsArray.filter(option => 
+      option.toLowerCase().includes(lowerQuery)
+    );
+  }, [optionsArray, searchQuery]);
 
-  // Sort options based on filter type
-  const sortedOptions = title === "Processors" 
-    ? sortProcessorOptions(filteredOptions)
-    : title === "Brands" 
-      ? filteredOptions.sort((a, b) => a.localeCompare(b)) // Sort brands alphabetically
-      : filteredOptions;
+  // Memoize sorted options to prevent recalculation on every render
+  const sortedOptions = useMemo(() => {
+    if (title === "Processors") {
+      return sortProcessorOptions(filteredOptions);
+    } else if (title === "Brands") {
+      return [...filteredOptions].sort((a, b) => a.localeCompare(b));
+    }
+    return filteredOptions;
+  }, [filteredOptions, title]);
 
   const handleCheckboxChange = useCallback((option: string, checked: boolean) => {
-    const newSelected = new Set(selectedOptions);
-    if (checked) {
-      newSelected.add(option);
-    } else {
-      newSelected.delete(option);
-    }
-    onChange(newSelected);
+    onChange(new Set(checked 
+      ? [...selectedOptions, option] 
+      : [...selectedOptions].filter(item => item !== option)
+    ));
   }, [selectedOptions, onChange]);
 
   const handleClearFilter = useCallback(() => {
