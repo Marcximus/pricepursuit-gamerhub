@@ -24,6 +24,9 @@ export const applyBrandFilter = (
   const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title);
   const hasOtherBrandsFilter = filters.brands.has('Other');
   
+  // Debug logging to troubleshoot filtering
+  console.log(`Filtering by brand: ${normalizedBrand}, selected brands:`, Array.from(filters.brands));
+  
   // Special handling for "Other" category
   if (hasOtherBrandsFilter) {
     // Check if the laptop brand is a major brand (in the mainBrandsSet)
@@ -49,8 +52,10 @@ export const applyBrandFilter = (
     return false;
   } else {
     // Standard brand filtering without "Other" category
-    return Array.from(filters.brands).some(selectedBrand => 
+    const matches = Array.from(filters.brands).some(selectedBrand => 
       matchesFilter(selectedBrand, normalizedBrand, 'brand', laptop.title)
     );
+    console.log(`Brand match result for ${normalizedBrand}: ${matches}`);
+    return matches;
   }
 };

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
 import { LaptopFilters, type FilterOptions } from "@/components/laptops/LaptopFilters";
@@ -39,22 +39,30 @@ const ComparePriceLaptops = () => {
     brands: new Set<string>(),
   });
   
+  // Add a ref to track if component is mounted
+  const isMounted = useRef(true);
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+  
   // Debounce filter changes to reduce performance impact (300ms delay)
   const filters = useDebounce(rawFilters, 300);
 
   // Add debugging useEffect to track filter changes
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('Filter state updated:', {
-        processors: Array.from(filters.processors),
-        ramSizes: Array.from(filters.ramSizes),
-        storageOptions: Array.from(filters.storageOptions),
-        graphicsCards: Array.from(filters.graphicsCards),
-        screenSizes: Array.from(filters.screenSizes),
-        brands: Array.from(filters.brands),
-        priceRange: filters.priceRange,
-      });
-    }
+    console.log('Filter state updated:', {
+      processors: Array.from(filters.processors),
+      ramSizes: Array.from(filters.ramSizes),
+      storageOptions: Array.from(filters.storageOptions),
+      graphicsCards: Array.from(filters.graphicsCards),
+      screenSizes: Array.from(filters.screenSizes),
+      brands: Array.from(filters.brands),
+      priceRange: filters.priceRange,
+    });
   }, [filters]);
 
   const { 
@@ -85,6 +93,15 @@ const ComparePriceLaptops = () => {
   };
 
   const handleFiltersChange = useCallback((newFilters: FilterOptions) => {
+    // Only update if component is still mounted
+    if (!isMounted.current) return;
+    
+    console.log('handleFiltersChange called with:', {
+      brands: Array.from(newFilters.brands),
+      processors: Array.from(newFilters.processors),
+      priceRange: newFilters.priceRange
+    });
+    
     // Create a deep copy of the filter sets to avoid reference issues
     const updatedFilters: FilterOptions = {
       priceRange: { ...newFilters.priceRange },
