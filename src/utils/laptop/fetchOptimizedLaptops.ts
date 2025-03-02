@@ -86,14 +86,12 @@ export async function fetchOptimizedLaptops({
     if (error) {
       console.error('Error invoking function with POST:', error);
       // If POST fails, try GET as a fallback
-      const urlWithParams = `${supabase.functions.url('fetch-laptops')}?${queryString}`;
-      console.log(`Trying GET fallback: ${urlWithParams}`);
-      
-      const response = await fetch(urlWithParams, {
+      const functionEndpoint = 'fetch-laptops';
+      const response = await fetch(`${window.location.origin}/.supabase/functions/v1/${functionEndpoint}?${queryString}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.auth.session()?.access_token || ''}`
+          'Authorization': `Bearer ${supabase.auth.getSession().then(({ data }) => data?.session?.access_token || '')}`
         }
       });
       
