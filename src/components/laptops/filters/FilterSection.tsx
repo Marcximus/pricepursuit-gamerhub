@@ -1,4 +1,3 @@
-
 import { useCallback, useState } from "react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +13,6 @@ type FilterSectionProps = {
   onChange: (options: Set<string>) => void;
   defaultExpanded?: boolean;
   icon?: string;
-  disabledOptions?: Set<string>;
 };
 
 export function FilterSection({ 
@@ -23,8 +21,7 @@ export function FilterSection({
   selectedOptions, 
   onChange,
   defaultExpanded = false,
-  icon = "box",
-  disabledOptions = new Set()
+  icon = "box"
 }: FilterSectionProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const optionsArray = Array.from(options);
@@ -51,6 +48,10 @@ export function FilterSection({
     }
     onChange(newSelected);
   }, [selectedOptions, onChange]);
+
+  const handleClearFilter = useCallback(() => {
+    onChange(new Set());
+  }, [onChange]);
 
   return (
     <AccordionItem value={title} className="border-b border-slate-200">
@@ -83,7 +84,6 @@ export function FilterSection({
           options={sortedOptions}
           selectedOptions={selectedOptions}
           onOptionChange={handleCheckboxChange}
-          disabledOptions={disabledOptions}
         />
       </AccordionContent>
     </AccordionItem>

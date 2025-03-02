@@ -1,5 +1,5 @@
 
-import React, { useCallback, memo } from "react";
+import React, { useCallback } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 type CheckboxItemProps = {
@@ -7,53 +7,27 @@ type CheckboxItemProps = {
   label: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
-  disabled?: boolean;
 };
 
-// Use memo to prevent unnecessary re-renders of checkbox items
-export const CheckboxItem = memo(function CheckboxItem({ 
-  id, 
-  label, 
-  checked, 
-  onCheckedChange, 
-  disabled = false 
-}: CheckboxItemProps) {
+export function CheckboxItem({ id, label, checked, onCheckedChange }: CheckboxItemProps) {
   const handleCheckedChange = useCallback((checked: boolean | "indeterminate") => {
     onCheckedChange(checked === true);
   }, [onCheckedChange]);
 
-  const handleItemClick = useCallback(() => {
-    if (!disabled) {
-      onCheckedChange(!checked);
-    }
-  }, [checked, disabled, onCheckedChange]);
-
   return (
-    <div 
-      className={`flex items-center space-x-2 py-1.5 px-2 rounded transition-colors ${
-        disabled 
-          ? 'opacity-50 cursor-not-allowed' 
-          : 'hover:bg-blue-50 cursor-pointer'
-      }`}
-      onClick={handleItemClick}
-    >
+    <div className="flex items-center space-x-2 py-1.5 px-2 rounded hover:bg-blue-50 transition-colors">
       <Checkbox
         id={id}
         checked={checked}
         onCheckedChange={handleCheckedChange}
-        disabled={disabled}
         className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 border-slate-300"
-        onClick={(e) => e.stopPropagation()}
       />
       <label
         htmlFor={id}
-        className={`text-sm leading-none flex-1 font-medium ${
-          disabled ? 'text-slate-400' : 'text-slate-700'
-        }`}
-        onClick={(e) => e.stopPropagation()}
+        className="text-sm leading-none cursor-pointer flex-1 text-slate-700 font-medium"
       >
         {label}
       </label>
     </div>
   );
-});
+}
