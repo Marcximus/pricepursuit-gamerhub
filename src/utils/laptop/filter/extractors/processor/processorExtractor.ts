@@ -1,3 +1,4 @@
+
 import {
   intelUltraPatterns,
   intelCorePatterns,
@@ -44,6 +45,13 @@ export const extractProcessorFromTitle = (
     } else if (normalizedTitle.includes('m3')) {
       return 'Apple M3 Chip';
     }
+  }
+  
+  // Check for Intel i5-13420H style notation (priority)
+  const intelModelDashMatch = normalizedTitle.match(intelCorePatterns.intelModelDash);
+  if (intelModelDashMatch) {
+    // This will match patterns like "i5-13420H"
+    return `Intel Core i${intelModelDashMatch[1]}-${intelModelDashMatch[2]}`;
   }
   
   // Try to extract Apple Silicon
@@ -158,6 +166,30 @@ export const extractProcessorFromTitle = (
   const snapdragonMatch = normalizedTitle.match(mobileProcessorPatterns.snapdragon);
   if (snapdragonMatch) {
     return `Qualcomm Snapdragon ${snapdragonMatch[1]}`;
+  }
+  
+  // Special handling for "Octa-core" processors
+  if (normalizedTitle.includes('octa-core') || normalizedTitle.includes('octa core')) {
+    // Look for processor model near the octa-core mention
+    const octaContext = normalizedTitle.split(/\bocta[-\s]core\b/i);
+    if (octaContext.length > 1) {
+      // Look for model information after the octa-core mention
+      const afterOcta = octaContext[1];
+      
+      // Check if there's an Intel i-series processor mentioned
+      const intelMatch = afterOcta.match(/\bi([3579])[-]?(\d{4,5}[a-z]*)/i);
+      if (intelMatch) {
+        return `Intel Core i${intelMatch[1]}-${intelMatch[2]} (Octa-core)`;
+      }
+      
+      // If no specific model, return generic octa-core
+      if (normalizedTitle.includes('intel')) {
+        return 'Intel Octa-core Processor';
+      } else if (normalizedTitle.includes('amd')) {
+        return 'AMD Octa-core Processor';
+      }
+    }
+    return 'Octa-core Processor';
   }
   
   // If we have an existing processor value, return that

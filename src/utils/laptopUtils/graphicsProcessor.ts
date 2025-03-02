@@ -47,7 +47,22 @@ export const processGraphics = (graphics: string | undefined, title: string): st
   
   // Look for graphics in the title (more specific patterns first)
   const graphicsPatterns = [
-    // NVIDIA RTX/GTX Cards (including mobile variants)
+    // NVIDIA RTX 40-series GPU - will catch RTX 4050 in our example
+    /\b(?:NVIDIA\s+)?(?:GeForce\s+)?RTX\s*40\d{2}(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-Q)?\b/i,
+    
+    // NVIDIA RTX 30-series GPU
+    /\b(?:NVIDIA\s+)?(?:GeForce\s+)?RTX\s*30\d{2}(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-Q)?\b/i,
+    
+    // NVIDIA RTX 20-series GPU
+    /\b(?:NVIDIA\s+)?(?:GeForce\s+)?RTX\s*20\d{2}(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-Q)?\b/i,
+    
+    // NVIDIA GTX 16-series GPU
+    /\b(?:NVIDIA\s+)?(?:GeForce\s+)?GTX\s*16\d{2}(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-Q)?\b/i,
+    
+    // NVIDIA GTX 10-series GPU
+    /\b(?:NVIDIA\s+)?(?:GeForce\s+)?GTX\s*10\d{2}(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-Q)?\b/i,
+    
+    // Generic NVIDIA RTX/GTX Cards
     /\b(?:NVIDIA\s+)?(?:GeForce\s+)?(?:RTX|GTX)\s*\d{3,4}(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-Q)?\b/i,
     
     // AMD Graphics (discrete and integrated)

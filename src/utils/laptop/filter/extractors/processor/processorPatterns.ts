@@ -14,7 +14,9 @@ export const intelCorePatterns = {
   iSeriesWithModel: /\bi([3579])(?:[- ](\d{4,5}[a-z]*))?/i,
   coreI: /core_i([3579])/i,
   ghzWithCore: /(\d+(?:\.\d+)?)\s*ghz\s*(?:core_i|core\s+i|i)([3579])/i,
-  coreWithGhz: /(?:core_i|core\s+i|i)([3579]).*?(\d+(?:\.\d+)?)\s*ghz/i
+  coreWithGhz: /(?:core_i|core\s+i|i)([3579]).*?(\d+(?:\.\d+)?)\s*ghz/i,
+  // New pattern specifically for i5-13420H style notation
+  intelModelDash: /\bi([3579])-(\d{5}[a-z]*)/i
 };
 
 // Intel budget processor patterns

@@ -1,3 +1,4 @@
+
 /**
  * Functions for processing and normalizing storage information
  */
@@ -47,8 +48,8 @@ export const processStorage = (storage: string | undefined, title: string, descr
     // Match dual storage configurations
     /\b(\d+)\s*(?:GB|TB)\s*(?:SSD|PCIe|NVMe)\s*\+\s*(\d+)\s*(?:GB|TB)\s*(?:HDD|SSD)\b/i,
     
-    // Generic storage pattern (use only if no other matches)
-    /\b(\d+)\s*(?:GB|TB)\b(?!.*(?:RAM|Memory))/i, // Negative lookahead to avoid matching RAM
+    // Generic storage pattern - this should catch "1TB SSD" in our example
+    /\b(\d+)\s*(?:GB|TB)\b(?!.*(?:RAM|Memory))/i,
   ];
   
   for (const pattern of storagePatterns) {
@@ -80,7 +81,7 @@ export const processStorage = (storage: string | undefined, title: string, descr
       
       // Process single storage
       const size = match[1];
-      let unit = match[0].includes('TB') ? 'TB' : 'GB';
+      let unit = match[0].toLowerCase().includes('tb') ? 'TB' : 'GB';
       
       // Validate storage values for realism
       // Common laptop SSD/HDD sizes are typically 128GB, 256GB, 512GB, 1TB, 2TB
@@ -100,32 +101,18 @@ export const processStorage = (storage: string | undefined, title: string, descr
       
       // Extract storage type information
       let type = 'SSD'; // Default to SSD for modern laptops
-      let generation = '';
       
-      const genMatch = textToSearch.match(/\bGen ?([1-5])\b/i);
-      const typeMatch = textToSearch.match(/\b(?:PCIe|NVMe|M\.2)\b/i);
-      
-      if (genMatch) {
-        generation = ` Gen ${genMatch[1]}`;
-      }
-      
-      if (typeMatch) {
-        type = `${typeMatch[0].toUpperCase()} ${type}`;
-      }
-      
-      if (match[0].toLowerCase().includes('hdd') || match[0].toLowerCase().includes('hard drive')) {
+      if (textToSearch.toLowerCase().includes('hdd') || textToSearch.toLowerCase().includes('hard drive')) {
         type = 'HDD';
-      } else if (match[0].toLowerCase().includes('emmc')) {
+      } else if (textToSearch.toLowerCase().includes('emmc')) {
         type = 'eMMC';
-      } else if (!typeMatch && !match[0].toLowerCase().includes('ssd')) {
-        // If no explicit storage type is mentioned, check if we can infer it
-        if (parseInt(size, 10) >= 500 && unit === 'GB') {
-          // Modern laptops with ≥500GB storage are likely to have SSD
-          type = 'SSD';
-        } else if (unit === 'TB') {
-          // TB-sized storage could be either, but more likely SSD in newer laptops
-          type = 'SSD';
-        }
+      }
+      
+      // Add NVMe if mentioned
+      if (textToSearch.toLowerCase().includes('nvme')) {
+        type = 'NVMe ' + type;
+      } else if (textToSearch.toLowerCase().includes('pcie')) {
+        type = 'PCIe ' + type;
       }
       
       // Validate storage size is reasonable for laptops
@@ -137,7 +124,7 @@ export const processStorage = (storage: string | undefined, title: string, descr
         continue; // Skip unrealistic storage values
       }
       
-      return `${size}${unit}${generation ? generation : ''} ${type}`.trim();
+      return `${size}${unit} ${type}`.trim();
     }
   }
   

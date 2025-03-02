@@ -10,6 +10,11 @@ import type { SortOption } from "@/components/laptops/LaptopSort";
 import { normalizeBrand, normalizeModel } from "@/utils/laptop/valueNormalizer";
 import { applyAllProductFilters } from "@/utils/laptop/productFilters";
 import { extractProcessorFromTitle } from "@/utils/laptop/filter/extractors/processor/processorExtractor";
+import { processRam } from "@/utils/laptopUtils/processors/ramProcessor";
+import { processGraphics } from "@/utils/laptopUtils/graphicsProcessor";
+import { processStorage } from "@/utils/laptopUtils/processors/storageProcessor";
+import { processScreenSize } from "@/utils/laptopUtils/physicalSpecsProcessor";
+import { processScreenResolution } from "@/utils/laptopUtils/processors/screenProcessor";
 
 export const processAndFilterLaptops = (
   rawData: any[],
@@ -45,20 +50,41 @@ export const processAndFilterLaptops = (
     const normalizedModel = normalizeModel(laptop.model || '', laptop.title, normalizedBrand);
     
     // Extract processor from title first, fall back to database value
-    // This prioritizes title-based processor information
     const extractedProcessor = extractProcessorFromTitle(laptop.title, laptop.processor);
     
-    // Log when we're using title-based processor extraction for debugging
+    // Extract other key specs from title if they're missing in the database
+    const extractedRam = !laptop.ram ? processRam(undefined, laptop.title, laptop.description) : null;
+    const extractedGraphics = !laptop.graphics ? processGraphics(undefined, laptop.title) : null;
+    const extractedStorage = !laptop.storage ? processStorage(undefined, laptop.title, laptop.description) : null;
+    const extractedScreenSize = !laptop.screen_size ? processScreenSize(undefined, laptop.title, laptop.description) : null;
+    const extractedScreenResolution = !laptop.screen_resolution ? processScreenResolution(undefined, laptop.title, laptop.description) : null;
+    
+    // Log when we're using title-based extraction for debugging
     if (extractedProcessor && extractedProcessor !== laptop.processor) {
       console.log(`Title-based processor extraction: "${laptop.title}" -> "${extractedProcessor}" (was: "${laptop.processor}")`);
     }
     
-    // Apply the normalized values
-    const laptopWithNormalizedValues = {
+    if (extractedRam || extractedGraphics || extractedStorage || extractedScreenSize || extractedScreenResolution) {
+      console.log(`Additional title-based extractions for laptop "${laptop.title}":`, {
+        ram: extractedRam || 'not extracted',
+        graphics: extractedGraphics || 'not extracted',
+        storage: extractedStorage || 'not extracted',
+        screenSize: extractedScreenSize || 'not extracted',
+        screenResolution: extractedScreenResolution || 'not extracted'
+      });
+    }
+    
+    // Apply the extracted values, prioritizing database values if they exist
+    const laptopWithExtractedValues = {
       ...laptop,
       brand: normalizedBrand,
       model: normalizedModel,
-      processor: extractedProcessor || laptop.processor // Use extracted processor if available
+      processor: extractedProcessor || laptop.processor,
+      ram: laptop.ram || extractedRam,
+      graphics: laptop.graphics || extractedGraphics,
+      storage: laptop.storage || extractedStorage,
+      screen_size: laptop.screen_size || extractedScreenSize,
+      screen_resolution: laptop.screen_resolution || extractedScreenResolution
     };
     
     const reviews = laptop.product_reviews || [];
@@ -74,7 +100,7 @@ export const processAndFilterLaptops = (
         helpful_votes: review.helpful_votes || 0
       }))
     };
-    return processLaptopData(laptopWithNormalizedValues);
+    return processLaptopData(laptopWithExtractedValues);
   });
 
   logDataStatistics(processedLaptops);

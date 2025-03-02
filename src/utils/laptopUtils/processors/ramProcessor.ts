@@ -32,6 +32,9 @@ export const processRam = (ram: string | undefined, title: string, description?:
     /\bRAM:\s*(\d+)\s*GB\b/i,
     /\bMemory:\s*(\d+)\s*GB\b/i,
     
+    // Match simple RAM numbers - this will catch "32GB RAM" in our example
+    /\b(\d+)\s*GB\b(?=.*?\bRAM\b)/i,
+    
     // Match RAM before storage (must have RAM indicator)
     /\b(\d+)\s*GB\b(?=\s*(?:RAM|Memory|DDR))/i,
   ];
