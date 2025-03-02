@@ -85,13 +85,24 @@ export async function fetchAllLaptops(minimalForFilters = false) {
 
     allLaptops = [...allLaptops, ...laptops];
     
-    // Check if the last item exists and has a valid id property
-    const lastLaptop = laptops[laptops.length - 1];
-    if (lastLaptop && typeof lastLaptop === 'object' && 'id' in lastLaptop && lastLaptop.id) {
-      lastId = lastLaptop.id;
+    // Safely access the last laptop's ID, ensuring laptops array is not empty
+    if (laptops.length > 0) {
+      const lastLaptopIndex = laptops.length - 1;
+      const potentialLastLaptop = laptops[lastLaptopIndex];
+      
+      // Verify the laptop object exists and has a valid ID property
+      if (potentialLastLaptop && 
+          typeof potentialLastLaptop === 'object' && 
+          'id' in potentialLastLaptop && 
+          potentialLastLaptop.id) {
+        lastId = potentialLastLaptop.id;
+      } else {
+        // Break the loop if we don't have a valid ID to continue with
+        console.warn('No valid ID found in the last laptop of the batch, stopping pagination');
+        hasMore = false;
+      }
     } else {
-      // Break the loop if we don't have a valid ID to continue with
-      console.warn('No valid ID found in the last laptop of the batch, stopping pagination');
+      // This is a safety check, but should never happen due to the earlier empty check
       hasMore = false;
     }
 
