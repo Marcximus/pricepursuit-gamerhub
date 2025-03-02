@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LaptopCard } from "@/components/laptops/LaptopCard";
 import type { Product } from "@/types/product";
-import { Skeleton } from "@/components/ui/skeleton";
 
 type LaptopListProps = {
   laptops: Product[];
@@ -37,32 +36,11 @@ export function LaptopList({
     isRefetching
   });
 
-  // Render skeleton UI while loading
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {[...Array(5)].map((_, index) => (
-          <Card key={index} className="overflow-hidden">
-            <div className="flex flex-col md:flex-row gap-4 p-4">
-              <div className="md:w-48 w-full">
-                <Skeleton className="h-32 w-full rounded-md" />
-              </div>
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-1/4" />
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                </div>
-                <Skeleton className="h-10 w-32 mt-3" />
-              </div>
-            </div>
-          </Card>
-        ))}
+      <div className="text-center py-12">
+        <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
+        <p className="mt-2 text-gray-600">Loading laptops...</p>
       </div>
     );
   }

@@ -43,22 +43,4 @@ function App() {
   );
 }
 
-// Preload the critical data as early as possible
-const preloadCriticalData = async () => {
-  try {
-    const { fetchInitialLaptops } = await import('./services/laptopService');
-    const initialData = await fetchInitialLaptops();
-    
-    // Set this as placeholder data for queries
-    if (initialData && initialData.length > 0) {
-      queryClient.setQueryData(['initial-laptops'], initialData);
-    }
-  } catch (error) {
-    console.error('Error preloading data:', error);
-  }
-};
-
-// Attempt to preload data
-preloadCriticalData();
-
 export default App;

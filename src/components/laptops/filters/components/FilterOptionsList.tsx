@@ -3,15 +3,9 @@ import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CheckboxItem } from "./CheckboxItem";
 
-export type FilterOption = {
-  name: string;
-  count: number;
-  disabled: boolean;
-};
-
 type FilterOptionsListProps = {
   title: string;
-  options: FilterOption[];
+  options: string[];
   selectedOptions: Set<string>;
   onOptionChange: (option: string, checked: boolean) => void;
 };
@@ -22,22 +16,17 @@ export function FilterOptionsList({
   selectedOptions, 
   onOptionChange 
 }: FilterOptionsListProps) {
-  // Ensure options is always an array
-  const safeOptions = Array.isArray(options) ? options : [];
-  
   return (
-    <ScrollArea className={`${safeOptions.length > 8 ? 'h-[240px]' : ''} rounded-md`}>
+    <ScrollArea className={`${options.length > 8 ? 'h-[240px]' : ''} rounded-md`}>
       <div className="space-y-1">
-        {safeOptions.length > 0 ? (
-          safeOptions.map((option) => (
+        {options.length > 0 ? (
+          options.map((option) => (
             <CheckboxItem
-              key={option.name}
-              id={`${title}-${option.name}`}
-              label={option.name}
-              checked={selectedOptions.has(option.name)}
-              onCheckedChange={(checked) => onOptionChange(option.name, checked)}
-              disabled={option.disabled}
-              count={option.count}
+              key={option}
+              id={`${title}-${option}`}
+              label={option}
+              checked={selectedOptions.has(option)}
+              onCheckedChange={(checked) => onOptionChange(option, checked)}
             />
           ))
         ) : (
