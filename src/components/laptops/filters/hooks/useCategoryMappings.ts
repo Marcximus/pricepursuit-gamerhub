@@ -42,3 +42,4 @@ export const useCategoryMappings = (
     };
   }, [processors, ramSizes, storageOptions, graphicsCards, screenSizes, brands]);
 };
+

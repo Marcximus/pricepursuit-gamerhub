@@ -10,12 +10,9 @@ import { matchesFilter } from "@/utils/laptop/filter/matchers";
 export const findAvailableOptions = (
   category: FilterCategoryKey,
   laptops: Product[],
-  categoryToField: Record<FilterCategoryKey, keyof Product>,
-  categoryToOptions: Record<FilterCategoryKey, Set<string>>
+  fieldKey: keyof Product,
+  optionsSet: Set<string>
 ): Set<string> => {
-  const field = categoryToField[category];
-  const optionsSet = categoryToOptions[category];
-  
   // Use Set for O(1) lookups
   const availableOptions = new Set<string>();
   
@@ -28,7 +25,7 @@ export const findAvailableOptions = (
     let isAvailable = false;
     
     for (const laptop of laptops) {
-      const fieldValue = laptop[field];
+      const fieldValue = laptop[fieldKey];
       
       // Skip if the laptop doesn't have this field value
       if (!fieldValue) continue;
@@ -46,7 +43,7 @@ export const findAvailableOptions = (
       }
       
       // Calculate match and cache the result
-      const matches = matchesFilter(option, fieldValue as string, field as any, laptop.title);
+      const matches = matchesFilter(option, fieldValue as string, fieldKey as any, laptop.title);
       optionMatchCache.set(cacheKey, matches);
       
       if (matches) {
@@ -62,3 +59,4 @@ export const findAvailableOptions = (
   
   return availableOptions;
 };
+

@@ -1,5 +1,6 @@
 
 import { useMemo } from "react";
+import type { Product } from "@/types/product";
 import type { FilterCategoryKey, DisabledOptions } from "../types";
 import { findAvailableOptions } from "./useAvailableOptions";
 
@@ -7,8 +8,8 @@ import { findAvailableOptions } from "./useAvailableOptions";
  * Hook to calculate which options should be disabled based on available options
  */
 export const useCalculateDisabledOptions = (
-  filteredLaptopsByCategory: Record<FilterCategoryKey, any[]> | null,
-  categoryToField: Record<FilterCategoryKey, keyof any>,
+  filteredLaptopsByCategory: Record<FilterCategoryKey, Product[]> | null,
+  categoryToField: Record<FilterCategoryKey, keyof Product>,
   categoryToOptions: Record<FilterCategoryKey, Set<string>>
 ) => {
   return useMemo(() => {
@@ -29,12 +30,12 @@ export const useCalculateDisabledOptions = (
     
     // Calculate available options for each category
     const availableOptionsByCategory: Record<FilterCategoryKey, Set<string>> = {
-      brands: findAvailableOptions('brands', filteredLaptopsByCategory.brands, categoryToField, categoryToOptions),
-      processors: findAvailableOptions('processors', filteredLaptopsByCategory.processors, categoryToField, categoryToOptions),
-      ramSizes: findAvailableOptions('ramSizes', filteredLaptopsByCategory.ramSizes, categoryToField, categoryToOptions),
-      storageOptions: findAvailableOptions('storageOptions', filteredLaptopsByCategory.storageOptions, categoryToField, categoryToOptions),
-      graphicsCards: findAvailableOptions('graphicsCards', filteredLaptopsByCategory.graphicsCards, categoryToField, categoryToOptions),
-      screenSizes: findAvailableOptions('screenSizes', filteredLaptopsByCategory.screenSizes, categoryToField, categoryToOptions)
+      brands: findAvailableOptions('brands', filteredLaptopsByCategory.brands, categoryToField.brands, categoryToOptions.brands),
+      processors: findAvailableOptions('processors', filteredLaptopsByCategory.processors, categoryToField.processors, categoryToOptions.processors),
+      ramSizes: findAvailableOptions('ramSizes', filteredLaptopsByCategory.ramSizes, categoryToField.ramSizes, categoryToOptions.ramSizes),
+      storageOptions: findAvailableOptions('storageOptions', filteredLaptopsByCategory.storageOptions, categoryToField.storageOptions, categoryToOptions.storageOptions),
+      graphicsCards: findAvailableOptions('graphicsCards', filteredLaptopsByCategory.graphicsCards, categoryToField.graphicsCards, categoryToOptions.graphicsCards),
+      screenSizes: findAvailableOptions('screenSizes', filteredLaptopsByCategory.screenSizes, categoryToField.screenSizes, categoryToOptions.screenSizes)
     };
     
     // Fill disabled options sets
@@ -54,3 +55,4 @@ export const useCalculateDisabledOptions = (
     return disabledOptions;
   }, [filteredLaptopsByCategory, categoryToField, categoryToOptions]);
 };
+
