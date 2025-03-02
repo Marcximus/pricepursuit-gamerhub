@@ -9,6 +9,8 @@ import { LaptopList } from "@/components/laptops/LaptopList";
 import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const ComparePriceLaptops = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,6 +24,8 @@ const ComparePriceLaptops = () => {
     screenSizes: new Set<string>(),
     brands: new Set<string>(),
   });
+  
+  const queryClient = useQueryClient();
 
   // Add debugging useEffect to track filter changes
   useEffect(() => {
@@ -36,7 +40,7 @@ const ComparePriceLaptops = () => {
     });
   }, [filters]);
 
-  // Fetch all laptops
+  // Enhanced React Query fetching with proper cache management
   const { 
     data, 
     isLoading: isLaptopsLoading, 
@@ -61,10 +65,13 @@ const ComparePriceLaptops = () => {
   const handleSortChange = (newSortBy: SortOption) => {
     setSortBy(newSortBy);
     setCurrentPage(1); // Reset page when sort changes
+    toast.info(`Sorting laptops by ${newSortBy.replace('-', ' ')}`);
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    // Scroll to top when changing pages
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleFiltersChange = (newFilters: FilterOptions) => {
@@ -81,11 +88,42 @@ const ComparePriceLaptops = () => {
     
     setFilters(updatedFilters);
     setCurrentPage(1); // Reset to first page when filters change
+    
+    // Show toast notification about filter changes
+    const totalFilters = 
+      updatedFilters.processors.size +
+      updatedFilters.ramSizes.size +
+      updatedFilters.storageOptions.size +
+      updatedFilters.graphicsCards.size +
+      updatedFilters.screenSizes.size +
+      updatedFilters.brands.size +
+      (updatedFilters.priceRange.min > 0 || updatedFilters.priceRange.max < 10000 ? 1 : 0);
+      
+    if (totalFilters > 0) {
+      toast.info(`${totalFilters} filter${totalFilters > 1 ? 's' : ''} applied`);
+    }
   };
 
   const handleRetry = () => {
-    refetch();
+    toast.promise(
+      refetch(),
+      {
+        loading: 'Refreshing laptop data...',
+        success: 'Laptop data refreshed successfully',
+        error: 'Failed to refresh laptop data'
+      }
+    );
   };
+
+  // Prefetch next page
+  useEffect(() => {
+    if (currentPage < totalPages) {
+      queryClient.prefetchQuery({
+        queryKey: ['all-laptops', { page: currentPage + 1, sortBy, filters }],
+        queryFn: fetchAllLaptops
+      });
+    }
+  }, [currentPage, sortBy, filters, totalPages, queryClient]);
 
   return (
     <div className="min-h-screen bg-slate-50">

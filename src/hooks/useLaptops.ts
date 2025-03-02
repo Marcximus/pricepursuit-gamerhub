@@ -30,15 +30,17 @@ const defaultFilters: FilterOptions = {
   brands: new Set<string>()
 };
 
+// Improved useLaptops hook with React Query
 export const useLaptops = (
   page: number = 1, 
   sortBy: SortOption = 'rating-desc',
   filters: FilterOptions = defaultFilters
 ) => {
+  // Use React Query for efficient caching and data fetching
   const query = useQuery({
-    queryKey: ['all-laptops'],
+    queryKey: ['all-laptops', { page, sortBy, filters }],
     queryFn: fetchAllLaptops,
-    staleTime: 1000 * 60 * 60, // 1 hour
+    staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 60 * 24, // 24 hours
     select: (data) => {
       const processedData = processAndFilterLaptops(data, filters, sortBy, page, ITEMS_PER_PAGE);

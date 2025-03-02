@@ -10,32 +10,25 @@ import { matchesIntelProcessor } from '@/utils/laptop/filter/matchers/processor/
 import { matchesOtherProcessor } from '@/utils/laptop/filter/matchers/processor/otherProcessor';
 
 /**
- * Custom hook for filtering laptops based on various criteria
+ * Enhanced hook for filtering laptops with React Query integration
  * @param laptops The array of laptops to filter
- * @param initialFilters Optional initial filter state
- * @param debounceMs Optional debounce time in milliseconds
+ * @param initialFilters Initial filter state
+ * @param debounceMs Debounce time in milliseconds
  */
 export function useFilteredLaptops(
   laptops: Product[],
-  initialFilters?: FilterOptions,
+  initialFilters: FilterOptions,
   debounceMs: number = 300
 ) {
-  const [filters, setFilters] = useState<FilterOptions>(initialFilters || {
-    priceRange: { min: 0, max: 10000 },
-    processors: new Set<string>(),
-    ramSizes: new Set<string>(),
-    storageOptions: new Set<string>(),
-    graphicsCards: new Set<string>(),
-    screenSizes: new Set<string>(),
-    brands: new Set<string>(),
-  });
-
+  // Use the passed filters directly instead of maintaining internal state
+  // This works better with React Query's caching
+  
   // Debounce filter changes to prevent too many recalculations
-  const debouncedFilters = useDebounce(filters, debounceMs);
+  const debouncedFilters = useDebounce(initialFilters, debounceMs);
 
   // Memoize the filtered results to avoid recalculation if nothing has changed
   const filteredLaptops = useMemo(() => {
-    console.log('Recalculating filtered laptops');
+    console.log('Recalculating filtered laptops with', laptops.length, 'laptops');
     
     // Check if any filters are active
     const hasPriceFilter = debouncedFilters.priceRange.min > 0 || debouncedFilters.priceRange.max < 10000;
@@ -125,11 +118,6 @@ export function useFilteredLaptops(
     });
   }, [laptops, debouncedFilters]);
 
-  // Memoize the filter update function
-  const updateFilters = useCallback((newFilters: FilterOptions) => {
-    setFilters(newFilters);
-  }, []);
-
   // Memoize filter stats for UI indicators
   const filterStats = useMemo(() => {
     return {
@@ -142,8 +130,6 @@ export function useFilteredLaptops(
   }, [filteredLaptops]);
 
   return {
-    filters,
-    updateFilters,
     filteredLaptops,
     filterStats
   };

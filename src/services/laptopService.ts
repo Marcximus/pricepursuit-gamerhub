@@ -1,9 +1,22 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { QueryClient } from "@tanstack/react-query";
 
 const BATCH_SIZE = 1000;
 
+// This function can be called directly or through React Query
 export async function fetchAllLaptops() {
+  // Check if we have this data in the React Query cache
+  const queryClient = new QueryClient();
+  const cachedData = queryClient.getQueryData(['all-laptops-raw']);
+  
+  if (cachedData) {
+    console.log('Using cached laptop data');
+    return cachedData;
+  }
+  
+  console.log('Cache miss - fetching all laptops from database');
+  
   let allLaptops: any[] = [];
   let lastId: string | null = null;
   let hasMore = true;
@@ -78,5 +91,9 @@ export async function fetchAllLaptops() {
   }
 
   console.log(`Completed fetching all laptops. Total count: ${allLaptops.length}`);
+  
+  // Store in cache for future use
+  queryClient.setQueryData(['all-laptops-raw'], allLaptops);
+  
   return allLaptops;
 }
