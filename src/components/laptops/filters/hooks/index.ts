@@ -2,3 +2,4 @@
 export * from './useDisabledOptions';
 export * from './useFilterSections';
 export * from './useTotalActiveFilters';
+export * from './useFilteredOptionsCache';
