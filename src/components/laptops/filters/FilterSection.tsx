@@ -3,7 +3,6 @@ import { useCallback, useState } from "react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "./components/SearchInput";
-import { ClearFilterButton } from "./components/ClearFilterButton";
 import { FilterOptionsList } from "./components/FilterOptionsList";
 import { FilterIcon } from "./components/FilterIcon";
 import { sortProcessorOptions } from "./utils/processorSort";
