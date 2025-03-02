@@ -47,7 +47,13 @@ export async function fetchLaptopsInBatches(minimalForFilters = false): Promise<
           .filter((laptop): laptop is NonNullable<typeof laptop> => 
             laptop !== null && typeof laptop === 'object' && 'id' in laptop
           )
-          .map(laptop => laptop as unknown as Product);
+          .map((laptop) => {
+            // Additional null check to satisfy TypeScript
+            if (laptop === null) {
+              throw new Error("Unexpected null laptop after filtering");
+            }
+            return laptop as unknown as Product;
+          });
         
         allLaptops = [...allLaptops, ...validLaptops];
         

@@ -1,12 +1,12 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { getLaptopColumns } from "./utils";
-import type { Product } from "@/types/product";
-
 /**
  * Fetches laptops with pagination directly from the database
  * This approach skips client-side filtering for better performance
  */
+import { supabase } from "@/integrations/supabase/client";
+import { getLaptopColumns } from "./utils";
+import type { Product } from "@/types/product";
+
 export async function fetchPaginatedLaptops(page = 1, pageSize = 50, sortBy = 'rating-desc') {
   console.time('fetchPaginatedLaptops');
   
@@ -64,7 +64,13 @@ export async function fetchPaginatedLaptops(page = 1, pageSize = 50, sortBy = 'r
         .filter((laptop): laptop is NonNullable<typeof laptop> => 
           laptop !== null && typeof laptop === 'object' && 'id' in laptop
         )
-        .map(laptop => laptop as unknown as Product);
+        .map((laptop) => {
+          // Handle null check to satisfy TypeScript
+          if (laptop === null) {
+            throw new Error("Unexpected null laptop after filtering");
+          }
+          return laptop as unknown as Product;
+        });
     } else {
       console.error('Invalid data format received:', laptopData);
     }
