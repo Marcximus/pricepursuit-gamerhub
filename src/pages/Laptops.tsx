@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useLaptops } from "@/hooks/useLaptops";
+import { useFilteredLaptops } from "@/hooks/useFilteredLaptops";
 import Navigation from "@/components/Navigation";
 import { LaptopFilters, type FilterOptions } from "@/components/laptops/LaptopFilters";
 import type { SortOption } from "@/components/laptops/LaptopSort";
@@ -35,6 +36,7 @@ const ComparePriceLaptops = () => {
     });
   }, [filters]);
 
+  // Fetch all laptops
   const { 
     data, 
     isLoading: isLaptopsLoading, 
@@ -43,6 +45,13 @@ const ComparePriceLaptops = () => {
     refetch
   } = useLaptops(currentPage, sortBy, filters);
 
+  // Use our custom hook to filter laptops client-side
+  const { 
+    filteredLaptops, 
+    filterStats 
+  } = useFilteredLaptops(data?.allLaptops || [], filters);
+
+  // Derive the subset of laptops for the current page
   const laptops = data?.laptops ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
@@ -99,7 +108,7 @@ const ComparePriceLaptops = () => {
             }
             toolbar={
               <LaptopToolbar
-                totalLaptops={totalCount}
+                totalLaptops={filterStats.count || totalCount}
                 sortBy={sortBy}
                 onSortChange={handleSortChange}
                 isLoading={isLaptopsLoading}
