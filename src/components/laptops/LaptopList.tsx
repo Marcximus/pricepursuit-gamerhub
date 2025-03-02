@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LaptopCard } from "@/components/laptops/LaptopCard";
 import type { Product } from "@/types/product";
-import { Skeleton } from "@/components/ui/skeleton";
 
 type LaptopListProps = {
   laptops: Product[];
@@ -39,31 +38,9 @@ export function LaptopList({
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Card key={i} className="overflow-hidden">
-            <CardContent className="p-4">
-              <div className="flex gap-4">
-                <div className="flex-shrink-0">
-                  <Skeleton className="h-28 w-28 rounded-md" />
-                </div>
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                  <div className="space-y-1">
-                    <Skeleton className="h-3 w-1/3" />
-                    <Skeleton className="h-3 w-1/4" />
-                    <Skeleton className="h-3 w-2/5" />
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <Skeleton className="h-5 w-20" />
-                    <Skeleton className="h-8 w-24 rounded-md" />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="text-center py-12">
+        <ReloadIcon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
+        <p className="mt-2 text-gray-600">Loading laptops...</p>
       </div>
     );
   }
@@ -123,21 +100,6 @@ export function LaptopList({
 
   return (
     <div className="space-y-8">
-      {/* Show refetching indicator if data is refreshing but we have content */}
-      {isRefetching && (
-        <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-md flex items-center">
-          <ReloadIcon className="h-4 w-4 mr-2 animate-spin" />
-          <span>Refreshing laptop data...</span>
-        </div>
-      )}
-      
-      {/* Add result count indicator */}
-      <div className="text-sm text-slate-600">
-        Showing {laptops.length} {laptops.length === 1 ? 'laptop' : 'laptops'}
-        {totalCount > 0 && laptops.length !== totalCount && ` of ${totalCount} total`}
-        {currentPage > 1 && ` (Page ${currentPage})`}
-      </div>
-    
       <div className="space-y-4">
         {laptops.map((laptop) => (
           <LaptopCard key={laptop.id} laptop={laptop} />

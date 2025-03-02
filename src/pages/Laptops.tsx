@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useLaptops, clearLaptopCache } from "@/hooks/useLaptops";
-import { useFilteredLaptops } from "@/hooks/useFilteredLaptops";
+import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
 import { LaptopFilters, type FilterOptions } from "@/components/laptops/LaptopFilters";
 import type { SortOption } from "@/components/laptops/LaptopSort";
@@ -9,9 +8,6 @@ import { LaptopList } from "@/components/laptops/LaptopList";
 import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { fetchAllLaptops } from "@/services/laptopService";
 
 const ComparePriceLaptops = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -25,9 +21,8 @@ const ComparePriceLaptops = () => {
     screenSizes: new Set<string>(),
     brands: new Set<string>(),
   });
-  
-  const queryClient = useQueryClient();
 
+  // Add debugging useEffect to track filter changes
   useEffect(() => {
     console.log('Filter state updated:', {
       processors: Array.from(filters.processors),
@@ -48,11 +43,6 @@ const ComparePriceLaptops = () => {
     refetch
   } = useLaptops(currentPage, sortBy, filters);
 
-  const { 
-    filteredLaptops, 
-    filterStats 
-  } = useFilteredLaptops(data?.allLaptops || [], filters);
-
   const laptops = data?.laptops ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
@@ -61,16 +51,15 @@ const ComparePriceLaptops = () => {
 
   const handleSortChange = (newSortBy: SortOption) => {
     setSortBy(newSortBy);
-    setCurrentPage(1);
-    toast.info(`Sorting laptops by ${newSortBy.replace('-', ' ')}`);
+    setCurrentPage(1); // Reset page when sort changes
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleFiltersChange = (newFilters: FilterOptions) => {
+    // Create a deep copy of the filter sets to avoid reference issues
     const updatedFilters: FilterOptions = {
       priceRange: { ...newFilters.priceRange },
       processors: new Set(newFilters.processors),
@@ -82,44 +71,12 @@ const ComparePriceLaptops = () => {
     };
     
     setFilters(updatedFilters);
-    setCurrentPage(1);
-    
-    const totalFilters = 
-      updatedFilters.processors.size +
-      updatedFilters.ramSizes.size +
-      updatedFilters.storageOptions.size +
-      updatedFilters.graphicsCards.size +
-      updatedFilters.screenSizes.size +
-      updatedFilters.brands.size +
-      (updatedFilters.priceRange.min > 0 || updatedFilters.priceRange.max < 10000 ? 1 : 0);
-      
-    if (totalFilters > 0) {
-      toast.info(`${totalFilters} filter${totalFilters > 1 ? 's' : ''} applied`);
-    }
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const handleRetry = () => {
-    // Clear cache before refetching to ensure fresh data
-    clearLaptopCache();
-    
-    toast.promise(
-      refetch(),
-      {
-        loading: 'Refreshing laptop data...',
-        success: 'Laptop data refreshed successfully',
-        error: 'Failed to refresh laptop data'
-      }
-    );
+    refetch();
   };
-
-  useEffect(() => {
-    if (currentPage < totalPages) {
-      queryClient.prefetchQuery({
-        queryKey: ['optimized-laptops', { page: currentPage + 1, sortBy, filters }],
-        queryFn: () => fetchAllLaptops()
-      });
-    }
-  }, [currentPage, sortBy, filters, totalPages, queryClient]);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -142,7 +99,7 @@ const ComparePriceLaptops = () => {
             }
             toolbar={
               <LaptopToolbar
-                totalLaptops={filterStats.count || totalCount}
+                totalLaptops={totalCount}
                 sortBy={sortBy}
                 onSortChange={handleSortChange}
                 isLoading={isLaptopsLoading}

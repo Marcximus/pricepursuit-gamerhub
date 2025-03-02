@@ -23,7 +23,6 @@ interface LaptopToolbarProps {
     screenSizes: Set<string>;
     brands: Set<string>;
   };
-  isFilterOptionsLoading?: boolean;
 }
 
 export function LaptopToolbar({
@@ -35,7 +34,6 @@ export function LaptopToolbar({
   filters,
   onFiltersChange,
   filterOptions,
-  isFilterOptionsLoading
 }: LaptopToolbarProps) {
   const [open, setOpen] = useState(false);
   
@@ -98,13 +96,6 @@ export function LaptopToolbar({
       );
     }
     
-    if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
-      selections.push({ 
-        type: 'priceRange', 
-        value: `$${filters.priceRange.min} - $${filters.priceRange.max}` 
-      });
-    }
-    
     return selections;
   };
   
@@ -113,17 +104,14 @@ export function LaptopToolbar({
     if (!filters || !onFiltersChange) return;
     
     const newFilters = { ...filters };
+    const filterKey = filterType as keyof typeof newFilters;
     
-    if (filterType === 'priceRange') {
-      // Reset price range to defaults
-      newFilters.priceRange = { min: 0, max: 10000 };
-    } else if (filterType !== 'priceRange' && newFilters[filterType] instanceof Set) {
-      const newSet = new Set(newFilters[filterType] as Set<string>);
+    if (filterKey !== 'priceRange' && newFilters[filterKey] instanceof Set) {
+      const newSet = new Set(newFilters[filterKey] as Set<string>);
       newSet.delete(value);
-      newFilters[filterType] = newSet;
+      newFilters[filterKey] = newSet;
+      onFiltersChange(newFilters as FilterOptions);
     }
-    
-    onFiltersChange(newFilters as FilterOptions);
   };
   
   return (
@@ -183,7 +171,6 @@ export function LaptopToolbar({
                   graphicsCards={filterOptions.graphicsCards}
                   screenSizes={filterOptions.screenSizes}
                   brands={filterOptions.brands}
-                  isLoading={isFilterOptionsLoading}
                 />
               </div>
             </SheetContent>

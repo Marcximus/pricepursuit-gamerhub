@@ -1,5 +1,4 @@
-
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState } from "react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "./components/SearchInput";
@@ -14,7 +13,6 @@ type FilterSectionProps = {
   onChange: (options: Set<string>) => void;
   defaultExpanded?: boolean;
   icon?: string;
-  isLoading?: boolean;
 };
 
 export function FilterSection({ 
@@ -23,100 +21,37 @@ export function FilterSection({
   selectedOptions, 
   onChange,
   defaultExpanded = false,
-  icon = "box",
-  isLoading = false
+  icon = "box"
 }: FilterSectionProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const optionsArray = useMemo(() => Array.from(options || new Set<string>()), [options]);
+  const optionsArray = Array.from(options);
   const hasSelections = selectedOptions.size > 0;
 
-  // Log total options count for debugging
-  console.log(`${title} filter has ${optionsArray.length} total options`);
-  
-  // Memoize filtered options to prevent recalculation on every render
-  const filteredOptions = useMemo(() => {
-    // Early return if no search query
-    if (!searchQuery) return optionsArray;
-    
-    const lowerQuery = searchQuery.toLowerCase();
-    return optionsArray.filter(option => 
-      option.toLowerCase().includes(lowerQuery)
-    );
-  }, [optionsArray, searchQuery]);
+  // Filter options based on search query
+  const filteredOptions = optionsArray.filter(option => 
+    option.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  // Memoize sorted options to prevent recalculation on every render
-  const sortedOptions = useMemo(() => {
-    if (title === "Processor") {
-      return sortProcessorOptions(filteredOptions);
-    } else if (title === "Brand") {
-      // Make sure "Other" is always at the end
-      return [...filteredOptions].sort((a, b) => {
-        if (a === "Other") return 1; // Move "Other" to the end
-        if (b === "Other") return -1; // Move "Other" to the end
-        return a.localeCompare(b); // Regular alphabetical sort
-      });
-    } else if (title === "RAM") {
-      // Sort RAM sizes numerically
-      return [...filteredOptions].sort((a, b) => {
-        const aNum = parseInt(a.match(/\d+/)?.[0] || "0", 10);
-        const bNum = parseInt(b.match(/\d+/)?.[0] || "0", 10);
-        return aNum - bNum;
-      });
-    } else if (title === "Storage") {
-      // Sort storage sizes numerically, with TB after GB
-      return [...filteredOptions].sort((a, b) => {
-        const aMatch = a.match(/(\d+)\s*(GB|TB)/i);
-        const bMatch = b.match(/(\d+)\s*(GB|TB)/i);
-        
-        if (!aMatch && !bMatch) return a.localeCompare(b);
-        if (!aMatch) return 1;
-        if (!bMatch) return -1;
-        
-        const aValue = parseInt(aMatch[1], 10);
-        const bValue = parseInt(bMatch[1], 10);
-        const aUnit = aMatch[2].toUpperCase();
-        const bUnit = bMatch[2].toUpperCase();
-        
-        // Convert to GB for comparison
-        const aGB = aUnit === "TB" ? aValue * 1024 : aValue;
-        const bGB = bUnit === "TB" ? bValue * 1024 : bValue;
-        
-        return aGB - bGB;
-      });
-    } else if (title === "Screen Size") {
-      // Sort screen sizes numerically
-      return [...filteredOptions].sort((a, b) => {
-        const aNum = parseFloat(a.match(/\d+(\.\d+)?/)?.[0] || "0");
-        const bNum = parseFloat(b.match(/\d+(\.\d+)?/)?.[0] || "0");
-        return aNum - bNum;
-      });
-    }
-    return filteredOptions;
-  }, [filteredOptions, title]);
+  // Sort options based on filter type
+  const sortedOptions = title === "Processors" 
+    ? sortProcessorOptions(filteredOptions)
+    : title === "Brands" 
+      ? filteredOptions.sort((a, b) => a.localeCompare(b)) // Sort brands alphabetically
+      : filteredOptions;
 
   const handleCheckboxChange = useCallback((option: string, checked: boolean) => {
-    onChange(new Set(checked 
-      ? [...selectedOptions, option] 
-      : [...selectedOptions].filter(item => item !== option)
-    ));
+    const newSelected = new Set(selectedOptions);
+    if (checked) {
+      newSelected.add(option);
+    } else {
+      newSelected.delete(option);
+    }
+    onChange(newSelected);
   }, [selectedOptions, onChange]);
 
   const handleClearFilter = useCallback(() => {
     onChange(new Set());
   }, [onChange]);
-
-  // Handle search input changes
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-  
-  // Clear search
-  const handleClearSearch = () => {
-    setSearchQuery("");
-  };
-
-  // Determine if search should be shown based on number of options
-  const showSearch = optionsArray.length > 8;
 
   return (
     <AccordionItem value={title} className="border-b border-slate-200">
@@ -127,19 +62,7 @@ export function FilterSection({
           <div className="flex-shrink-0 text-slate-600 group-data-[state=open]:text-blue-600">
             <FilterIcon iconType={icon} />
           </div>
-          <span className="text-slate-800 group-hover:text-slate-900 group-data-[state=open]:text-blue-700">
-            {title}
-            {!isLoading && optionsArray.length > 0 && (
-              <span className="text-xs text-slate-500 ml-1.5">
-                ({optionsArray.length})
-              </span>
-            )}
-            {isLoading && (
-              <span className="text-xs text-slate-500 ml-1.5">
-                (loading...)
-              </span>
-            )}
-          </span>
+          <span className="text-slate-800 group-hover:text-slate-900 group-data-[state=open]:text-blue-700">{title}</span>
           {hasSelections && (
             <Badge variant="outline" className="ml-auto bg-blue-50 text-blue-700 border-blue-200 text-xs font-semibold">
               {selectedOptions.size}
@@ -148,12 +71,11 @@ export function FilterSection({
         </div>
       </AccordionTrigger>
       <AccordionContent className="pt-3 pb-4 px-3">
-        {showSearch && (
+        {options.size > 8 && (
           <SearchInput
             placeholder={`Search ${title.toLowerCase()}...`}
             value={searchQuery}
-            onChange={handleSearchChange}
-            onClear={handleClearSearch}
+            onChange={setSearchQuery}
           />
         )}
         
@@ -162,17 +84,7 @@ export function FilterSection({
           options={sortedOptions}
           selectedOptions={selectedOptions}
           onOptionChange={handleCheckboxChange}
-          isLoading={isLoading}
         />
-        
-        {hasSelections && (
-          <button
-            onClick={handleClearFilter}
-            className="mt-3 text-xs text-blue-600 hover:text-blue-800 font-medium"
-          >
-            Clear {selectedOptions.size} selected {title.toLowerCase()}
-          </button>
-        )}
       </AccordionContent>
     </AccordionItem>
   );

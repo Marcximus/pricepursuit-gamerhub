@@ -1,4 +1,1 @@
-
 project_id = "kkebyebrhdpcwqnxhjcx"
-[functions.fetch-laptops]
-verify_jwt = false
