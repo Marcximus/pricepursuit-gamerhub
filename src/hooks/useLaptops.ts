@@ -30,6 +30,10 @@ const defaultFilters: FilterOptions = {
   brands: new Set<string>()
 };
 
+// Cache for laptop data to avoid redundant processing
+let cachedLaptops: any[] | null = null;
+let cachedProcessedLaptops: any[] | null = null;
+
 export const useLaptops = (
   page: number = 1, 
   sortBy: SortOption = 'rating-desc',
@@ -41,7 +45,26 @@ export const useLaptops = (
     staleTime: 1000 * 60 * 60, // 1 hour
     gcTime: 1000 * 60 * 60 * 24, // 24 hours
     select: (data) => {
-      const processedData = processAndFilterLaptops(data, filters, sortBy, page, ITEMS_PER_PAGE);
+      // Use cached data if available to avoid reprocessing
+      if (cachedLaptops !== data) {
+        cachedLaptops = data;
+        cachedProcessedLaptops = null; // Reset processed cache when raw data changes
+      }
+      
+      const processedData = processAndFilterLaptops(
+        data, 
+        filters, 
+        sortBy, 
+        page, 
+        ITEMS_PER_PAGE, 
+        cachedProcessedLaptops
+      );
+      
+      // Store processed laptops for reuse
+      if (!cachedProcessedLaptops) {
+        cachedProcessedLaptops = processedData.allLaptops;
+      }
+      
       return {
         ...processedData,
         collectLaptops,

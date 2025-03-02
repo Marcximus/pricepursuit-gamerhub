@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
 import { LaptopFilters, type FilterOptions } from "@/components/laptops/LaptopFilters";
@@ -9,10 +9,27 @@ import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
 
+// Debounce function to limit filter updates
+const useDebounce = <T,>(value: T, delay: number): T => {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 const ComparePriceLaptops = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortOption>("rating-desc");
-  const [filters, setFilters] = useState<FilterOptions>({
+  const [rawFilters, setRawFilters] = useState<FilterOptions>({
     priceRange: { min: 0, max: 10000 },
     processors: new Set<string>(),
     ramSizes: new Set<string>(),
@@ -21,18 +38,23 @@ const ComparePriceLaptops = () => {
     screenSizes: new Set<string>(),
     brands: new Set<string>(),
   });
+  
+  // Debounce filter changes to reduce performance impact (300ms delay)
+  const filters = useDebounce(rawFilters, 300);
 
   // Add debugging useEffect to track filter changes
   useEffect(() => {
-    console.log('Filter state updated:', {
-      processors: Array.from(filters.processors),
-      ramSizes: Array.from(filters.ramSizes),
-      storageOptions: Array.from(filters.storageOptions),
-      graphicsCards: Array.from(filters.graphicsCards),
-      screenSizes: Array.from(filters.screenSizes),
-      brands: Array.from(filters.brands),
-      priceRange: filters.priceRange,
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Filter state updated:', {
+        processors: Array.from(filters.processors),
+        ramSizes: Array.from(filters.ramSizes),
+        storageOptions: Array.from(filters.storageOptions),
+        graphicsCards: Array.from(filters.graphicsCards),
+        screenSizes: Array.from(filters.screenSizes),
+        brands: Array.from(filters.brands),
+        priceRange: filters.priceRange,
+      });
+    }
   }, [filters]);
 
   const { 
@@ -56,9 +78,11 @@ const ComparePriceLaptops = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    // Scroll to top when page changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleFiltersChange = (newFilters: FilterOptions) => {
+  const handleFiltersChange = useCallback((newFilters: FilterOptions) => {
     // Create a deep copy of the filter sets to avoid reference issues
     const updatedFilters: FilterOptions = {
       priceRange: { ...newFilters.priceRange },
@@ -70,9 +94,9 @@ const ComparePriceLaptops = () => {
       brands: new Set(newFilters.brands),
     };
     
-    setFilters(updatedFilters);
+    setRawFilters(updatedFilters);
     setCurrentPage(1); // Reset to first page when filters change
-  };
+  }, []);
 
   const handleRetry = () => {
     refetch();
