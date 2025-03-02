@@ -57,20 +57,22 @@ export function FilterSection({
 
   return (
     <AccordionItem value={title} className="border-b border-slate-200">
-      <AccordionTrigger className="text-sm font-medium hover:no-underline px-2 py-3 rounded-md hover:bg-slate-50 transition-colors group">
-        <div className="flex items-center gap-2 w-full">
-          <div className="flex-shrink-0">
+      <AccordionTrigger 
+        className="text-sm font-medium hover:no-underline px-3 py-3.5 rounded-md hover:bg-slate-100 transition-colors group data-[state=open]:bg-blue-50 data-[state=open]:text-blue-700"
+      >
+        <div className="flex items-center gap-2.5 w-full">
+          <div className="flex-shrink-0 text-slate-600 group-data-[state=open]:text-blue-600">
             <FilterIcon iconType={icon} />
           </div>
-          <span className="text-slate-800 group-hover:text-slate-900">{title}</span>
+          <span className="text-slate-800 group-hover:text-slate-900 group-data-[state=open]:text-blue-700">{title}</span>
           {hasSelections && (
-            <Badge variant="outline" className="ml-auto bg-blue-50 text-blue-700 border-blue-200 text-xs">
+            <Badge variant="outline" className="ml-auto bg-blue-50 text-blue-700 border-blue-200 text-xs font-semibold">
               {selectedOptions.size}
             </Badge>
           )}
         </div>
       </AccordionTrigger>
-      <AccordionContent className="pt-2 pb-3 px-1">
+      <AccordionContent className="pt-3 pb-4 px-3">
         {options.size > 8 && (
           <SearchInput
             placeholder={`Search ${title.toLowerCase()}...`}
@@ -80,7 +82,7 @@ export function FilterSection({
         )}
         
         {hasSelections && (
-          <div className="mb-2 flex justify-end">
+          <div className="mb-3 flex justify-end">
             <ClearFilterButton 
               label={title}
               onClick={handleClearFilter}

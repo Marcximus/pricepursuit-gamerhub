@@ -18,7 +18,7 @@ export function FilterOptionsList({
 }: FilterOptionsListProps) {
   return (
     <ScrollArea className={`${options.length > 8 ? 'h-[240px]' : ''} rounded-md`}>
-      <div className="space-y-1 px-1">
+      <div className="space-y-1">
         {options.length > 0 ? (
           options.map((option) => (
             <CheckboxItem
@@ -30,7 +30,7 @@ export function FilterOptionsList({
             />
           ))
         ) : (
-          <div className="text-sm text-slate-500 py-2 text-center">
+          <div className="text-sm text-slate-500 py-4 text-center bg-slate-50 rounded-md">
             No options available
           </div>
         )}

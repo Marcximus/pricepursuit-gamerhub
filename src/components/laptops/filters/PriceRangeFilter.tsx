@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { DollarSign } from "lucide-react";
+import { DollarSign, X } from "lucide-react";
 
 type PriceRangeFilterProps = {
   minPrice: number;
@@ -127,18 +127,24 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
     }).format(price);
   };
 
+  // Check if price filter is active
+  const isPriceFilterActive = !isDefaultPriceRange;
+
   return (
-    <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-      <div className="flex justify-between items-center mb-3">
+    <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm mb-5">
+      <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-          <DollarSign className="h-4 w-4" />
+          <div className="h-6 w-6 flex items-center justify-center rounded-full bg-blue-50 text-blue-600">
+            <DollarSign className="h-3.5 w-3.5" />
+          </div>
           <Label className="text-sm font-medium">Price Range</Label>
         </div>
-        {!isDefaultPriceRange && (
+        {isPriceFilterActive && (
           <button
             onClick={handleResetPrice}
-            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+            className="text-xs flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 font-medium transition-colors"
           >
+            <X className="h-3 w-3" />
             Reset
           </button>
         )}
@@ -159,7 +165,7 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
         />
       </div>
 
-      <div className="flex gap-2 items-center mt-8">
+      <div className="flex gap-3 items-center mt-8">
         <div className="relative flex-1">
           <Input
             type="number"
@@ -167,7 +173,7 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
             onChange={(e) => setLocalMin(Number(e.target.value))}
             min={0}
             max={localMax - 50}
-            className="pl-9 h-9 text-sm"
+            className="pl-8 h-10 text-sm rounded-md border-slate-300 focus:border-blue-300 focus:ring-blue-200"
           />
           <div className="absolute left-3 top-2.5 text-slate-500">$</div>
         </div>
@@ -179,7 +185,7 @@ export function PriceRangeFilter({ minPrice, maxPrice, onPriceChange }: PriceRan
             onChange={(e) => setLocalMax(Number(e.target.value))}
             min={localMin + 50}
             max={EXTENDED_MAX_PRICE}
-            className="pl-9 h-9 text-sm"
+            className="pl-8 h-10 text-sm rounded-md border-slate-300 focus:border-blue-300 focus:ring-blue-200"
           />
           <div className="absolute left-3 top-2.5 text-slate-500">$</div>
         </div>

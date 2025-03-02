@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion } from "@/components/ui/accordion";
 import { FilterSection } from "./filters/FilterSection";
 import { PriceRangeFilter } from "./filters/PriceRangeFilter";
-import { Filter, SlidersHorizontal } from "lucide-react";
+import { Filter, SlidersHorizontal, X } from "lucide-react";
 
 export type FilterOptions = {
   priceRange: { min: number; max: number };
@@ -106,27 +106,33 @@ export function LaptopFilters({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4 px-1">
-        <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-          <SlidersHorizontal className="h-4 w-4" />
-          <span>Filters</span>
-          {totalActiveFilters > 0 && (
-            <span className="inline-flex items-center justify-center bg-blue-100 text-blue-800 text-xs font-medium rounded-full h-5 min-w-[20px] px-1">
-              {totalActiveFilters}
-            </span>
-          )}
+      <div className="flex items-center justify-between mb-5 px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg border-b border-slate-200">
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+            <SlidersHorizontal className="h-4 w-4" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-800">Filters</h3>
+            <p className="text-xs text-slate-500">Refine your search</p>
+          </div>
         </div>
         {totalActiveFilters > 0 && (
-          <button
-            onClick={handleResetAllFilters}
-            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-          >
-            Reset all
-          </button>
+          <div className="flex items-center">
+            <span className="inline-flex items-center justify-center bg-blue-100 text-blue-800 text-xs font-medium rounded-full h-6 min-w-[24px] px-1.5 mr-2">
+              {totalActiveFilters}
+            </span>
+            <button
+              onClick={handleResetAllFilters}
+              className="text-xs flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 font-medium transition-colors"
+            >
+              <X className="h-3 w-3" />
+              Reset all
+            </button>
+          </div>
         )}
       </div>
 
-      <ScrollArea className="flex-1 pr-4">
+      <ScrollArea className="flex-1 px-4 pb-4">
         <div className="space-y-5">
           <PriceRangeFilter 
             minPrice={filters.priceRange.min}
@@ -134,7 +140,7 @@ export function LaptopFilters({
             onPriceChange={handlePriceChange}
           />
 
-          <Accordion type="multiple" defaultValue={defaultValues} className="w-full">
+          <Accordion type="multiple" defaultValue={defaultValues} className="w-full bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
             <FilterSection
               title="Brand"
               options={brands}

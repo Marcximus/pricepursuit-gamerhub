@@ -12,12 +12,12 @@ type SearchInputProps = {
 export function SearchInput({ placeholder, value, onChange }: SearchInputProps) {
   return (
     <div className="relative mb-3">
-      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+      <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
       <Input
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="pl-9 h-9 text-sm bg-slate-50 border-slate-200 focus:bg-white"
+        className="pl-9 h-10 text-sm bg-slate-50 border-slate-200 focus:bg-white rounded-md"
       />
     </div>
   );
