@@ -1,175 +1,93 @@
 
 /**
- * Processes and normalizes screen size information
- * Extracts screen size value from text
+ * Functions for processing and normalizing physical specifications
  */
+
 export const processScreenSize = (screenSize: string | undefined, title: string, description?: string): string | undefined => {
   if (screenSize && typeof screenSize === 'string' && !screenSize.includes('undefined')) {
-    // Clean up existing screen size string to remove unrelated specs
-    const cleanedScreenSize = screenSize
-      .replace(/\d+\s*(GB|TB)\s*(RAM|SSD|HDD|Memory|Storage)/i, '')
-      .replace(/\b(USB|HDMI|Windows|WiFi|Bluetooth)\b/gi, '')
-      .trim();
-      
-    if (cleanedScreenSize.length > 1) {
-      return cleanedScreenSize;
-    }
+    return screenSize;
   }
   
-  // Combine title and description for better extraction chances if description is provided
+  // Combine title and description for better extraction chances
   const textToSearch = description ? `${title} ${description}` : title;
   
-  // Look for screen size patterns in the text (more specific patterns first)
-  // Express pattern with decimal numbers and inch keyword
-  const sizePatterns = [
-    // Match specific screen size with decimal + inch
-    /\b(\d{1,2}(?:\.\d{1,2})?)[- ](?:inch|in|"|''|inches)\b/i,
-    
-    // Match screen size with just the double quote as inch indicator
-    /\b(\d{1,2}(?:\.\d{1,2})?)\s*["″]\b/i,
-    
-    // Match screen size in the format 15.6-inch or similar
-    /\b(\d{1,2}(?:\.\d{1,2})?)[- ](?:inch(?:es)?)\b/i,
-    
-    // Match screen size mentioned with a double quote symbol
-    /\b(\d{1,2}(?:\.\d{1,2})?)\s*(?:inch(?:es)?|["″])\b/i,
-    
-    // Match screen size mentioned with "Screen" or "Display"
-    /\b(?:screen|display)?\s*(?:size)?:?\s*(\d{1,2}(?:\.\d{1,2})?)\s*(?:inch|in|"|''|inches)\b/i,
-    
-    // Less specific patterns (only use if more specific ones don't match)
-    /\b(\d{1,2}(?:\.\d{1,2})?)\s*(?:in|inch|inches)\b/i,
-    
-    // Common laptop/notebook sizes - without inch keyword but at the start of text
-    /^(?:notebook|laptop)\s*(\d{1,2}(?:\.\d{1,2})?)\b/i,
+  // Look for screen size patterns
+  const screenSizePatterns = [
+    /\b(\d{1,2}\.?\d*)[\-\s]?inch\b/i,
+    /\b(\d{1,2}\.?\d*)[\-\s]?in\b/i,
+    /\b(\d{1,2}\.?\d*)"(?:\s*display|\s*screen|\s*ips|\s*laptop)?\b/i,
+    /\bscreen\s*size:?\s*(\d{1,2}\.?\d*)\s*(?:inch|in|")\b/i
   ];
   
-  for (const pattern of sizePatterns) {
+  for (const pattern of screenSizePatterns) {
     const match = textToSearch.match(pattern);
     if (match && match[1]) {
-      const sizeValue = parseFloat(match[1]);
-      
-      // Validate that this looks like a realistic screen size for a laptop
-      if (sizeValue >= 10 && sizeValue <= 22) {
-        return `${sizeValue}″`;
+      const size = parseFloat(match[1]);
+      // Filter out unrealistic laptop screen sizes
+      if (size < 10 || size > 21) {
+        continue;
       }
+      return `${size}"`;
     }
-  }
-  
-  // Look for common laptop screen sizes
-  const commonSizes = textToSearch.match(/\b(11\.6|12\.5|13\.3|14|15\.6|16|17\.3)\b/);
-  if (commonSizes && commonSizes[1]) {
-    const sizeValue = parseFloat(commonSizes[1]);
-    if (sizeValue >= 10 && sizeValue <= 22) {
-      return `${sizeValue}″`;
-    }
-  }
-  
-  // Match MacBook specific sizes
-  if (textToSearch.toLowerCase().includes('macbook')) {
-    if (textToSearch.match(/\b(air|pro)\s*13\b/i)) return '13.3″';
-    if (textToSearch.match(/\b(air|pro)\s*14\b/i)) return '14.2″';
-    if (textToSearch.match(/\b(air|pro)\s*15\b/i)) return '15.3″';
-    if (textToSearch.match(/\b(air|pro)\s*16\b/i)) return '16.2″';
   }
   
   return undefined;
 };
 
-/**
- * Processes and normalizes weight information
- */
 export const processWeight = (weight: string | undefined, title: string, description?: string): string | undefined => {
   if (weight && typeof weight === 'string' && !weight.includes('undefined')) {
-    return weight.trim();
+    return weight;
   }
   
-  // Combine title and description for better extraction chances if description is provided
+  // Combine title and description for better extraction chances
   const textToSearch = description ? `${title} ${description}` : title;
   
-  // Look for weight in the text using common weight patterns
+  // Look for weight patterns
   const weightPatterns = [
-    // Match weight with pounds/lbs
-    /\b(\d{1,2}(?:\.\d{1,2})?)(?:\s*|-)(pounds|pound|lbs|lb)\b/i,
-    
-    // Match weight with kilograms/kg
-    /\b(\d{1,2}(?:\.\d{1,2})?)(?:\s*|-)(kg|kilograms|kilogram)\b/i,
-    
-    // Match weight with grams
-    /\b(\d{3,4})(?:\s*|-)(g|grams|gram)\b/i,
-    
-    // Match weight with "weighs" verb
-    /\bweighs\s+(\d{1,2}(?:\.\d{1,2})?)(?:\s*|-)(pounds|pound|lbs|lb|kg|kilograms|kilogram)\b/i,
-    
-    // Match weight mentioned with "weight"
-    /\bweight:?\s*(\d{1,2}(?:\.\d{1,2})?)(?:\s*|-)(pounds|pound|lbs|lb|kg|kilograms|kilogram)\b/i,
+    /\b(\d+\.?\d*)\s*(?:pounds|pound|lbs|lb)\b/i,
+    /\b(\d+\.?\d*)\s*(?:kg|kilograms|kilogram)\b/i,
+    /\bweight:?\s*(\d+\.?\d*)\s*(?:pounds|pound|lbs|lb|kg|kilograms|kilogram)\b/i
   ];
   
   for (const pattern of weightPatterns) {
     const match = textToSearch.match(pattern);
-    if (match && match[1] && match[2]) {
+    if (match && match[1]) {
       const weightValue = parseFloat(match[1]);
-      const unit = match[2].toLowerCase();
+      const unit = textToSearch.substring(match.index! + match[0].indexOf(match[1]) + match[1].length).match(/kg|kilograms|kilogram/i) ? 'kg' : 'lbs';
       
-      if (unit.includes('lb') || unit.includes('pound')) {
-        // Validate that this looks like a realistic weight for a laptop
-        if (weightValue > 0.5 && weightValue < 12) {
-          return `${weightValue} lbs`;
-        }
-      } else if (unit.includes('kg') || unit.includes('kilo')) {
-        // Convert kg to lbs for standardization if needed
-        if (weightValue > 0.2 && weightValue < 5) {
-          return `${weightValue} kg`;
-        }
-      } else if (unit.includes('g')) {
-        // Convert grams to kg for standardization
-        const kgValue = weightValue / 1000;
-        if (kgValue > 0.2 && kgValue < 5) {
-          return `${kgValue.toFixed(2)} kg`;
-        }
+      // Convert kg to pounds for consistency
+      if (unit === 'kg') {
+        const poundsValue = weightValue * 2.20462;
+        return `${poundsValue.toFixed(2)} lbs`;
       }
+      
+      return `${weightValue} lbs`;
     }
   }
   
   return undefined;
 };
 
-/**
- * Processes and normalizes battery life information
- */
 export const processBatteryLife = (batteryLife: string | undefined, title: string, description?: string): string | undefined => {
   if (batteryLife && typeof batteryLife === 'string' && !batteryLife.includes('undefined')) {
-    return batteryLife.trim();
+    return batteryLife;
   }
   
-  // Combine title and description for better extraction chances if description is provided
+  // Combine title and description for better extraction chances
   const textToSearch = description ? `${title} ${description}` : title;
   
-  // Look for battery life in the text using common battery life patterns
+  // Look for battery life patterns
   const batteryPatterns = [
-    // Match battery life with hours mention
-    /\b(\d{1,2}(?:\.\d{1,2})?)(?:\s*|-|–|—)(?:hour|hr|h)s?\s*(?:battery|runtime|battery life)\b/i,
-    
-    // Match battery life with "up to" pattern
-    /\bup\s*to\s*(\d{1,2}(?:\.\d{1,2})?)(?:\s*|-|–|—)(?:hour|hr|h)s?\b/i,
-    
-    // Match battery life with "lasts" verb
-    /\bbattery\s*(?:life|runtime)?\s*(?:lasts|of)\s*(\d{1,2}(?:\.\d{1,2})?)(?:\s*|-|–|—)(?:hour|hr|h)s?\b/i,
-    
-    // Match battery life mentioned with "battery life" or "battery"
-    /\bbattery\s*(?:life|runtime)?:?\s*(\d{1,2}(?:\.\d{1,2})?)(?:\s*|-|–|—)(?:hour|hr|h)s?\b/i,
-    
-    // More generic pattern for battery hours
-    /\b(\d{1,2}(?:\.\d{1,2})?)(?:\s*|-|–|—)(?:hour|hr|h)s?\s*(?:of|on)?\s*(?:battery|runtime)?\b/i,
+    /\b(\d+\.?\d*)\s*(?:hours|hour|hrs|hr)(?:\s*battery|\s*battery\s*life)?\b/i,
+    /\bbattery(?:\s*life)?:?\s*(?:up\s*to\s*)?(\d+\.?\d*)\s*(?:hours|hour|hrs|hr)\b/i,
+    /\bbattery\s*life\s*of\s*(?:up\s*to\s*)?(\d+\.?\d*)\s*(?:hours|hour|hrs|hr)\b/i
   ];
   
   for (const pattern of batteryPatterns) {
     const match = textToSearch.match(pattern);
     if (match && match[1]) {
       const hours = parseFloat(match[1]);
-      
-      // Validate that this looks like a realistic battery life for a laptop
-      if (hours > 0 && hours <= 24) {
+      if (hours > 0 && hours <= 24) { // Realistic battery life
         return `${hours} hours`;
       }
     }
@@ -178,71 +96,37 @@ export const processBatteryLife = (batteryLife: string | undefined, title: strin
   return undefined;
 };
 
-/**
- * Processes and normalizes webcam/camera information
- */
 export const processCamera = (camera: string | undefined, title: string, description?: string): string | undefined => {
   if (camera && typeof camera === 'string' && !camera.includes('undefined')) {
-    return camera.trim();
+    return camera;
   }
   
-  // Combine title and description for better extraction chances if description is provided
+  // Combine title and description for better extraction chances
   const textToSearch = description ? `${title} ${description}` : title;
   
-  // Look for camera in the text using common camera patterns
+  // Look for camera quality patterns
   const cameraPatterns = [
-    // Match HD/FHD camera mention
-    /\b(HD|FHD|720p|1080p)\s*(?:webcam|camera)\b/i,
-    
-    // Match megapixel camera mention
-    /\b(\d+(?:\.\d+)?MP|megapixel)\s*(?:webcam|camera)\b/i,
-    
-    // Match camera with special features
-    /\b(?:IR|infrared|face recognition|windows hello)\s*(?:webcam|camera)\b/i,
-    
-    // Match privacy camera mentions
-    /\b(?:privacy|physical shutter)\s*(?:webcam|camera)\b/i,
-    
-    // Match "with webcam" or similar
-    /\bwith\s*(?:built-in|integrated)?\s*(?:webcam|camera)\b/i,
-    
-    // Match any webcam mention
-    /\b(?:webcam|camera)\b/i,
+    /\b(?:720p|1080p|HD|FHD|Full\s*HD|QHD|2K|4K)\s*(?:webcam|camera)\b/i,
+    /\bwebcam:?\s*(?:720p|1080p|HD|FHD|Full\s*HD|QHD|2K|4K)\b/i,
+    /\bcamera:?\s*(?:720p|1080p|HD|FHD|Full\s*HD|QHD|2K|4K)\b/i
   ];
   
   for (const pattern of cameraPatterns) {
     const match = textToSearch.match(pattern);
     if (match) {
-      // Extract the camera spec
-      let cameraSpec = match[0].trim();
-      
-      // Standardize common terms
-      cameraSpec = cameraSpec
-        .replace(/web\s*cam/i, 'webcam')
-        .replace(/built-in|integrated/i, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-      
-      // Add HD if webcam is mentioned but no quality is specified
-      if (cameraSpec.toLowerCase() === 'webcam' || cameraSpec.toLowerCase() === 'camera') {
-        cameraSpec = 'HD Webcam';
-      }
-      
-      return cameraSpec;
+      return match[0].replace(/webcam:|camera:|\s+/gi, ' ').trim();
     }
   }
   
-  // Check specifically for no webcam
-  if (textToSearch.match(/\bno\s*(?:webcam|camera)\b/i)) {
-    return 'No webcam';
+  // Basic webcam detection
+  if (textToSearch.match(/\bwebcam\b|\bcamera\b/i)) {
+    return 'HD Webcam';
   }
   
   return undefined;
 };
 
-/**
- * Processes and extracts color information
- */
+// These functions duplicate featureProcessor ones for disambiguation in the main export
 export const processColor = (title: string, description?: string): string | undefined => {
   // Combine title and description for better extraction chances if description is provided
   const textToSearch = description ? `${title} ${description}` : title;
@@ -274,9 +158,6 @@ export const processColor = (title: string, description?: string): string | unde
   return undefined;
 };
 
-/**
- * Processes touchscreen information
- */
 export const processTouchscreen = (title: string, description?: string): boolean | undefined => {
   // Combine title and description for better extraction chances if description is provided
   const textToSearch = description ? `${title} ${description}` : title;
@@ -304,9 +185,6 @@ export const processTouchscreen = (title: string, description?: string): boolean
   return undefined;
 };
 
-/**
- * Detects backlit keyboard feature
- */
 export const processBacklitKeyboard = (title: string, description?: string): boolean | undefined => {
   // Combine title and description for better extraction chances if description is provided
   const textToSearch = description ? `${title} ${description}` : title;
@@ -328,9 +206,6 @@ export const processBacklitKeyboard = (title: string, description?: string): boo
   return undefined;
 };
 
-/**
- * Extracts information about ports
- */
 export const processPorts = (title: string, description?: string): Record<string, number> | undefined => {
   // Combine title and description for better extraction chances if description is provided
   const textToSearch = description ? `${title} ${description}` : title;
@@ -404,9 +279,6 @@ export const processPorts = (title: string, description?: string): Record<string
   return Object.keys(ports).length > 0 ? ports : undefined;
 };
 
-/**
- * Detects fingerprint reader feature
- */
 export const processFingerprint = (title: string, description?: string): boolean | undefined => {
   // Combine title and description for better extraction chances if description is provided
   const textToSearch = description ? `${title} ${description}` : title;
