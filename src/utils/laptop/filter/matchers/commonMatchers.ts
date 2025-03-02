@@ -36,14 +36,20 @@ export const matchesFilter = (
   productTitle?: string
 ): boolean => {
   try {
-    console.log(`Matching filter: '${filterValue}' with product value: '${productValue}', type: ${filterType}`);
+    // Skip excessive logging in production for better performance
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`Matching filter: '${filterValue}' with product value: '${productValue}', type: ${filterType}`);
+    }
     
     // Use direct function calls instead of dynamic imports
     switch (filterType) {
       case 'brand':
         const brandResult = matchesBrandFilter(filterValue, productValue, productTitle);
-        console.log(`Brand match result: ${brandResult}`);
+        
+        // Always log brand matches since this is our current issue
+        console.log(`Brand match result for '${filterValue}' with '${productValue}': ${brandResult}`);
         return brandResult;
+        
       case 'graphics':
         return matchesGraphicsFilter(filterValue, productValue, productTitle);
       case 'processor':

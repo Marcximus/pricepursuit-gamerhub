@@ -24,6 +24,7 @@ const processorCache = new Map<string, string>();
  * Filters laptops based on selected filter options with improved performance
  */
 export const filterLaptops = (laptops: Product[], filters: FilterOptions): Product[] => {
+  // Log filter state at the start
   console.log('Starting filtering with:', {
     totalLaptops: laptops.length,
     activeFilters: {
@@ -49,43 +50,42 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
   // Cache the brand counts in memory for better performance
   let brandCounts: Record<string, number> = {};
   
-  // Only compute brand counts if brand filtering is active
-  if (filters.brands.size > 0) {
-    console.log('Brand filtering is active, computing brand counts...');
+  // Always compute brand counts when filtering, regardless of whether brand filtering is active
+  // This helps with the "Other" category and general brand filtering
+  console.log('Computing brand counts for filtering...');
     
-    laptops.forEach(laptop => {
-      if (!laptop.brand && !laptop.title) return;
-      
-      // Use cached normalized brand if available
-      const cacheKey = `${laptop.brand || ''}_${laptop.title || ''}`;
-      let normalizedBrand: string;
-      
-      if (brandCache.has(cacheKey)) {
-        normalizedBrand = brandCache.get(cacheKey)!;
-      } else {
-        normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title).toLowerCase();
-        brandCache.set(cacheKey, normalizedBrand);
-      }
-      
-      brandCounts[normalizedBrand] = (brandCounts[normalizedBrand] || 0) + 1;
-    });
+  laptops.forEach(laptop => {
+    if (!laptop.brand && !laptop.title) return;
     
-    // Populate mainBrandsSet with brands that have 15+ laptops
-    Object.entries(brandCounts).forEach(([brand, count]) => {
-      if (count >= 15) {
-        mainBrandsSet.add(brand.toLowerCase());
-      }
-    });
+    // Use cached normalized brand if available
+    const cacheKey = `${laptop.brand || ''}_${laptop.title || ''}`;
+    let normalizedBrand: string;
     
-    // Add any explicitly selected brands (except 'Other') to mainBrandsSet
-    filters.brands.forEach(brand => {
-      if (brand !== 'Other') {
-        mainBrandsSet.add(brand.toLowerCase());
-      }
-    });
+    if (brandCache.has(cacheKey)) {
+      normalizedBrand = brandCache.get(cacheKey)!;
+    } else {
+      normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title).toLowerCase();
+      brandCache.set(cacheKey, normalizedBrand);
+    }
     
-    console.log('Main brands set:', Array.from(mainBrandsSet));
-  }
+    brandCounts[normalizedBrand] = (brandCounts[normalizedBrand] || 0) + 1;
+  });
+  
+  // Populate mainBrandsSet with brands that have 15+ laptops
+  Object.entries(brandCounts).forEach(([brand, count]) => {
+    if (count >= 15) {
+      mainBrandsSet.add(brand.toLowerCase());
+    }
+  });
+  
+  // Add any explicitly selected brands (except 'Other') to mainBrandsSet
+  filters.brands.forEach(brand => {
+    if (brand !== 'Other') {
+      mainBrandsSet.add(brand.toLowerCase());
+    }
+  });
+  
+  console.log('Main brands set:', Array.from(mainBrandsSet));
 
   // Apply filters in order of speed (fastest first) to short-circuit early
   const filteredLaptops = laptops.filter(laptop => {
@@ -124,13 +124,15 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
   console.log(`Filtering complete: ${filteredLaptops.length} out of ${laptops.length} laptops matched filters`);
   
   // Sample filtered laptops to validate brand filtering is working
-  if (filters.brands.size > 0) {
+  if (filters.brands.size > 0 && filteredLaptops.length > 0) {
     const sampleSize = Math.min(5, filteredLaptops.length);
     console.log(`Sample of filtered laptops (${sampleSize}):`);
     for (let i = 0; i < sampleSize; i++) {
       const laptop = filteredLaptops[i];
       console.log(`[${i+1}] Brand: ${laptop.brand}, Title: ${laptop.title?.substring(0, 30)}...`);
     }
+  } else if (filteredLaptops.length === 0) {
+    console.log('No laptops matched the current filters');
   }
   
   return filteredLaptops;

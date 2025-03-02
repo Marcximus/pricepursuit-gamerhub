@@ -9,11 +9,16 @@ export const matchesBrandFilter = (
   productValue: string | null | undefined,
   productTitle?: string
 ): boolean => {
-  if (!productValue) return false;
+  if (!productValue && !productTitle) return false;
   
   // Use the specialized brand normalization function
-  const normalizedProductBrand = normalizeBrand(productValue, productTitle);
+  const normalizedProductBrand = normalizeBrand(productValue || '', productTitle);
   
   // Case insensitive comparison
-  return normalizedProductBrand.toLowerCase() === filterValue.toLowerCase();
+  const matches = normalizedProductBrand.toLowerCase() === filterValue.toLowerCase();
+  
+  // Add debugging for brand matching
+  console.log(`Brand matching: ${filterValue} vs ${normalizedProductBrand} = ${matches}`);
+  
+  return matches;
 };

@@ -8,6 +8,7 @@ import { LaptopList } from "@/components/laptops/LaptopList";
 import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
+import { toast } from "@/components/ui/use-toast";
 
 // Debounce function to limit filter updates
 const useDebounce = <T,>(value: T, delay: number): T => {
@@ -24,6 +25,19 @@ const useDebounce = <T,>(value: T, delay: number): T => {
   }, [value, delay]);
 
   return debouncedValue;
+};
+
+// Create deep copy of filter sets to prevent reference issues
+const createFiltersCopy = (filters: FilterOptions): FilterOptions => {
+  return {
+    priceRange: { ...filters.priceRange },
+    processors: new Set(filters.processors),
+    ramSizes: new Set(filters.ramSizes),
+    storageOptions: new Set(filters.storageOptions),
+    graphicsCards: new Set(filters.graphicsCards),
+    screenSizes: new Set(filters.screenSizes),
+    brands: new Set(filters.brands),
+  };
 };
 
 const ComparePriceLaptops = () => {
@@ -49,12 +63,24 @@ const ComparePriceLaptops = () => {
     };
   }, []);
   
-  // Debounce filter changes to reduce performance impact (300ms delay)
-  const filters = useDebounce(rawFilters, 300);
+  // Reduce debounce time for more responsive filtering (150ms instead of 300ms)
+  const filters = useDebounce(rawFilters, 150);
 
-  // Add debugging useEffect to track filter changes
+  // Log filter changes both before and after debounce
   useEffect(() => {
-    console.log('Filter state updated:', {
+    console.log('Raw filter state updated (before debounce):', {
+      processors: Array.from(rawFilters.processors),
+      ramSizes: Array.from(rawFilters.ramSizes),
+      storageOptions: Array.from(rawFilters.storageOptions),
+      graphicsCards: Array.from(rawFilters.graphicsCards),
+      screenSizes: Array.from(rawFilters.screenSizes),
+      brands: Array.from(rawFilters.brands),
+      priceRange: rawFilters.priceRange,
+    });
+  }, [rawFilters]);
+  
+  useEffect(() => {
+    console.log('Debounced filter state updated (after debounce):', {
       processors: Array.from(filters.processors),
       ramSizes: Array.from(filters.ramSizes),
       storageOptions: Array.from(filters.storageOptions),
@@ -63,6 +89,31 @@ const ComparePriceLaptops = () => {
       brands: Array.from(filters.brands),
       priceRange: filters.priceRange,
     });
+  }, [filters]);
+
+  // Add toast notifications for better UX
+  const prevFiltersRef = useRef<FilterOptions | null>(null);
+  
+  useEffect(() => {
+    if (prevFiltersRef.current) {
+      const brandsBefore = Array.from(prevFiltersRef.current.brands);
+      const brandsAfter = Array.from(filters.brands);
+      
+      // Check if brands were added
+      const addedBrands = brandsAfter.filter(brand => !brandsBefore.includes(brand));
+      if (addedBrands.length > 0) {
+        console.log(`Brand filter added: ${addedBrands.join(', ')}`);
+      }
+      
+      // Check if brands were removed
+      const removedBrands = brandsBefore.filter(brand => !brandsAfter.includes(brand));
+      if (removedBrands.length > 0) {
+        console.log(`Brand filter removed: ${removedBrands.join(', ')}`);
+      }
+    }
+    
+    // Update the ref for next comparison
+    prevFiltersRef.current = createFiltersCopy(filters);
   }, [filters]);
 
   const { 
@@ -78,6 +129,13 @@ const ComparePriceLaptops = () => {
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
   const isPartialData = data?.isPartialData;
+
+  // Log whenever new laptop data is received
+  useEffect(() => {
+    if (data && data.laptops) {
+      console.log(`Received ${data.laptops.length} laptops on page ${currentPage}, total: ${data.totalCount}`);
+    }
+  }, [data, currentPage]);
 
   const filterOptions = useLaptopFilters(data?.allLaptops);
 
@@ -103,31 +161,25 @@ const ComparePriceLaptops = () => {
     });
     
     // Create a deep copy of the filter sets to avoid reference issues
-    const updatedFilters: FilterOptions = {
-      priceRange: { ...newFilters.priceRange },
-      processors: new Set(newFilters.processors),
-      ramSizes: new Set(newFilters.ramSizes),
-      storageOptions: new Set(newFilters.storageOptions),
-      graphicsCards: new Set(newFilters.graphicsCards),
-      screenSizes: new Set(newFilters.screenSizes),
-      brands: new Set(newFilters.brands),
-    };
-    
-    setRawFilters(updatedFilters);
+    setRawFilters(createFiltersCopy(newFilters));
     setCurrentPage(1); // Reset to first page when filters change
   }, []);
 
   const handleRetry = () => {
     refetch();
+    toast({
+      title: "Refreshing data",
+      description: "Trying to fetch the latest laptop data...",
+    });
   };
 
-  // Add logging to see when the component is rendering with filter options
+  // Add effect to detect when brands filter is applied and log details
   useEffect(() => {
-    console.log('Laptop filter options available:', {
-      brandsCount: filterOptions.brands.size,
-      brands: Array.from(filterOptions.brands),
-    });
-  }, [filterOptions.brands]);
+    const brandCount = filters.brands.size;
+    if (brandCount > 0) {
+      console.log(`Active brand filters (${brandCount}):`, Array.from(filters.brands));
+    }
+  }, [filters.brands]);
 
   return (
     <div className="min-h-screen bg-slate-50">
