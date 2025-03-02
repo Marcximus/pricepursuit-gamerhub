@@ -81,20 +81,12 @@ export function FilterSection({
           />
         )}
         
-        {hasSelections && (
-          <div className="mb-3 flex justify-end">
-            <ClearFilterButton 
-              label={title}
-              onClick={handleClearFilter}
-            />
-          </div>
-        )}
-        
         <FilterOptionsList
           title={title}
           options={sortedOptions}
           selectedOptions={selectedOptions}
           onOptionChange={handleCheckboxChange}
+          showClearButtons={true}
         />
       </AccordionContent>
     </AccordionItem>
