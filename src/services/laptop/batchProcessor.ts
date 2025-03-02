@@ -44,8 +44,8 @@ export async function fetchLaptopsInBatches(minimalForFilters = false): Promise<
       if (Array.isArray(laptops)) {
         // Convert to proper Product type and validate the data has required fields
         const validLaptops = laptops
-          .filter(laptop => 
-            laptop && typeof laptop === 'object' && 'id' in laptop
+          .filter((laptop): laptop is NonNullable<typeof laptop> => 
+            laptop !== null && typeof laptop === 'object' && 'id' in laptop
           )
           .map(laptop => laptop as unknown as Product);
         

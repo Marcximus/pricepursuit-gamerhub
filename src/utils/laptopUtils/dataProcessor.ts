@@ -119,6 +119,9 @@ export const processLaptopData = (laptop: any): Product => {
     specs.benchmark_score = generateLaptopScore(specs);
   }
   
+  // Convert the ports from Record<string, number> to string for compatibility with Product type
+  const portsString = specs.ports ? JSON.stringify(specs.ports) : null;
+  
   // Process and create the laptop product object
   return {
     id: laptop.id,
