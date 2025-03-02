@@ -7,7 +7,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import ComparePriceLaptops from "./pages/Laptops";
 import NotFound from "./pages/NotFound";
-import { preloadLaptopData } from "./services/laptopService";
 
 // Create a new query client with specific options for better debugging
 const queryClient = new QueryClient({
@@ -19,14 +18,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-// Only preload laptop data if we don't already have embedded data
-if (!window.EMBEDDED_LAPTOP_DATA) {
-  console.log('No embedded data found, will attempt to preload');
-  preloadLaptopData();
-} else {
-  console.log(`Already have ${window.EMBEDDED_LAPTOP_DATA.length} embedded laptops, skipping preload`);
-}
 
 function App() {
   console.log('App component rendering');

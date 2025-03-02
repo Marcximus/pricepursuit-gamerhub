@@ -38,35 +38,8 @@ export const useLaptops = (
   const query = useQuery({
     queryKey: ['all-laptops'],
     queryFn: fetchAllLaptops,
-    staleTime: Infinity, // Never consider cached data stale (we'll handle expiry ourselves)
-    gcTime: Infinity, // Never garbage collect this query
-    // Immediately use embedded data if available
-    initialData: () => {
-      try {
-        // First check for embedded data in window object
-        if (window.EMBEDDED_LAPTOP_DATA && 
-            Array.isArray(window.EMBEDDED_LAPTOP_DATA) && 
-            window.EMBEDDED_LAPTOP_DATA.length > 0) {
-          console.log(`Using ${window.EMBEDDED_LAPTOP_DATA.length} laptops from embedded data as initialData`);
-          return window.EMBEDDED_LAPTOP_DATA;
-        }
-        
-        // Fall back to localStorage cache
-        const cacheExpiryStr = localStorage.getItem('preloaded-laptops-expiry');
-        const cachedDataStr = localStorage.getItem('preloaded-laptops-data');
-        if (cacheExpiryStr && cachedDataStr) {
-          const expiry = parseInt(cacheExpiryStr, 10);
-          if (Date.now() <= expiry) {
-            const cachedData = JSON.parse(cachedDataStr);
-            console.log(`Using ${cachedData.length} laptops from localStorage as initialData`);
-            return cachedData;
-          }
-        }
-      } catch (err) {
-        console.error('Error accessing initial data sources:', err);
-      }
-      return undefined;
-    },
+    staleTime: 1000 * 60 * 60, // 1 hour
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours
     select: (data) => {
       const processedData = processAndFilterLaptops(data, filters, sortBy, page, ITEMS_PER_PAGE);
       return {
