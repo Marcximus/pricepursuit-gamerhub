@@ -59,15 +59,17 @@ const ComparePriceLaptops = () => {
 
   const { 
     data, 
-    isLoading: isLaptopsLoading, 
-    error: laptopsError,
+    isLoading, 
+    error,
     isRefetching,
-    refetch
+    refetch,
+    isFullDataLoaded
   } = useLaptops(currentPage, sortBy, filters);
 
   const laptops = data?.laptops ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
+  const isPartialData = data?.isPartialData;
 
   const filterOptions = useLaptopFilters(data?.allLaptops);
 
@@ -126,7 +128,7 @@ const ComparePriceLaptops = () => {
                 totalLaptops={totalCount}
                 sortBy={sortBy}
                 onSortChange={handleSortChange}
-                isLoading={isLaptopsLoading}
+                isLoading={isLoading}
                 isRefetching={isRefetching}
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
@@ -139,8 +141,10 @@ const ComparePriceLaptops = () => {
                 totalCount={totalCount}
                 currentPage={currentPage}
                 totalPages={totalPages}
-                isLoading={isLaptopsLoading}
-                error={laptopsError}
+                isLoading={isLoading}
+                isPartialData={isPartialData}
+                isFullDataLoaded={isFullDataLoaded}
+                error={error}
                 isRefetching={isRefetching}
                 onPageChange={handlePageChange}
                 onRetry={handleRetry}
