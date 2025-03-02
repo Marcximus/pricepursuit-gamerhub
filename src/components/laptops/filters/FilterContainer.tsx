@@ -109,8 +109,6 @@ export function FilterContainer({
     <div className="flex flex-col h-full">
       <FilterHeader 
         onSearch={handleSearch}
-        totalActiveFilters={totalActiveFilters}
-        onResetAllFilters={handleResetAllFilters}
       />
 
       <ScrollArea className="flex-1 px-4 pb-4">
