@@ -1,8 +1,11 @@
 
 import { parseValueWithUnit } from './commonMatchers';
 
+// Cache for RAM value parsing to avoid redundant operations
+const ramValueCache = new Map<string, {value: number; unit: string} | null>();
+
 /**
- * Matcher for RAM filter values with improved accuracy
+ * Matcher for RAM filter values with improved performance
  */
 export const matchesRamFilter = (
   filterValue: string,
@@ -10,35 +13,19 @@ export const matchesRamFilter = (
   productTitle?: string
 ): boolean => {
   if (!productValue) return false;
-  
-  // Enhanced check: verify this value is actually RAM and not storage/GPU
-  // Check for RAM indicators in the value or title
-  const isRamValue = 
-    /\b(ram|memory|ddr)\b/i.test(productValue) || 
-    (productTitle && /\b(\d+)\s*gb\s*(ram|memory|ddr)\b/i.test(productTitle));
-  
-  // If it's not clearly RAM-related and title doesn't have RAM indicators near this value, be cautious
-  if (!isRamValue && productTitle) {
-    // Extract the numeric part from productValue
-    const match = productValue.match(/(\d+)\s*GB/i);
-    if (match) {
-      const valueInTitle = match[1];
-      // Look for this value in title with RAM indicators
-      const ramRegex = new RegExp(`\\b${valueInTitle}\\s*GB\\s*(DDR\\d?|RAM|Memory)\\b`, 'i');
-      
-      // If we don't find RAM indicators near this value in title,
-      // check if it looks like storage instead
-      if (!ramRegex.test(productTitle)) {
-        const storageRegex = new RegExp(`\\b${valueInTitle}\\s*GB\\s*(SSD|HDD|Storage|eMMC)\\b`, 'i');
-        if (storageRegex.test(productTitle)) {
-          return false; // This is likely storage, not RAM
-        }
-      }
-    }
+
+  // Get parsed RAM values from cache or compute them
+  let filterRAM = ramValueCache.get(filterValue);
+  if (filterRAM === undefined) {
+    filterRAM = parseValueWithUnit(filterValue);
+    ramValueCache.set(filterValue, filterRAM);
   }
   
-  const filterRAM = parseValueWithUnit(filterValue);
-  const productRAM = parseValueWithUnit(productValue);
+  let productRAM = ramValueCache.get(productValue);
+  if (productRAM === undefined) {
+    productRAM = parseValueWithUnit(productValue);
+    ramValueCache.set(productValue, productRAM);
+  }
   
   if (!filterRAM || !productRAM) return false;
   

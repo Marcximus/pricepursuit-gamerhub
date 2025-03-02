@@ -1,11 +1,17 @@
+
 import type { Product } from "@/types/product";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import { matchesFilter } from "../matchers";
 import { extractProcessorFromTitle } from "../extractors/processor/processorExtractor";
 import { standardizeProcessorForFiltering } from "../extractors/processor/processorStandardizer";
 
+// Cache for extracted processors
+const processorCache = new Map<string, string>();
+// Cache for standardized processors
+const standardizedProcessorCache = new Map<string, string>();
+
 /**
- * Apply processor filtering to a laptop with improved title extraction
+ * Apply processor filtering to a laptop with improved performance
  */
 export const applyProcessorFilter = (
   laptop: Product,
@@ -15,51 +21,58 @@ export const applyProcessorFilter = (
     return true;
   }
   
-  // First extract processor from title with fallback to stored value
-  // This prioritizes title-based processor information
-  const extractedProcessor = extractProcessorFromTitle(laptop.title, laptop.processor);
+  // Skip laptops without any processor info in title or specs
+  if (!laptop.processor && !laptop.title) {
+    return false;
+  }
+  
+  // Use cached processor extraction if possible
+  const cacheKey = `${laptop.id || ''}-${laptop.title || ''}-${laptop.processor || ''}`;
+  let extractedProcessor = processorCache.get(cacheKey);
+  
+  if (!extractedProcessor) {
+    extractedProcessor = extractProcessorFromTitle(laptop.title, laptop.processor);
+    if (extractedProcessor) {
+      processorCache.set(cacheKey, extractedProcessor);
+    }
+  }
   
   // If we can't determine the processor at all, exclude when processor filter is active
   if (!extractedProcessor) {
     return false;
   }
   
-  // Log for debugging to see what processors are being extracted and standardized
-  const standardizedProcessor = standardizeProcessorForFiltering(extractedProcessor);
+  // Get standardized processor from cache or compute it
+  let standardizedProcessor = standardizedProcessorCache.get(extractedProcessor);
+  if (!standardizedProcessor) {
+    standardizedProcessor = standardizeProcessorForFiltering(extractedProcessor);
+    standardizedProcessorCache.set(extractedProcessor, standardizedProcessor);
+  }
   
   // Special handling for MacBooks with Apple Silicon in title
   if (laptop.title) {
     const normalizedTitle = laptop.title.toLowerCase();
     
-    if (normalizedTitle.includes('macbook') && normalizedTitle.includes('m2')) {
-      // MacBook with M2 chip mentioned in title
-      if (Array.from(filters.processors).some(filter => 
-          filter === 'Apple M2' || 
-          filter.startsWith('Apple M2 '))) {
-        return true;
-      }
-    }
-    
-    // Special handling for Apple M-series in title - direct title check
-    if (laptop.title.match(/\bm[1234]\s+chip\b/i)) {
-      const mVersion = laptop.title.match(/\bm([1234])\s+chip\b/i)?.[1];
-      if (mVersion) {
-        // Check if any selected filter matches this Apple M-series
-        if (Array.from(filters.processors).some(filter => 
-            filter === `Apple M${mVersion}` || 
-            filter.startsWith(`Apple M${mVersion} `))) {
-          return true;
+    // Fast path for Apple silicon
+    if (normalizedTitle.includes('macbook')) {
+      // Process M-series chips for MacBooks
+      for (const mVersion of ["m1", "m2", "m3", "m4"]) {
+        if (normalizedTitle.includes(mVersion)) {
+          // Check for variants (Pro, Max, Ultra)
+          let variant = "";
+          if (normalizedTitle.includes(`${mVersion} pro`)) variant = "Pro";
+          else if (normalizedTitle.includes(`${mVersion} max`)) variant = "Max";
+          else if (normalizedTitle.includes(`${mVersion} ultra`)) variant = "Ultra";
+          
+          // Check if any selected filter matches this Apple M-series
+          const mVersionUpper = mVersion.charAt(0).toUpperCase() + mVersion.slice(1);
+          const chipName = `Apple ${mVersionUpper}${variant ? ' ' + variant : ''}`;
+          
+          if (filters.processors.has(chipName)) {
+            return true;
+          }
         }
       }
-    }
-  }
-  
-  // Special handling for processor value "Apple" with MacBook in title
-  if (laptop.processor === 'Apple' && laptop.title && 
-      laptop.title.toLowerCase().includes('macbook') && 
-      laptop.title.toLowerCase().includes('m2')) {
-    if (Array.from(filters.processors).some(filter => filter === 'Apple M2')) {
-      return true;
     }
   }
   
