@@ -103,6 +103,16 @@ export function FilterSection({
     onChange(new Set());
   }, [onChange]);
 
+  // Handle search input changes
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+  
+  // Clear search
+  const handleClearSearch = () => {
+    setSearchQuery("");
+  };
+
   // Determine if search should be shown based on number of options
   const showSearch = optionsArray.length > 8;
 
@@ -135,7 +145,8 @@ export function FilterSection({
           <SearchInput
             placeholder={`Search ${title.toLowerCase()}...`}
             value={searchQuery}
-            onChange={setSearchQuery}
+            onChange={handleSearchChange}
+            onClear={handleClearSearch}
           />
         )}
         
