@@ -13,21 +13,40 @@ serve(async (req) => {
   }
 
   try {
-    // Parse the request body for the query parameters
-    const { query } = await req.json();
+    // Support both GET and POST methods
+    let filterParams;
     
-    // Use the query parameters
-    const filterParams = {
-      brand: query.brand || null,
-      minPrice: query.minPrice ? parseFloat(query.minPrice) : null,
-      maxPrice: query.maxPrice ? parseFloat(query.maxPrice) : null,
-      ram: query.ram || null,
-      processor: query.processor || null,
-      sortBy: query.sortBy || 'wilson_score',
-      sortDir: query.sortDir || 'desc',
-      page: query.page ? parseInt(query.page) : 1,
-      pageSize: query.pageSize ? parseInt(query.pageSize) : 20
-    };
+    if (req.method === 'POST') {
+      // Parse the request body for query parameters
+      const { query } = await req.json();
+      filterParams = {
+        brand: query.brand || null,
+        minPrice: query.minPrice ? parseFloat(query.minPrice) : null,
+        maxPrice: query.maxPrice ? parseFloat(query.maxPrice) : null,
+        ram: query.ram || null,
+        processor: query.processor || null,
+        sortBy: query.sortBy || 'wilson_score',
+        sortDir: query.sortDir || 'desc',
+        page: query.page ? parseInt(query.page) : 1,
+        pageSize: query.pageSize ? parseInt(query.pageSize) : 20
+      };
+    } else {
+      // Parse filter params from URL for GET requests
+      const url = new URL(req.url);
+      filterParams = {
+        brand: url.searchParams.get('brand'),
+        minPrice: url.searchParams.get('minPrice') ? parseFloat(url.searchParams.get('minPrice')) : null,
+        maxPrice: url.searchParams.get('maxPrice') ? parseFloat(url.searchParams.get('maxPrice')) : null,
+        ram: url.searchParams.get('ram'),
+        processor: url.searchParams.get('processor'),
+        sortBy: url.searchParams.get('sortBy') || 'wilson_score',
+        sortDir: url.searchParams.get('sortDir') || 'desc',
+        page: url.searchParams.get('page') ? parseInt(url.searchParams.get('page')) : 1,
+        pageSize: url.searchParams.get('pageSize') ? parseInt(url.searchParams.get('pageSize')) : 20
+      };
+    }
+
+    console.log('Request received with parameters:', filterParams);
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -76,6 +95,8 @@ serve(async (req) => {
       console.error('Error fetching laptops:', error);
       throw error;
     }
+
+    console.log(`Query returned ${data.length} laptops, total count: ${count}`);
 
     // Add cache headers
     const headers = { 

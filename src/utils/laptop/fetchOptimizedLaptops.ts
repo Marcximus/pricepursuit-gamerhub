@@ -56,8 +56,9 @@ export async function fetchOptimizedLaptops({
   params.append('page', page.toString());
   params.append('pageSize', pageSize.toString());
 
-  // Convert params to string for the URL
+  // Convert params to string for caching key
   const queryString = params.toString();
+  console.log(`Fetching laptops with params: ${queryString}`);
   
   // Determine cache time based on filter specificity
   const filterCount = [brand, minPrice, maxPrice, ram, processor].filter(Boolean).length;
@@ -66,11 +67,16 @@ export async function fetchOptimizedLaptops({
     : 2 * 60 * 1000;  // 2 minutes for general listings
 
   try {
-    // Instead of trying to call the edge function via URL, use the Supabase client
-    // This ensures proper authentication and error handling
+    // Check if we have a cached version first
+    const cachedData = cache.get<PaginatedResponse<Product>>(`fetch-laptops-${queryString}`);
+    if (cachedData) {
+      console.log('Using cached laptop data');
+      return cachedData;
+    }
+    
+    // Try invoking the serverless function with POST method
     const { data, error } = await supabase.functions.invoke('fetch-laptops', {
-      method: 'GET',
-      // The correct way to pass query parameters in Supabase JS v2
+      method: 'POST',
       body: { query: Object.fromEntries(params) },
       headers: {
         'Content-Type': 'application/json'
@@ -78,13 +84,33 @@ export async function fetchOptimizedLaptops({
     });
 
     if (error) {
-      console.error('Error invoking function:', error);
-      throw error;
+      console.error('Error invoking function with POST:', error);
+      // If POST fails, try GET as a fallback
+      const urlWithParams = `${supabase.functions.url('fetch-laptops')}?${queryString}`;
+      console.log(`Trying GET fallback: ${urlWithParams}`);
+      
+      const response = await fetch(urlWithParams, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabase.auth.session()?.access_token || ''}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`GET request failed: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      // Cache the result for future use
+      cache.set(`fetch-laptops-${queryString}`, data, { expiry: cacheTime });
+      return data as PaginatedResponse<Product>;
     }
 
     // Cache the result for future use
     cache.set(`fetch-laptops-${queryString}`, data, { expiry: cacheTime });
     
+    console.log(`Successfully fetched ${data?.data?.length || 0} laptops out of ${data?.meta?.totalCount || 0} total`);
     return data as PaginatedResponse<Product>;
   } catch (error) {
     console.error('Error fetching optimized laptops:', error);

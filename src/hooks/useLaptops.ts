@@ -41,19 +41,21 @@ export const useLaptops = (
 ) => {
   // Convert filter format for the optimized endpoint
   const apiFilters = {
-    brand: Array.from(filters.brands).join(',') || undefined,
+    brand: Array.from(filters.brands || []).join(',') || undefined,
     minPrice: filters.priceRange.min > 0 ? filters.priceRange.min : undefined,
     maxPrice: filters.priceRange.max < 10000 ? filters.priceRange.max : undefined,
-    ram: Array.from(filters.ramSizes).join(',') || undefined,
-    processor: Array.from(filters.processors).join(',') || undefined
+    ram: Array.from(filters.ramSizes || []).join(',') || undefined,
+    processor: Array.from(filters.processors || []).join(',') || undefined
   };
+
+  console.log('API Filters:', apiFilters);
 
   // Convert sort format
   const [sortField, sortDirection] = sortBy.split('-') as [string, 'asc' | 'desc'];
   
   // Use React Query with the optimized fetch
   const query = useQuery({
-    queryKey: ['optimized-laptops', { page, sortBy, filters }],
+    queryKey: ['optimized-laptops', { page, sortBy, filters: JSON.stringify(apiFilters) }],
     queryFn: () => fetchOptimizedLaptops({
       ...apiFilters,
       sortBy: sortField,
