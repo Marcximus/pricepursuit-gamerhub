@@ -11,7 +11,7 @@ import {
   applyScreenSizeFilter,
   hasActiveFilters
 } from "./filtering";
-import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
+import { normalizeBrand } from "@/utils/laptop/normalizers/brandNormalizer";
 import { extractProcessorFromTitle } from "./extractors/processor/processorExtractor";
 
 // Cache for brand normalization
@@ -28,12 +28,12 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     totalLaptops: laptops.length,
     activeFilters: {
       priceRange: filters.priceRange,
-      processors: filters.processors.size,
-      ram: filters.ramSizes.size,
-      storage: filters.storageOptions.size,
-      graphics: filters.graphicsCards.size,
-      screenSizes: filters.screenSizes.size,
-      brands: filters.brands.size
+      processors: filters.processors.size > 0 ? Array.from(filters.processors) : 'none',
+      ram: filters.ramSizes.size > 0 ? Array.from(filters.ramSizes) : 'none',
+      storage: filters.storageOptions.size > 0 ? Array.from(filters.storageOptions) : 'none',
+      graphics: filters.graphicsCards.size > 0 ? Array.from(filters.graphicsCards) : 'none',
+      screenSizes: filters.screenSizes.size > 0 ? Array.from(filters.screenSizes) : 'none',
+      brands: filters.brands.size > 0 ? Array.from(filters.brands) : 'none'
     }
   });
 
@@ -51,6 +51,8 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
   
   // Only compute brand counts if brand filtering is active
   if (filters.brands.size > 0) {
+    console.log('Brand filtering is active, computing brand counts...');
+    
     laptops.forEach(laptop => {
       if (!laptop.brand && !laptop.title) return;
       
@@ -81,6 +83,8 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
         mainBrandsSet.add(brand.toLowerCase());
       }
     });
+    
+    console.log('Main brands set:', Array.from(mainBrandsSet));
   }
 
   // Apply filters in order of speed (fastest first) to short-circuit early
@@ -94,7 +98,10 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
     if (!applyPriceFilter(laptop, filters)) return false;
     
     // 2. Brand filter (next fastest)
-    if (filters.brands.size > 0 && !applyBrandFilter(laptop, filters, mainBrandsSet)) return false;
+    if (filters.brands.size > 0) {
+      const brandMatch = applyBrandFilter(laptop, filters, mainBrandsSet);
+      if (!brandMatch) return false;
+    }
     
     // 3. RAM filter (relatively simple comparison)
     if (filters.ramSizes.size > 0 && !applyRamFilter(laptop, filters)) return false;
@@ -115,6 +122,16 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
   });
 
   console.log(`Filtering complete: ${filteredLaptops.length} out of ${laptops.length} laptops matched filters`);
+  
+  // Sample filtered laptops to validate brand filtering is working
+  if (filters.brands.size > 0) {
+    const sampleSize = Math.min(5, filteredLaptops.length);
+    console.log(`Sample of filtered laptops (${sampleSize}):`);
+    for (let i = 0; i < sampleSize; i++) {
+      const laptop = filteredLaptops[i];
+      console.log(`[${i+1}] Brand: ${laptop.brand}, Title: ${laptop.title?.substring(0, 30)}...`);
+    }
+  }
   
   return filteredLaptops;
 };

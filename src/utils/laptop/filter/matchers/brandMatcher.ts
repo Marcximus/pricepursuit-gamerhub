@@ -1,5 +1,5 @@
 
-import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
+import { normalizeBrand } from "@/utils/laptop/normalizers/brandNormalizer";
 
 /**
  * Matcher for brand filter values with improved accuracy

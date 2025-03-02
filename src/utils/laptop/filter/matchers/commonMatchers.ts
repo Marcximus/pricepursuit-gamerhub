@@ -36,10 +36,14 @@ export const matchesFilter = (
   productTitle?: string
 ): boolean => {
   try {
+    console.log(`Matching filter: '${filterValue}' with product value: '${productValue}', type: ${filterType}`);
+    
     // Use direct function calls instead of dynamic imports
     switch (filterType) {
       case 'brand':
-        return matchesBrandFilter(filterValue, productValue, productTitle);
+        const brandResult = matchesBrandFilter(filterValue, productValue, productTitle);
+        console.log(`Brand match result: ${brandResult}`);
+        return brandResult;
       case 'graphics':
         return matchesGraphicsFilter(filterValue, productValue, productTitle);
       case 'processor':

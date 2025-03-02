@@ -2,7 +2,7 @@
 import type { Product } from "@/types/product";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import { matchesFilter } from "../matchers";
-import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
+import { normalizeBrand } from "@/utils/laptop/normalizers/brandNormalizer";
 
 /**
  * Apply brand filtering to a laptop
@@ -52,10 +52,14 @@ export const applyBrandFilter = (
     return false;
   } else {
     // Standard brand filtering without "Other" category
-    const matches = Array.from(filters.brands).some(selectedBrand => 
-      matchesFilter(selectedBrand, normalizedBrand, 'brand', laptop.title)
-    );
-    console.log(`Brand match result for ${normalizedBrand}: ${matches}`);
+    const matches = Array.from(filters.brands).some(selectedBrand => {
+      // Debug log for each comparison
+      const doesMatch = matchesFilter(selectedBrand, normalizedBrand, 'brand', laptop.title);
+      console.log(`Comparing ${selectedBrand} with ${normalizedBrand}: ${doesMatch}`);
+      return doesMatch;
+    });
+    
+    console.log(`Final brand match result for ${normalizedBrand}: ${matches}`);
     return matches;
   }
 };

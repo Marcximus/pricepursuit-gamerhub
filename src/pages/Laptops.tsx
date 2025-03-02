@@ -121,6 +121,14 @@ const ComparePriceLaptops = () => {
     refetch();
   };
 
+  // Add logging to see when the component is rendering with filter options
+  useEffect(() => {
+    console.log('Laptop filter options available:', {
+      brandsCount: filterOptions.brands.size,
+      brands: Array.from(filterOptions.brands),
+    });
+  }, [filterOptions.brands]);
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Navigation />
