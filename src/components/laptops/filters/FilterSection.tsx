@@ -14,6 +14,7 @@ type FilterSectionProps = {
   onChange: (options: Set<string>) => void;
   defaultExpanded?: boolean;
   icon?: string;
+  isLoading?: boolean;
 };
 
 export function FilterSection({ 
@@ -22,7 +23,8 @@ export function FilterSection({
   selectedOptions, 
   onChange,
   defaultExpanded = false,
-  icon = "box"
+  icon = "box",
+  isLoading = false
 }: FilterSectionProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const optionsArray = useMemo(() => Array.from(options), [options]);
@@ -127,9 +129,14 @@ export function FilterSection({
           </div>
           <span className="text-slate-800 group-hover:text-slate-900 group-data-[state=open]:text-blue-700">
             {title}
-            {optionsArray.length > 0 && (
+            {!isLoading && optionsArray.length > 0 && (
               <span className="text-xs text-slate-500 ml-1.5">
                 ({optionsArray.length})
+              </span>
+            )}
+            {isLoading && (
+              <span className="text-xs text-slate-500 ml-1.5">
+                (loading...)
               </span>
             )}
           </span>
@@ -155,6 +162,7 @@ export function FilterSection({
           options={sortedOptions}
           selectedOptions={selectedOptions}
           onOptionChange={handleCheckboxChange}
+          isLoading={isLoading}
         />
         
         {hasSelections && (

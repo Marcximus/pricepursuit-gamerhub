@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { CheckboxItem } from "./CheckboxItem";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "./SearchInput";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type FilterOptionsListProps = {
   title: string;
@@ -11,6 +12,7 @@ type FilterOptionsListProps = {
   selectedOptions: Set<string>;
   onOptionChange: (option: string, checked: boolean) => void;
   showClearButtons?: boolean;
+  isLoading?: boolean;
 };
 
 // Memoize the entire component to prevent unnecessary re-renders
@@ -19,7 +21,8 @@ export const FilterOptionsList = memo(function FilterOptionsList({
   options, 
   selectedOptions, 
   onOptionChange,
-  showClearButtons = false
+  showClearButtons = false,
+  isLoading = false
 }: FilterOptionsListProps) {
   // Add state for search filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,6 +96,22 @@ export const FilterOptionsList = memo(function FilterOptionsList({
     setSearchQuery('');
     setShowAllOptions(false);
   };
+
+  // If loading, show skeleton UI
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        <div className={`${getScrollAreaHeight()} rounded-md p-1`}>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex items-center space-x-2 py-1.5">
+              <Skeleton className="h-4 w-4 rounded" />
+              <Skeleton className="h-4 w-[80%] rounded" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col space-y-2">

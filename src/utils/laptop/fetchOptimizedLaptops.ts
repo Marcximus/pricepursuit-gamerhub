@@ -37,6 +37,7 @@ export interface LaptopFilterParams {
   page?: number;
   pageSize?: number;
   includeFilterOptions?: boolean;
+  fetchAllOptions?: boolean; // New parameter to fetch filter options from entire DB
 }
 
 /**
@@ -56,7 +57,8 @@ export async function fetchOptimizedLaptops({
   sortDir = 'desc',
   page = 1,
   pageSize = 30,
-  includeFilterOptions = false
+  includeFilterOptions = false,
+  fetchAllOptions = false // New parameter to fetch all filter options
 }: LaptopFilterParams): Promise<PaginatedResponse<Product>> {
   // Build query parameters
   const params = new URLSearchParams();
@@ -80,13 +82,17 @@ export async function fetchOptimizedLaptops({
   if (includeFilterOptions) {
     params.append('includeFilterOptions', 'true');
     
-    // If this is just a filter options request (indicated by pageSize=1), we create a special 
-    // cache key to ensure it's cached separately and for a longer time
-    if (pageSize === 1) {
+    // Add flag to request filter options from entire DB
+    if (fetchAllOptions) {
+      params.append('fetchAllOptions', 'true');
+    }
+    
+    // Special case for filter options only query
+    if (fetchAllOptions || pageSize === 1) {
       const cacheKey = 'filter-options-only';
       const cachedOptions = cache.get<PaginatedResponse<Product>>(cacheKey);
       if (cachedOptions) {
-        console.log('Using cached filter options');
+        console.log('Using cached ALL filter options');
         return cachedOptions;
       }
       
@@ -97,7 +103,12 @@ export async function fetchOptimizedLaptops({
         const { data: filterOptionsData, error } = await supabase.functions.invoke('fetch-laptops', {
           method: 'POST',
           body: { 
-            query: { includeFilterOptions: true, pageSize: 1, page: 1 },
+            query: { 
+              includeFilterOptions: true, 
+              fetchAllOptions: true,
+              pageSize: 1, 
+              page: 1 
+            },
           },
           headers: {
             'Content-Type': 'application/json'
@@ -116,8 +127,8 @@ export async function fetchOptimizedLaptops({
           });
         }
         
-        // Cache filter options for a longer time (30 minutes)
-        cache.set(cacheKey, filterOptionsData, { expiry: 30 * 60 * 1000 });
+        // Cache filter options for a longer time (60 minutes)
+        cache.set(cacheKey, filterOptionsData, { expiry: 60 * 60 * 1000 });
         
         return filterOptionsData as PaginatedResponse<Product>;
       } catch (error) {
@@ -137,11 +148,8 @@ export async function fetchOptimizedLaptops({
     ? 5 * 60 * 1000   // 5 minutes for filtered results
     : 10 * 60 * 1000; // 10 minutes for unfiltered results
 
-  // Special shorter cache time for filter options query
-  const filterOptionsCacheTime = 5 * 60 * 1000; // 5 minutes
-
   try {
-    // Check if we have a cached version first - use appropriate cache time based on query type
+    // Check if we have a cached version first
     const cacheKey = `fetch-laptops-${queryString}`;
     const cachedData = cache.get<PaginatedResponse<Product>>(cacheKey);
     if (cachedData) {
@@ -154,7 +162,8 @@ export async function fetchOptimizedLaptops({
       method: 'POST',
       body: { 
         query: Object.fromEntries(params),
-        includeFilterOptions 
+        includeFilterOptions,
+        fetchAllOptions
       },
       headers: {
         'Content-Type': 'application/json'
@@ -169,7 +178,6 @@ export async function fetchOptimizedLaptops({
       const accessToken = sessionData?.session?.access_token || '';
       
       // If POST fails, try GET with the actual Supabase URL as a fallback
-      // Use the actual Supabase URL rather than window.location.origin
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://kkebyebrhdpcwqnxhjcx.supabase.co';
       const functionEndpoint = `${supabaseUrl}/functions/v1/fetch-laptops?${queryString}`;
       
@@ -198,9 +206,8 @@ export async function fetchOptimizedLaptops({
         });
       }
       
-      // Cache the result for future use - use appropriate cache time
-      const appropriateCacheTime = includeFilterOptions ? filterOptionsCacheTime : cacheTime;
-      cache.set(cacheKey, data, { expiry: appropriateCacheTime });
+      // Cache the result for future use
+      cache.set(cacheKey, data, { expiry: cacheTime });
       
       return data as PaginatedResponse<Product>;
     }
@@ -212,9 +219,8 @@ export async function fetchOptimizedLaptops({
       });
     }
 
-    // Cache the result for future use - use appropriate cache time
-    const appropriateCacheTime = includeFilterOptions ? filterOptionsCacheTime : cacheTime;
-    cache.set(cacheKey, data, { expiry: appropriateCacheTime });
+    // Cache the result for future use
+    cache.set(cacheKey, data, { expiry: cacheTime });
     
     console.log(`Successfully fetched ${data?.data?.length || 0} laptops out of ${data?.meta?.totalCount || 0} total`);
     

@@ -53,18 +53,19 @@ export const useLaptops = (
 
   const [sortField, sortDirection] = sortBy.split('-') as [string, 'asc' | 'desc'];
   
-  // Completely separate query just for filter options - independent of pagination or filters
-  // This ensures we always have ALL filter options from the entire database
+  // First, fetch ALL filter options from the entire database
+  // This query runs INDEPENDENTLY of the main data query and has a longer cache time
   const filterOptionsQuery = useQuery({
     queryKey: ['all-filter-options'],
     queryFn: () => fetchOptimizedLaptops({
       // No filters - we want ALL possible options from the entire database
       includeFilterOptions: true,
       page: 1,
-      pageSize: 1 // We only need the filter options, not the actual data
+      pageSize: 1, // We only need the filter options, not the actual data
+      fetchAllOptions: true // New parameter to instruct backend to fetch options from entire DB
     }),
-    staleTime: 1000 * 60 * 30, // 30 minutes - longer cache for filter options
-    gcTime: 1000 * 60 * 60, // 60 minutes
+    staleTime: 1000 * 60 * 60, // 60 minutes - long cache time for filter options
+    gcTime: 1000 * 60 * 120, // 2 hours - even longer garbage collection time
   });
 
   // Main query for filtered/paginated data
@@ -76,14 +77,13 @@ export const useLaptops = (
       sortDir: sortDirection,
       page,
       pageSize: ITEMS_PER_PAGE,
-      // Don't need filter options in this query since we have a separate query for that
-      includeFilterOptions: false
+      includeFilterOptions: false // Don't need filter options in this query
     }),
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes cache
+    gcTime: 1000 * 60 * 10, // 10 minutes garbage collection
   });
 
-  // Always use the dedicated filter options query for filters, never fall back to the main query
+  // Always use the filter options from the dedicated filter options query
   const filterOptions = filterOptionsQuery.data?.filterOptions;
 
   const transformedData = query.data ? {
