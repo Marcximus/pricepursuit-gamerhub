@@ -20,49 +20,60 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       };
     }
 
-    // Log sample laptops to check storage values
-    console.log('Sample laptop storage values:', 
-      laptops.slice(0, 10)
-        .map(laptop => ({ 
-          id: laptop.id, 
-          storage: laptop.storage,
-          price: laptop.current_price
-        }))
+    // Log total laptops for debugging filter generation
+    console.log(`Generating filters from ${laptops.length} laptops`);
+    
+    // Sample of important fields for debugging
+    console.log('Sample laptop fields for filter generation:', 
+      laptops.slice(0, 3).map(laptop => ({ 
+        id: laptop.id, 
+        brand: laptop.brand,
+        processor: laptop.processor,
+        ram: laptop.ram,
+        storage: laptop.storage,
+        graphics: laptop.graphics,
+        screen: laptop.screen_size
+      }))
     );
 
-    // Get storage options and log them to debug the issue
+    // Get all filter options using the helper functions
+    const brands = getGroupedBrandValues(laptops, 15);
+    const processors = getUniqueFilterValues(laptops, 'processor');
+    const ramSizes = getUniqueFilterValues(laptops, 'ram');
     const storageOptions = getUniqueFilterValues(laptops, 'storage');
-    console.log('Generated storage options:', Array.from(storageOptions));
-
-    // Count laptops with storage between 100-199 GB
-    const laptopsWith100To199GB = laptops.filter(laptop => {
-      if (!laptop.storage) return false;
-      const storageMatch = laptop.storage.match(/(\d+)\s*(GB|TB|gb|tb)/i);
-      if (!storageMatch) return false;
-      
-      const value = parseInt(storageMatch[1], 10);
-      const unit = storageMatch[2].toLowerCase();
-      const gbValue = unit === 'tb' ? value * 1024 : value;
-      
-      return gbValue >= 100 && gbValue < 200;
-    });
+    const graphicsCards = getUniqueFilterValues(laptops, 'graphics');
+    const screenSizes = getUniqueFilterValues(laptops, 'screen_size');
     
-    console.log(`Found ${laptopsWith100To199GB.length} laptops with storage between 100-199 GB`);
-    if (laptopsWith100To199GB.length > 0) {
-      console.log('Sample of 100-199 GB laptops:', 
-        laptopsWith100To199GB.slice(0, 5)
-          .map(laptop => ({ id: laptop.id, storage: laptop.storage }))
-      );
-    }
+    // Log counts for debugging
+    console.log('Filter options counts:', {
+      brands: brands.size,
+      processors: processors.size,
+      ramSizes: ramSizes.size,
+      storageOptions: storageOptions.size,
+      graphicsCards: graphicsCards.size,
+      screenSizes: screenSizes.size
+    });
+
+    // Log a few sample values from each filter set
+    const logSampleValues = (set: Set<string>, name: string) => {
+      const values = Array.from(set).slice(0, 5);
+      console.log(`Sample ${name} values:`, values);
+    };
+    
+    logSampleValues(brands, 'brand');
+    logSampleValues(processors, 'processor');
+    logSampleValues(ramSizes, 'RAM');
+    logSampleValues(storageOptions, 'storage');
+    logSampleValues(graphicsCards, 'graphics');
+    logSampleValues(screenSizes, 'screen size');
 
     return {
-      // Use grouped brands instead of all individual brands
-      brands: getGroupedBrandValues(laptops, 15),  // Group brands with fewer than 15 laptops
-      processors: getUniqueFilterValues(laptops, 'processor'),
-      ramSizes: getUniqueFilterValues(laptops, 'ram'),
-      storageOptions: storageOptions,
-      graphicsCards: getUniqueFilterValues(laptops, 'graphics'),
-      screenSizes: getUniqueFilterValues(laptops, 'screen_size'),
+      brands,
+      processors,
+      ramSizes, 
+      storageOptions,
+      graphicsCards,
+      screenSizes,
     };
   }, [laptops]);
 };

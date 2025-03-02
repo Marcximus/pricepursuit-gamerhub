@@ -14,13 +14,16 @@ interface PaginatedResponse<T> {
   };
 }
 
-// Export the filter params interface
+// Export the filter params interface with all possible filter fields
 export interface LaptopFilterParams {
   brand?: string;
   minPrice?: number;
   maxPrice?: number;
   ram?: string;
   processor?: string;
+  storage?: string;
+  graphics?: string;
+  screenSize?: string;
   sortBy?: string;
   sortDir?: 'asc' | 'desc';
   page?: number;
@@ -37,6 +40,9 @@ export async function fetchOptimizedLaptops({
   maxPrice = undefined,
   ram = '',
   processor = '',
+  storage = '',
+  graphics = '',
+  screenSize = '',
   sortBy = 'wilson_score',
   sortDir = 'desc',
   page = 1,
@@ -45,11 +51,15 @@ export async function fetchOptimizedLaptops({
   // Build query parameters
   const params = new URLSearchParams();
   
+  // Add all filter parameters that are not undefined
   if (brand) params.append('brand', brand);
   if (minPrice !== undefined) params.append('minPrice', minPrice.toString());
   if (maxPrice !== undefined) params.append('maxPrice', maxPrice.toString());
   if (ram) params.append('ram', ram);
   if (processor) params.append('processor', processor);
+  if (storage) params.append('storage', storage);
+  if (graphics) params.append('graphics', graphics);
+  if (screenSize) params.append('screenSize', screenSize);
   
   params.append('sortBy', sortBy);
   params.append('sortDir', sortDir);
@@ -61,7 +71,7 @@ export async function fetchOptimizedLaptops({
   console.log(`Fetching laptops with params: ${queryString}`);
   
   // Determine cache time based on filter specificity
-  const filterCount = [brand, minPrice, maxPrice, ram, processor].filter(Boolean).length;
+  const filterCount = [brand, minPrice, maxPrice, ram, processor, storage, graphics, screenSize].filter(Boolean).length;
   const cacheTime = filterCount > 2 
     ? 10 * 60 * 1000  // 10 minutes for specific filters
     : 2 * 60 * 1000;  // 2 minutes for general listings
@@ -140,5 +150,5 @@ export async function fetchOptimizedLaptops({
  * Function to clear product cache on specific actions
  */
 export const clearLaptopCache = () => {
-  cache.clear('fetch-');
+  cache.clear('fetch-laptops-');
 };

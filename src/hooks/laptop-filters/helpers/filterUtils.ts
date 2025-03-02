@@ -11,43 +11,59 @@ export const getValidValues = (
   normalizer: (value: string) => string,
   validator?: (value: string) => boolean
 ): string[] => {
-  const validValues = laptops
-    .map(laptop => {
-      const value = laptop[key];
-      if (!value || typeof value !== 'string' || value.trim() === '') {
-        return null;
-      }
-
-      const normalized = normalizer(value);
-      
-      // Skip if normalized value is empty or doesn't pass validation
-      if (!normalized || (validator && !validator(normalized))) {
-        return null;
-      }
-      
-      return normalized;
-    })
-    .filter((value): value is string => value !== null && value !== '');
-
-  // Special debug for storage values
-  if (key === 'storage') {
-    const before = laptops.filter(laptop => laptop.storage).length;
-    const after = validValues.length;
-    console.log(`Storage filtering: ${before} raw values, ${after} valid values`);
-    
-    // Additional logging to see if we have any "100 GB+" values
-    const has100GBPlus = validValues.includes('100 GB+');
-    console.log(`Has "100 GB+" in storage options: ${has100GBPlus}`);
-    if (!has100GBPlus) {
-      console.log('Storage values available:', validValues);
-      // Check if there are laptops with storage values between 100-199 GB
-      const storageRawValues = laptops
-        .filter(laptop => laptop.storage)
-        .map(laptop => ({ id: laptop.id, storage: laptop.storage }));
-      console.log('Sample of raw storage values:', storageRawValues.slice(0, 10));
+  console.log(`Processing ${laptops.length} laptops for ${key} filter values`);
+  
+  // Track statistics for debugging
+  let totalValues = 0;
+  let normalizedValues = 0;
+  let validatedValues = 0;
+  
+  const allValues = new Set<string>();
+  
+  laptops.forEach(laptop => {
+    const value = laptop[key];
+    if (!value || typeof value !== 'string' || value.trim() === '') {
+      return;
     }
-  }
-
-  // Return unique values
-  return Array.from(new Set(validValues));
+    
+    totalValues++;
+    
+    // Try to extract multiple values from a single field (e.g., "8GB RAM")
+    const valueString = String(value).trim();
+    let normalized: string;
+    
+    try {
+      normalized = normalizer(valueString);
+      if (normalized) normalizedValues++;
+    } catch (error) {
+      console.error(`Error normalizing ${key} value "${valueString}":`, error);
+      return;
+    }
+    
+    // Skip if normalized value is empty or doesn't pass validation
+    if (!normalized) return;
+    
+    if (validator && !validator(normalized)) {
+      return;
+    }
+    
+    validatedValues++;
+    allValues.add(normalized);
+    
+    // For storage, also try to add standardized versions (e.g., "512GB" from "512 GB SSD")
+    if (key === 'storage') {
+      // Extract storage capacity values (e.g., 512GB, 1TB)
+      const capacityMatch = valueString.match(/(\d+)\s*(GB|TB|gb|tb)/i);
+      if (capacityMatch) {
+        const capacity = capacityMatch[1];
+        const unit = capacityMatch[2].toUpperCase();
+        const standardizedValue = `${capacity}${unit}`;
+        allValues.add(standardizedValue);
+      }
+    }
+  });
+  
+  console.log(`${key} filter processing stats: total=${totalValues}, normalized=${normalizedValues}, validated=${validatedValues}, unique=${allValues.size}`);
+  
+  return Array.from(allValues);
 };

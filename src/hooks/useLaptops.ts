@@ -40,15 +40,19 @@ export const useLaptops = (
   filters: FilterOptions = defaultFilters
 ) => {
   // Convert filter format for the optimized endpoint
+  // Include ALL filter types for complete filtering
   const apiFilters = {
     brand: Array.from(filters.brands || []).join(',') || undefined,
     minPrice: filters.priceRange.min > 0 ? filters.priceRange.min : undefined,
     maxPrice: filters.priceRange.max < 10000 ? filters.priceRange.max : undefined,
     ram: Array.from(filters.ramSizes || []).join(',') || undefined,
-    processor: Array.from(filters.processors || []).join(',') || undefined
+    processor: Array.from(filters.processors || []).join(',') || undefined,
+    storage: Array.from(filters.storageOptions || []).join(',') || undefined,
+    graphics: Array.from(filters.graphicsCards || []).join(',') || undefined,
+    screenSize: Array.from(filters.screenSizes || []).join(',') || undefined
   };
 
-  console.log('API Filters:', apiFilters);
+  console.log('API Filters for laptop query:', apiFilters);
 
   // Convert sort format
   const [sortField, sortDirection] = sortBy.split('-') as [string, 'asc' | 'desc'];

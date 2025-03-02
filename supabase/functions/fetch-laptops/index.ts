@@ -26,6 +26,9 @@ serve(async (req) => {
         maxPrice: query.maxPrice ? parseFloat(query.maxPrice) : null,
         ram: query.ram || null,
         processor: query.processor || null,
+        storage: query.storage || null,
+        graphics: query.graphics || null,
+        screenSize: query.screenSize || null,
         sortBy: query.sortBy || 'wilson_score',
         sortDir: query.sortDir || 'desc',
         page: query.page ? parseInt(query.page) : 1,
@@ -40,6 +43,9 @@ serve(async (req) => {
         maxPrice: url.searchParams.get('maxPrice') ? parseFloat(url.searchParams.get('maxPrice')) : null,
         ram: url.searchParams.get('ram'),
         processor: url.searchParams.get('processor'),
+        storage: url.searchParams.get('storage'),
+        graphics: url.searchParams.get('graphics'),
+        screenSize: url.searchParams.get('screenSize'),
         sortBy: url.searchParams.get('sortBy') || 'wilson_score',
         sortDir: url.searchParams.get('sortDir') || 'desc',
         page: url.searchParams.get('page') ? parseInt(url.searchParams.get('page')) : 1,
@@ -62,11 +68,63 @@ serve(async (req) => {
     
     // Only include non-null filters
     if (filterParams.brand) {
-      query = query.eq('brand', filterParams.brand);
+      // Split comma-separated brands
+      const brands = filterParams.brand.split(',');
+      if (brands.length === 1) {
+        query = query.eq('brand', brands[0]);
+      } else if (brands.length > 1) {
+        query = query.in('brand', brands);
+      }
     }
     
     if (filterParams.ram) {
-      query = query.eq('ram', filterParams.ram);
+      // Split comma-separated RAM sizes
+      const ramSizes = filterParams.ram.split(',');
+      if (ramSizes.length === 1) {
+        query = query.eq('ram', ramSizes[0]);
+      } else if (ramSizes.length > 1) {
+        query = query.in('ram', ramSizes);
+      }
+    }
+    
+    if (filterParams.storage) {
+      // Split comma-separated storage sizes
+      const storageSizes = filterParams.storage.split(',');
+      if (storageSizes.length === 1) {
+        query = query.ilike('storage', `%${storageSizes[0]}%`);
+      } else if (storageSizes.length > 1) {
+        query = query.or(storageSizes.map(size => `storage.ilike.%${size}%`).join(','));
+      }
+    }
+    
+    if (filterParams.processor) {
+      // Split comma-separated processors
+      const processors = filterParams.processor.split(',');
+      if (processors.length === 1) {
+        query = query.ilike('processor', `%${processors[0]}%`);
+      } else if (processors.length > 1) {
+        query = query.or(processors.map(proc => `processor.ilike.%${proc}%`).join(','));
+      }
+    }
+    
+    if (filterParams.graphics) {
+      // Split comma-separated graphics
+      const graphicsCards = filterParams.graphics.split(',');
+      if (graphicsCards.length === 1) {
+        query = query.ilike('graphics', `%${graphicsCards[0]}%`);
+      } else if (graphicsCards.length > 1) {
+        query = query.or(graphicsCards.map(gpu => `graphics.ilike.%${gpu}%`).join(','));
+      }
+    }
+    
+    if (filterParams.screenSize) {
+      // Split comma-separated screen sizes
+      const screenSizes = filterParams.screenSize.split(',');
+      if (screenSizes.length === 1) {
+        query = query.ilike('screen_size', `%${screenSizes[0]}%`);
+      } else if (screenSizes.length > 1) {
+        query = query.or(screenSizes.map(size => `screen_size.ilike.%${size}%`).join(','));
+      }
     }
     
     if (filterParams.minPrice !== null) {
@@ -75,10 +133,6 @@ serve(async (req) => {
     
     if (filterParams.maxPrice !== null) {
       query = query.lte('current_price', filterParams.maxPrice);
-    }
-    
-    if (filterParams.processor) {
-      query = query.ilike('processor', `%${filterParams.processor}%`);
     }
     
     // Add pagination

@@ -19,12 +19,23 @@ export const FilterOptionsList = memo(function FilterOptionsList({
   onOptionChange,
   showClearButtons = false
 }: FilterOptionsListProps) {
+  // Group selected options at top for better UX
+  const sortedOptions = React.useMemo(() => {
+    if (selectedOptions.size === 0) return options;
+    
+    // Put selected options first, then unselected ones
+    return [
+      ...options.filter(option => selectedOptions.has(option)),
+      ...options.filter(option => !selectedOptions.has(option))
+    ];
+  }, [options, selectedOptions]);
+
   return (
     <div className="flex flex-col">
       <ScrollArea className={`${options.length > 8 ? 'h-[240px]' : ''} rounded-md`}>
         <div className="space-y-1">
           {options.length > 0 ? (
-            options.map((option) => (
+            sortedOptions.map((option) => (
               <CheckboxItem
                 key={option}
                 id={`${title}-${option}`}
@@ -40,6 +51,13 @@ export const FilterOptionsList = memo(function FilterOptionsList({
           )}
         </div>
       </ScrollArea>
+      
+      {/* Show count if there are many options */}
+      {options.length > 15 && (
+        <div className="mt-2 text-xs text-slate-500 text-center">
+          Showing {options.length} options
+        </div>
+      )}
     </div>
   );
 });
