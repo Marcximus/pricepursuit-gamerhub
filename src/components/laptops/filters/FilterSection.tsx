@@ -27,7 +27,7 @@ export function FilterSection({
   isLoading = false
 }: FilterSectionProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const optionsArray = useMemo(() => Array.from(options), [options]);
+  const optionsArray = useMemo(() => Array.from(options || new Set<string>()), [options]);
   const hasSelections = selectedOptions.size > 0;
 
   // Log total options count for debugging

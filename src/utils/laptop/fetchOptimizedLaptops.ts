@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/types/product";
-import { cachedFetch, cache } from "@/lib/cache";
+import { cache } from "@/lib/cache";
 
 // Add TypeScript interface for the paginated response
 interface PaginatedResponse<T> {
@@ -37,12 +37,13 @@ export interface LaptopFilterParams {
   page?: number;
   pageSize?: number;
   includeFilterOptions?: boolean;
-  fetchAllOptions?: boolean; // New parameter to fetch filter options from entire DB
+  fetchAllOptions?: boolean; // Parameter to fetch filter options from entire DB
 }
 
 /**
  * Fetches laptops with optimized performance using serverless function
  * Now with client-side caching for better performance and separate filter options query
+ * Multiple fallback mechanisms for resilience
  */
 export async function fetchOptimizedLaptops({
   brand = '',
@@ -133,7 +134,51 @@ export async function fetchOptimizedLaptops({
         return filterOptionsData as PaginatedResponse<Product>;
       } catch (error) {
         console.error('Error fetching filter options:', error);
-        throw error;
+        
+        // Fallback to direct database query for filter options
+        console.log('Falling back to direct fetch for filter options');
+        
+        try {
+          // Directly query database for distinct filter values
+          const filterOptions = await fetchFilterOptionsDirectly();
+          
+          const response = {
+            data: [],
+            meta: {
+              totalCount: 0,
+              page: 1,
+              pageSize: 1,
+              totalPages: 1
+            },
+            filterOptions
+          };
+          
+          // Cache the direct fetch result
+          cache.set(cacheKey, response, { expiry: 60 * 60 * 1000 });
+          
+          return response;
+        } catch (fallbackError) {
+          console.error('Fallback fetch also failed:', fallbackError);
+          
+          // Return empty filter options as last resort
+          return {
+            data: [],
+            meta: {
+              totalCount: 0,
+              page: 1,
+              pageSize: 1,
+              totalPages: 1
+            },
+            filterOptions: {
+              brands: new Set<string>(),
+              processors: new Set<string>(),
+              ramSizes: new Set<string>(),
+              storageOptions: new Set<string>(),
+              graphicsCards: new Set<string>(),
+              screenSizes: new Set<string>()
+            }
+          };
+        }
       }
     }
   }
@@ -158,26 +203,58 @@ export async function fetchOptimizedLaptops({
     }
     
     // Try invoking the serverless function with POST method
-    const { data, error } = await supabase.functions.invoke('fetch-laptops', {
-      method: 'POST',
-      body: { 
-        query: Object.fromEntries(params),
-        includeFilterOptions,
-        fetchAllOptions
-      },
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-laptops', {
+        method: 'POST',
+        body: { 
+          query: Object.fromEntries(params),
+          includeFilterOptions,
+          fetchAllOptions
+        },
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
 
-    if (error) {
-      console.error('Error invoking function with POST:', error);
+      if (error) {
+        console.error('Error invoking function with POST:', error);
+        throw error;
+      }
+
+      // If the data includes filter options, convert arrays to Sets
+      if (data?.filterOptions) {
+        Object.keys(data.filterOptions).forEach(key => {
+          data.filterOptions[key] = new Set(data.filterOptions[key]);
+        });
+      }
+
+      // Cache the result for future use
+      cache.set(cacheKey, data, { expiry: cacheTime });
       
+      console.log(`Successfully fetched ${data?.data?.length || 0} laptops out of ${data?.meta?.totalCount || 0} total`);
+      
+      // Log filter options if present
+      if (data?.filterOptions) {
+        console.log('Filter options counts:', {
+          brands: data.filterOptions.brands?.size,
+          processors: data.filterOptions.processors?.size,
+          ramSizes: data.filterOptions.ramSizes?.size,
+          storage: data.filterOptions.storageOptions?.size,
+          graphics: data.filterOptions.graphicsCards?.size,
+          screenSizes: data.filterOptions.screenSizes?.size
+        });
+      }
+      
+      return data as PaginatedResponse<Product>;
+    } catch (error) {
+      console.error('POST method failed, trying GET fallback:', error);
+      
+      // Fallback to GET if POST fails
       // Get access token for the request
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token || '';
       
-      // If POST fails, try GET with the actual Supabase URL as a fallback
+      // Try GET with the actual Supabase URL as a fallback
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://kkebyebrhdpcwqnxhjcx.supabase.co';
       const functionEndpoint = `${supabaseUrl}/functions/v1/fetch-laptops?${queryString}`;
       
@@ -211,32 +288,6 @@ export async function fetchOptimizedLaptops({
       
       return data as PaginatedResponse<Product>;
     }
-
-    // If the data includes filter options, convert arrays to Sets
-    if (data?.filterOptions) {
-      Object.keys(data.filterOptions).forEach(key => {
-        data.filterOptions[key] = new Set(data.filterOptions[key]);
-      });
-    }
-
-    // Cache the result for future use
-    cache.set(cacheKey, data, { expiry: cacheTime });
-    
-    console.log(`Successfully fetched ${data?.data?.length || 0} laptops out of ${data?.meta?.totalCount || 0} total`);
-    
-    // Log filter options if present
-    if (data?.filterOptions) {
-      console.log('Filter options counts:', {
-        brands: data.filterOptions.brands?.size,
-        processors: data.filterOptions.processors?.size,
-        ramSizes: data.filterOptions.ramSizes?.size,
-        storage: data.filterOptions.storageOptions?.size,
-        graphics: data.filterOptions.graphicsCards?.size,
-        screenSizes: data.filterOptions.screenSizes?.size
-      });
-    }
-    
-    return data as PaginatedResponse<Product>;
   } catch (error) {
     console.error('Error fetching optimized laptops:', error);
     
@@ -247,7 +298,47 @@ export async function fetchOptimizedLaptops({
       return cachedData;
     }
     
-    throw error;
+    // Last resort fallback - direct database query
+    console.log('All API methods failed, falling back to direct database query');
+    try {
+      const laptops = await fetchLaptopsDirectly({
+        page,
+        pageSize,
+        sortBy,
+        sortDir,
+        filters: {
+          brand,
+          minPrice,
+          maxPrice,
+          ram,
+          processor,
+          storage,
+          graphics,
+          screenSize
+        }
+      });
+      
+      const result = {
+        data: laptops.data,
+        meta: {
+          totalCount: laptops.totalCount,
+          page: page,
+          pageSize: pageSize,
+          totalPages: Math.ceil(laptops.totalCount / pageSize)
+        }
+      };
+      
+      // Add filter options if requested
+      if (includeFilterOptions) {
+        const filterOptions = await fetchFilterOptionsDirectly();
+        result['filterOptions'] = filterOptions;
+      }
+      
+      return result as PaginatedResponse<Product>;
+    } catch (fallbackError) {
+      console.error('Direct database query also failed:', fallbackError);
+      throw error;
+    }
   }
 }
 
@@ -258,3 +349,112 @@ export const clearLaptopCache = () => {
   cache.clear('fetch-laptops-');
   cache.clear('filter-options-only');
 };
+
+/**
+ * Direct database query for filter options as a fallback
+ */
+async function fetchFilterOptionsDirectly() {
+  console.log('Fetching filter options directly from database');
+  
+  // Get brands
+  const { data: brands } = await supabase
+    .from('products')
+    .select('brand')
+    .eq('is_laptop', true)
+    .not('brand', 'is', null);
+  
+  // Get processors
+  const { data: processors } = await supabase
+    .from('products')
+    .select('processor')
+    .eq('is_laptop', true)
+    .not('processor', 'is', null);
+  
+  // Get RAM sizes
+  const { data: ramSizes } = await supabase
+    .from('products')
+    .select('ram')
+    .eq('is_laptop', true)
+    .not('ram', 'is', null);
+  
+  // Get storage options
+  const { data: storageOptions } = await supabase
+    .from('products')
+    .select('storage')
+    .eq('is_laptop', true)
+    .not('storage', 'is', null);
+  
+  // Get graphics cards
+  const { data: graphicsCards } = await supabase
+    .from('products')
+    .select('graphics')
+    .eq('is_laptop', true)
+    .not('graphics', 'is', null);
+  
+  // Get screen sizes
+  const { data: screenSizes } = await supabase
+    .from('products')
+    .select('screen_size')
+    .eq('is_laptop', true)
+    .not('screen_size', 'is', null);
+  
+  return {
+    brands: new Set(brands?.map(item => item.brand) || []),
+    processors: new Set(processors?.map(item => item.processor) || []),
+    ramSizes: new Set(ramSizes?.map(item => item.ram) || []),
+    storageOptions: new Set(storageOptions?.map(item => item.storage) || []),
+    graphicsCards: new Set(graphicsCards?.map(item => item.graphics) || []),
+    screenSizes: new Set(screenSizes?.map(item => item.screen_size) || [])
+  };
+}
+
+/**
+ * Direct database query for laptops as a fallback
+ */
+async function fetchLaptopsDirectly({ page, pageSize, sortBy, sortDir, filters }) {
+  console.log('Fetching laptops directly from database');
+  
+  let query = supabase
+    .from('products')
+    .select(`
+      *,
+      product_reviews (
+        id, rating, title, content, reviewer_name, review_date, verified_purchase, helpful_votes
+      )
+    `, { count: 'exact' })
+    .eq('is_laptop', true);
+  
+  // Apply filters
+  if (filters.brand) {
+    query = query.in('brand', filters.brand.split(','));
+  }
+  
+  if (filters.minPrice) {
+    query = query.gte('current_price', filters.minPrice);
+  }
+  
+  if (filters.maxPrice) {
+    query = query.lte('current_price', filters.maxPrice);
+  }
+  
+  // Add pagination
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+  
+  // Add sorting
+  const sortField = sortBy === 'price' ? 'current_price' : sortBy;
+  query = query.order(sortField, { ascending: sortDir === 'asc' });
+  
+  // Execute query with pagination
+  const { data, count, error } = await query.range(from, to);
+  
+  if (error) {
+    console.error('Error in direct database query:', error);
+    throw error;
+  }
+  
+  return {
+    data: data || [],
+    totalCount: count || 0
+  };
+}

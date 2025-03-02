@@ -53,37 +53,78 @@ export const useLaptops = (
 
   const [sortField, sortDirection] = sortBy.split('-') as [string, 'asc' | 'desc'];
   
-  // First, fetch ALL filter options from the entire database
-  // This query runs INDEPENDENTLY of the main data query and has a longer cache time
+  // Fetch ALL filter options from the entire database using a direct Supabase query
+  // This ensures we get all possible filter values regardless of pagination or current filters
   const filterOptionsQuery = useQuery({
     queryKey: ['all-filter-options'],
-    queryFn: () => fetchOptimizedLaptops({
-      // No filters - we want ALL possible options from the entire database
-      includeFilterOptions: true,
-      page: 1,
-      pageSize: 1, // We only need the filter options, not the actual data
-      fetchAllOptions: true // New parameter to instruct backend to fetch options from entire DB
-    }),
-    staleTime: 1000 * 60 * 60, // 60 minutes - long cache time for filter options
-    gcTime: 1000 * 60 * 120, // 2 hours - even longer garbage collection time
+    queryFn: async () => {
+      try {
+        // First try to get from optimized endpoint
+        const data = await fetchOptimizedLaptops({
+          includeFilterOptions: true,
+          page: 1,
+          pageSize: 1,
+          fetchAllOptions: true
+        });
+        
+        if (data?.filterOptions) return data;
+        
+        // If that fails, fallback to direct database fetch
+        console.log('Falling back to direct database fetch for filter options');
+        return fetchAllLaptops({ fetchFilterOptionsOnly: true });
+      } catch (error) {
+        console.error('Error fetching filter options:', error);
+        // Fallback to direct database fetch on error
+        return fetchAllLaptops({ fetchFilterOptionsOnly: true });
+      }
+    },
+    staleTime: 1000 * 60 * 60, // 60 minutes - long cache time
+    gcTime: 1000 * 60 * 120, // 2 hours
+    retry: 2, // Retry failed requests twice
   });
 
   // Main query for filtered/paginated data
   const query = useQuery({
     queryKey: ['optimized-laptops', { page, sortBy, filters: JSON.stringify(apiFilters) }],
-    queryFn: () => fetchOptimizedLaptops({
-      ...apiFilters,
-      sortBy: sortField,
-      sortDir: sortDirection,
-      page,
-      pageSize: ITEMS_PER_PAGE,
-      includeFilterOptions: false // Don't need filter options in this query
-    }),
+    queryFn: async () => {
+      try {
+        // First try using the optimized function
+        return await fetchOptimizedLaptops({
+          ...apiFilters,
+          sortBy: sortField,
+          sortDir: sortDirection,
+          page,
+          pageSize: ITEMS_PER_PAGE,
+          includeFilterOptions: false
+        });
+      } catch (error) {
+        console.error('Error using optimized fetch, falling back to direct fetch:', error);
+        // Fallback to fetching directly from database if the function fails
+        const allLaptops = await fetchAllLaptops({ 
+          page, 
+          pageSize: ITEMS_PER_PAGE, 
+          sortBy, 
+          filters: apiFilters 
+        });
+        
+        // Format response to match the expected structure
+        return {
+          data: allLaptops.data,
+          meta: {
+            totalCount: allLaptops.totalCount,
+            totalPages: Math.ceil(allLaptops.totalCount / ITEMS_PER_PAGE),
+            page: page,
+            pageSize: ITEMS_PER_PAGE
+          }
+        };
+      }
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes cache
     gcTime: 1000 * 60 * 10, // 10 minutes garbage collection
+    retry: 1, // Retry failed requests once
   });
 
-  // Always use the filter options from the dedicated filter options query
+  // Always use the filter options from the dedicated query
   const filterOptions = filterOptionsQuery.data?.filterOptions;
 
   const transformedData = query.data ? {
@@ -109,7 +150,7 @@ export const useLaptops = (
 
   return {
     ...query,
-    filterOptionsLoading: filterOptionsQuery.isLoading,
+    filterOptionsLoading: filterOptionsQuery.isLoading || filterOptionsQuery.isFetching,
     filterOptionsError: filterOptionsQuery.error,
     data: transformedData,
     collectLaptops,
