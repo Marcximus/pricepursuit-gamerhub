@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLaptops } from "@/hooks/useLaptops";
 import { useFilteredLaptops } from "@/hooks/useFilteredLaptops";
@@ -11,6 +10,7 @@ import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { fetchAllLaptops } from "@/services/laptopService";
 
 const ComparePriceLaptops = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -27,7 +27,6 @@ const ComparePriceLaptops = () => {
   
   const queryClient = useQueryClient();
 
-  // Add debugging useEffect to track filter changes
   useEffect(() => {
     console.log('Filter state updated:', {
       processors: Array.from(filters.processors),
@@ -40,7 +39,6 @@ const ComparePriceLaptops = () => {
     });
   }, [filters]);
 
-  // Enhanced React Query fetching with proper cache management
   const { 
     data, 
     isLoading: isLaptopsLoading, 
@@ -49,13 +47,11 @@ const ComparePriceLaptops = () => {
     refetch
   } = useLaptops(currentPage, sortBy, filters);
 
-  // Use our custom hook to filter laptops client-side
   const { 
     filteredLaptops, 
     filterStats 
   } = useFilteredLaptops(data?.allLaptops || [], filters);
 
-  // Derive the subset of laptops for the current page
   const laptops = data?.laptops ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
@@ -64,18 +60,16 @@ const ComparePriceLaptops = () => {
 
   const handleSortChange = (newSortBy: SortOption) => {
     setSortBy(newSortBy);
-    setCurrentPage(1); // Reset page when sort changes
+    setCurrentPage(1);
     toast.info(`Sorting laptops by ${newSortBy.replace('-', ' ')}`);
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // Scroll to top when changing pages
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleFiltersChange = (newFilters: FilterOptions) => {
-    // Create a deep copy of the filter sets to avoid reference issues
     const updatedFilters: FilterOptions = {
       priceRange: { ...newFilters.priceRange },
       processors: new Set(newFilters.processors),
@@ -87,9 +81,8 @@ const ComparePriceLaptops = () => {
     };
     
     setFilters(updatedFilters);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
     
-    // Show toast notification about filter changes
     const totalFilters = 
       updatedFilters.processors.size +
       updatedFilters.ramSizes.size +
@@ -115,7 +108,6 @@ const ComparePriceLaptops = () => {
     );
   };
 
-  // Prefetch next page
   useEffect(() => {
     if (currentPage < totalPages) {
       queryClient.prefetchQuery({

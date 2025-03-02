@@ -42,7 +42,7 @@ export const useLaptops = (
     queryFn: fetchAllLaptops,
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 60 * 24, // 24 hours
-    select: (data) => {
+    select: (data: any[]) => {
       const processedData = processAndFilterLaptops(data, filters, sortBy, page, ITEMS_PER_PAGE);
       return {
         ...processedData,
