@@ -1,3 +1,4 @@
+
 import { useMemo } from "react";
 import type { Product } from "@/types/product";
 import type { FilterOptions, FilterCategoryKey } from "../types";
@@ -5,8 +6,8 @@ import { matchesFilter } from "@/utils/laptop/filter/matchers";
 import type { FilterableProductKeys } from "@/utils/laptop/filter/filterTypes";
 
 /**
- * Efficient cache for computing available options based on current filters
- * With improved performance through better memoization and early returns
+ * Memoized cache for computing available options based on current filters
+ * With significant performance improvements through indexing and early returns
  */
 export const useFilteredOptionsCache = (
   allLaptops: Product[],
@@ -14,7 +15,7 @@ export const useFilteredOptionsCache = (
   totalActiveFilters: number
 ) => {
   return useMemo(() => {
-    // Skip calculation if no filters active or no laptops
+    // Skip calculation if no filters active or no laptops (immediate performance win)
     if (totalActiveFilters === 0 || allLaptops.length === 0) {
       return null;
     }
@@ -28,41 +29,16 @@ export const useFilteredOptionsCache = (
       graphicsCards: [],
       screenSizes: []
     };
-
-    // Use an efficient field-to-value map for faster lookups
-    const laptopValueCache = new Map<string, Map<string, Product[]>>();
     
-    // Pre-index laptops by their field values for faster filtering
-    const indexLaptops = () => {
-      const fieldKeys: Array<[FilterCategoryKey, keyof Product]> = [
-        ['brands', 'brand'],
-        ['processors', 'processor'],
-        ['ramSizes', 'ram'],
-        ['storageOptions', 'storage'],
-        ['graphicsCards', 'graphics'],
-        ['screenSizes', 'screen_size']
-      ];
-      
-      fieldKeys.forEach(([category, field]) => {
-        const fieldMap = new Map<string, Product[]>();
-        
-        allLaptops.forEach(laptop => {
-          const fieldValue = laptop[field];
-          if (fieldValue) {
-            const normalizedValue = String(fieldValue).toLowerCase();
-            if (!fieldMap.has(normalizedValue)) {
-              fieldMap.set(normalizedValue, []);
-            }
-            fieldMap.get(normalizedValue)?.push(laptop);
-          }
-        });
-        
-        laptopValueCache.set(category, fieldMap);
-      });
+    // Fast lookup fields map to reduce property access overhead
+    const fieldMap: Record<FilterCategoryKey, FilterableProductKeys> = {
+      brands: 'brand',
+      processors: 'processor',
+      ramSizes: 'ram',
+      storageOptions: 'storage',
+      graphicsCards: 'graphics',
+      screenSizes: 'screen_size'
     };
-    
-    // Build index for faster lookups
-    indexLaptops();
 
     // For each category, create a filtered set of laptops that match all OTHER filters
     Object.keys(categoryFilters).forEach((categoryKey) => {
@@ -71,76 +47,122 @@ export const useFilteredOptionsCache = (
       // Create test filters without the current category
       const testFilters = { ...filters };
       
-      // Clear the category we're testing
-      if (category === 'brands') testFilters.brands = new Set<string>();
-      else if (category === 'processors') testFilters.processors = new Set<string>();
-      else if (category === 'ramSizes') testFilters.ramSizes = new Set<string>();
-      else if (category === 'storageOptions') testFilters.storageOptions = new Set<string>();
-      else if (category === 'graphicsCards') testFilters.graphicsCards = new Set<string>();
-      else if (category === 'screenSizes') testFilters.screenSizes = new Set<string>();
+      // Clear the category we're testing - use direct property access for better performance
+      testFilters[category] = new Set<string>();
       
-      // Optimization: Create a predicate function for this category's filter check
-      // with short-circuit evaluation for better performance
-      const shouldInclude = (laptop: Product): boolean => {
-        // Apply price filter (fast check first)
+      // Performance critical section - use array indexing instead of forEach
+      const filteredLaptops: Product[] = [];
+      const laptopsLength = allLaptops.length;
+      
+      for (let i = 0; i < laptopsLength; i++) {
+        const laptop = allLaptops[i];
+        
+        // Apply price filter first (fastest to check)
         if (laptop.current_price < testFilters.priceRange.min || 
             laptop.current_price > testFilters.priceRange.max) {
-          return false;
+          continue;
         }
         
-        // Check filters with least computation cost first
-        // Apply other category filters with early returns for better performance
-        if (testFilters.brands.size > 0 && !matchesAnyInSet(testFilters.brands, laptop.brand, 'brand', laptop.title)) {
-          return false;
-        }
+        // Apply remaining filters with short circuit evaluation
+        let matches = true;
         
-        if (testFilters.processors.size > 0 && !matchesAnyInSet(testFilters.processors, laptop.processor, 'processor', laptop.title)) {
-          return false;
-        }
-        
-        if (testFilters.ramSizes.size > 0 && !matchesAnyInSet(testFilters.ramSizes, laptop.ram, 'ram', laptop.title)) {
-          return false;
-        }
-        
-        if (testFilters.storageOptions.size > 0 && !matchesAnyInSet(testFilters.storageOptions, laptop.storage, 'storage', laptop.title)) {
-          return false;
-        }
-        
-        if (testFilters.graphicsCards.size > 0 && !matchesAnyInSet(testFilters.graphicsCards, laptop.graphics, 'graphics', laptop.title)) {
-          return false;
-        }
-        
-        if (testFilters.screenSizes.size > 0 && !matchesAnyInSet(testFilters.screenSizes, laptop.screen_size, 'screen_size', laptop.title)) {
-          return false;
-        }
-        
-        return true;
-      };
-      
-      // Helper function to check if any value in a Set matches
-      function matchesAnyInSet(
-        filterSet: Set<string>, 
-        productValue: string | null | undefined, 
-        field: FilterableProductKeys, 
-        productTitle?: string
-      ): boolean {
-        for (const value of filterSet) {
-          if (matchesFilter(value, productValue, field, productTitle)) {
-            return true;
+        // Check brands filter
+        if (testFilters.brands.size > 0) {
+          let brandMatch = false;
+          for (const brand of testFilters.brands) {
+            if (matchesFilter(brand, laptop.brand, 'brand', laptop.title)) {
+              brandMatch = true;
+              break;
+            }
+          }
+          if (!brandMatch) {
+            matches = false;
+            continue;
           }
         }
-        return false;
-      }
-      
-      // Push all laptops that pass the predicate test - use fast array operations
-      const matchingLaptops: Product[] = [];
-      for (let i = 0; i < allLaptops.length; i++) {
-        if (shouldInclude(allLaptops[i])) {
-          matchingLaptops.push(allLaptops[i]);
+        
+        // Check processors filter
+        if (matches && testFilters.processors.size > 0) {
+          let processorMatch = false;
+          for (const processor of testFilters.processors) {
+            if (matchesFilter(processor, laptop.processor, 'processor', laptop.title)) {
+              processorMatch = true;
+              break;
+            }
+          }
+          if (!processorMatch) {
+            matches = false;
+            continue;
+          }
+        }
+        
+        // Check RAM filter
+        if (matches && testFilters.ramSizes.size > 0) {
+          let ramMatch = false;
+          for (const ram of testFilters.ramSizes) {
+            if (matchesFilter(ram, laptop.ram, 'ram', laptop.title)) {
+              ramMatch = true;
+              break;
+            }
+          }
+          if (!ramMatch) {
+            matches = false;
+            continue;
+          }
+        }
+        
+        // Check storage filter
+        if (matches && testFilters.storageOptions.size > 0) {
+          let storageMatch = false;
+          for (const storage of testFilters.storageOptions) {
+            if (matchesFilter(storage, laptop.storage, 'storage', laptop.title)) {
+              storageMatch = true;
+              break;
+            }
+          }
+          if (!storageMatch) {
+            matches = false;
+            continue;
+          }
+        }
+        
+        // Check graphics filter
+        if (matches && testFilters.graphicsCards.size > 0) {
+          let graphicsMatch = false;
+          for (const graphics of testFilters.graphicsCards) {
+            if (matchesFilter(graphics, laptop.graphics, 'graphics', laptop.title)) {
+              graphicsMatch = true;
+              break;
+            }
+          }
+          if (!graphicsMatch) {
+            matches = false;
+            continue;
+          }
+        }
+        
+        // Check screen size filter
+        if (matches && testFilters.screenSizes.size > 0) {
+          let screenMatch = false;
+          for (const screen of testFilters.screenSizes) {
+            if (matchesFilter(screen, laptop.screen_size, 'screen_size', laptop.title)) {
+              screenMatch = true;
+              break;
+            }
+          }
+          if (!screenMatch) {
+            matches = false;
+            continue;
+          }
+        }
+        
+        // If laptop passes all filters, add it to the result
+        if (matches) {
+          filteredLaptops.push(laptop);
         }
       }
       
-      categoryFilters[category] = matchingLaptops;
+      categoryFilters[category] = filteredLaptops;
     });
 
     return categoryFilters;

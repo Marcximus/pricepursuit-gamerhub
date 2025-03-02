@@ -1,5 +1,5 @@
 
-import React, { useCallback } from "react";
+import React, { useCallback, memo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 type CheckboxItemProps = {
@@ -10,7 +10,8 @@ type CheckboxItemProps = {
   disabled?: boolean;
 };
 
-export function CheckboxItem({ 
+// Use memo to prevent unnecessary re-renders of checkbox items
+export const CheckboxItem = memo(function CheckboxItem({ 
   id, 
   label, 
   checked, 
@@ -42,7 +43,6 @@ export function CheckboxItem({
         onCheckedChange={handleCheckedChange}
         disabled={disabled}
         className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 border-slate-300"
-        // Prevent click event bubbling to avoid double-toggling
         onClick={(e) => e.stopPropagation()}
       />
       <label
@@ -50,11 +50,10 @@ export function CheckboxItem({
         className={`text-sm leading-none flex-1 font-medium ${
           disabled ? 'text-slate-400' : 'text-slate-700'
         }`}
-        // Prevent click event bubbling to avoid double-toggling
         onClick={(e) => e.stopPropagation()}
       >
         {label}
       </label>
     </div>
   );
-}
+});
