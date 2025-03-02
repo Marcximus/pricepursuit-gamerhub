@@ -51,6 +51,34 @@ export const useLaptops = (
         getDatabaseStats
       };
     },
+    // Add initial data placeholder for better UX
+    placeholderData: {
+      laptops: [],
+      totalCount: 0,
+      totalPages: 1,
+      currentPage: 1,
+      filterOptions: {
+        processors: new Set(),
+        ramSizes: new Set(),
+        storageOptions: new Set(),
+        graphicsCards: new Set(),
+        screenSizes: new Set(),
+        brands: new Set(),
+      },
+      optionsWithCounts: {
+        processors: [],
+        ramSizes: [],
+        storageOptions: [],
+        graphicsCards: [],
+        screenSizes: [],
+        brands: [],
+      },
+      collectLaptops,
+      updateLaptops,
+      refreshBrandModels,
+      processLaptopsAI,
+      getDatabaseStats
+    }
   });
 
   return {
