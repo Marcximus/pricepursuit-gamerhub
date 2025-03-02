@@ -20,8 +20,8 @@ export function FilterOptionsList({
 }: FilterOptionsListProps) {
   return (
     <div className="flex flex-col">
-      <ScrollArea className={`${options.length > 8 ? 'h-[240px]' : ''} rounded-md`}>
-        <div className="space-y-1">
+      <ScrollArea className={`${options.length > 8 ? 'h-[180px]' : ''} rounded-md`}>
+        <div className="space-y-0.5">
           {options.length > 0 ? (
             options.map((option) => (
               <CheckboxItem
