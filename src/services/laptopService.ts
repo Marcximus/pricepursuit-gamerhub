@@ -84,7 +84,13 @@ export async function fetchAllLaptops(minimalForFilters = false) {
     }
 
     allLaptops = [...allLaptops, ...laptops];
-    lastId = laptops[laptops.length - 1].id;
+    // Only update lastId if we have valid laptops with an id property
+    if (laptops.length > 0 && laptops[laptops.length - 1]?.id) {
+      lastId = laptops[laptops.length - 1].id;
+    } else {
+      // Break the loop if we don't have a valid ID to continue with
+      hasMore = false;
+    }
 
     if (laptops.length < BATCH_SIZE) {
       hasMore = false;
