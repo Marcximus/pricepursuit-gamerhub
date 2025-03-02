@@ -91,9 +91,10 @@ export async function fetchAllLaptops(minimalForFilters = false) {
       const potentialLastLaptop = laptops[lastLaptopIndex];
       
       // First check if potentialLastLaptop exists at all before trying to access its properties
-      if (potentialLastLaptop) {
+      if (potentialLastLaptop !== null && potentialLastLaptop !== undefined) {
         // Then verify it's an object with a valid ID property
-        if (typeof potentialLastLaptop === 'object' && 
+        // Use type guard to satisfy TypeScript
+        if (typeof potentialLastLaptop === 'object' && potentialLastLaptop !== null && 
             'id' in potentialLastLaptop && 
             potentialLastLaptop.id) {
           lastId = potentialLastLaptop.id;
