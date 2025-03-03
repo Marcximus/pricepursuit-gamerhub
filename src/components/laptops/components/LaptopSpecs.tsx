@@ -7,7 +7,7 @@ import { processGraphics } from "@/utils/laptopUtils/graphicsProcessor";
 import { processStorage } from "@/utils/laptopUtils/processors/storageProcessor";
 import { processScreenSize } from "@/utils/laptopUtils/physicalSpecsProcessor";
 import { processScreenResolution } from "@/utils/laptopUtils/processors/screenProcessor";
-import { normalizeGraphics } from "@/utils/laptop/normalizers/graphicsNormalizer";
+import { normalizeGraphics, isHighPerformanceGraphics, isIntegratedGraphics } from "@/utils/laptop/normalizers/graphicsNormalizer";
 
 type LaptopSpecsProps = {
   title: string;
@@ -37,20 +37,19 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
   const extractedProcessor = !specs.processor ? extractProcessorFromTitle(title) : null;
   const extractedRam = !specs.ram ? processRam(undefined, title) : null;
   
-  // Improved graphics extraction with normalization
+  // Improved graphics extraction and display logic
   let displayGraphics = '';
+  
+  // First try to normalize the existing graphics value from database
   if (specs.graphics) {
-    // First try to normalize the existing graphics value
     const normalizedGraphics = normalizeGraphics(specs.graphics);
-    if (normalizedGraphics && normalizedGraphics.length > 3 && 
-        !normalizedGraphics.includes("Apple") && !normalizedGraphics.includes("Asus") &&
-        !normalizedGraphics.includes("Intel") && !normalizedGraphics.includes("AMD")) {
+    if (normalizedGraphics && normalizedGraphics.length > 3) {
       // Only use if it's specific enough (not just a brand name)
       displayGraphics = normalizedGraphics;
     }
   }
   
-  // If we don't have a good graphics value, extract from title
+  // If we don't have a valid graphics value from database, extract from title
   if (!displayGraphics) {
     const extractedGraphics = processGraphics(undefined, title);
     if (extractedGraphics) {
@@ -58,6 +57,19 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
     } else {
       // Final fallback to the original value or "Not Specified"
       displayGraphics = specs.graphics || 'Not Specified';
+    }
+  }
+  
+  // Add GPU type indicators for better user understanding
+  let gpuType = '';
+  if (displayGraphics !== 'Not Specified') {
+    if (isHighPerformanceGraphics(displayGraphics)) {
+      gpuType = ' (High Performance)';
+    } else if (isIntegratedGraphics(displayGraphics)) {
+      gpuType = ' (Integrated)';
+    } else if (displayGraphics.toLowerCase().includes('nvidia') || 
+              displayGraphics.toLowerCase().includes('radeon rx')) {
+      gpuType = ' (Dedicated)';
     }
   }
   
@@ -71,19 +83,6 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
   const displayStorage = specs.storage || extractedStorage || 'Not Specified';
   const displayScreenSize = specs.screenSize || extractedScreenSize || 'Not Specified';
   const displayScreenResolution = specs.screenResolution || extractedScreenResolution || '';
-  
-  // Log extraction results for debugging
-  console.log('Spec extraction from title:', {
-    title,
-    extractedProcessor,
-    extractedRam,
-    extractedGraphics: processGraphics(undefined, title),
-    originalGraphics: specs.graphics,
-    finalGraphics: displayGraphics,
-    extractedStorage,
-    extractedScreenSize,
-    extractedScreenResolution
-  });
   
   return (
     <div>
@@ -118,7 +117,7 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
         </li>
         <li>
           <span className="font-bold">GPU:</span>{" "}
-          {displayGraphics}
+          {displayGraphics}{gpuType}
         </li>
         <li>
           <span className="font-bold">RAM:</span>{" "}
