@@ -5,8 +5,6 @@ import { PriceRangeFilter } from "./PriceRangeFilter";
 import { FilterHeader } from "./FilterHeader";
 import { FilterAccordion } from "./FilterAccordion";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
-import { X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 type FilterContainerProps = {
   filters: FilterOptions;
@@ -50,14 +48,6 @@ export function FilterContainer({
     onFiltersChange({
       ...filters,
       searchQuery: query
-    });
-  }, [filters, onFiltersChange]);
-
-  // Clear search query
-  const handleClearSearch = useCallback(() => {
-    onFiltersChange({
-      ...filters,
-      searchQuery: ""
     });
   }, [filters, onFiltersChange]);
 
@@ -115,37 +105,11 @@ export function FilterContainer({
     screenSizes
   };
 
-  // Check if there is an active search query
-  const hasActiveSearch = filters.searchQuery && filters.searchQuery.trim() !== "";
-
   return (
     <div className="flex flex-col h-full">
       <FilterHeader 
         onSearch={handleSearch}
       />
-
-      {/* Active Search Term Display */}
-      {hasActiveSearch && (
-        <div className="px-4 py-3 border-b border-slate-200">
-          <div className="flex flex-wrap gap-1.5">
-            <Badge 
-              variant="secondary" 
-              className="flex items-center gap-1 bg-blue-50 text-blue-700 hover:bg-blue-100 border-none"
-            >
-              <span className="text-xs font-medium">
-                Search: {filters.searchQuery}
-              </span>
-              <button 
-                onClick={handleClearSearch} 
-                className="rounded-full p-0.5 hover:bg-blue-200/50 transition-colors"
-                aria-label="Clear search"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          </div>
-        </div>
-      )}
 
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-[calc(100vh-220px)]">

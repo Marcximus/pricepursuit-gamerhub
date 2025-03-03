@@ -115,6 +115,19 @@ export function LaptopToolbar({
       onFiltersChange(newFilters as FilterOptions);
     }
   };
+
+  // Handle clearing search
+  const handleClearSearch = () => {
+    if (!filters || !onFiltersChange) return;
+    
+    onFiltersChange({
+      ...filters,
+      searchQuery: ""
+    });
+  };
+  
+  // Check if there is an active search
+  const hasActiveSearch = filters?.searchQuery && filters.searchQuery.trim() !== "";
   
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 bg-white border-b border-slate-200 rounded-lg shadow-sm">
@@ -124,8 +137,20 @@ export function LaptopToolbar({
         </span>
         
         {/* Show active filter selections inline */}
-        {filters && onFiltersChange && getActiveFilterSelections().length > 0 && (
+        {filters && onFiltersChange && (
           <div className="flex flex-wrap gap-1.5 ml-2">
+            {/* Show search query as a filter */}
+            {hasActiveSearch && (
+              <button
+                onClick={handleClearSearch}
+                className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 transition-colors"
+              >
+                Search: {filters.searchQuery}
+                <XCircle className="h-3 w-3" />
+              </button>
+            )}
+            
+            {/* Show other active filters */}
             {getActiveFilterSelections().map(({ type, value }, index) => (
               <button
                 key={`toolbar-filter-${type}-${value}-${index}`}
