@@ -111,9 +111,9 @@ export function FilterContainer({
         onSearch={handleSearch}
       />
 
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-[calc(100vh-220px)]">
-          <div className="space-y-5 px-4 pt-4 pb-4">
+          <div className="px-4 pt-4 pb-4 space-y-5">
             <PriceRangeFilter 
               minPrice={filters.priceRange.min}
               maxPrice={filters.priceRange.max}
