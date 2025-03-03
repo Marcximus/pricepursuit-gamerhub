@@ -1,0 +1,90 @@
+
+import { XCircle } from "lucide-react";
+import { FilterOptions } from "../LaptopFilters";
+
+type ActiveFilterPillsProps = {
+  filters: FilterOptions;
+  onRemoveFilter: (filterType: string, value: string) => void;
+  onClearSearch: () => void;
+};
+
+export function ActiveFilterPills({ 
+  filters, 
+  onRemoveFilter, 
+  onClearSearch 
+}: ActiveFilterPillsProps) {
+  // Check if there is an active search
+  const hasActiveSearch = filters?.searchQuery && filters.searchQuery.trim() !== "";
+  
+  // Get all active filter selections for displaying
+  const getActiveFilterSelections = () => {
+    if (!filters) return [];
+    
+    const selections = [];
+    
+    if (filters.brands.size > 0) {
+      Array.from(filters.brands).forEach(brand => 
+        selections.push({ type: 'brands', value: brand })
+      );
+    }
+    
+    if (filters.processors.size > 0) {
+      Array.from(filters.processors).forEach(processor => 
+        selections.push({ type: 'processors', value: processor })
+      );
+    }
+    
+    if (filters.ramSizes.size > 0) {
+      Array.from(filters.ramSizes).forEach(ram => 
+        selections.push({ type: 'ramSizes', value: ram })
+      );
+    }
+    
+    if (filters.storageOptions.size > 0) {
+      Array.from(filters.storageOptions).forEach(storage => 
+        selections.push({ type: 'storageOptions', value: storage })
+      );
+    }
+    
+    if (filters.graphicsCards.size > 0) {
+      Array.from(filters.graphicsCards).forEach(gpu => 
+        selections.push({ type: 'graphicsCards', value: gpu })
+      );
+    }
+    
+    if (filters.screenSizes.size > 0) {
+      Array.from(filters.screenSizes).forEach(screen => 
+        selections.push({ type: 'screenSizes', value: screen })
+      );
+    }
+    
+    return selections;
+  };
+
+  return (
+    <div className="flex flex-wrap gap-1.5 ml-2">
+      {/* Show search query as a filter */}
+      {hasActiveSearch && (
+        <button
+          onClick={onClearSearch}
+          className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 transition-colors"
+        >
+          Search: {filters.searchQuery}
+          <XCircle className="h-3 w-3" />
+        </button>
+      )}
+      
+      {/* Show other active filters */}
+      {getActiveFilterSelections().map(({ type, value }, index) => (
+        <button
+          key={`toolbar-filter-${type}-${value}-${index}`}
+          onClick={() => onRemoveFilter(type, value)}
+          className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 transition-colors"
+        >
+          {value}
+          <XCircle className="h-3 w-3" />
+        </button>
+      ))}
+    </div>
+  );
+}
