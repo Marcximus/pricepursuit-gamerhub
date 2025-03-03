@@ -1,3 +1,4 @@
+
 import React, { useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PriceRangeFilter } from "./PriceRangeFilter";
@@ -110,23 +111,25 @@ export function FilterContainer({
         onSearch={handleSearch}
       />
 
-      <ScrollArea className="flex-1">
-        <div className="space-y-5 px-4 pt-4 pb-4">
-          <PriceRangeFilter 
-            minPrice={filters.priceRange.min}
-            maxPrice={filters.priceRange.max}
-            onPriceChange={handlePriceChange}
-          />
+      <div className="flex-1 overflow-auto">
+        <ScrollArea className="h-[calc(100vh-220px)]">
+          <div className="space-y-5 px-4 pt-4 pb-4">
+            <PriceRangeFilter 
+              minPrice={filters.priceRange.min}
+              maxPrice={filters.priceRange.max}
+              onPriceChange={handlePriceChange}
+            />
 
-          <FilterAccordion 
-            filterSections={filterSections}
-            defaultValues={defaultValues}
-            filters={filters}
-            handleFilterChange={handleFilterChange}
-            filterOptions={filterOptions}
-          />
-        </div>
-      </ScrollArea>
+            <FilterAccordion 
+              filterSections={filterSections}
+              defaultValues={defaultValues}
+              filters={filters}
+              handleFilterChange={handleFilterChange}
+              filterOptions={filterOptions}
+            />
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   );
 }
