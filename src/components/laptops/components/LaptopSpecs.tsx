@@ -7,6 +7,7 @@ import { processGraphics } from "@/utils/laptopUtils/graphicsProcessor";
 import { processStorage } from "@/utils/laptopUtils/processors/storageProcessor";
 import { processScreenSize } from "@/utils/laptopUtils/physicalSpecsProcessor";
 import { processScreenResolution } from "@/utils/laptopUtils/processors/screenProcessor";
+import { normalizeGraphics } from "@/utils/laptop/normalizers/graphicsNormalizer";
 
 type LaptopSpecsProps = {
   title: string;
@@ -35,7 +36,31 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
   // This ensures we use any information available in the title when database values are missing
   const extractedProcessor = !specs.processor ? extractProcessorFromTitle(title) : null;
   const extractedRam = !specs.ram ? processRam(undefined, title) : null;
-  const extractedGraphics = !specs.graphics ? processGraphics(undefined, title) : null;
+  
+  // Improved graphics extraction with normalization
+  let displayGraphics = '';
+  if (specs.graphics) {
+    // First try to normalize the existing graphics value
+    const normalizedGraphics = normalizeGraphics(specs.graphics);
+    if (normalizedGraphics && normalizedGraphics.length > 3 && 
+        !normalizedGraphics.includes("Apple") && !normalizedGraphics.includes("Asus") &&
+        !normalizedGraphics.includes("Intel") && !normalizedGraphics.includes("AMD")) {
+      // Only use if it's specific enough (not just a brand name)
+      displayGraphics = normalizedGraphics;
+    }
+  }
+  
+  // If we don't have a good graphics value, extract from title
+  if (!displayGraphics) {
+    const extractedGraphics = processGraphics(undefined, title);
+    if (extractedGraphics) {
+      displayGraphics = extractedGraphics;
+    } else {
+      // Final fallback to the original value or "Not Specified"
+      displayGraphics = specs.graphics || 'Not Specified';
+    }
+  }
+  
   const extractedStorage = !specs.storage ? processStorage(undefined, title) : null;
   const extractedScreenSize = !specs.screenSize ? processScreenSize(undefined, title) : null;
   const extractedScreenResolution = !specs.screenResolution ? processScreenResolution(undefined, title) : null;
@@ -43,7 +68,6 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
   // For display, prioritize database values but fall back to extracted values
   const displayProcessor = specs.processor || extractedProcessor || 'Not Specified';
   const displayRam = specs.ram || extractedRam || 'Not Specified';
-  const displayGraphics = specs.graphics || extractedGraphics || 'Not Specified';
   const displayStorage = specs.storage || extractedStorage || 'Not Specified';
   const displayScreenSize = specs.screenSize || extractedScreenSize || 'Not Specified';
   const displayScreenResolution = specs.screenResolution || extractedScreenResolution || '';
@@ -53,7 +77,9 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
     title,
     extractedProcessor,
     extractedRam,
-    extractedGraphics,
+    extractedGraphics: processGraphics(undefined, title),
+    originalGraphics: specs.graphics,
+    finalGraphics: displayGraphics,
     extractedStorage,
     extractedScreenSize,
     extractedScreenResolution

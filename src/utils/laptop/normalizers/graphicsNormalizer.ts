@@ -1,3 +1,4 @@
+
 /**
  * Normalizes graphics card strings for consistent display and filtering
  */
@@ -11,6 +12,12 @@ export const normalizeGraphics = (graphics: string): string => {
     .replace(/Integrated\s+Graphics:?/i, '')
     .replace(/GPU:?/i, '')
     .trim();
+  
+  // Reject single brand names that don't include GPU info
+  const justBrandPattern = /^(Apple|Asus|Dell|HP|Lenovo|MSI|Acer|Samsung|Microsoft)$/i;
+  if (justBrandPattern.test(normalized)) {
+    return '';
+  }
   
   // Filter out invalid or nonsensical graphics card descriptions
   if (normalized.length < 3 || 
@@ -60,7 +67,8 @@ export const normalizeGraphics = (graphics: string): string => {
     .replace(/intel\s+uhd\s+graphics/i, 'Intel UHD Graphics')
     .replace(/intel\s+hd\s+graphics/i, 'Intel HD Graphics')
     .replace(/\bIris\s+Xe\b/i, 'Intel Iris Xe Graphics')
-    .replace(/\bUHD\s+Graphics\b/i, 'Intel UHD Graphics');
+    .replace(/\bUHD\s+Graphics\b/i, 'Intel UHD Graphics')
+    .replace(/\bintel\s+arc\s+([a-z]\d{2,3})\b/i, 'Intel Arc $1');
     
   // Standardize AMD naming
   normalized = normalized
@@ -117,6 +125,7 @@ export const getGraphicsFilterValue = (graphics: string): string => {
   if (normalized.includes('iris')) return 'Intel Iris Graphics';
   if (normalized.includes('uhd')) return 'Intel UHD Graphics';
   if (normalized.includes('hd graphics')) return 'Intel HD Graphics';
+  if (normalized.includes('arc')) return 'Intel Arc';
   
   // Apple integrated graphics
   if (normalized.includes('m3')) return 'Apple M3 GPU';

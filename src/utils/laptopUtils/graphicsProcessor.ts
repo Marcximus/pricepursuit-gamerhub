@@ -13,7 +13,11 @@ export const processGraphics = (graphics: string | undefined, title: string): st
       .replace(/\s+/g, ' ')
       .trim();
       
-    if (cleanedGraphics.length > 3 && 
+    // Skip if graphics is just a brand name with no actual GPU info
+    const justBrandPattern = /^(Apple|Asus|Dell|HP|Lenovo|MSI|Acer|Samsung|Microsoft)$/i;
+    if (justBrandPattern.test(cleanedGraphics)) {
+      console.log(`Rejecting graphics value "${cleanedGraphics}" as it's just a brand name`);
+    } else if (cleanedGraphics.length > 3 && 
         cleanedGraphics !== 'Graphics' && 
         cleanedGraphics !== 'GPU' && 
         !cleanedGraphics.includes('32-core')) {
@@ -71,6 +75,9 @@ export const processGraphics = (graphics: string | undefined, title: string): st
     
     // Intel Graphics
     /\b(?:Intel\s+)?(?:UHD|Iris\s+Xe|Iris\s+Plus|HD)\s*Graphics(?:\s*\d*)?\b/i,
+    
+    // Arc series from Intel
+    /\b(?:Intel\s+)?Arc\s+[A-Z]\d{2,3}\b/i,
     
     // Generic patterns (as fallback)
     /\b(?:NVIDIA|AMD|Intel)\s+(?:Graphics|GPU)\b/i,
