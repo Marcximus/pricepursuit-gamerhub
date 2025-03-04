@@ -45,7 +45,7 @@ const WinnerBadge: React.FC<WinnerBadgeProps> = ({
   return (
     <div className={`inline-flex items-center justify-center gap-2 px-4 py-1.5 ${colors.bg} ${colors.text} rounded-full border ${colors.border} shadow-sm`}>
       <Trophy className={`w-4 h-4 ${colors.icon}`} />
-      <span className="font-semibold">Winner: {winningLaptop.brand} {winningLaptop.model}</span>
+      <span className="font-semibold">🏆 Winner: {winningLaptop.brand} {winningLaptop.model} 🏆</span>
     </div>
   );
 };
