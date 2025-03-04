@@ -15,11 +15,23 @@ export const nvidiaPatterns = [
   // RTX 20-series
   /\b(?:NVIDIA\s+)?(?:GeForce\s+)?RTX\s*20\d{2}(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-?Q)?\b/i,
   
-  // GTX 16-series
+  // Enhanced GTX 16-series with specific models
   /\b(?:NVIDIA\s+)?(?:GeForce\s+)?GTX\s*16\d{2}(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-?Q)?\b/i,
+  /\b(?:NVIDIA\s+)?(?:GeForce\s+)?GTX\s*1660(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-?Q)?\b/i,
+  /\b(?:NVIDIA\s+)?(?:GeForce\s+)?GTX\s*1650(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-?Q)?\b/i,
   
-  // GTX 10-series
+  // Enhanced GTX 10-series with specific models
   /\b(?:NVIDIA\s+)?(?:GeForce\s+)?GTX\s*10\d{2}(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-?Q)?\b/i,
+  /\b(?:NVIDIA\s+)?(?:GeForce\s+)?GTX\s*1080(?:\s*Ti)?(?:\s*Max-?Q)?\b/i,
+  /\b(?:NVIDIA\s+)?(?:GeForce\s+)?GTX\s*1070(?:\s*Ti)?(?:\s*Max-?Q)?\b/i,
+  /\b(?:NVIDIA\s+)?(?:GeForce\s+)?GTX\s*1060(?:\s*Ti)?(?:\s*Max-?Q)?\b/i,
+  
+  // Handle models without spaces (e.g. GTX1060 instead of GTX 1060)
+  /\b(?:NVIDIA\s+)?(?:GeForce\s+)?GTX1080(?:Ti)?(?:Max-?Q)?\b/i,
+  /\b(?:NVIDIA\s+)?(?:GeForce\s+)?GTX1070(?:Ti)?(?:Max-?Q)?\b/i,
+  /\b(?:NVIDIA\s+)?(?:GeForce\s+)?GTX1060(?:Ti)?(?:Max-?Q)?\b/i,
+  /\b(?:NVIDIA\s+)?(?:GeForce\s+)?GTX1650(?:Ti)?(?:Super)?(?:Max-?Q)?\b/i,
+  /\b(?:NVIDIA\s+)?(?:GeForce\s+)?GTX1660(?:Ti)?(?:Super)?(?:Max-?Q)?\b/i,
   
   // Older GTX series
   /\b(?:NVIDIA\s+)?(?:GeForce\s+)?GTX\s*\d{3,4}(?:\s*Ti)?(?:\s*Super)?(?:\s*Max-?Q)?\b/i,

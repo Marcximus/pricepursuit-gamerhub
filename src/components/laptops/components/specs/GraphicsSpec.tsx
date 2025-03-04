@@ -40,14 +40,39 @@ export function GraphicsSpec({ title, graphics }: GraphicsSpecProps) {
     if (extractedGraphics && extractedGraphics.length > 4) {
       displayGraphics = extractedGraphics;
     } else {
+      // Special cases for common NVIDIA GPUs
+      if (title.toLowerCase().includes('gtx 1060') || 
+          title.toLowerCase().includes('gtx1060') ||
+          (graphics && (graphics.toLowerCase().includes('gtx 1060') || 
+                       graphics.toLowerCase().includes('gtx1060')))) {
+        displayGraphics = 'NVIDIA GTX 1060';
+      }
+      // Special case for GTX 1070
+      else if (title.toLowerCase().includes('gtx 1070') || 
+               title.toLowerCase().includes('gtx1070') ||
+               (graphics && (graphics.toLowerCase().includes('gtx 1070') || 
+                            graphics.toLowerCase().includes('gtx1070')))) {
+        displayGraphics = 'NVIDIA GTX 1070';
+      }
+      // Special case for GTX 1080
+      else if (title.toLowerCase().includes('gtx 1080') || 
+               title.toLowerCase().includes('gtx1080') ||
+               (graphics && (graphics.toLowerCase().includes('gtx 1080') || 
+                            graphics.toLowerCase().includes('gtx1080')))) {
+        displayGraphics = 'NVIDIA GTX 1080';
+      }
       // Special case for GTX 1650
-      if (title.toLowerCase().includes('gtx 1650') || 
-          (graphics && graphics.toLowerCase().includes('gtx 1650'))) {
+      else if (title.toLowerCase().includes('gtx 1650') || 
+               title.toLowerCase().includes('gtx1650') ||
+               (graphics && (graphics.toLowerCase().includes('gtx 1650') || 
+                            graphics.toLowerCase().includes('gtx1650')))) {
         displayGraphics = 'NVIDIA GTX 1650';
       } 
       // Special case for GTX 1660
       else if (title.toLowerCase().includes('gtx 1660') || 
-               (graphics && graphics.toLowerCase().includes('gtx 1660'))) {
+               title.toLowerCase().includes('gtx1660') ||
+               (graphics && (graphics.toLowerCase().includes('gtx 1660') || 
+                            graphics.toLowerCase().includes('gtx1660')))) {
         displayGraphics = 'NVIDIA GTX 1660';
       }
       // Check title for Intel HD Graphics patterns
@@ -93,8 +118,11 @@ export function GraphicsSpec({ title, graphics }: GraphicsSpecProps) {
     }
   }
   
-  // Special case - make sure GTX 1650 and GTX 1660 show as dedicated
-  if (displayGraphics.toLowerCase().includes('gtx 1650') || 
+  // Special case - make sure common GTX models show as dedicated
+  if (displayGraphics.toLowerCase().includes('gtx 1060') || 
+      displayGraphics.toLowerCase().includes('gtx 1070') ||
+      displayGraphics.toLowerCase().includes('gtx 1080') ||
+      displayGraphics.toLowerCase().includes('gtx 1650') || 
       displayGraphics.toLowerCase().includes('gtx 1660')) {
     if (!gpuType) {
       gpuType = ' (Dedicated)';

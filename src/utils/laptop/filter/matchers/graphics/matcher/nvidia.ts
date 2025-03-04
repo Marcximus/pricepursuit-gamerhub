@@ -25,6 +25,21 @@ export const matchesNvidiaGraphics = (
     return normalizedProduct.includes('gtx 1660') || normalizedProduct.includes('gtx1660');
   }
   
+  // Special case for GTX 1060 - direct matching
+  if (normalizedFilter.includes('gtx 1060') || normalizedFilter === 'nvidia gtx 1060') {
+    return normalizedProduct.includes('gtx 1060') || normalizedProduct.includes('gtx1060');
+  }
+  
+  // Special case for GTX 1070 - direct matching
+  if (normalizedFilter.includes('gtx 1070') || normalizedFilter === 'nvidia gtx 1070') {
+    return normalizedProduct.includes('gtx 1070') || normalizedProduct.includes('gtx1070');
+  }
+  
+  // Special case for GTX 1080 - direct matching
+  if (normalizedFilter.includes('gtx 1080') || normalizedFilter === 'nvidia gtx 1080') {
+    return normalizedProduct.includes('gtx 1080') || normalizedProduct.includes('gtx1080');
+  }
+  
   // Check specific architecture (RTX vs GTX)
   const filterIsRTX = normalizedFilter.includes('rtx');
   const productIsRTX = normalizedProduct.includes('rtx');
@@ -38,8 +53,8 @@ export const matchesNvidiaGraphics = (
   
   // Match the series number with improved pattern recognition
   // e.g., RTX 3060, RTX 3060 Ti, RTX 3060 Max-Q, etc.
-  const filterSeriesMatch = normalizedFilter.match(/(?:rtx|gtx)\s*(\d{1,4})(?:\s*ti|\s*super)?/i);
-  const productSeriesMatch = normalizedProduct.match(/(?:rtx|gtx)\s*(\d{1,4})(?:\s*ti|\s*super)?/i);
+  const filterSeriesMatch = normalizedFilter.match(/(?:rtx|gtx)\s*(\d{3,4})(?:\s*ti|\s*super)?/i);
+  const productSeriesMatch = normalizedProduct.match(/(?:rtx|gtx)\s*(\d{3,4})(?:\s*ti|\s*super)?/i);
   
   if (filterSeriesMatch) {
     // If filter specifies a model number, product must match that model or better

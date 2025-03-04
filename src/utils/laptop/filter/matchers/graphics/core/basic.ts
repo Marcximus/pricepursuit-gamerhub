@@ -37,8 +37,9 @@ export const mainGraphicsCategories: string[] = [
   // NVIDIA RTX 20 series
   'NVIDIA RTX 2080', 'NVIDIA RTX 2070', 'NVIDIA RTX 2060',
   
-  // NVIDIA GTX series
-  'NVIDIA GTX 1660', 'NVIDIA GTX 1650',
+  // NVIDIA GTX series - expanded to include more models
+  'NVIDIA GTX 1660', 'NVIDIA GTX 1650', 'NVIDIA GTX 1060', 'NVIDIA GTX 1070', 'NVIDIA GTX 1080',
+  'NVIDIA GTX 980', 'NVIDIA GTX 970', 'NVIDIA GTX 960',
   
   // NVIDIA MX series
   'NVIDIA MX 550', 'NVIDIA MX 450', 'NVIDIA MX 350', 'NVIDIA MX 250',

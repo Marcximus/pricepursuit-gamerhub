@@ -22,6 +22,40 @@ import {
   isVagueGraphicsTerm
 } from './core';
 
+// New specialized matchers for additional GTX models
+const isGtx1060 = (
+  filterValue: string,
+  productFilterValue: string,
+  normalizedProduct: string
+): boolean => {
+  return filterValue === 'NVIDIA GTX 1060' && 
+    (productFilterValue === 'NVIDIA GTX 1060' || 
+     normalizedProduct.toLowerCase().includes('gtx 1060') ||
+     normalizedProduct.toLowerCase().includes('gtx1060'));
+};
+
+const isGtx1070 = (
+  filterValue: string,
+  productFilterValue: string,
+  normalizedProduct: string
+): boolean => {
+  return filterValue === 'NVIDIA GTX 1070' && 
+    (productFilterValue === 'NVIDIA GTX 1070' || 
+     normalizedProduct.toLowerCase().includes('gtx 1070') ||
+     normalizedProduct.toLowerCase().includes('gtx1070'));
+};
+
+const isGtx1080 = (
+  filterValue: string,
+  productFilterValue: string,
+  normalizedProduct: string
+): boolean => {
+  return filterValue === 'NVIDIA GTX 1080' && 
+    (productFilterValue === 'NVIDIA GTX 1080' || 
+     normalizedProduct.toLowerCase().includes('gtx 1080') ||
+     normalizedProduct.toLowerCase().includes('gtx1080'));
+};
+
 /**
  * Enhanced matcher for graphics card filter values with improved accuracy
  */
@@ -54,6 +88,18 @@ export const matchesGraphicsFilter = (
   const productFilterValue = getGraphicsFilterValue(normalizedProduct);
   
   // Special cases for specific GPU models
+  if (isGtx1060(filterValue, productFilterValue, normalizedProduct)) {
+    return true;
+  }
+  
+  if (isGtx1070(filterValue, productFilterValue, normalizedProduct)) {
+    return true;
+  }
+  
+  if (isGtx1080(filterValue, productFilterValue, normalizedProduct)) {
+    return true;
+  }
+  
   if (isGtx1650(filterValue, productFilterValue, normalizedProduct)) {
     return true;
   }
@@ -114,6 +160,24 @@ export const matchesGraphicsFilter = (
   // Reject vague or meaningless graphics terms
   if (isVagueGraphicsTerm(filterLower)) {
     return false;
+  }
+  
+  // Additional check for GTX 10-series in both filter and product
+  if (filterLower.includes('gtx 10') && productLower.includes('gtx 10')) {
+    // Check for exact model match (e.g., GTX 1060 in both)
+    if (filterLower.includes('1060') && productLower.includes('1060')) return true;
+    if (filterLower.includes('1070') && productLower.includes('1070')) return true;
+    if (filterLower.includes('1080') && productLower.includes('1080')) return true;
+  }
+  
+  // Special handling for products with 'geforce' but no explicit nvidia mention
+  if (filterLower.includes('nvidia') && !productLower.includes('nvidia') && productLower.includes('geforce')) {
+    // If filter is for a specific NVIDIA GTX model
+    if (filterLower.includes('gtx 1060') && productLower.includes('gtx 1060')) return true;
+    if (filterLower.includes('gtx 1070') && productLower.includes('gtx 1070')) return true;
+    if (filterLower.includes('gtx 1080') && productLower.includes('gtx 1080')) return true;
+    if (filterLower.includes('gtx 1650') && productLower.includes('gtx 1650')) return true;
+    if (filterLower.includes('gtx 1660') && productLower.includes('gtx 1660')) return true;
   }
   
   // Fall back to generic GPU matching

@@ -21,13 +21,47 @@ export const getNvidiaFilterValue = (normalized: string): string | null => {
     if (model) return `NVIDIA RTX ${model}`;
   }
   
+  // GTX 10-series - Enhanced to specifically match GTX 1060, 1070, 1080
+  if (/\bgtx\s*1060\b/i.test(normalized)) {
+    return `NVIDIA GTX 1060`;
+  }
+  
+  if (/\bgtx\s*1070\b/i.test(normalized)) {
+    return `NVIDIA GTX 1070`;
+  }
+  
+  if (/\bgtx\s*1080\b/i.test(normalized)) {
+    return `NVIDIA GTX 1080`;
+  }
+  
   // GTX Series - Enhanced to specifically match GTX 1650
   if (/\bgtx\s*1650\b/i.test(normalized)) {
     return `NVIDIA GTX 1650`;
   }
   
-  // GTX Series - Enhanced to specifically match other common models
+  // GTX Series - Enhanced to specifically match GTX 1660
   if (/\bgtx\s*1660\b/i.test(normalized)) {
+    return `NVIDIA GTX 1660`;
+  }
+  
+  // Also match when the model numbers don't have spaces
+  if (/\bgtx1060\b/i.test(normalized)) {
+    return `NVIDIA GTX 1060`;
+  }
+  
+  if (/\bgtx1070\b/i.test(normalized)) {
+    return `NVIDIA GTX 1070`;
+  }
+  
+  if (/\bgtx1080\b/i.test(normalized)) {
+    return `NVIDIA GTX 1080`;
+  }
+  
+  if (/\bgtx1650\b/i.test(normalized)) {
+    return `NVIDIA GTX 1650`;
+  }
+  
+  if (/\bgtx1660\b/i.test(normalized)) {
     return `NVIDIA GTX 1660`;
   }
   
@@ -52,12 +86,20 @@ export const getNvidiaFilterValue = (normalized: string): string | null => {
     return 'NVIDIA RTX Graphics';
   }
   
-  // Special case to catch GTX 1650 that might be formatted differently
+  // Special case to catch GTX models that might be formatted differently
   if (normalized.includes('nvidia') && normalized.includes('gtx')) {
+    if (normalized.includes('1060')) {
+      return 'NVIDIA GTX 1060';
+    }
+    if (normalized.includes('1070')) {
+      return 'NVIDIA GTX 1070';
+    }
+    if (normalized.includes('1080')) {
+      return 'NVIDIA GTX 1080';
+    }
     if (normalized.includes('1650')) {
       return 'NVIDIA GTX 1650';
     }
-    // Special case for GTX 1660
     if (normalized.includes('1660')) {
       return 'NVIDIA GTX 1660';
     }
