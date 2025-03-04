@@ -1,7 +1,7 @@
 
 import React from "react";
 import type { Product } from "@/types/product";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Zap } from "lucide-react";
 
 interface LaptopDisplayProps {
   laptop: Product;
@@ -51,10 +51,13 @@ const LaptopDisplay: React.FC<LaptopDisplayProps> = ({
           rel="noopener noreferrer"
           className="block"
         >
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-md shadow-sm border border-blue-100">
-            <p className="text-2xl font-bold text-blue-700">{formatPrice(laptop.current_price)}</p>
+          <div className="bg-slate-900 p-4 rounded-lg shadow-md border border-slate-800 transition-transform hover:scale-[1.02]">
+            <p className="text-2xl font-bold text-white flex items-center justify-between">
+              {formatPrice(laptop.current_price)}
+              <Zap className="w-5 h-5 text-blue-400" />
+            </p>
             {laptop.original_price && laptop.original_price > laptop.current_price && (
-              <p className="text-sm text-muted-foreground line-through">{formatPrice(laptop.original_price)}</p>
+              <p className="text-sm text-slate-400 line-through">{formatPrice(laptop.original_price)}</p>
             )}
           </div>
         </a>
@@ -63,9 +66,9 @@ const LaptopDisplay: React.FC<LaptopDisplayProps> = ({
           href={affiliateUrl} 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="mt-3 flex items-center justify-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-md border border-blue-100"
+          className="mt-3 flex items-center justify-center gap-1 text-sm text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-md border border-slate-700"
         >
-          <span>View Details</span>
+          <span>Tech Specs</span>
           <ArrowUpRight className="h-3 w-3" />
         </a>
       </div>
