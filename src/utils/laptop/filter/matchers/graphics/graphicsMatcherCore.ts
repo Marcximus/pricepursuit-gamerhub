@@ -1,11 +1,9 @@
 
 import { normalizeGraphics, getGraphicsFilterValue, isIntegratedGraphics, isHighPerformanceGraphics } from "@/utils/laptop/normalizers/graphicsNormalizer";
-import { 
-  matchesNvidiaGraphics,
-  matchesAmdGraphics,
-  matchesIntelGraphics,
-  matchesAppleGraphics
-} from './';
+import { matchesNvidiaGraphics } from './nvidiaMatcher';
+import { matchesAmdGraphics } from './amdMatcher';
+import { matchesIntelGraphics } from './intelMatcher';
+import { matchesAppleGraphics } from './appleMatcher';
 
 /**
  * Enhanced matcher for graphics card filter values with improved accuracy
@@ -68,8 +66,8 @@ export const matchesGraphicsFilter = (
   }
   
   // AMD graphics
-  if ((filterLower.includes('radeon') || filterLower.includes('amd')) && 
-      (productLower.includes('radeon') || productLower.includes('amd'))) {
+  if ((filterLower.includes('radeon') || filterLower.includes('amd') || filterLower.includes('vega')) && 
+      (productLower.includes('radeon') || productLower.includes('amd') || productLower.includes('vega'))) {
     return matchesAmdGraphics(filterLower, productLower);
   }
   

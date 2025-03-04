@@ -40,23 +40,36 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
   // Improved graphics extraction and display logic
   let displayGraphics = '';
   
-  // First try to normalize the existing graphics value from database
+  // First try to use and normalize the existing graphics value from database
   if (specs.graphics) {
-    const normalizedGraphics = normalizeGraphics(specs.graphics);
-    if (normalizedGraphics && normalizedGraphics.length > 3) {
-      // Only use if it's specific enough (not just a brand name)
-      displayGraphics = normalizedGraphics;
+    // Check if the graphics value is a generic brand name without model
+    const isGenericGpu = /^(nvidia|amd|intel|radeon|graphics)$/i.test(specs.graphics.trim());
+    
+    if (!isGenericGpu) {
+      // If it's not just a generic brand name, use the normalized version
+      const normalizedGraphics = normalizeGraphics(specs.graphics);
+      if (normalizedGraphics && normalizedGraphics.length > 3) {
+        displayGraphics = normalizedGraphics;
+      }
     }
   }
   
-  // If we don't have a valid graphics value from database, extract from title
-  if (!displayGraphics) {
+  // If we don't have a valid graphics value from database or it's too generic, extract from title
+  if (!displayGraphics || displayGraphics.length < 5) {
     const extractedGraphics = processGraphics(undefined, title);
-    if (extractedGraphics) {
+    if (extractedGraphics && extractedGraphics.length > 4) {
       displayGraphics = extractedGraphics;
     } else {
       // Final fallback to the original value or "Not Specified"
       displayGraphics = specs.graphics || 'Not Specified';
+    }
+  }
+  
+  // Clean up generic brand-only GPU descriptions
+  if (/^(nvidia|amd|intel|radeon|graphics)$/i.test(displayGraphics.trim())) {
+    const extractedGraphics = processGraphics(undefined, title);
+    if (extractedGraphics && extractedGraphics.length > 4) {
+      displayGraphics = extractedGraphics;
     }
   }
   
