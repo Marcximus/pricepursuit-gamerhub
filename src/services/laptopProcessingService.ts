@@ -12,7 +12,7 @@ export function processAndFilterLaptops(
   page: number,
   itemsPerPage: number
 ) {
-  // First filter out products with forbidden keywords
+  // First filter out products with forbidden keywords - but only do this once
   const laptopsWithoutForbiddenKeywords = allLaptops.filter(
     laptop => !containsForbiddenKeywords(laptop.title || '')
   );
@@ -55,6 +55,6 @@ export function processAndFilterLaptops(
     laptops: paginatedLaptops,
     totalCount: sortedLaptops.length,
     totalPages,
-    allLaptops: laptopsWithoutForbiddenKeywords, // Also filter the allLaptops reference
+    allLaptops: laptopsWithoutForbiddenKeywords, // We're already filtering here, don't need to do it again later
   };
 }

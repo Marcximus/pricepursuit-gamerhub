@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
@@ -8,7 +7,6 @@ import { LaptopList } from "@/components/laptops/LaptopList";
 import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
-import { containsForbiddenKeywords } from "@/utils/laptop/productFilters";
 
 const ComparePriceLaptops = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -46,8 +44,8 @@ const ComparePriceLaptops = () => {
     refetch
   } = useLaptops(currentPage, sortBy, filters);
 
-  // Add an additional filter step to ensure no forbidden products are displayed
-  const laptops = data?.laptops?.filter(laptop => !containsForbiddenKeywords(laptop.title || '')) ?? [];
+  // No additional filtering here - data.laptops is already filtered in processAndFilterLaptops
+  const laptops = data?.laptops ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
