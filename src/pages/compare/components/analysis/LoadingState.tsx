@@ -8,15 +8,20 @@ const LoadingState: React.FC = () => {
   const [progress, setProgress] = useState(5);
   
   useEffect(() => {
-    // Simulate progress with a slower, more gradual animation
+    // Faster (2x) progress with more random increments
     const timer = setTimeout(() => {
       setProgress(prev => {
-        // Increase progress more slowly and cap at 90%
-        // We cap at 90% since we don't know actual completion
-        const increment = Math.max(1, Math.floor(20 / (prev + 5))); // Slower increments as progress increases
-        return prev >= 90 ? 90 : prev + increment;
+        // More random increments with higher speed (2x faster)
+        const randomFactor = Math.random() * 2 + 0.5; // Random factor between 0.5 and 2.5
+        const increment = Math.max(2, Math.floor((40 / (prev + 5)) * randomFactor));
+        
+        // Add occasional jumps for more randomness
+        const shouldJump = Math.random() > 0.85;
+        const jumpValue = shouldJump ? Math.floor(Math.random() * 8) + 3 : 0;
+        
+        return prev >= 90 ? 90 : Math.min(90, prev + increment + jumpValue);
       });
-    }, 1200); // Longer delay between updates (1.2 seconds)
+    }, 600); // Half the delay (was 1200ms)
     
     return () => clearTimeout(timer);
   }, [progress]);
