@@ -1,0 +1,2 @@
+
+export { extractWeight } from './weightExtractor';

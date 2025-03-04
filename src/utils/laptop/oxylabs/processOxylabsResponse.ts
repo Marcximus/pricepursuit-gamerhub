@@ -1,20 +1,26 @@
 
 import { logLaptopProcessingDetails } from "../collection/status/processingLogs";
-import { extractBrand } from "./extractors/brandExtractor";
-import { extractModel } from "./extractors/modelExtractor";
-import { extractPrice, extractOriginalPrice } from "./extractors/priceExtractor";
-import { extractImageUrl } from "./extractors/imageExtractor";
-import { extractRating, extractReviewCount, extractReviewData } from "./extractors/reviewExtractor";
-import { extractDescription } from "./extractors/descriptionExtractor";
-import { extractProcessor } from "./extractors/processorExtractor";
-import { extractRam } from "./extractors/ramExtractor";
-import { extractStorage } from "./extractors/storageExtractor";
-import { extractScreenSize, extractScreenResolution } from "./extractors/screenExtractor";
-import { extractGraphics } from "./extractors/graphicsExtractor";
-import { extractWeight } from "./extractors/weightExtractor";
-import { extractOS } from "./extractors/osExtractor";
-import { extractTouchscreen } from "./extractors/touchscreenExtractor";
-import { extractColor } from "./extractors/colorExtractor";
+import { 
+  extractBrand, 
+  extractModel, 
+  extractProcessor, 
+  extractRam,
+  extractStorage,
+  extractScreenSize,
+  extractScreenResolution,
+  extractGraphics,
+  extractWeight,
+  extractOS,
+  extractTouchscreen,
+  extractColor,
+  extractPrice,
+  extractOriginalPrice,
+  extractImageUrl,
+  extractRating,
+  extractReviewCount,
+  extractReviewData,
+  extractDescription
+} from "./extractors";
 import { processLaptopDescription } from "../../laptopUtils/descriptionProcessor";
 
 /**

@@ -1,5 +1,5 @@
 
-import { normalizeModel } from "../../normalizers/modelNormalizer";
+import { normalizeModel } from "../../../normalizers/modelNormalizer";
 import { extractBrand } from "./brandExtractor";
 
 /**

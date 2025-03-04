@@ -1,5 +1,5 @@
 
-import { normalizeBrand } from "../../normalizers/brandNormalizer";
+import { normalizeBrand } from "../../../normalizers/brandNormalizer";
 
 /**
  * Extract brand with priority logic (from multiple sources)

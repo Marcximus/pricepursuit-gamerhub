@@ -1,3 +1,4 @@
+
 /**
  * Extract screen size
  */
