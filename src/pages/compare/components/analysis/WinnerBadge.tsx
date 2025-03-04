@@ -1,6 +1,5 @@
 
 import React from "react";
-import { Trophy } from "lucide-react";
 import type { Product } from "@/types/product";
 
 interface WinnerBadgeProps {
@@ -26,14 +25,14 @@ const WinnerBadge: React.FC<WinnerBadgeProps> = ({
   const themeColors = {
     bg: "bg-green-100",
     text: "text-green-800",
-    icon: "text-green-600",
     border: "border-green-200"
   };
   
   return (
     <div className={`inline-flex items-center justify-center gap-2 px-4 py-1.5 ${themeColors.bg} ${themeColors.text} rounded-full border ${themeColors.border} shadow-sm`}>
-      <Trophy className={`w-4 h-4 ${themeColors.icon}`} />
+      <span>🏆</span>
       <span className="font-semibold">Winner: {winningLaptop.brand} {winningLaptop.model}</span>
+      <span>🏆</span>
     </div>
   );
 };
