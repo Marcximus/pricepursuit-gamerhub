@@ -1,4 +1,3 @@
-
 import type { Product } from "@/types/product";
 import type { FilterableProductKeys } from "@/utils/laptop/filter";
 import { normalizerMap, validatorMap } from "../helpers/filterHelpers";
@@ -63,7 +62,7 @@ export const getUniqueFilterValues = (
       'NVIDIA RTX 2080', 'NVIDIA RTX 2070', 'NVIDIA RTX 2060',
       
       // NVIDIA GTX series - Add specific models
-      'NVIDIA GTX 1660', 'NVIDIA GTX 1650', 'NVIDIA GTX 1060', 'NVIDIA GTX 1070', 'NVIDIA GTX 1080',
+      'NVIDIA GTX 1660', 'NVIDIA GTX 1650',
       
       // NVIDIA MX series
       'NVIDIA MX 550', 'NVIDIA MX 450', 'NVIDIA MX 350', 'NVIDIA MX 250',
@@ -77,9 +76,10 @@ export const getUniqueFilterValues = (
       // Intel Arc discrete
       'Intel Arc A770', 'Intel Arc A750', 'Intel Arc A380',
       
-      // Intel Integrated (more detailed categories) - COMBINED Iris Xe and regular Iris
-      'Intel Iris Graphics', // Combined category instead of separate Iris Xe and Iris
+      // Intel Integrated (more detailed categories)
+      'Intel Iris Xe Graphics', 
       'Intel Iris Plus Graphics',
+      'Intel Iris Graphics',
       'Intel UHD Graphics 700 Series',
       'Intel UHD Graphics 600 Series', 
       'Intel UHD Graphics',

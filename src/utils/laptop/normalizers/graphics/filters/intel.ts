@@ -11,15 +11,19 @@ export const getIntelFilterValue = (normalized: string): string | null => {
     if (model) return `Intel Arc A${model}`;
   }
   
-  // Both Intel Iris Xe and regular Iris - combine into single category
-  if (/iris\s*xe\s*graphics/i.test(normalized) || 
-      /iris\s*graphics/i.test(normalized)) {
-    return 'Intel Iris Graphics';
+  // Intel Iris Xe with number
+  if (/iris\s*xe\s*graphics\s*(\d+)?/i.test(normalized)) {
+    return 'Intel Iris Xe Graphics';
   }
   
   // Intel Iris Plus/Pro
   if (/iris\s*(plus|pro)/i.test(normalized)) {
     return 'Intel Iris Plus Graphics';
+  }
+  
+  // Intel Iris (any other)
+  if (/iris/i.test(normalized)) {
+    return 'Intel Iris Graphics';
   }
   
   // Intel UHD Graphics with number

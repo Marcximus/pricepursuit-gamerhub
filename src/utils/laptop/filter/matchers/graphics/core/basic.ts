@@ -53,9 +53,10 @@ export const mainGraphicsCategories: string[] = [
   // Intel Arc discrete
   'Intel Arc A770', 'Intel Arc A750', 'Intel Arc A380',
   
-  // Intel Integrated (more detailed categories) - COMBINED Iris Xe and Iris Graphics
-  'Intel Iris Graphics', // Combined category
+  // Intel Integrated (more detailed categories)
+  'Intel Iris Xe Graphics', 
   'Intel Iris Plus Graphics',
+  'Intel Iris Graphics',
   'Intel UHD Graphics 700 Series',
   'Intel UHD Graphics 600 Series', 
   'Intel UHD Graphics',
