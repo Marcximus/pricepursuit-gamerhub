@@ -1,11 +1,15 @@
+
 import React from "react";
-import Navigation from "@/components/Navigation";
-import { ComparisonHeader, LaptopCard, AnalysisSection, SpecificationsSection } from "./index";
-import { formatPrice } from "../utils/comparisonHelpers";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, RefreshCw, X } from "lucide-react";
 import type { Product } from "@/types/product";
-import type { ComparisonResult } from "../types";
-import type { ComparisonSection } from "../types";
+import ComparisonHeader from "./ComparisonHeader";
+import LaptopCard from "./LaptopCard";
+import SpecificationsSection from "./SpecificationsSection";
 import EmptyComparisonState from "./EmptyComparisonState";
+import AnalysisSection from "./AnalysisSection";
+import type { ComparisonResult } from "./ComparisonDataProvider";
+
 interface ComparisonLayoutProps {
   handleGoBack: () => void;
   handleClearAndGoBack: () => void;
@@ -15,7 +19,10 @@ interface ComparisonLayoutProps {
   laptopLeft: Product | null;
   laptopRight: Product | null;
   hasSelectedLaptops: boolean;
+  enhancedSpecsLeft: Record<string, any> | null;
+  enhancedSpecsRight: Record<string, any> | null;
 }
+
 const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
   handleGoBack,
   handleClearAndGoBack,
@@ -24,87 +31,72 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
   comparisonResult,
   laptopLeft,
   laptopRight,
-  hasSelectedLaptops
+  hasSelectedLaptops,
+  enhancedSpecsLeft,
+  enhancedSpecsRight
 }) => {
-  // Generate the comparison sections data when laptops are available
-  const generateComparisonSections = (): ComparisonSection[] => {
-    if (!laptopLeft || !laptopRight) return [];
-    return [{
-      title: 'Brand & Model',
-      leftValue: `${laptopLeft?.brand || 'N/A'} ${laptopLeft?.model || ''}`,
-      rightValue: `${laptopRight?.brand || 'N/A'} ${laptopRight?.model || ''}`
-    }, {
-      title: 'Processor',
-      leftValue: laptopLeft?.processor || 'Not Specified',
-      rightValue: laptopRight?.processor || 'Not Specified',
-      compare: (a: string, b: string) => formatPrice(laptopLeft?.current_price) === a ? 'equal' : 'unknown'
-    }, {
-      title: 'RAM',
-      leftValue: laptopLeft?.ram || 'Not Specified',
-      rightValue: laptopRight?.ram || 'Not Specified',
-      compare: (a: string, b: string) => a === b ? 'equal' : a > b ? 'better' : 'worse'
-    }, {
-      title: 'Storage',
-      leftValue: laptopLeft?.storage || 'Not Specified',
-      rightValue: laptopRight?.storage || 'Not Specified',
-      compare: (a: string, b: string) => a === b ? 'equal' : a > b ? 'better' : 'worse'
-    }, {
-      title: 'Graphics',
-      leftValue: laptopLeft?.graphics || 'Not Specified',
-      rightValue: laptopRight?.graphics || 'Not Specified'
-    }, {
-      title: 'Display',
-      leftValue: `${laptopLeft?.screen_size || 'N/A'} ${laptopLeft?.screen_resolution ? `(${laptopLeft.screen_resolution})` : ''}`,
-      rightValue: `${laptopRight?.screen_size || 'N/A'} ${laptopRight?.screen_resolution ? `(${laptopRight.screen_resolution})` : ''}`
-    }, {
-      title: 'Price',
-      leftValue: formatPrice(laptopLeft?.current_price),
-      rightValue: formatPrice(laptopRight?.current_price),
-      compare: (a: string, b: string) => a === b ? 'equal' : parseFloat(a.replace('$', '')) < parseFloat(b.replace('$', '')) ? 'better' : 'worse'
-    }, {
-      title: 'Rating',
-      leftValue: laptopLeft?.rating ? `${laptopLeft.rating}/5 (${laptopLeft.rating_count} reviews)` : 'No ratings',
-      rightValue: laptopRight?.rating ? `${laptopRight.rating}/5 (${laptopRight.rating_count} reviews)` : 'No ratings',
-      compare: (a: string, b: string) => {
-        const aMatch = a.match(/(\d+\.\d+)\/5/);
-        const bMatch = b.match(/(\d+\.\d+)\/5/);
-        if (aMatch && bMatch) {
-          const aRating = parseFloat(aMatch[1]);
-          const bRating = parseFloat(bMatch[1]);
-          if (aRating > bRating) return 'better';
-          if (aRating < bRating) return 'worse';
-          return 'equal';
-        }
-        return 'unknown';
-      }
-    }];
-  };
-  const comparisonSections = generateComparisonSections();
-  return <div className="min-h-screen bg-slate-50">
-      <Navigation />
+  return (
+    <div className="container mx-auto py-8 px-4 md:px-6">
+      <div className="flex justify-between items-center mb-6">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleGoBack}
+          className="flex items-center gap-1"
+        >
+          <ChevronLeft className="w-4 h-4" /> Back
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleClearAndGoBack}
+          className="flex items-center gap-1"
+        >
+          <X className="w-4 h-4" /> Clear and Back
+        </Button>
+      </div>
       
-      <main className="pt-32 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <ComparisonHeader handleGoBack={handleGoBack} handleClearAndGoBack={handleClearAndGoBack} />
+      {!hasSelectedLaptops ? (
+        <EmptyComparisonState />
+      ) : (
+        <>
+          <ComparisonHeader 
+            laptopLeft={laptopLeft} 
+            laptopRight={laptopRight} 
+          />
           
-          <h1 className="text-2xl font-bold mb-6">Best Laptop Comparison</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <LaptopCard 
+              laptop={laptopLeft} 
+              side="left" 
+              winner={comparisonResult?.winner} 
+            />
+            <LaptopCard 
+              laptop={laptopRight} 
+              side="right" 
+              winner={comparisonResult?.winner}
+            />
+          </div>
           
-          {!hasSelectedLaptops ? <EmptyComparisonState /> : <>
-              {/* Product Header Section */}
-              <div className="grid grid-cols-2 gap-8 mb-8">
-                <LaptopCard laptop={laptopLeft} isWinner={comparisonResult?.winner === 'left'} formatPrice={formatPrice} />
-                
-                <LaptopCard laptop={laptopRight} isWinner={comparisonResult?.winner === 'right'} formatPrice={formatPrice} />
-              </div>
-              
-              {/* AI Analysis Section */}
-              <AnalysisSection isLoading={isLoading} error={error} comparisonResult={comparisonResult} laptopLeft={laptopLeft} laptopRight={laptopRight} />
-              
-              {/* Detailed Specs Comparison - Updated to pass correct props */}
-              <SpecificationsSection laptopLeft={laptopLeft} laptopRight={laptopRight} />
-            </>}
-        </div>
-      </main>
-    </div>;
+          <div className="space-y-6">
+            <AnalysisSection 
+              isLoading={isLoading}
+              error={error}
+              comparisonResult={comparisonResult}
+            />
+            
+            <SpecificationsSection 
+              laptopLeft={laptopLeft} 
+              laptopRight={laptopRight}
+              enhancedSpecsLeft={enhancedSpecsLeft}
+              enhancedSpecsRight={enhancedSpecsRight}
+            />
+          </div>
+        </>
+      )}
+    </div>
+  );
 };
+
 export default ComparisonLayout;
