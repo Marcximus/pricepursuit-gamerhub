@@ -13,7 +13,6 @@ const Recommendation: React.FC<RecommendationProps> = ({
       <h3 className="font-semibold mb-3 text-green-800 flex items-center gap-2">
         <span>✅</span>
         <span>Our Recommendation</span>
-        <span>💡</span>
       </h3>
       <p className="text-green-900">{recommendation}</p>
     </div>
