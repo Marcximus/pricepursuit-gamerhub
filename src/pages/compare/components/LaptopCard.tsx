@@ -1,8 +1,9 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Trophy } from "lucide-react";
 import type { Product } from "@/types/product";
+import ConfettiEffect from "./analysis/ConfettiEffect";
 
 interface LaptopCardProps {
   laptop: Product | null;
@@ -11,6 +12,21 @@ interface LaptopCardProps {
 }
 
 const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }) => {
+  const [showConfetti, setShowConfetti] = useState(false);
+  
+  useEffect(() => {
+    if (isWinner) {
+      setShowConfetti(true);
+      
+      // Reset after animation (4 seconds)
+      const timer = setTimeout(() => {
+        setShowConfetti(false);
+      }, 4000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isWinner]);
+  
   if (!laptop) {
     return (
       <Card className="p-4 h-full flex flex-col">
@@ -23,6 +39,9 @@ const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }
   
   return (
     <Card className="p-4 h-full flex flex-col relative">
+      {/* Confetti effect positioned over the winning laptop */}
+      {isWinner && <ConfettiEffect isActive={showConfetti} />}
+      
       {/* Winner badge positioned absolutely to not affect layout */}
       {isWinner && (
         <div className="absolute top-3 left-3 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full flex items-center gap-1 text-sm font-medium shadow-sm">

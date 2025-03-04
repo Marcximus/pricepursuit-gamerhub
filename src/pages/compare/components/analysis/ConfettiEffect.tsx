@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { PartyPopper } from "lucide-react";
 
 interface ConfettiEffectProps {
   isActive: boolean;
@@ -13,16 +13,17 @@ const ConfettiEffect: React.FC<ConfettiEffectProps> = ({ isActive }) => {
     if (!isActive) return;
     
     // Generate confetti particles
-    const colors = ["#FFD700", "#FFA500", "#FF4500", "#9370DB", "#20B2AA"];
+    const colors = ["#FFD700", "#FFA500", "#FF4500", "#9370DB", "#20B2AA", "#FF1493", "#00CED1"];
     const newParticles = [];
     
-    for (let i = 0; i < 30; i++) {
-      // Reduced spread area to focus more on the winning side
-      const left = `${Math.random() * 60 - 30}%`;
-      const top = `${Math.random() * 50}%`;
+    for (let i = 0; i < 40; i++) {
+      // Wider spread for more festive appearance
+      const left = `${Math.random() * 120 - 10}%`;
+      const top = `${Math.random() * 80}%`;
       const color = colors[Math.floor(Math.random() * colors.length)];
-      const size = `${Math.random() * 0.5 + 0.5}rem`;
-      const duration = `${Math.random() * 2 + 1}s`;
+      const size = `${Math.random() * 0.7 + 0.3}rem`;
+      // Randomize duration between 2-4 seconds for a more natural effect
+      const duration = `${Math.random() * 2 + 2}s`;
       
       newParticles.push({
         id: i,
@@ -36,10 +37,10 @@ const ConfettiEffect: React.FC<ConfettiEffectProps> = ({ isActive }) => {
     
     setParticles(newParticles);
     
-    // Clear confetti after animation ends
+    // Clear confetti after animation ends (4 seconds)
     const timer = setTimeout(() => {
       setParticles([]);
-    }, 3000);
+    }, 4000);
     
     return () => clearTimeout(timer);
   }, [isActive]);
@@ -47,7 +48,7 @@ const ConfettiEffect: React.FC<ConfettiEffectProps> = ({ isActive }) => {
   if (!isActive) return null;
   
   return (
-    <div className="absolute w-40 h-40 overflow-visible pointer-events-none z-10">
+    <div className="absolute w-full h-full overflow-visible pointer-events-none z-10">
       {particles.map((p) => (
         <div
           key={p.id}
@@ -60,7 +61,7 @@ const ConfettiEffect: React.FC<ConfettiEffectProps> = ({ isActive }) => {
             animation: `fall ${p.duration} ease-out forwards`
           }}
         >
-          <Sparkles />
+          <PartyPopper />
         </div>
       ))}
       
@@ -68,14 +69,14 @@ const ConfettiEffect: React.FC<ConfettiEffectProps> = ({ isActive }) => {
         {`
           @keyframes fall {
             0% {
-              transform: translateY(-10px) rotate(0deg);
+              transform: translateY(-20px) rotate(0deg);
               opacity: 0;
             }
             10% {
               opacity: 1;
             }
             100% {
-              transform: translateY(100px) rotate(360deg);
+              transform: translateY(150px) rotate(360deg);
               opacity: 0;
             }
           }
