@@ -7,18 +7,16 @@ import { useToast } from "@/hooks/use-toast";
 
 export interface ComparisonResult {
   winner: "left" | "right" | "tie";
-  summary: string;
-  leftAdvantages: string[];
-  rightAdvantages: string[];
-  valueProposition: {
-    better_value: "left" | "right" | "tie";
-    explanation: string;
-  };
-  useCases: {
+  analysis: string;
+  advantages: {
     left: string[];
     right: string[];
   };
-  detailed_analysis: string;
+  recommendation: string;
+  valueForMoney: {
+    left: string;
+    right: string;
+  };
 }
 
 interface ComparisonDataProviderProps {
@@ -66,15 +64,15 @@ const ComparisonDataProvider: React.FC<ComparisonDataProviderProps> = ({ childre
           if (leftError) throw new Error(`Error fetching left laptop: ${leftError.message}`);
           if (rightError) throw new Error(`Error fetching right laptop: ${rightError.message}`);
           
-          setLaptopLeft(leftData);
-          setLaptopRight(rightData);
+          setLaptopLeft(leftData as Product);
+          setLaptopRight(rightData as Product);
           
           // Now fetch enhanced specifications from RapidAPI
           if (leftData?.asin && rightData?.asin) {
             fetchEnhancedSpecs(leftData.asin, rightData.asin);
           }
           
-        } catch (err) {
+        } catch (err: any) {
           console.error("Error fetching laptop details:", err);
           setError(`Failed to fetch laptop details: ${err.message}`);
         }
@@ -121,7 +119,7 @@ const ComparisonDataProvider: React.FC<ComparisonDataProviderProps> = ({ childre
           setEnhancedSpecsRight(enhancedSpecs);
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching enhanced specs:", err);
       toast({
         title: "Enhanced data error",
@@ -152,7 +150,7 @@ const ComparisonDataProvider: React.FC<ComparisonDataProviderProps> = ({ childre
           
           const result = await response.json();
           setComparisonResult(result);
-        } catch (err) {
+        } catch (err: any) {
           console.error("Error comparing laptops:", err);
           setError(err.message || 'Failed to compare laptops');
         } finally {

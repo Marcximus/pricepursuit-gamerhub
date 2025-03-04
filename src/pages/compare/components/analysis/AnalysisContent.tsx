@@ -5,7 +5,7 @@ import AdvantagesList from "./AdvantagesList";
 import ValueForMoney from "./ValueForMoney";
 import Recommendation from "./Recommendation";
 import type { Product } from "@/types/product";
-import type { ComparisonResult } from "../../types";
+import type { ComparisonResult } from "../../components/ComparisonDataProvider";
 
 interface AnalysisContentProps {
   comparisonResult: ComparisonResult;
