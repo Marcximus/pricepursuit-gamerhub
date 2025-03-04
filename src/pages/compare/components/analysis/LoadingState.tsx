@@ -4,8 +4,31 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Loader } from "lucide-react";
 
+const funnyLoadingTexts = [
+  "Training hamsters to compare laptops...",
+  "Calculating performance-to-RGB-lighting ratio...",
+  "Converting caffeine into laptop recommendations...",
+  "Asking gamers which laptop is cooler...",
+  "Measuring laptop weight in bananas...",
+  "Checking if it can run Crysis...",
+  "Translating technical jargon to English...",
+  "Consulting with tech wizards...",
+  "Determining which laptop survives coffee spills better...",
+  "Figuring out laptop battery life in Netflix episodes..."
+];
+
 const LoadingState: React.FC = () => {
   const [progress, setProgress] = useState(5);
+  const [textIndex, setTextIndex] = useState(0);
+  
+  useEffect(() => {
+    // Rotate through funny loading texts
+    const textTimer = setInterval(() => {
+      setTextIndex(prev => (prev + 1) % funnyLoadingTexts.length);
+    }, 3000);
+    
+    return () => clearInterval(textTimer);
+  }, []);
   
   useEffect(() => {
     // Slower progress (20% slower) with more random increments
@@ -34,7 +57,7 @@ const LoadingState: React.FC = () => {
           <span className="font-medium">Analyzing laptops...</span>
         </div>
         <Progress value={progress} className="w-full h-2" indicatorClassName="bg-primary" />
-        <p className="text-sm text-muted-foreground">AI is comparing the specifications and value</p>
+        <p className="text-sm text-muted-foreground">{funnyLoadingTexts[textIndex]}</p>
       </div>
       
       <Skeleton className="h-4 w-full" />
