@@ -1,3 +1,4 @@
+
 import type { Product } from "@/types/product";
 import type { FilterableProductKeys } from "@/utils/laptop/filter";
 import { normalizerMap, validatorMap } from "../helpers/filterHelpers";
@@ -73,14 +74,32 @@ export const getUniqueFilterValues = (
       'AMD Radeon RX 5700', 'AMD Radeon RX 5600', 'AMD Radeon RX 5500',
       'AMD Radeon Vega',
       
-      // Intel Graphics
+      // Intel Arc discrete
       'Intel Arc A770', 'Intel Arc A750', 'Intel Arc A380',
-      'Intel Iris Xe Graphics', 'Intel UHD Graphics', 'Intel HD Graphics',
+      
+      // Intel Integrated (more detailed categories)
+      'Intel Iris Xe Graphics', 
+      'Intel Iris Plus Graphics',
+      'Intel Iris Graphics',
+      'Intel UHD Graphics 700 Series',
+      'Intel UHD Graphics 600 Series', 
+      'Intel UHD Graphics',
+      'Intel HD Graphics 500 Series',
+      'Intel HD Graphics 400 Series',
+      'Intel HD Graphics 300 Series',
+      'Intel HD Graphics 200 Series',
+      'Intel HD Graphics',
       
       // Apple
-      'Apple M3 GPU', 'Apple M2 GPU', 'Apple M1 GPU',
+      'Apple M3 Ultra GPU', 'Apple M3 Max GPU', 'Apple M3 Pro GPU', 'Apple M3 GPU',
+      'Apple M2 Ultra GPU', 'Apple M2 Max GPU', 'Apple M2 Pro GPU', 'Apple M2 GPU',
+      'Apple M1 Ultra GPU', 'Apple M1 Max GPU', 'Apple M1 Pro GPU', 'Apple M1 GPU',
       
       // Generic categories
+      'NVIDIA RTX Graphics', 'NVIDIA GTX Graphics', 'NVIDIA Graphics',
+      'AMD Radeon Graphics',
+      'Intel Graphics',
+      'Apple Graphics',
       'High Performance GPU', 'Integrated GPU', 'Dedicated GPU',
       
       // Others
@@ -88,7 +107,7 @@ export const getUniqueFilterValues = (
     ];
     
     // Add categories with at least one match to the set, filtering out rare options
-    const MINIMUM_COUNT_THRESHOLD = 10;
+    const MINIMUM_COUNT_THRESHOLD = 3;  // Lower threshold to include more specific categories
     let hasRareOptions = false;
     
     primaryGraphicsCategories.forEach(category => {

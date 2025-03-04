@@ -87,6 +87,13 @@ export const intelPatterns = [
   // HD Graphics (older integrated) with generation number
   /\b(?:Intel\s+)?HD\s*Graphics(?:\s+\d+)?\b/i,
   
+  // More specific HD Graphics patterns
+  /\b(?:Intel\s+)?HD\s*Graphics\s+(\d+)\b/i,
+  /\b(?:Intel\s+)?HD\s*(\d+)\s*Graphics\b/i,
+  
+  // Generic HD Graphics mention (common in cheaper laptops)
+  /\b(?:Intel\s+)?HD\s*Graphics\b/i,
+  
   // Any Intel graphics mention (fallback)
   /\bIntel\s+(?!CPU|RAM|SSD|HDD|GB|TB|processor|core|celeron|pentium)[A-Za-z0-9]+\s+Graphics\b/i
 ];

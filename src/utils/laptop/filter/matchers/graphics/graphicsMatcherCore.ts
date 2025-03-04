@@ -49,19 +49,48 @@ export const matchesGraphicsFilter = (
       'AMD Radeon RX 5700', 'AMD Radeon RX 5600', 'AMD Radeon RX 5500',
       'AMD Radeon Vega',
       
-      // Intel Graphics
+      // Intel Arc discrete
       'Intel Arc A770', 'Intel Arc A750', 'Intel Arc A380',
-      'Intel Iris Xe Graphics', 'Intel UHD Graphics', 'Intel HD Graphics',
+      
+      // Intel Integrated (more detailed categories)
+      'Intel Iris Xe Graphics', 
+      'Intel Iris Plus Graphics',
+      'Intel Iris Graphics',
+      'Intel UHD Graphics 700 Series',
+      'Intel UHD Graphics 600 Series', 
+      'Intel UHD Graphics',
+      'Intel HD Graphics 500 Series',
+      'Intel HD Graphics 400 Series',
+      'Intel HD Graphics 300 Series',
+      'Intel HD Graphics 200 Series',
+      'Intel HD Graphics',
       
       // Apple
-      'Apple M3 GPU', 'Apple M2 GPU', 'Apple M1 GPU',
+      'Apple M3 Ultra GPU', 'Apple M3 Max GPU', 'Apple M3 Pro GPU', 'Apple M3 GPU',
+      'Apple M2 Ultra GPU', 'Apple M2 Max GPU', 'Apple M2 Pro GPU', 'Apple M2 GPU',
+      'Apple M1 Ultra GPU', 'Apple M1 Max GPU', 'Apple M1 Pro GPU', 'Apple M1 GPU',
       
       // Generic categories
-      'High Performance GPU', 'Integrated GPU', 'Dedicated GPU'
+      'NVIDIA RTX Graphics', 'NVIDIA GTX Graphics', 'NVIDIA Graphics',
+      'AMD Radeon Graphics',
+      'Intel Graphics',
+      'Apple Graphics',
     ];
     
-    // Check if the product's filter value is not in the main categories
-    return !mainCategories.includes(productFilterValue);
+    // If the product's filter value is a common category, don't include it in "Other"
+    if (mainCategories.includes(productFilterValue)) {
+      return false;
+    }
+    
+    // Check if it matches the more general GPU types - exclude these from "Other"
+    if (productFilterValue === 'High Performance GPU' || 
+        productFilterValue === 'Integrated GPU' || 
+        productFilterValue === 'Dedicated GPU') {
+      return false;
+    }
+    
+    // Include in "Other" if it doesn't match any main category
+    return true;
   }
   
   // Normalize both filter and product values for consistency
@@ -103,15 +132,15 @@ export const matchesGraphicsFilter = (
   const productLower = normalizedProduct.toLowerCase();
   const filterLower = filterValue.toLowerCase();
   
+  // Handle Intel graphics family matches
+  if (filterLower.includes('intel') && productLower.includes('intel')) {
+    return matchesIntelGraphics(filterLower, productLower);
+  }
+  
   // NVIDIA discrete GPU matching
   if ((filterLower.includes('rtx') || filterLower.includes('gtx') || filterLower.includes('nvidia')) &&
       (productLower.includes('rtx') || productLower.includes('gtx') || productLower.includes('nvidia'))) {
     return matchesNvidiaGraphics(filterLower, productLower);
-  }
-  
-  // Intel graphics
-  if (filterLower.includes('intel') && productLower.includes('intel')) {
-    return matchesIntelGraphics(filterLower, productLower);
   }
   
   // AMD graphics

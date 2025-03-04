@@ -32,8 +32,14 @@ export function GraphicsSpec({ title, graphics }: GraphicsSpecProps) {
     if (extractedGraphics && extractedGraphics.length > 4) {
       displayGraphics = extractedGraphics;
     } else {
-      // Final fallback to the original value or "Not Specified"
-      displayGraphics = graphics || 'Not Specified';
+      // Check title for Intel HD Graphics patterns
+      const intelHdMatch = title.match(/Intel\s+(?:HD|UHD)?\s*Graphics\s*(\d+)?/i);
+      if (intelHdMatch) {
+        displayGraphics = intelHdMatch[0];
+      } else {
+        // Final fallback to the original value or "Not Specified"
+        displayGraphics = graphics || 'Not Specified';
+      }
     }
   }
   

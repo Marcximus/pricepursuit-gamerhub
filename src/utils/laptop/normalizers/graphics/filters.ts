@@ -65,24 +65,52 @@ export const getGraphicsFilterValue = (graphics: string): string => {
     return 'AMD Radeon Vega';
   }
   
-  // Intel Graphics
+  // Intel Graphics - Enhanced detection for various Intel integrated graphics
   if (/\barc\s*a(\d+)/i.test(normalized)) {
     const model = normalized.match(/\barc\s*a(\d+)/i);
     if (model) return `Intel Arc A${model[1]}`;
   }
   
-  if (/iris\s*xe/i.test(normalized)) {
+  // Intel Iris Xe with number
+  if (/iris\s*xe\s*graphics\s*(\d+)?/i.test(normalized)) {
     return 'Intel Iris Xe Graphics';
   }
   
+  // Intel Iris Plus/Pro
+  if (/iris\s*(plus|pro)/i.test(normalized)) {
+    return 'Intel Iris Plus Graphics';
+  }
+  
+  // Intel Iris (any other)
   if (/iris/i.test(normalized)) {
     return 'Intel Iris Graphics';
   }
   
-  if (/uhd/i.test(normalized)) {
+  // Intel UHD Graphics with number
+  if (/uhd\s*graphics\s*(\d+)/i.test(normalized)) {
+    const model = normalized.match(/uhd\s*graphics\s*(\d+)/i);
+    if (model && model[1]) {
+      if (model[1].match(/^6\d\d$/)) return 'Intel UHD Graphics 600 Series';
+      if (model[1].match(/^7\d\d$/)) return 'Intel UHD Graphics 700 Series';
+      return `Intel UHD Graphics ${model[1]}`;
+    }
     return 'Intel UHD Graphics';
   }
   
+  // Intel HD Graphics with number
+  if (/hd\s*graphics\s*(\d+)/i.test(normalized)) {
+    const model = normalized.match(/hd\s*graphics\s*(\d+)/i);
+    if (model && model[1]) {
+      if (model[1].match(/^5\d\d$/)) return 'Intel HD Graphics 500 Series';
+      if (model[1].match(/^4\d\d$/)) return 'Intel HD Graphics 400 Series';
+      if (model[1].match(/^3\d\d$/)) return 'Intel HD Graphics 300 Series';
+      if (model[1].match(/^2\d\d$/)) return 'Intel HD Graphics 200 Series';
+      return `Intel HD Graphics ${model[1]}`;
+    }
+    return 'Intel HD Graphics';
+  }
+  
+  // General Intel HD Graphics (without specific model)
   if (/hd\s*graphics/i.test(normalized)) {
     return 'Intel HD Graphics';
   }

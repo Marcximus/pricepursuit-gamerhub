@@ -15,7 +15,7 @@ export function extractGraphics(content: any): string | null {
   const graphicsPatterns = [
     /NVIDIA\s+(?:GeForce\s+)?(?:RTX|GTX)\s+\d{3,4}(?:\s*Ti)?(?:\s*Super)?/i,
     /AMD\s+Radeon\s+(?:RX\s+)?\d{3,4}(?:\s*XT)?/i,
-    /Intel\s+(?:UHD|Iris\s+Xe)\s+Graphics/i,
+    /Intel\s+(?:UHD|HD|Iris\s+Xe)\s+Graphics(?:\s+\d+)?/i,
     /Apple\s+M[123]\s+(?:GPU|Graphics)/i
   ];
   
@@ -26,6 +26,14 @@ export function extractGraphics(content: any): string | null {
     }
   }
   
+  // Check for Intel HD Graphics in description
+  if (content.description && typeof content.description === 'string') {
+    const intelMatch = content.description.match(/Intel\s+(?:UHD|HD|Iris\s+Xe)\s+Graphics(?:\s+\d+)?/i);
+    if (intelMatch) {
+      return intelMatch[0];
+    }
+  }
+  
   // Try bullet points as last resort
   if (content.bullet_points && typeof content.bullet_points === 'string') {
     for (const pattern of graphicsPatterns) {
@@ -33,6 +41,12 @@ export function extractGraphics(content: any): string | null {
       if (match) {
         return match[0];
       }
+    }
+    
+    // Specifically look for Intel HD graphics in bullet points
+    const intelMatch = content.bullet_points.match(/Intel\s+(?:UHD|HD|Iris\s+Xe)\s+Graphics(?:\s+\d+)?/i);
+    if (intelMatch) {
+      return intelMatch[0];
     }
   }
   
