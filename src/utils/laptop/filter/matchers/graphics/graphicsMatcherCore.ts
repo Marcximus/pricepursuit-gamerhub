@@ -1,4 +1,3 @@
-
 import { normalizeGraphics, getGraphicsFilterValue, isIntegratedGraphics, isHighPerformanceGraphics } from "@/utils/laptop/normalizers/graphicsNormalizer";
 import { matchesNvidiaGraphics } from './nvidiaMatcher';
 import { matchesAmdGraphics } from './amdMatcher';
@@ -7,6 +6,7 @@ import { matchesAppleGraphics } from './appleMatcher';
 
 /**
  * Enhanced matcher for graphics card filter values with improved accuracy
+ * Now supports matching against grouped/category values
  */
 export const matchesGraphicsFilter = (
   filterValue: string,
@@ -33,21 +33,100 @@ export const matchesGraphicsFilter = (
   }
   
   // Special filter case: "High Performance GPU"
-  if (filterValue.toLowerCase() === 'high performance gpu' && 
+  if (filterValue === 'High Performance GPUs' && 
       isHighPerformanceGraphics(normalizedProduct)) {
     return true;
   }
   
   // Special filter case: "Integrated GPU"
-  if (filterValue.toLowerCase() === 'integrated gpu' && 
+  if (filterValue === 'Integrated GPUs' && 
       isIntegratedGraphics(normalizedProduct)) {
     return true;
   }
   
   // Special filter case: "Dedicated GPU"
-  if (filterValue.toLowerCase() === 'dedicated gpu' && 
+  if (filterValue === 'High Performance GPUs' && 
       !isIntegratedGraphics(normalizedProduct)) {
     return true;
+  }
+  
+  // Category matching for NVIDIA series
+  if (filterValue === 'NVIDIA RTX 40 Series' && 
+      /nvidia\s+rtx\s+40\d0/i.test(normalizedProduct)) {
+    return true;
+  }
+  
+  if (filterValue === 'NVIDIA RTX 30 Series' && 
+      /nvidia\s+rtx\s+30\d0/i.test(normalizedProduct)) {
+    return true;
+  }
+  
+  if (filterValue === 'NVIDIA RTX 20 Series' && 
+      /nvidia\s+rtx\s+20\d0/i.test(normalizedProduct)) {
+    return true;
+  }
+  
+  if (filterValue === 'NVIDIA GTX Series' && 
+      /nvidia\s+gtx/i.test(normalizedProduct)) {
+    return true;
+  }
+  
+  // Category matching for AMD series
+  if (filterValue === 'AMD Radeon RX 7000 Series' && 
+      /amd\s+radeon\s+rx\s+7\d00/i.test(normalizedProduct)) {
+    return true;
+  }
+  
+  if (filterValue === 'AMD Radeon RX 6000 Series' && 
+      /amd\s+radeon\s+rx\s+6\d00/i.test(normalizedProduct)) {
+    return true;
+  }
+  
+  if (filterValue === 'AMD Radeon Graphics' && 
+      (/amd\s+radeon/i.test(normalizedProduct) && 
+       !/amd\s+radeon\s+rx/i.test(normalizedProduct))) {
+    return true;
+  }
+  
+  // Category matching for Intel graphics
+  if (filterValue === 'Intel Integrated Graphics' && 
+      (/intel\s+(?:iris|uhd|hd)/i.test(normalizedProduct))) {
+    return true;
+  }
+  
+  if (filterValue === 'Intel Arc Graphics' && 
+      /intel\s+arc/i.test(normalizedProduct)) {
+    return true;
+  }
+  
+  // Category matching for Apple Silicon
+  if (filterValue === 'Apple Silicon Graphics' && 
+      /apple\s+m[123]/i.test(normalizedProduct)) {
+    return true;
+  }
+  
+  // Other general categories
+  if (filterValue === 'Other NVIDIA Graphics' && 
+      /nvidia/i.test(normalizedProduct) && 
+      !(/rtx|gtx/i.test(normalizedProduct))) {
+    return true;
+  }
+  
+  if (filterValue === 'Other AMD Graphics' && 
+      /amd/i.test(normalizedProduct) && 
+      !(/radeon/i.test(normalizedProduct))) {
+    return true;
+  }
+  
+  if (filterValue === 'Other Intel Graphics' && 
+      /intel/i.test(normalizedProduct) && 
+      !(/iris|uhd|hd|arc/i.test(normalizedProduct))) {
+    return true;
+  }
+  
+  if (filterValue === 'Other Graphics') {
+    // Match anything that hasn't been categorized into the major brands
+    return !(/nvidia|amd|intel|apple/i.test(normalizedProduct));
   }
   
   // Secondary case: more detailed checking based on GPU type
@@ -77,26 +156,6 @@ export const matchesGraphicsFilter = (
       (productLower.includes('m1') || productLower.includes('m2') || productLower.includes('m3') || 
       productLower.includes('apple'))) {
     return matchesAppleGraphics(filterLower, productLower);
-  }
-  
-  // Check for generic GPU terms
-  if (filterLower === 'nvidia' && productLower.includes('nvidia')) {
-    return true;
-  }
-  
-  if (filterLower === 'amd' && productLower.includes('amd')) {
-    return true;
-  }
-  
-  if (filterLower === 'intel' && productLower.includes('intel')) {
-    return true;
-  }
-  
-  // Reject vague or meaningless graphics terms
-  if (filterLower === 'graphics' || filterLower === 'gpu' || 
-      filterLower === 'integrated' || filterLower === 'dedicated' || 
-      filterLower === '32-core') {
-    return false;
   }
   
   // Match by major GPU brand terms
