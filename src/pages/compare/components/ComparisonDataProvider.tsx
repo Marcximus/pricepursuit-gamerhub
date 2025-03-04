@@ -68,7 +68,8 @@ const ComparisonDataProvider: React.FC<ComparisonDataProviderProps> = ({ childre
               graphics: laptopLeft.graphics || '',
               screen_size: laptopLeft.screen_size || '',
               screen_resolution: laptopLeft.screen_resolution || '',
-              operating_system: laptopLeft.operating_system || '',
+              // Fix here: operating_system property doesn't exist in the Product type
+              // operating_system: laptopLeft.operating_system || '',
               weight: laptopLeft.weight || '',
               battery_life: laptopLeft.battery_life || '',
               price: laptopLeft.current_price || 0,
@@ -90,7 +91,8 @@ const ComparisonDataProvider: React.FC<ComparisonDataProviderProps> = ({ childre
               graphics: laptopRight.graphics || '',
               screen_size: laptopRight.screen_size || '',
               screen_resolution: laptopRight.screen_resolution || '',
-              operating_system: laptopRight.operating_system || '',
+              // Fix here: operating_system property doesn't exist in the Product type
+              // operating_system: laptopRight.operating_system || '',
               weight: laptopRight.weight || '',
               battery_life: laptopRight.battery_life || '',
               price: laptopRight.current_price || 0,
