@@ -1,7 +1,7 @@
 
 import type { Product } from "@/types/product";
 import type { ComparisonSection } from "../types";
-import { compareScreenSize, compareResolution } from "../utils/comparisonHelpers";
+import { compareScreenSize, compareResolution, compareRefreshRate } from "../utils/comparisonHelpers";
 import { formatValue, extractRefreshRate } from "../utils/formatters";
 
 export const getDisplaySpecs = (
@@ -25,14 +25,7 @@ export const getDisplaySpecs = (
       title: "Refresh Rate",
       leftValue: extractRefreshRate(laptopLeft?.screen_resolution, laptopLeft?.title),
       rightValue: extractRefreshRate(laptopRight?.screen_resolution, laptopRight?.title),
-      compare: (a: string, b: string) => {
-        const rateA = parseInt(a, 10);
-        const rateB = parseInt(b, 10);
-        if (isNaN(rateA) || isNaN(rateB)) return 'equal';
-        if (rateA > rateB) return 'better';
-        if (rateA < rateB) return 'worse';
-        return 'equal';
-      }
+      compare: compareRefreshRate
     }
   ];
 };
