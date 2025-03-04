@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Award, Check, ChevronsUp, ChevronsDown, CircleX } from "lucide-react";
+import { ArrowLeft, Award, Check, ChevronsUp, ChevronsDown, CircleX, Trophy } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { useComparison } from "@/contexts/ComparisonContext";
 import { Button } from "@/components/ui/button";
@@ -257,7 +257,12 @@ const ComparePage = () => {
           
           {/* Product Header Section */}
           <div className="grid grid-cols-2 gap-8 mb-8">
-            <Card className="p-6 flex flex-col items-center">
+            <Card className="p-6 flex flex-col items-center relative">
+              {comparisonResult && comparisonResult.winner === 'left' && (
+                <div className="absolute top-4 right-4">
+                  <Trophy className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+                </div>
+              )}
               <div className="w-48 h-48 flex items-center justify-center mb-4">
                 <img 
                   src={laptopLeft?.image_url || '/placeholder.svg'} 
@@ -273,7 +278,12 @@ const ComparePage = () => {
               </div>
             </Card>
             
-            <Card className="p-6 flex flex-col items-center">
+            <Card className="p-6 flex flex-col items-center relative">
+              {comparisonResult && comparisonResult.winner === 'right' && (
+                <div className="absolute top-4 right-4">
+                  <Trophy className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+                </div>
+              )}
               <div className="w-48 h-48 flex items-center justify-center mb-4">
                 <img 
                   src={laptopRight?.image_url || '/placeholder.svg'} 
