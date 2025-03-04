@@ -1,14 +1,10 @@
 
 import React from "react";
 import { ChevronsUp, ChevronsDown } from "lucide-react";
+import type { ComparisonSection } from "../types";
 
 interface SpecificationItemProps {
-  section: {
-    title: string;
-    leftValue: string;
-    rightValue: string;
-    compare?: (a: string, b: string) => 'better' | 'worse' | 'equal' | 'unknown';
-  };
+  section: ComparisonSection;
 }
 
 const SpecificationItem: React.FC<SpecificationItemProps> = ({ section }) => {

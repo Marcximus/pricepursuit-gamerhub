@@ -2,6 +2,7 @@
 import React from "react";
 import { formatPrice, compareProcessors, compareRAM, compareStorage, comparePrices, compareRatings } from "../utils/comparisonHelpers";
 import type { Product } from "@/types/product";
+import type { ComparisonSection } from "../types";
 
 interface ComparisonSectionsProps {
   laptopLeft: Product;
@@ -13,7 +14,7 @@ const ComparisonSections: React.FC<ComparisonSectionsProps> = ({
   laptopRight 
 }) => {
   // Define comparison sections
-  const comparisonSections = [
+  const comparisonSections: ComparisonSection[] = [
     {
       title: 'Brand & Model',
       leftValue: `${laptopLeft?.brand || 'N/A'} ${laptopLeft?.model || ''}`,
@@ -61,7 +62,11 @@ const ComparisonSections: React.FC<ComparisonSectionsProps> = ({
     },
   ];
   
-  return comparisonSections;
+  return (
+    <>
+      {comparisonSections}
+    </>
+  );
 };
 
 export default ComparisonSections;

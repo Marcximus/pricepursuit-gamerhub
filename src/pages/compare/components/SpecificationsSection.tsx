@@ -2,13 +2,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import SpecificationItem from "./SpecificationItem";
-
-interface ComparisonSection {
-  title: string;
-  leftValue: string;
-  rightValue: string;
-  compare?: (a: string, b: string) => 'better' | 'worse' | 'equal' | 'unknown';
-}
+import type { ComparisonSection } from "../types";
 
 interface SpecificationsSectionProps {
   comparisonSections: ComparisonSection[];
