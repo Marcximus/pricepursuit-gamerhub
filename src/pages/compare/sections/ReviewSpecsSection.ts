@@ -14,10 +14,22 @@ export const getReviewSpecs = (
     
     // Convert Wilson score (-1 to 1) to a percentage (0-100%)
     const percentage = Math.min(100, Math.max(0, (score + 1) * 50));
-    return `${percentage.toFixed(0)}%`;
+    
+    // Format to include confidence level indication
+    if (percentage >= 90) {
+      return `${percentage.toFixed(0)}% (Very High)`;
+    } else if (percentage >= 75) {
+      return `${percentage.toFixed(0)}% (High)`;
+    } else if (percentage >= 60) {
+      return `${percentage.toFixed(0)}% (Moderate)`;
+    } else if (percentage >= 40) {
+      return `${percentage.toFixed(0)}% (Fair)`;
+    } else {
+      return `${percentage.toFixed(0)}% (Low)`;
+    }
   };
 
-  // Compare Wilson scores
+  // Compare Wilson scores - update regex to match new format
   const compareWilsonScores = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
     const aMatch = a.match(/(\d+)%/);
     const bMatch = b.match(/(\d+)%/);
