@@ -12,6 +12,7 @@ const corsHeaders = {
 
 serve(async (req) => {
   console.log("🚀 Compare Laptops function started!");
+  const startTime = Date.now();
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -95,6 +96,8 @@ Based on the specifications above, provide a comprehensive comparison. Include w
 
     // Call DeepSeek API for the comparison
     console.log("🤖 Calling DeepSeek API...");
+    console.log("⏱️ API call starting at:", new Date().toISOString());
+    
     const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -113,9 +116,12 @@ Based on the specifications above, provide a comprehensive comparison. Include w
             content: userPrompt
           }
         ],
-        temperature: 0.2
+        temperature: 0.2  // Lower temperature for more analytical response
       })
     });
+
+    console.log("⏱️ API response received at:", new Date().toISOString());
+    console.log("⏳ API response time:", (Date.now() - startTime) / 1000, "seconds");
 
     if (!deepseekResponse.ok) {
       const errorText = await deepseekResponse.text();
@@ -125,6 +131,12 @@ Based on the specifications above, provide a comprehensive comparison. Include w
 
     const deepseekData = await deepseekResponse.json();
     console.log('✅ DeepSeek response received!');
+    console.log('🕒 Model used:', deepseekData.model);
+    console.log('💰 Tokens used:', {
+      promptTokens: deepseekData.usage?.prompt_tokens || 'unknown',
+      completionTokens: deepseekData.usage?.completion_tokens || 'unknown',
+      totalTokens: deepseekData.usage?.total_tokens || 'unknown'
+    });
     
     // Extract the content from the DeepSeek response
     const aiContent = deepseekData.choices[0]?.message?.content;
@@ -152,6 +164,8 @@ Based on the specifications above, provide a comprehensive comparison. Include w
       
       // Return the comparison result
       console.log('🎁 Returning comparison result');
+      console.log("⏱️ Total function execution time:", (Date.now() - startTime) / 1000, "seconds");
+      
       return new Response(
         JSON.stringify(comparisonResult),
         { 
@@ -169,6 +183,7 @@ Based on the specifications above, provide a comprehensive comparison. Include w
 
   } catch (error) {
     console.error('❌ Error in compare-laptops function:', error);
+    console.error('⏱️ Error occurred after:', (Date.now() - startTime) / 1000, "seconds");
     
     return new Response(
       JSON.stringify({ error: error.message }),
