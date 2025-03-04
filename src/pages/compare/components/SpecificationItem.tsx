@@ -1,6 +1,6 @@
 
 import React from "react";
-import { ChevronsUp, ChevronsDown, HelpCircle, ExternalLink } from "lucide-react";
+import { ChevronsUp, ChevronsDown, HelpCircle, ExternalLink, Tag, Award } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ComparisonSection } from "../types";
 
@@ -28,6 +28,16 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
   // Get emoji and tooltip based on specification type
   const getSpecInfo = (title: string) => {
     switch (title.toLowerCase()) {
+      case "brand":
+        return {
+          emoji: "🏢",
+          tooltip: "The manufacturer of the laptop."
+        };
+      case "model":
+        return {
+          emoji: "📱",
+          tooltip: "The specific model name or number of the laptop."
+        };
       case "rating count":
         return {
           emoji: "👥",
@@ -126,7 +136,7 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="flex items-center gap-1.5 cursor-help">
+              <span className="flex items-center gap-1.5 cursor-help text-left">
                 {emoji && <span className="text-lg">{emoji}</span>}
                 <span className="text-muted-foreground font-medium">{section.title}</span>
                 {tooltip && <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/70" />}
@@ -138,12 +148,12 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
       </div>
       
       {/* Left laptop value - blue theme */}
-      <div className="col-span-2 text-center">
+      <div className="col-span-2 text-left">
         <a 
           href={leftAffiliateUrl} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-1 hover:text-sky-600 transition-colors group"
+          className="inline-flex items-center gap-1 hover:text-sky-600 transition-colors group"
         >
           {leftStatus === 'better' && <ChevronsUp className="w-4 h-4 text-sky-600" />}
           {leftStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-amber-600" />}
@@ -153,12 +163,12 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
       </div>
       
       {/* Right laptop value - yellow theme */}
-      <div className="col-span-2 text-center">
+      <div className="col-span-2 text-left">
         <a 
           href={rightAffiliateUrl} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-1 hover:text-amber-600 transition-colors group"
+          className="inline-flex items-center gap-1 hover:text-amber-600 transition-colors group"
         >
           {rightStatus === 'better' && <ChevronsUp className="w-4 h-4 text-amber-600" />}
           {rightStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-sky-600" />}
