@@ -84,7 +84,7 @@ export function ActiveFilterPills({
           {value}
           <XCircle className="h-3.5 w-3.5 ml-0.5" />
         </button>
-      )}
+      ))}
     </div>
   );
 }
