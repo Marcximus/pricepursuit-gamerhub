@@ -1,5 +1,5 @@
 
-import { processGraphics } from "@/utils/laptopUtils/graphicsProcessor";
+import { processGraphics, isDedicatedGraphics } from "@/utils/laptopUtils/graphics";
 import { normalizeGraphics, isHighPerformanceGraphics, isIntegratedGraphics } from "@/utils/laptop/normalizers/graphicsNormalizer";
 import { getAppleSiliconGraphics } from "./ProcessorUtils";
 
