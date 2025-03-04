@@ -5,20 +5,7 @@ import AdvantagesList from "./AdvantagesList";
 import ValueForMoney from "./ValueForMoney";
 import Recommendation from "./Recommendation";
 import type { Product } from "@/types/product";
-
-interface ComparisonResult {
-  winner: 'left' | 'right' | 'tie';
-  analysis: string;
-  advantages: {
-    left: string[];
-    right: string[];
-  };
-  recommendation: string;
-  valueForMoney: {
-    left: string;
-    right: string;
-  };
-}
+import type { ComparisonResult } from "../../types";
 
 interface AnalysisContentProps {
   comparisonResult: ComparisonResult;

@@ -6,20 +6,7 @@ import LoadingState from "./analysis/LoadingState";
 import ErrorState from "./analysis/ErrorState";
 import AnalysisContent from "./analysis/AnalysisContent";
 import type { Product } from "@/types/product";
-
-interface ComparisonResult {
-  winner: 'left' | 'right' | 'tie';
-  analysis: string;
-  advantages: {
-    left: string[];
-    right: string[];
-  };
-  recommendation: string;
-  valueForMoney: {
-    left: string;
-    right: string;
-  };
-}
+import type { ComparisonResult } from "../types";
 
 interface AnalysisSectionProps {
   isLoading: boolean;
