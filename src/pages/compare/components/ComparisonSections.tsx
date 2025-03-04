@@ -17,46 +17,31 @@ import { calculateBenchmarkScore } from "../utils/benchmarkCalculator";
 interface ComparisonSectionsProps {
   laptopLeft: Product | null;
   laptopRight: Product | null;
-  enhancedSpecsLeft?: Record<string, any> | null;
-  enhancedSpecsRight?: Record<string, any> | null;
 }
 
-const ComparisonSections = ({ 
-  laptopLeft, 
-  laptopRight, 
-  enhancedSpecsLeft, 
-  enhancedSpecsRight 
-}: ComparisonSectionsProps): ComparisonSection[] => {
+// Changed from React.FC to a regular function
+const ComparisonSections = ({ laptopLeft, laptopRight }: ComparisonSectionsProps): ComparisonSection[] => {
+  // Helper to safely format values
   const formatValue = (value: any): string => {
     if (value === null || value === undefined) return 'N/A';
     return String(value);
   };
 
+  // Calculate benchmark scores for laptops that don't have them
   const getCalculatedBenchmarkScore = (laptop: Product | null): string => {
     if (!laptop) return 'N/A';
     
+    // If laptop already has a benchmark score, use it
     if (laptop.benchmark_score) {
       return formatValue(laptop.benchmark_score);
     }
     
+    // Otherwise calculate it
     const calculatedScore = calculateBenchmarkScore(laptop);
     return formatValue(calculatedScore);
   };
 
-  const getEnhancedSpec = (laptop: Product | null, enhancedSpecs: Record<string, any> | null, field: string, specType: string): string => {
-    if (!laptop) return 'N/A';
-    
-    if (enhancedSpecs && enhancedSpecs[field]) {
-      return enhancedSpecs[field];
-    }
-    
-    if (enhancedSpecs && enhancedSpecs.details && enhancedSpecs.details[specType]) {
-      return enhancedSpecs.details[specType];
-    }
-    
-    return formatValue(laptop[field as keyof Product]);
-  };
-
+  // Basic specs comparison
   const basicSections: ComparisonSection[] = [
     {
       title: "Brand",
@@ -76,71 +61,66 @@ const ComparisonSections = ({
     }
   ];
 
+  // Performance specs comparison
   const performanceSections: ComparisonSection[] = [
     {
       title: "Processor",
-      leftValue: getEnhancedSpec(laptopLeft, enhancedSpecsLeft, 'processor', 'CPU Model'),
-      rightValue: getEnhancedSpec(laptopRight, enhancedSpecsRight, 'processor', 'CPU Model'),
+      leftValue: formatValue(laptopLeft?.processor),
+      rightValue: formatValue(laptopRight?.processor),
       compare: compareProcessors
     },
     {
       title: "RAM",
-      leftValue: getEnhancedSpec(laptopLeft, enhancedSpecsLeft, 'ram', 'RAM'),
-      rightValue: getEnhancedSpec(laptopRight, enhancedSpecsRight, 'ram', 'RAM'),
+      leftValue: formatValue(laptopLeft?.ram),
+      rightValue: formatValue(laptopRight?.ram),
       compare: compareRAM
     },
     {
       title: "Storage",
-      leftValue: getEnhancedSpec(laptopLeft, enhancedSpecsLeft, 'storage', 'Memory Storage Capacity'),
-      rightValue: getEnhancedSpec(laptopRight, enhancedSpecsRight, 'storage', 'Memory Storage Capacity'),
+      leftValue: formatValue(laptopLeft?.storage),
+      rightValue: formatValue(laptopRight?.storage),
       compare: compareStorage
     },
     {
       title: "Graphics",
-      leftValue: getEnhancedSpec(laptopLeft, enhancedSpecsLeft, 'graphics', 'Graphics Coprocessor'),
-      rightValue: getEnhancedSpec(laptopRight, enhancedSpecsRight, 'graphics', 'Graphics Coprocessor')
+      leftValue: formatValue(laptopLeft?.graphics),
+      rightValue: formatValue(laptopRight?.graphics)
     }
   ];
 
+  // Display specs comparison
   const displaySections: ComparisonSection[] = [
     {
       title: "Screen Size",
-      leftValue: getEnhancedSpec(laptopLeft, enhancedSpecsLeft, 'screen_size', 'Screen Size'),
-      rightValue: getEnhancedSpec(laptopRight, enhancedSpecsRight, 'screen_size', 'Screen Size'),
+      leftValue: formatValue(laptopLeft?.screen_size),
+      rightValue: formatValue(laptopRight?.screen_size),
       compare: compareScreenSize
     },
     {
       title: "Screen Resolution",
-      leftValue: getEnhancedSpec(laptopLeft, enhancedSpecsLeft, 'screen_resolution', 'Resolution'),
-      rightValue: getEnhancedSpec(laptopRight, enhancedSpecsRight, 'screen_resolution', 'Resolution'),
+      leftValue: formatValue(laptopLeft?.screen_resolution),
+      rightValue: formatValue(laptopRight?.screen_resolution),
       compare: compareResolution
     }
   ];
 
+  // Physical specs comparison
   const physicalSections: ComparisonSection[] = [
     {
       title: "Weight",
-      leftValue: getEnhancedSpec(laptopLeft, enhancedSpecsLeft, 'weight', 'Item Weight'),
-      rightValue: getEnhancedSpec(laptopRight, enhancedSpecsRight, 'weight', 'Item Weight'),
+      leftValue: formatValue(laptopLeft?.weight),
+      rightValue: formatValue(laptopRight?.weight),
       compare: compareWeight
     },
     {
       title: "Battery Life",
-      leftValue: getEnhancedSpec(laptopLeft, enhancedSpecsLeft, 'battery_life', 'Battery Power Rating'),
-      rightValue: getEnhancedSpec(laptopRight, enhancedSpecsRight, 'battery_life', 'Battery Power Rating'),
+      leftValue: formatValue(laptopLeft?.battery_life),
+      rightValue: formatValue(laptopRight?.battery_life),
       compare: compareBatteryLife
     }
   ];
 
-  const osSections: ComparisonSection[] = [];
-  if ((enhancedSpecsLeft && enhancedSpecsLeft.os) || (enhancedSpecsRight && enhancedSpecsRight.os)) {
-    osSections.push({
-      title: "Operating System",
-      leftValue: enhancedSpecsLeft?.os || 'N/A',
-      rightValue: enhancedSpecsRight?.os || 'N/A'
-    });
-  }
-
+  // Reviews and rating comparison
   const reviewSections: ComparisonSection[] = [
     {
       title: "Rating",
@@ -160,6 +140,7 @@ const ComparisonSections = ({
     }
   ];
 
+  // Benchmark scores comparison
   const benchmarkSections: ComparisonSection[] = [
     {
       title: "Benchmark Score",
@@ -202,51 +183,12 @@ const ComparisonSections = ({
     }
   ];
 
-  const additionalSections: ComparisonSection[] = [];
-  
-  if (enhancedSpecsLeft?.additional_info || enhancedSpecsRight?.additional_info) {
-    const allKeys = new Set<string>();
-    
-    if (enhancedSpecsLeft?.additional_info) {
-      Object.keys(enhancedSpecsLeft.additional_info).forEach(key => allKeys.add(key));
-    }
-    
-    if (enhancedSpecsRight?.additional_info) {
-      Object.keys(enhancedSpecsRight.additional_info).forEach(key => allKeys.add(key));
-    }
-    
-    const importantKeys = [
-      'Wireless communication technologies',
-      'Connectivity technologies',
-      'Special features',
-      'Audio',
-      'Keyboard',
-      'Backlit Keyboard',
-      'Webcam',
-      'USB',
-      'HDMI',
-      'Thunderbolt',
-      'Battery Life'
-    ];
-    
-    importantKeys.forEach(key => {
-      if (allKeys.has(key)) {
-        additionalSections.push({
-          title: key,
-          leftValue: enhancedSpecsLeft?.additional_info?.[key] || 'N/A',
-          rightValue: enhancedSpecsRight?.additional_info?.[key] || 'N/A'
-        });
-      }
-    });
-  }
-
+  // Combine all sections
   const allSections = [
     ...basicSections,
     ...performanceSections,
     ...displaySections,
     ...physicalSections,
-    ...osSections,
-    ...additionalSections,
     ...reviewSections,
     ...benchmarkSections
   ];

@@ -9,13 +9,12 @@ import { getAffiliateUrl } from "../utils/affiliateUtils";
 
 interface LaptopCardProps {
   laptop: Product | null;
-  side: "left" | "right";
-  winner: "left" | "right" | "tie" | null;
+  isWinner: boolean;
+  formatPrice: (price?: number) => string;
 }
 
-const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, side, winner }) => {
+const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const isWinner = winner === side;
   
   if (!laptop) {
     return (
@@ -28,16 +27,6 @@ const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, side, winner }) => {
   }
   
   const affiliateUrl = getAffiliateUrl(laptop);
-
-  // Format price with currency symbol
-  const formatPrice = (price?: number): string => {
-    if (!price) return "N/A";
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(price);
-  };
   
   return (
     <Card ref={cardRef} className="p-4 h-full flex flex-col relative">
@@ -52,7 +41,6 @@ const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, side, winner }) => {
         laptop={laptop} 
         affiliateUrl={affiliateUrl} 
         formatPrice={formatPrice} 
-        isWinner={isWinner}
       />
     </Card>
   );

@@ -19,7 +19,6 @@ export interface Product {
   rating_count?: number;
   benchmark_score?: number;
   wilson_score?: number;
-  asin?: string;
 }
 
 export interface ComparisonResult {

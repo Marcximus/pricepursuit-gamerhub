@@ -10,27 +10,10 @@ import { ClipboardList } from "lucide-react";
 interface SpecificationsSectionProps {
   laptopLeft: Product | null;
   laptopRight: Product | null;
-  enhancedSpecsLeft: Record<string, any> | null;
-  enhancedSpecsRight: Record<string, any> | null;
 }
 
-const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({ 
-  laptopLeft, 
-  laptopRight,
-  enhancedSpecsLeft,
-  enhancedSpecsRight
-}) => {
-  // Merge enhanced data with existing data to get the best of both
-  const mergedLeftData = mergeProductData(laptopLeft, enhancedSpecsLeft);
-  const mergedRightData = mergeProductData(laptopRight, enhancedSpecsRight);
-  
-  // Get comparison sections with the merged data
-  const comparisonSections = ComparisonSections({ 
-    laptopLeft: mergedLeftData, 
-    laptopRight: mergedRightData,
-    enhancedSpecsLeft,
-    enhancedSpecsRight
-  });
+const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({ laptopLeft, laptopRight }) => {
+  const comparisonSections = ComparisonSections({ laptopLeft, laptopRight });
   
   return (
     <Card>
@@ -63,54 +46,5 @@ const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({
     </Card>
   );
 };
-
-// Merge data from the database with enhanced data from the API
-function mergeProductData(product: Product | null, enhancedSpecs: Record<string, any> | null): Product | null {
-  if (!product) return null;
-  if (!enhancedSpecs) return product;
-  
-  const mergedProduct = { ...product };
-  
-  // Enhanced processor information
-  if (enhancedSpecs.processor && (!product.processor || product.processor === 'Intel' || product.processor === 'AMD')) {
-    mergedProduct.processor = enhancedSpecs.processor;
-  }
-  
-  // Enhanced RAM information
-  if (enhancedSpecs.ram && (!product.ram || product.ram === 'DDR4' || product.ram === 'DDR5')) {
-    mergedProduct.ram = enhancedSpecs.ram;
-  }
-  
-  // Enhanced storage information
-  if (enhancedSpecs.storage && (!product.storage || product.storage.includes('Unknown'))) {
-    mergedProduct.storage = enhancedSpecs.storage;
-  }
-  
-  // Enhanced graphics information
-  if (enhancedSpecs.graphics && (!product.graphics || product.graphics === 'Integrated' || product.graphics === 'Dedicated')) {
-    mergedProduct.graphics = enhancedSpecs.graphics;
-  }
-  
-  // Enhanced screen information
-  if (enhancedSpecs.screen_size && !product.screen_size) {
-    mergedProduct.screen_size = enhancedSpecs.screen_size;
-  }
-  
-  if (enhancedSpecs.screen_resolution && !product.screen_resolution) {
-    mergedProduct.screen_resolution = enhancedSpecs.screen_resolution;
-  }
-  
-  // Enhanced weight information
-  if (enhancedSpecs.weight && !product.weight) {
-    mergedProduct.weight = enhancedSpecs.weight;
-  }
-  
-  // Enhanced battery information
-  if (enhancedSpecs.battery && !product.battery_life) {
-    mergedProduct.battery_life = enhancedSpecs.battery;
-  }
-  
-  return mergedProduct;
-}
 
 export default SpecificationsSection;

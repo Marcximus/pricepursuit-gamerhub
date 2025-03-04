@@ -1,5 +1,5 @@
 
-import { Product } from "./types.ts";
+import { Product } from "./types";
 
 // System prompt to guide the AI response
 export function generateSystemPrompt(): string {

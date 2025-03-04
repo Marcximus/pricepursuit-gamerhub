@@ -6,9 +6,9 @@ import LoadingState from "./analysis/LoadingState";
 import ErrorState from "./analysis/ErrorState";
 import AnalysisContent from "./analysis/AnalysisContent";
 import type { Product } from "@/types/product";
-import type { ComparisonResult } from "./ComparisonDataProvider";
+import type { ComparisonResult } from "../types";
 
-export interface AnalysisSectionProps {
+interface AnalysisSectionProps {
   isLoading: boolean;
   error: string | null;
   comparisonResult: ComparisonResult | null;
