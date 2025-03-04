@@ -1,6 +1,6 @@
 
 import type { Product } from "@/types/product";
-import { calculateProcessorScore } from "../../../utils/laptop/processors/processorProcessor";
+import { calculateProcessorScore as processorScoreCalculator } from "../../../utils/laptop/processors/processorProcessor";
 
 /**
  * Calculate a benchmark score for a laptop based on its specifications
@@ -14,7 +14,7 @@ export function calculateBenchmarkScore(laptop: Product): number {
     score += laptop.processor_score * 0.35;
   } else if (laptop.processor) {
     // Calculate processor score if not available
-    const processorScore = calculateProcessorScore(laptop.processor);
+    const processorScore = processorScoreCalculator(laptop.processor);
     score += processorScore * 0.35;
   }
   
