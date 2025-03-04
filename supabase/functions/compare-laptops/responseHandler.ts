@@ -1,5 +1,7 @@
 
-export function parseComparisonResult(aiContent: string): any {
+import { ComparisonResult } from "./types.ts";
+
+export function parseComparisonResult(aiContent: string): ComparisonResult {
   console.log('🧹 Cleaning up response...');
   
   // Clean up any potential markdown formatting

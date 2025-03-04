@@ -1,6 +1,6 @@
 
-import { generateSystemPrompt, generateUserPrompt } from "./promptGenerator";
-import { Product } from "./types";
+import { generateSystemPrompt, generateUserPrompt } from "./promptGenerator.ts";
+import { Product } from "./types.ts";
 
 export async function getComparison(laptopLeft: Product, laptopRight: Product, apiKey: string): Promise<any> {
   console.log("⏱️ API call starting at:", new Date().toISOString());
