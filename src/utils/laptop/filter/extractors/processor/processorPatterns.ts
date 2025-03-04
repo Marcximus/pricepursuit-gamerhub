@@ -1,3 +1,4 @@
+
 /**
  * Regular expression patterns for processor extraction
  */
@@ -41,11 +42,14 @@ export const appleSiliconPatterns = {
   mSeriesWithRam: /m([1234])(?:\s+(pro|max|ultra))?\s+(?:chip)?\s+(?:with\s+)?(\d+)\s*gb/i
 };
 
-// AMD Ryzen patterns
+// AMD Ryzen patterns - enhanced with more variations
 export const amdRyzenPatterns = {
   ryzenWithModel: /amd\s+ryzen\s+([3579])(?:[- _](\d{4}[a-z]*))?/i,
   ryzenWithoutAmd: /\bryzen\s+([3579])(?:[- _](\d{4}[a-z]*))?/i,
-  ryzenUnderscore: /ryzen_([3579])_(\d{4}[a-z]*)/i
+  ryzenUnderscore: /ryzen_([3579])_(\d{4}[a-z]*)/i,
+  // Added new patterns for AMD R5/R7 format and trademark symbols
+  amdRFormat: /\bamd\s+r([3579])[-\s](\d{4}[a-z]*)\b/i,
+  ryzenWithTrademark: /\bamd\s+ryzen(?:™|\s+™)?\s+(\d)(?:\s+|-)(\d{4}[a-z]*)\b/i
 };
 
 // Mobile processor patterns

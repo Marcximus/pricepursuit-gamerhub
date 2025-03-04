@@ -57,6 +57,9 @@ const extractGraphicsFromTitle = (title: string): string | undefined => {
     // Generic RTX/GTX mention with any potential model number
     /\b(?:NVIDIA\s+)?(?:GeForce\s+)?(?:RTX|GTX)\s*\d{1,4}[^\s]*\b/i,
     
+    // Enhanced: Support for RTX with special characters like ™
+    /\b(?:NVIDIA(?:®|\s+®)?\s+)?(?:GeForce(?:®|\s+®)?\s+)?RTX(?:™|\s+™)?\s*\d{1,4}[^\s]*\b/i,
+    
     // NVIDIA MX series (entry-level dedicated)
     /\b(?:NVIDIA\s+)?(?:GeForce\s+)?MX\s*\d{3}(?:\s*Ti)?\b/i,
     
@@ -84,8 +87,14 @@ const extractGraphicsFromTitle = (title: string): string | undefined => {
     // Generic RX series with any model number
     /\b(?:AMD\s+)?Radeon\s+RX\s*\d{1,4}[^\s]*\b/i,
     
+    // Enhanced: Support for Radeon with special characters like ™
+    /\b(?:AMD(?:®|\s+®)?\s+)?Radeon(?:™|\s+™)?(?:\s+RX)?\s*\d{1,4}[^\s]*\b/i,
+    
     // Generic Radeon (likely integrated)
     /\b(?:AMD\s+)?Radeon\s+Graphics\b/i,
+    
+    // Enhanced: Multiple Radeon mentions in a row (common in some listings)
+    /\b(?:AMD\s+)?(?:Radeon\s+){1,3}Graphics\b/i,
     
     // Any AMD graphics mention (fallback)
     /\bAMD\s+(?!CPU|RAM|SSD|HDD|GB|TB|processor|ryzen)[A-Za-z0-9]+(?:\s+Graphics)?\b/i
@@ -188,6 +197,22 @@ const extractGraphicsFromTitle = (title: string): string | undefined => {
       return 'AMD Radeon Graphics';
     }
   } 
+  
+  // Enhanced AMD R5/R7 pattern detection for GPUs
+  if (title.toLowerCase().match(/\bamd\s+r[3579]/i) && 
+      !title.toLowerCase().includes('nvidia') && 
+      !title.toLowerCase().includes('rtx') && 
+      !title.toLowerCase().includes('gtx')) {
+    return 'AMD Radeon Graphics';
+  }
+  
+  // Enhanced AMD pattern with trademark symbols
+  if (title.toLowerCase().match(/\bamd(?:®|\s+®)?\s+ryzen(?:™|\s+™)?/i) && 
+      !title.toLowerCase().includes('nvidia') && 
+      !title.toLowerCase().includes('rtx') && 
+      !title.toLowerCase().includes('gtx')) {
+    return 'AMD Radeon Graphics';
+  }
   
   if (title.toLowerCase().includes('intel') && 
       !title.toLowerCase().includes('nvidia') && 

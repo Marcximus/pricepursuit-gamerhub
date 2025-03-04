@@ -28,6 +28,12 @@ export const processProcessor = (processor: string | undefined, title: string, d
     // Match Apple M-series chips
     /\b(?:Apple\s*)?M[123]\s*(?:Pro|Max|Ultra)?\s*(?:chip)?\b/i,
     
+    // Enhanced: AMD R3/R5/R7/R9 patterns (like AMD R5-3500U)
+    /\b(?:AMD\s+)?R[3579][-\s](\d{4}[A-Z]*(?:\s*HX)?)\b/i,
+    
+    // Enhanced: AMD Ryzen with trademark symbols
+    /\b(?:AMD\s+)?Ryzen(?:™|\s+™)?\s+([3579])[- ](\d{4}[A-Z]*(?:\s*HX)?)\b/i,
+    
     // Match full processor names with generation and model - expanded patterns
     /\b(?:Intel Core Ultra [579]|Intel Core i[3579]|AMD Ryzen [3579]|Intel Celeron|Intel Pentium Gold|Intel Pentium Silver|Intel Pentium|MediaTek|Qualcomm Snapdragon|Apple M[12])\s*(?:[A-Z0-9-]+(?:\s*[A-Z0-9]+)*(?:\s*HX)?)\b/i,
     
@@ -60,6 +66,7 @@ export const processProcessor = (processor: string | undefined, title: string, d
         .replace(/intel core ultra/i, 'Intel Core Ultra')
         .replace(/amd ryzen/i, 'AMD Ryzen')
         .replace(/\bi(\d)/i, 'Intel Core i$1')  // Expand i5 to Intel Core i5
+        .replace(/\br([3579])[-\s](\d{4}[a-z]*)/i, 'AMD Ryzen $1-$2')  // Convert R5-3500U to AMD Ryzen 5-3500U
         .replace(/apple\s*m(\d)/i, 'Apple M$1') // Standardize Apple M-series naming
         .replace(/qualcomm snapdragon/i, 'Qualcomm Snapdragon')
         .replace(/mediatek dimensity/i, 'MediaTek Dimensity')
@@ -96,6 +103,14 @@ export const processProcessor = (processor: string | undefined, title: string, d
         }
       }
       
+      // Process AMD R5 format specifically
+      if (processedName.match(/\bR[3579][-\s]/i) && textToSearch.toLowerCase().includes('amd')) {
+        processedName = processedName.replace(/\bR([3579])[-\s](\d{4}[a-z]*)/i, 'AMD Ryzen $1-$2');
+      }
+      
+      // Remove trademark symbols
+      processedName = processedName.replace(/[™®©]/g, '');
+      
       // Ensure the processor doesn't contain RAM or storage specs
       if (!/\d+\s*GB\s*(RAM|Memory|SSD|Storage)/i.test(processedName)) {
         return processedName;
@@ -110,6 +125,14 @@ export const processProcessor = (processor: string | undefined, title: string, d
     // Only accept if it looks like a valid processor name
     if (/intel|amd|ryzen|core|celeron|pentium|snapdragon|mediatek|apple/i.test(extractedProcessor)) {
       return extractedProcessor;
+    }
+  }
+  
+  // Special case for AMD R5 format when it's missed in the patterns above
+  if (/\bamd\s+r[3579][-\s]\d{4}[a-z]*/i.test(textToSearch)) {
+    const amdRMatch = textToSearch.match(/\bamd\s+r([3579])[-\s](\d{4}[a-z]*)\b/i);
+    if (amdRMatch) {
+      return `AMD Ryzen ${amdRMatch[1]}-${amdRMatch[2]}`;
     }
   }
   
