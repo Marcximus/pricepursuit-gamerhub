@@ -29,7 +29,7 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
   const reviewsUrl = laptop.asin ? `${baseProductUrl}#customerReviews` : '';
 
   return (
-    <Card className="flex p-4 gap-4 hover:shadow-lg transition-shadow">
+    <Card className="flex p-4 gap-4 hover:shadow-lg transition-shadow relative">
       {/* Left side - Image and Price */}
       <div className="flex flex-col items-center gap-2 w-40">
         <LaptopImage 
@@ -51,12 +51,23 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
             reviewsUrl={reviewsUrl}
           />
         )}
-        
-        <LaptopCompareButton laptop={laptop} />
       </div>
 
       {/* Right side - Specs and Reviews */}
       <div className="flex-1">
+        <div className="flex justify-between items-start">
+          <a 
+            href={productUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block hover:text-blue-600 transition-colors"
+          >
+            <h3 className="font-bold mb-2 line-clamp-2">{laptop.title || 'Untitled Laptop'}</h3>
+          </a>
+          
+          <LaptopCompareButton laptop={laptop} className="ml-2 flex-shrink-0" />
+        </div>
+        
         <LaptopSpecs 
           title={laptop.title || 'Untitled Laptop'}
           productUrl={productUrl}
