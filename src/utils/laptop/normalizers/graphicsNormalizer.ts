@@ -1,3 +1,4 @@
+
 /**
  * Advanced module for normalizing and standardizing graphics card information
  * This improves filtering accuracy and display consistency
@@ -13,7 +14,8 @@ const GRAPHICS_PATTERNS = {
   },
   AMD: {
     PREFIX: /\b(?:amd|radeon)\b/i,
-    RX_SERIES: /\bradeon\s*(?:rx\s*)?(\d{3,4}(?:\s*xt)?)\b/i
+    RX_SERIES: /\bradeon\s*(?:rx\s*)?(\d{3,4}(?:\s*xt)?)\b/i,
+    VEGA_SERIES: /\bvega\s*(\d+)\b/i
   },
   INTEL: {
     PREFIX: /\bintel\b/i,
@@ -143,6 +145,46 @@ export const normalizeGraphics = (graphics: string): string => {
       .replace(/\bgtx\s+(\d{4})/i, 'NVIDIA GTX $1');
   }
   
+  // Process AMD graphics with enhanced Vega series detection
+  else if (GRAPHICS_PATTERNS.AMD.PREFIX.test(normalized) || 
+          GRAPHICS_PATTERNS.AMD.RX_SERIES.test(normalized) ||
+          GRAPHICS_PATTERNS.AMD.VEGA_SERIES.test(normalized)) {
+    
+    // Handle RX series
+    const rxMatch = normalized.match(GRAPHICS_PATTERNS.AMD.RX_SERIES);
+    if (rxMatch) {
+      return `AMD Radeon RX ${rxMatch[1].toUpperCase()}`;
+    }
+    
+    // Handle Vega series
+    const vegaMatch = normalized.match(GRAPHICS_PATTERNS.AMD.VEGA_SERIES);
+    if (vegaMatch) {
+      return `AMD Radeon Vega ${vegaMatch[1]}`;
+    }
+    
+    // Standardize other AMD graphics
+    normalized = normalized
+      .replace(/amd\s+radeon\s+graphics/i, 'AMD Radeon Graphics')
+      .replace(/radeon\s+graphics/i, 'AMD Radeon Graphics')
+      .replace(/\bradeon\s+rx\s+/i, 'AMD Radeon RX ')
+      .replace(/\bradeon\s+vega\s+/i, 'AMD Radeon Vega ')
+      .replace(/\bradeon\s+/i, 'AMD Radeon ');
+    
+    // Ensure AMD prefix is present
+    if (!normalized.toLowerCase().includes('amd')) {
+      normalized = `AMD ${normalized}`;
+    }
+    
+    // Add "Graphics" suffix if missing
+    if (!normalized.toLowerCase().includes('graphics') && 
+        !normalized.toLowerCase().includes('vega') && 
+        !normalized.toLowerCase().includes('rx')) {
+      normalized += ' Graphics';
+    }
+    
+    return normalized;
+  }
+  
   // Process Intel graphics
   else if (GRAPHICS_PATTERNS.INTEL.PREFIX.test(normalized) || 
           GRAPHICS_PATTERNS.INTEL.IRIS_XE.test(normalized) || 
@@ -168,36 +210,6 @@ export const normalizeGraphics = (graphics: string): string => {
     // Ensure Intel prefix is present
     if (!normalized.toLowerCase().includes('intel')) {
       normalized = `Intel ${normalized}`;
-    }
-    
-    // Add "Graphics" suffix if missing
-    if (!normalized.toLowerCase().includes('graphics')) {
-      normalized += ' Graphics';
-    }
-    
-    return normalized;
-  }
-  
-  // Process AMD graphics
-  else if (GRAPHICS_PATTERNS.AMD.PREFIX.test(normalized) || 
-          GRAPHICS_PATTERNS.AMD.RX_SERIES.test(normalized)) {
-    
-    // Standardize RX series
-    const rxMatch = normalized.match(GRAPHICS_PATTERNS.AMD.RX_SERIES);
-    if (rxMatch) {
-      return `AMD Radeon RX ${rxMatch[1].toUpperCase()}`;
-    }
-    
-    // Standardize other AMD graphics
-    normalized = normalized
-      .replace(/amd\s+radeon\s+graphics/i, 'AMD Radeon Graphics')
-      .replace(/radeon\s+graphics/i, 'AMD Radeon Graphics')
-      .replace(/\bradeon\s+rx\s+/i, 'AMD Radeon RX ')
-      .replace(/\bradeon\s+/i, 'AMD Radeon ');
-    
-    // Ensure AMD prefix is present
-    if (!normalized.toLowerCase().includes('amd')) {
-      normalized = `AMD ${normalized}`;
     }
     
     // Add "Graphics" suffix if missing
@@ -249,32 +261,158 @@ export const getGraphicsFilterValue = (graphics: string): string => {
     }
   }
   
-  // NVIDIA discrete GPU categories
-  if (normalized.includes('rtx 40')) return 'NVIDIA RTX 40 Series';
-  if (normalized.includes('rtx 30')) return 'NVIDIA RTX 30 Series';
-  if (normalized.includes('rtx 20')) return 'NVIDIA RTX 20 Series';
-  if (normalized.includes('rtx')) return 'NVIDIA RTX';
-  if (normalized.includes('gtx 16')) return 'NVIDIA GTX 16 Series';
-  if (normalized.includes('gtx 10')) return 'NVIDIA GTX 10 Series';
-  if (normalized.includes('gtx')) return 'NVIDIA GTX';
+  // NVIDIA discrete GPU categories - enhanced with specific model detection
+  // RTX 40 series (most recent)
+  if (normalized.includes('rtx 40')) {
+    // Check for specific models
+    if (normalized.includes('4090')) return 'NVIDIA RTX 4090';
+    if (normalized.includes('4080')) return 'NVIDIA RTX 4080';
+    if (normalized.includes('4070')) return 'NVIDIA RTX 4070';
+    if (normalized.includes('4060')) return 'NVIDIA RTX 4060';
+    if (normalized.includes('4050')) return 'NVIDIA RTX 4050';
+    return 'NVIDIA RTX 40 Series';
+  }
   
-  // AMD discrete GPU categories
-  if (normalized.includes('radeon rx 7')) return 'AMD Radeon RX 7000 Series';
-  if (normalized.includes('radeon rx 6')) return 'AMD Radeon RX 6000 Series';
-  if (normalized.includes('radeon rx')) return 'AMD Radeon RX';
-  if (normalized.includes('radeon')) return 'AMD Radeon Graphics';
+  // RTX 30 series
+  if (normalized.includes('rtx 30')) {
+    // Check for specific models
+    if (normalized.includes('3090')) return 'NVIDIA RTX 3090';
+    if (normalized.includes('3080')) return 'NVIDIA RTX 3080';
+    if (normalized.includes('3070')) return 'NVIDIA RTX 3070';
+    if (normalized.includes('3060')) return 'NVIDIA RTX 3060';
+    if (normalized.includes('3050')) return 'NVIDIA RTX 3050';
+    return 'NVIDIA RTX 30 Series';
+  }
+  
+  // RTX 20 series
+  if (normalized.includes('rtx 20')) {
+    // Check for specific models
+    if (normalized.includes('2080')) return 'NVIDIA RTX 2080';
+    if (normalized.includes('2070')) return 'NVIDIA RTX 2070';
+    if (normalized.includes('2060')) return 'NVIDIA RTX 2060';
+    return 'NVIDIA RTX 20 Series';
+  }
+  
+  // Generic RTX
+  if (normalized.includes('rtx')) {
+    // Check for specific models not caught by series checks
+    const rtxModelMatch = normalized.match(/rtx\s*(\d{4})/i);
+    if (rtxModelMatch) {
+      return `NVIDIA RTX ${rtxModelMatch[1]}`;
+    }
+    return 'NVIDIA RTX';
+  }
+  
+  // GTX 16 series
+  if (normalized.includes('gtx 16')) {
+    // Check for specific models
+    if (normalized.includes('1660')) return 'NVIDIA GTX 1660';
+    if (normalized.includes('1650')) return 'NVIDIA GTX 1650';
+    return 'NVIDIA GTX 16 Series';
+  }
+  
+  // GTX 10 series
+  if (normalized.includes('gtx 10')) {
+    // Check for specific models
+    if (normalized.includes('1080')) return 'NVIDIA GTX 1080';
+    if (normalized.includes('1070')) return 'NVIDIA GTX 1070';
+    if (normalized.includes('1060')) return 'NVIDIA GTX 1060';
+    if (normalized.includes('1050')) return 'NVIDIA GTX 1050';
+    return 'NVIDIA GTX 10 Series';
+  }
+  
+  // Generic GTX
+  if (normalized.includes('gtx')) {
+    // Check for specific models not caught by series checks
+    const gtxModelMatch = normalized.match(/gtx\s*(\d{3,4})/i);
+    if (gtxModelMatch) {
+      return `NVIDIA GTX ${gtxModelMatch[1]}`;
+    }
+    return 'NVIDIA GTX';
+  }
+  
+  // AMD discrete GPU categories - enhanced with specific model detection
+  // Radeon RX 7000 series
+  if (normalized.includes('radeon rx 7')) {
+    // Check for specific models
+    if (normalized.includes('7900')) return 'AMD Radeon RX 7900';
+    if (normalized.includes('7800')) return 'AMD Radeon RX 7800';
+    if (normalized.includes('7700')) return 'AMD Radeon RX 7700';
+    if (normalized.includes('7600')) return 'AMD Radeon RX 7600';
+    return 'AMD Radeon RX 7000 Series';
+  }
+  
+  // Radeon RX 6000 series
+  if (normalized.includes('radeon rx 6')) {
+    // Check for specific models
+    if (normalized.includes('6900')) return 'AMD Radeon RX 6900';
+    if (normalized.includes('6800')) return 'AMD Radeon RX 6800';
+    if (normalized.includes('6700')) return 'AMD Radeon RX 6700';
+    if (normalized.includes('6600')) return 'AMD Radeon RX 6600';
+    if (normalized.includes('6500')) return 'AMD Radeon RX 6500';
+    return 'AMD Radeon RX 6000 Series';
+  }
+  
+  // Older RX series
+  if (normalized.includes('radeon rx')) {
+    // Check for specific models not caught by series checks
+    const rxModelMatch = normalized.match(/rx\s*(\d{3,4})/i);
+    if (rxModelMatch) {
+      return `AMD Radeon RX ${rxModelMatch[1]}`;
+    }
+    return 'AMD Radeon RX';
+  }
+  
+  // Vega series with specific model detection
+  if (normalized.includes('vega')) {
+    const vegaModelMatch = normalized.match(/vega\s*(\d+)/i);
+    if (vegaModelMatch) {
+      return `AMD Radeon Vega ${vegaModelMatch[1]}`;
+    }
+    return 'AMD Radeon Vega';
+  }
+  
+  // Generic Radeon
+  if (normalized.includes('radeon')) {
+    return 'AMD Radeon Graphics';
+  }
   
   // Intel integrated/discrete graphics categories
-  if (normalized.includes('arc')) return 'Intel Arc';
+  if (normalized.includes('arc')) {
+    // Check for specific Arc models
+    const arcModelMatch = normalized.match(/arc\s*([a-z]\d{2,3})/i);
+    if (arcModelMatch) {
+      return `Intel Arc ${arcModelMatch[1].toUpperCase()}`;
+    }
+    return 'Intel Arc';
+  }
+  
   if (normalized.includes('iris xe')) return 'Intel Iris Xe Graphics';
   if (normalized.includes('iris')) return 'Intel Iris Graphics';
   if (normalized.includes('uhd')) return 'Intel UHD Graphics';
   if (normalized.includes('hd graphics')) return 'Intel HD Graphics';
   
   // Apple integrated graphics
-  if (normalized.includes('m3')) return 'Apple M3 GPU';
-  if (normalized.includes('m2')) return 'Apple M2 GPU';
-  if (normalized.includes('m1')) return 'Apple M1 GPU';
+  if (normalized.includes('m3')) {
+    if (normalized.includes('pro')) return 'Apple M3 Pro GPU';
+    if (normalized.includes('max')) return 'Apple M3 Max GPU';
+    if (normalized.includes('ultra')) return 'Apple M3 Ultra GPU';
+    return 'Apple M3 GPU';
+  }
+  
+  if (normalized.includes('m2')) {
+    if (normalized.includes('pro')) return 'Apple M2 Pro GPU';
+    if (normalized.includes('max')) return 'Apple M2 Max GPU';
+    if (normalized.includes('ultra')) return 'Apple M2 Ultra GPU';
+    return 'Apple M2 GPU';
+  }
+  
+  if (normalized.includes('m1')) {
+    if (normalized.includes('pro')) return 'Apple M1 Pro GPU';
+    if (normalized.includes('max')) return 'Apple M1 Max GPU';
+    if (normalized.includes('ultra')) return 'Apple M1 Ultra GPU';
+    return 'Apple M1 GPU';
+  }
   
   return normalized;
 };
@@ -301,6 +439,11 @@ export const isIntegratedGraphics = (graphics: string): boolean => {
     return true;
   }
   
+  // AMD Vega integrated
+  if (normalized.includes('vega') && !normalized.includes('radeon rx')) {
+    return true;
+  }
+  
   if (normalized.includes('apple m')) {
     return true;
   }
@@ -321,24 +464,49 @@ export const isHighPerformanceGraphics = (graphics: string): boolean => {
   
   const normalized = normalizeGraphics(graphics).toLowerCase();
   
-  // NVIDIA high-performance GPUs
-  if (normalized.includes('rtx') || 
-      (normalized.includes('gtx') && (normalized.includes('1070') || normalized.includes('1080')))) {
+  // NVIDIA high-performance GPUs - with specific model detection
+  if (normalized.includes('rtx')) {
+    // RTX 40/30 series are high performance by default
+    if (normalized.includes('40') || normalized.includes('30')) {
+      return true;
+    }
+    
+    // High-end 20 series
+    if (normalized.includes('2080') || normalized.includes('2070')) {
+      return true;
+    }
+    
+    return false; // Other RTX models are mid-range
+  }
+  
+  // High-end GTX models
+  if (normalized.includes('gtx') && 
+      (normalized.includes('1080') || normalized.includes('1070'))) {
     return true;
   }
   
-  // AMD high-performance GPUs
-  if (normalized.includes('radeon rx') && 
-      (normalized.includes('6') || normalized.includes('7'))) {
-    return true;
+  // AMD high-performance GPUs - with specific model detection
+  if (normalized.includes('radeon rx')) {
+    // High-end 6000/7000 series
+    if (normalized.includes('7900') || normalized.includes('7800') || 
+        normalized.includes('6900') || normalized.includes('6800')) {
+      return true;
+    }
+    
+    return false; // Other RX models are mid-range
   }
   
-  // Intel discrete graphics
+  // Intel discrete graphics - only high-end Arc models
   if (normalized.includes('intel arc')) {
-    return true;
+    // A770/A750 are high performance
+    if (normalized.includes('a770') || normalized.includes('a750')) {
+      return true;
+    }
+    
+    return false; // Other Arc models are mid-range
   }
   
-  // Apple higher-end variants
+  // Apple higher-end variants - only Pro/Max/Ultra are high performance
   if (normalized.includes('apple m') && 
       (normalized.includes('pro') || normalized.includes('max') || normalized.includes('ultra'))) {
     return true;
