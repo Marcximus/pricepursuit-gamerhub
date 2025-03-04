@@ -1,9 +1,9 @@
-
 import { ReloadIcon, ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LaptopCard } from "@/components/laptops/LaptopCard";
 import type { Product } from "@/types/product";
+import { containsForbiddenKeywords } from "@/utils/laptop/productFilters";
 
 type LaptopListProps = {
   laptops: Product[];
@@ -76,7 +76,10 @@ export function LaptopList({
     );
   }
 
-  if (!laptops || laptops.length === 0) {
+  // Final safety check to filter out any products with forbidden keywords
+  const filteredLaptops = laptops.filter(laptop => !containsForbiddenKeywords(laptop.title || ''));
+
+  if (!filteredLaptops || filteredLaptops.length === 0) {
     console.log('No laptops available to display');
     return (
       <Card>
@@ -101,7 +104,7 @@ export function LaptopList({
   return (
     <div className="space-y-8">
       <div className="space-y-4">
-        {laptops.map((laptop) => (
+        {filteredLaptops.map((laptop) => (
           <LaptopCard key={laptop.id} laptop={laptop} />
         ))}
       </div>

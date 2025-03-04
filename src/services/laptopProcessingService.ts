@@ -3,6 +3,7 @@ import type { SortOption } from "@/components/laptops/LaptopSort";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import { sortLaptops } from "@/utils/laptopSort";
 import { filterLaptops } from "@/utils/laptop/filter/filterLaptops";
+import { containsForbiddenKeywords } from "@/utils/laptop/productFilters";
 
 export function processAndFilterLaptops(
   allLaptops: any[],
@@ -11,11 +12,16 @@ export function processAndFilterLaptops(
   page: number,
   itemsPerPage: number
 ) {
+  // First filter out products with forbidden keywords
+  const laptopsWithoutForbiddenKeywords = allLaptops.filter(
+    laptop => !containsForbiddenKeywords(laptop.title || '')
+  );
+
   // Step 1: Apply text search if there's a search query
-  let filteredLaptops = allLaptops;
+  let filteredLaptops = laptopsWithoutForbiddenKeywords;
   if (filters.searchQuery && filters.searchQuery.trim() !== "") {
     const searchTerms = filters.searchQuery.toLowerCase().trim().split(/\s+/);
-    filteredLaptops = allLaptops.filter(laptop => {
+    filteredLaptops = laptopsWithoutForbiddenKeywords.filter(laptop => {
       const titleText = (laptop.title || "").toLowerCase();
       const brandText = (laptop.brand || "").toLowerCase();
       const processorText = (laptop.processor || "").toLowerCase();
@@ -49,6 +55,6 @@ export function processAndFilterLaptops(
     laptops: paginatedLaptops,
     totalCount: sortedLaptops.length,
     totalPages,
-    allLaptops,
+    allLaptops: laptopsWithoutForbiddenKeywords, // Also filter the allLaptops reference
   };
 }

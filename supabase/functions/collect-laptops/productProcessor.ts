@@ -1,5 +1,6 @@
 
 import { insertOrUpdateProducts } from "./databaseService.ts";
+import { containsForbiddenKeywords } from "./utils/productFilters.ts";
 
 export async function processProducts(products: any[], brand: string, detailedLogging = false) {
   // Validate input
@@ -35,9 +36,11 @@ export async function processProducts(products: any[], brand: string, detailedLo
       ];
       
       // Check if the title contains any laptop keywords but none of the non-laptop keywords
+      // Also use our more comprehensive forbidden keywords filter
       const isLaptop = 
         laptopKeywords.some(keyword => title.includes(keyword)) && 
-        !nonLaptopKeywords.some(keyword => title.includes(keyword));
+        !nonLaptopKeywords.some(keyword => title.includes(keyword)) &&
+        !containsForbiddenKeywords(product.title || '');
       
       if (detailedLogging && !isLaptop) {
         console.log(`Filtering out non-laptop: "${title}"`);
