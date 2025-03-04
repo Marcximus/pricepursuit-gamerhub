@@ -32,23 +32,61 @@ const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }
   
   useEffect(() => {
     if (showConfetti && confettiRef.current && cardRef.current) {
-      // Get card dimensions to center the confetti
+      // Firework confetti effect
       const rect = cardRef.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
       
-      // Fire confetti with improved options
+      // Create a firework effect with multiple bursts
+      const fireworkColors = ['#FFD700', '#FFA500', '#FF4500', '#9370DB', '#20B2AA'];
+      
+      // First central burst
       confettiRef.current.fire({
-        particleCount: 150,
-        spread: 70,
+        particleCount: 80,
+        spread: 360,
+        startVelocity: 30,
         origin: { 
-          // Center the confetti in the card
           x: 0.5,
           y: 0.5
         },
         gravity: 0.8,
-        decay: 0.9,
-        ticks: 200, // Increase ticks for longer animation
-        colors: ['#FFD700', '#FFA500', '#FF4500', '#9370DB', '#20B2AA']
+        colors: fireworkColors,
+        shapes: ['circle', 'square'],
+        scalar: 1,
       });
+      
+      // Add delayed secondary bursts for firework effect
+      setTimeout(() => {
+        confettiRef.current?.fire({
+          particleCount: 50,
+          spread: 180,
+          startVelocity: 25,
+          origin: { 
+            x: 0.4,
+            y: 0.45
+          },
+          gravity: 0.7,
+          colors: fireworkColors,
+          shapes: ['circle'],
+          scalar: 0.8,
+        });
+      }, 200);
+      
+      setTimeout(() => {
+        confettiRef.current?.fire({
+          particleCount: 50,
+          spread: 180,
+          startVelocity: 25,
+          origin: { 
+            x: 0.6,
+            y: 0.45
+          },
+          gravity: 0.7,
+          colors: fireworkColors,
+          shapes: ['circle'],
+          scalar: 0.8,
+        });
+      }, 400);
     }
   }, [showConfetti]);
   
