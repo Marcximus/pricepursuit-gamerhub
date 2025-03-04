@@ -36,9 +36,11 @@ export function FilterSection({
   // Sort options based on filter type
   const sortedOptions = title === "Processors" 
     ? sortProcessorOptions(filteredOptions)
-    : title === "Brands" || title === "Graphics"
-      ? filteredOptions.sort((a, b) => a.localeCompare(b)) // Sort brands and graphics alphabetically
-      : filteredOptions;
+    : title === "Graphics"
+      ? sortGraphicsOptions(filteredOptions)
+      : title === "Brands"
+        ? filteredOptions.sort((a, b) => a.localeCompare(b)) // Sort brands alphabetically
+        : filteredOptions;
 
   const handleCheckboxChange = useCallback((option: string, checked: boolean) => {
     const newSelected = new Set(selectedOptions);
@@ -90,4 +92,48 @@ export function FilterSection({
       </AccordionContent>
     </AccordionItem>
   );
+}
+
+// Helper function to sort graphics options alphabetically but with numbers in descending order
+function sortGraphicsOptions(options: string[]): string[] {
+  // Group options by manufacturer prefix
+  const grouped: Record<string, string[]> = {};
+  
+  options.forEach(option => {
+    // Extract the manufacturer prefix (NVIDIA, AMD, Intel, etc.)
+    const prefixMatch = option.match(/^([A-Za-z]+)/);
+    const prefix = prefixMatch ? prefixMatch[1] : '';
+    
+    if (!grouped[prefix]) {
+      grouped[prefix] = [];
+    }
+    
+    grouped[prefix].push(option);
+  });
+  
+  // Sort each group's options
+  Object.keys(grouped).forEach(prefix => {
+    grouped[prefix].sort((a, b) => {
+      // Extract numbers from the strings
+      const aNumbers = a.match(/\d+/g);
+      const bNumbers = b.match(/\d+/g);
+      
+      // If both have numbers, compare the first number in descending order
+      if (aNumbers && bNumbers) {
+        const aNum = parseInt(aNumbers[0], 10);
+        const bNum = parseInt(bNumbers[0], 10);
+        if (aNum !== bNum) {
+          return bNum - aNum; // Descending order
+        }
+      }
+      
+      // Fall back to alphabetical sorting
+      return a.localeCompare(b);
+    });
+  });
+  
+  // Sort the groups alphabetically and flatten the result
+  return Object.keys(grouped)
+    .sort()
+    .flatMap(prefix => grouped[prefix]);
 }
