@@ -78,11 +78,11 @@ export const matchesIntelGraphics = (
       // Check if the product has a model that belongs to this series
       if (normalizedFilter.includes('600 series')) {
         const productUhdSeriesMatch = normalizedProduct.match(/uhd\s*(\d+)/i);
-        return productUhdSeriesMatch && productUhdSeriesMatch[1].match(/^6\d\d$/);
+        return productUhdSeriesMatch ? productUhdSeriesMatch[1].match(/^6\d\d$/) !== null : false;
       }
       if (normalizedFilter.includes('700 series')) {
         const productUhdSeriesMatch = normalizedProduct.match(/uhd\s*(\d+)/i);
-        return productUhdSeriesMatch && productUhdSeriesMatch[1].match(/^7\d\d$/);
+        return productUhdSeriesMatch ? productUhdSeriesMatch[1].match(/^7\d\d$/) !== null : false;
       }
     }
     
@@ -108,22 +108,22 @@ export const matchesIntelGraphics = (
       // Check if the product has a model that belongs to this series
       if (normalizedFilter.includes('400 series')) {
         const productHdSeriesMatch = normalizedProduct.match(/hd\s*graphics\s*(\d+)/i);
-        return (productHdSeriesMatch && productHdSeriesMatch[1].match(/^4\d\d$/)) || 
+        return productHdSeriesMatch ? productHdSeriesMatch[1].match(/^4\d\d$/) !== null : 
                normalizedProduct.includes('400');
       }
       if (normalizedFilter.includes('500 series')) {
         const productHdSeriesMatch = normalizedProduct.match(/hd\s*graphics\s*(\d+)/i);
-        return (productHdSeriesMatch && productHdSeriesMatch[1].match(/^5\d\d$/)) || 
+        return productHdSeriesMatch ? productHdSeriesMatch[1].match(/^5\d\d$/) !== null : 
                normalizedProduct.includes('500');
       }
       if (normalizedFilter.includes('300 series')) {
         const productHdSeriesMatch = normalizedProduct.match(/hd\s*graphics\s*(\d+)/i);
-        return (productHdSeriesMatch && productHdSeriesMatch[1].match(/^3\d\d$/)) || 
+        return productHdSeriesMatch ? productHdSeriesMatch[1].match(/^3\d\d$/) !== null : 
                normalizedProduct.includes('300');
       }
       if (normalizedFilter.includes('200 series')) {
         const productHdSeriesMatch = normalizedProduct.match(/hd\s*graphics\s*(\d+)/i);
-        return (productHdSeriesMatch && productHdSeriesMatch[1].match(/^2\d\d$/)) || 
+        return productHdSeriesMatch ? productHdSeriesMatch[1].match(/^2\d\d$/) !== null : 
                normalizedProduct.includes('200');
       }
     }
