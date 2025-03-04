@@ -1,6 +1,7 @@
 
 import { extractProcessorFromTitle } from "@/utils/laptop/filter/extractors/processor/processorExtractor";
 import { extractAppleProcessor } from "./ProcessorUtils";
+import { normalizeProcessor } from "@/utils/laptop/normalizers/processorNormalizer";
 
 type ProcessorSpecProps = {
   title: string;
@@ -9,7 +10,9 @@ type ProcessorSpecProps = {
 
 export function ProcessorSpec({ title, processor }: ProcessorSpecProps) {
   // Extract specs from title if they're not specified in the data
-  const extractedProcessor = !processor ? extractProcessorFromTitle(title) : null;
+  const extractedProcessor = !processor || processor === 'AMD' || processor === 'Intel' 
+    ? extractProcessorFromTitle(title) 
+    : null;
   
   // Apple-specific processor handling for MacBooks
   let displayProcessor = processor || extractedProcessor || 'Not Specified';
@@ -20,6 +23,11 @@ export function ProcessorSpec({ title, processor }: ProcessorSpecProps) {
     if (appleProcessor) {
       displayProcessor = appleProcessor;
     }
+  }
+
+  // Normalize processor name for better display
+  if (displayProcessor) {
+    displayProcessor = normalizeProcessor(displayProcessor);
   }
   
   return (

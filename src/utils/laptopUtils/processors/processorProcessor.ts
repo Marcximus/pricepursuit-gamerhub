@@ -34,6 +34,9 @@ export const processProcessor = (processor: string | undefined, title: string, d
     // Enhanced: AMD Ryzen with trademark symbols
     /\b(?:AMD\s+)?Ryzen(?:™|\s+™)?\s+([3579])[- ](\d{4}[A-Z]*(?:\s*HX)?)\b/i,
     
+    // NEW: Added pattern for "Ryzen 3 7330U" (space instead of dash)
+    /\b(?:AMD\s+)?Ryzen\s+([3579])\s+(\d{4}[A-Z]*(?:\s*HX)?)\b/i,
+    
     // Match full processor names with generation and model - expanded patterns
     /\b(?:Intel Core Ultra [579]|Intel Core i[3579]|AMD Ryzen [3579]|Intel Celeron|Intel Pentium Gold|Intel Pentium Silver|Intel Pentium|MediaTek|Qualcomm Snapdragon|Apple M[12])\s*(?:[A-Z0-9-]+(?:\s*[A-Z0-9]+)*(?:\s*HX)?)\b/i,
     
@@ -42,6 +45,12 @@ export const processProcessor = (processor: string | undefined, title: string, d
     
     // Match processor with core count and generation
     /\b(?:\d{1,2}[-\s]Core\s+(?:i[3579]|Core Ultra)(?:[- ]\d{4,5}[A-Z]*)?)\b/i,
+    
+    // NEW: Added pattern for Ryzen with core count
+    /\b(?:Ryzen\s+\d\s+\d+-core)\b/i,
+    
+    // NEW: Added pattern for AMD Ryzen with core count
+    /\b(?:AMD\s+Ryzen\s+\d\s+\d+-core)\b/i,
     
     // Match full processor description with thread counts
     /\b(?:(?:\d{1,2})[-\s]core,\s*(?:\d{1,2})[-\s]thread\s+(?:Intel|AMD))\b/i,
@@ -75,6 +84,9 @@ export const processProcessor = (processor: string | undefined, title: string, d
         .replace(/intel pentium gold/i, 'Intel Pentium Gold')
         .replace(/intel pentium silver/i, 'Intel Pentium Silver')
         .replace(/intel pentium/i, 'Intel Pentium');
+      
+      // NEW: Standardize "Ryzen 3 7330U" to "AMD Ryzen 3-7330U" format
+      processedName = processedName.replace(/\bryzen\s+(\d)\s+(\d{4}[a-z]*)/i, 'AMD Ryzen $1-$2');
       
       // Remove duplicate "Intel Core" if present
       processedName = processedName.replace(/(Intel Core)\s+Intel Core/i, '$1');
@@ -133,6 +145,30 @@ export const processProcessor = (processor: string | undefined, title: string, d
     const amdRMatch = textToSearch.match(/\bamd\s+r([3579])[-\s](\d{4}[a-z]*)\b/i);
     if (amdRMatch) {
       return `AMD Ryzen ${amdRMatch[1]}-${amdRMatch[2]}`;
+    }
+  }
+  
+  // NEW: Special case for plain "Ryzen X XXXXU" format
+  if (/\bryzen\s+\d\s+\d{4}[a-z]*/i.test(textToSearch)) {
+    const ryzenMatch = textToSearch.match(/\bryzen\s+(\d)\s+(\d{4}[a-z]*)\b/i);
+    if (ryzenMatch) {
+      return `AMD Ryzen ${ryzenMatch[1]}-${ryzenMatch[2]}`;
+    }
+  }
+  
+  // NEW: Special case for full "AMD Ryzen X XXXXHS" format
+  if (/\bamd\s+ryzen\s+\d\s+\d{4}[a-z]*/i.test(textToSearch)) {
+    const fullRyzenMatch = textToSearch.match(/\bamd\s+ryzen\s+(\d)\s+(\d{4}[a-z]*)\b/i);
+    if (fullRyzenMatch) {
+      return `AMD Ryzen ${fullRyzenMatch[1]}-${fullRyzenMatch[2]}`;
+    }
+  }
+  
+  // NEW: Special case for Ryzen with core count
+  if (/\bryzen\s+\d(?:\s+|-)(?:\d+)[-\s]core\b/i.test(textToSearch)) {
+    const ryzenCoreMatch = textToSearch.match(/\bryzen\s+(\d)(?:\s+|-)(\d+)[-\s]core\b/i);
+    if (ryzenCoreMatch) {
+      return `AMD Ryzen ${ryzenCoreMatch[1]} (${ryzenCoreMatch[2]}-core)`;
     }
   }
   

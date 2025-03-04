@@ -49,7 +49,15 @@ export const amdRyzenPatterns = {
   ryzenUnderscore: /ryzen_([3579])_(\d{4}[a-z]*)/i,
   // Added new patterns for AMD R5/R7 format and trademark symbols
   amdRFormat: /\bamd\s+r([3579])[-\s](\d{4}[a-z]*)\b/i,
-  ryzenWithTrademark: /\bamd\s+ryzen(?:™|\s+™)?\s+(\d)(?:\s+|-)(\d{4}[a-z]*)\b/i
+  ryzenWithTrademark: /\bamd\s+ryzen(?:™|\s+™)?\s+(\d)(?:\s+|-)(\d{4}[a-z]*)\b/i,
+  // NEW: Added patterns for "Ryzen 3 7330U" format (space instead of dash)
+  plainRyzenModel: /\bryzen\s+(\d)\s+(\d{4}[a-z]*)\b/i,
+  // NEW: Added pattern for "AMD Ryzen 7 5800HS" (full format with space)
+  fullRyzenModel: /\bamd\s+ryzen\s+(\d)\s+(\d{4}[a-z]*)\b/i,
+  // NEW: Added pattern for Ryzen with core count
+  ryzenWithCores: /\bryzen\s+(\d)(?:\s+|-)(\d+)[-\s]core\b/i,
+  // NEW: Added pattern for AMD Ryzen with core count
+  amdRyzenWithCores: /\bamd\s+ryzen\s+(\d)(?:\s+|-)(\d+)[-\s]core\b/i
 };
 
 // Mobile processor patterns

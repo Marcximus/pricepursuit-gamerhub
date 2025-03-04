@@ -46,5 +46,33 @@ export const extractAmdProcessor = (normalizedTitle: string): string | null => {
     return `AMD Ryzen ${explicitRMatch[1]}-${explicitRMatch[2]}`;
   }
   
+  // NEW: Check for plain Ryzen X XXXXXX format (like "Ryzen 3 7330U")
+  const plainRyzenPattern = /\bryzen\s+(\d)\s+(\d{4}[a-z]*)\b/i;
+  const plainRyzenMatch = normalizedTitle.match(plainRyzenPattern);
+  if (plainRyzenMatch) {
+    return `AMD Ryzen ${plainRyzenMatch[1]}-${plainRyzenMatch[2]}`;
+  }
+  
+  // NEW: Check for AMD Ryzen X XXXXXX format (like "AMD Ryzen 7 5800HS")
+  const fullRyzenPattern = /\bamd\s+ryzen\s+(\d)\s+(\d{4}[a-z]*)\b/i;
+  const fullRyzenMatch = normalizedTitle.match(fullRyzenPattern);
+  if (fullRyzenMatch) {
+    return `AMD Ryzen ${fullRyzenMatch[1]}-${fullRyzenMatch[2]}`;
+  }
+  
+  // NEW: Check for "Ryzen X" without model number but with core count
+  const ryzenCorePattern = /\bryzen\s+(\d)(?:\s+|-)(\d+)[-\s]core\b/i;
+  const ryzenCoreMatch = normalizedTitle.match(ryzenCorePattern);
+  if (ryzenCoreMatch) {
+    return `AMD Ryzen ${ryzenCoreMatch[1]} (${ryzenCoreMatch[2]}-core)`;
+  }
+  
+  // NEW: Expanded pattern for AMD with core count
+  const amdCorePattern = /\bamd\s+ryzen\s+(\d)(?:\s+|-)(\d+)[-\s]core\b/i;
+  const amdCoreMatch = normalizedTitle.match(amdCorePattern);
+  if (amdCoreMatch) {
+    return `AMD Ryzen ${amdCoreMatch[1]} (${amdCoreMatch[2]}-core)`;
+  }
+  
   return null;
 };
