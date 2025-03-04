@@ -53,3 +53,13 @@ export function containsForbiddenKeywords(title: string): boolean {
     lowerTitle.includes(keyword.toLowerCase())
   );
 }
+
+/**
+ * Apply all product filters to an array of products
+ * @param products Array of products to filter
+ * @returns Filtered array of products without forbidden keywords in titles
+ */
+export function applyAllProductFilters(products: any[]): any[] {
+  // Filter out products with forbidden keywords in their titles
+  return products.filter(product => !containsForbiddenKeywords(product.title || ''));
+}

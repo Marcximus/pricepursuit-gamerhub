@@ -39,5 +39,12 @@ export const extractAmdProcessor = (normalizedTitle: string): string | null => {
     return `AMD Ryzen ${amdTrademarkMatch[1]}-${amdTrademarkMatch[2]}`;
   }
   
+  // Check for explicit R5, R7 format without AMD prefix
+  const explicitRPattern = /\br([3579])[-\s](\d{4}[a-z]*)\s+cpu\b/i;
+  const explicitRMatch = normalizedTitle.match(explicitRPattern);
+  if (explicitRMatch) {
+    return `AMD Ryzen ${explicitRMatch[1]}-${explicitRMatch[2]}`;
+  }
+  
   return null;
 };
