@@ -1,3 +1,4 @@
+
 import { useCallback, useState } from "react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
@@ -56,7 +57,7 @@ export function FilterSection({
   return (
     <AccordionItem value={title} className="border-b border-slate-200">
       <AccordionTrigger 
-        className="text-sm font-medium hover:no-underline px-3 py-3.5 rounded-md hover:bg-slate-100 transition-colors group data-[state=open]:bg-blue-50 data-[state=open]:text-blue-700"
+        className="text-sm font-medium hover:no-underline px-3 py-4 rounded-md hover:bg-slate-100 transition-colors group data-[state=open]:bg-blue-50 data-[state=open]:text-blue-700"
       >
         <div className="flex items-center gap-2.5 w-full">
           <div className="flex-shrink-0 text-slate-600 group-data-[state=open]:text-blue-600">
@@ -70,12 +71,13 @@ export function FilterSection({
           )}
         </div>
       </AccordionTrigger>
-      <AccordionContent className="pt-3 pb-4 px-3">
+      <AccordionContent className="pt-3 pb-5 px-3">
         {options.size > 8 && (
           <SearchInput
             placeholder={`Search ${title.toLowerCase()}...`}
             value={searchQuery}
             onChange={setSearchQuery}
+            className="mb-3"
           />
         )}
         

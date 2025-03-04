@@ -67,10 +67,10 @@ export function ActiveFilterPills({
       {hasActiveSearch && (
         <button
           onClick={onClearSearch}
-          className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 transition-colors"
         >
           Search: {filters.searchQuery}
-          <XCircle className="h-3 w-3" />
+          <XCircle className="h-3.5 w-3.5 ml-0.5" />
         </button>
       )}
       
@@ -79,12 +79,12 @@ export function ActiveFilterPills({
         <button
           key={`toolbar-filter-${type}-${value}-${index}`}
           onClick={() => onRemoveFilter(type, value)}
-          className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 transition-colors"
         >
           {value}
-          <XCircle className="h-3 w-3" />
+          <XCircle className="h-3.5 w-3.5 ml-0.5" />
         </button>
-      ))}
+      )}
     </div>
   );
 }

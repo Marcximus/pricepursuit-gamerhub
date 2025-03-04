@@ -34,12 +34,12 @@ export function MobileFilterDrawer({
         <Button 
           variant="outline" 
           size="sm" 
-          className="lg:hidden relative border-slate-200 text-slate-700"
+          className="lg:hidden relative border-slate-200 text-slate-700 h-10 px-4 py-2"
         >
           <Filter className="h-4 w-4 mr-2" />
           Filters
           {activeFiltersCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-blue-600 text-xs text-white rounded-full w-5 h-5 flex items-center justify-center">
+            <span className="absolute -top-1.5 -right-1.5 bg-blue-600 text-xs text-white rounded-full w-5 h-5 flex items-center justify-center">
               {activeFiltersCount}
             </span>
           )}
