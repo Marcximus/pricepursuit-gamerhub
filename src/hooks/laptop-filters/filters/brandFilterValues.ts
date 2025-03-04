@@ -37,10 +37,13 @@ export const getGroupedBrandValues = (
   const otherBrands: string[] = [];
   
   Object.entries(brandCounts).forEach(([brand, count]) => {
-    if (count >= threshold) {
-      mainBrands.push(brand);
-    } else {
-      otherBrands.push(brand);
+    // Only include brands that actually have laptops in the results
+    if (count > 0) {
+      if (count >= threshold) {
+        mainBrands.push(brand);
+      } else {
+        otherBrands.push(brand);
+      }
     }
   });
   

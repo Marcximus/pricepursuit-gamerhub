@@ -27,7 +27,7 @@ export const applyBrandFilter = (
   // Special handling for "Other" category
   if (hasOtherBrandsFilter) {
     // Check if the laptop brand is a major brand (in the mainBrandsSet)
-    const isMainBrand = mainBrandsSet.has(normalizedBrand.toLowerCase());
+    const isMainBrand = mainBrandsSet.has(normalizedBrand);
     
     // Check if it matches any specifically selected brand
     const matchesSelectedBrand = Array.from(filters.brands)
