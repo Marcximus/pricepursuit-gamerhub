@@ -36,14 +36,12 @@ export function extractIntelProcessor(text: string): string | null {
   }
   
   // Check for Intel budget processors
-  if (intelBudgetPatterns.celeronWithModel.test(normalizedText)) {
+  // Fix: Use the existing celeron pattern to check for and extract model
+  if (intelBudgetPatterns.celeron.test(normalizedText)) {
     const match = normalizedText.match(/\b(?:intel\s+)?celeron\s+([a-z0-9]+)\b/i);
-    if (match) {
+    if (match && match[1]) {
       return `Intel Celeron ${match[1]}`;
     }
-  }
-  
-  if (intelBudgetPatterns.celeron.test(normalizedText)) {
     return 'Intel Celeron';
   }
   
