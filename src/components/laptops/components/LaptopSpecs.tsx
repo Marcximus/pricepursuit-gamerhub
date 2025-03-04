@@ -1,3 +1,4 @@
+
 import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
 import { normalizeModel } from "@/utils/laptop/valueNormalizer";
 import { extractProcessorFromTitle } from "@/utils/laptop/filter/extractors/processor/processorExtractor";
@@ -36,34 +37,27 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
   const extractedProcessor = !specs.processor ? extractProcessorFromTitle(title) : null;
   const extractedRam = !specs.ram ? processRam(undefined, title) : null;
   
-  // Enhanced graphics extraction and display logic with priority on detailed information
+  // Improved graphics extraction and display logic
   let displayGraphics = '';
   
-  // First try to extract from title (often most detailed)
-  const extractedGraphics = processGraphics(undefined, title);
+  // First try to normalize the existing graphics value from database
+  if (specs.graphics) {
+    const normalizedGraphics = normalizeGraphics(specs.graphics);
+    if (normalizedGraphics && normalizedGraphics.length > 3) {
+      // Only use if it's specific enough (not just a brand name)
+      displayGraphics = normalizedGraphics;
+    }
+  }
   
-  // Then try to normalize the existing graphics value from database
-  const normalizedDbGraphics = specs.graphics ? normalizeGraphics(specs.graphics) : '';
-  
-  // Determine which graphics info to use based on specificity
-  if (extractedGraphics && extractedGraphics.includes(normalizedDbGraphics)) {
-    // If title extraction contains the database value plus more details, use it
-    displayGraphics = extractedGraphics;
-  } else if (normalizedDbGraphics && normalizedDbGraphics.match(/(?:rtx|gtx|rx)\s*\d{3,4}/i)) {
-    // If database has specific model numbers, prefer it
-    displayGraphics = normalizedDbGraphics;
-  } else if (extractedGraphics && extractedGraphics.match(/(?:rtx|gtx|rx)\s*\d{3,4}/i)) {
-    // If title extraction has specific model numbers, use it
-    displayGraphics = extractedGraphics;
-  } else if (normalizedDbGraphics && normalizedDbGraphics.length > 5) {
-    // If database value is reasonably specific, use it
-    displayGraphics = normalizedDbGraphics;
-  } else if (extractedGraphics) {
-    // Otherwise use whatever we could extract from title
-    displayGraphics = extractedGraphics;
-  } else {
-    // Final fallback to the original value or "Not Specified"
-    displayGraphics = specs.graphics || 'Not Specified';
+  // If we don't have a valid graphics value from database, extract from title
+  if (!displayGraphics) {
+    const extractedGraphics = processGraphics(undefined, title);
+    if (extractedGraphics) {
+      displayGraphics = extractedGraphics;
+    } else {
+      // Final fallback to the original value or "Not Specified"
+      displayGraphics = specs.graphics || 'Not Specified';
+    }
   }
   
   // Add GPU type indicators for better user understanding
