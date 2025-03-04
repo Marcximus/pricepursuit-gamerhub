@@ -2,7 +2,6 @@
 import { useMemo } from "react";
 import type { Product } from "@/types/product";
 import { getUniqueFilterValues, getGroupedBrandValues } from "./laptop-filters";
-import { getGroupedGraphicsValues } from "./laptop-filters/filters/graphicsFilterValues";
 
 /**
  * Hook for generating laptop filter options based on available laptop data
@@ -62,8 +61,7 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       processors: getUniqueFilterValues(laptops, 'processor'),
       ramSizes: getUniqueFilterValues(laptops, 'ram'),
       storageOptions: storageOptions,
-      // Group graphics cards for cleaner filters
-      graphicsCards: getGroupedGraphicsValues(laptops, 10),  // Group graphics with fewer than 10 laptops
+      graphicsCards: getUniqueFilterValues(laptops, 'graphics'),
       screenSizes: getUniqueFilterValues(laptops, 'screen_size'),
     };
   }, [laptops]);
