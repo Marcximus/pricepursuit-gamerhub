@@ -34,7 +34,7 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
         <p>{comparisonResult.analysis}</p>
       </div>
       
-      {/* Advantages - Updated with blue vs red theme */}
+      {/* Advantages - Updated with blue vs yellow theme */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         <AdvantagesList
           laptopName={`${laptopLeft?.brand} ${laptopLeft?.model}`}
@@ -45,11 +45,11 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
         <AdvantagesList
           laptopName={`${laptopRight?.brand} ${laptopRight?.model}`}
           advantages={comparisonResult.advantages.right}
-          colorTheme="red"
+          colorTheme="yellow"
         />
       </div>
       
-      {/* Value for Money - Updated with blue vs red theme */}
+      {/* Value for Money - Updated with blue vs yellow theme */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         <ValueForMoney
           laptopName={`${laptopLeft?.brand} ${laptopLeft?.model}`}
@@ -60,7 +60,7 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
         <ValueForMoney
           laptopName={`${laptopRight?.brand} ${laptopRight?.model}`}
           valueAssessment={comparisonResult.valueForMoney.right}
-          colorTheme="red"
+          colorTheme="yellow"
         />
       </div>
       

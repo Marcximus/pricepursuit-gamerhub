@@ -137,7 +137,7 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
         </TooltipProvider>
       </div>
       
-      {/* Left laptop value - moved to middle column with blue theme */}
+      {/* Left laptop value - blue theme */}
       <div className="col-span-2 text-center">
         <a 
           href={leftAffiliateUrl} 
@@ -146,23 +146,23 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
           className="inline-flex items-center justify-center gap-1 hover:text-sky-600 transition-colors group"
         >
           {leftStatus === 'better' && <ChevronsUp className="w-4 h-4 text-sky-600" />}
-          {leftStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
+          {leftStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-amber-600" />}
           <span className={leftStatus === 'better' ? 'text-sky-700 font-medium' : ''}>{section.leftValue}</span>
           <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />
         </a>
       </div>
       
-      {/* Right laptop value - kept in the right column with red theme */}
+      {/* Right laptop value - yellow theme */}
       <div className="col-span-2 text-center">
         <a 
           href={rightAffiliateUrl} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-1 hover:text-red-600 transition-colors group"
+          className="inline-flex items-center justify-center gap-1 hover:text-amber-600 transition-colors group"
         >
-          {rightStatus === 'better' && <ChevronsUp className="w-4 h-4 text-red-600" />}
+          {rightStatus === 'better' && <ChevronsUp className="w-4 h-4 text-amber-600" />}
           {rightStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-sky-600" />}
-          <span className={rightStatus === 'better' ? 'text-red-700 font-medium' : ''}>{section.rightValue}</span>
+          <span className={rightStatus === 'better' ? 'text-amber-700 font-medium' : ''}>{section.rightValue}</span>
           <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />
         </a>
       </div>

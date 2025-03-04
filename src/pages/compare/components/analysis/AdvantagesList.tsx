@@ -6,7 +6,7 @@ import type { Product } from "@/types/product";
 interface AdvantagesListProps {
   laptopName: string;
   advantages: string[];
-  colorTheme?: "blue" | "red";
+  colorTheme?: "blue" | "yellow";
 }
 
 const AdvantagesList: React.FC<AdvantagesListProps> = ({
@@ -22,11 +22,11 @@ const AdvantagesList: React.FC<AdvantagesListProps> = ({
       heading: "text-sky-800",
       icon: "text-sky-600"
     },
-    red: {
-      bg: "bg-red-50",
-      border: "border-red-200", 
-      heading: "text-red-800",
-      icon: "text-red-600"
+    yellow: {
+      bg: "bg-amber-50",
+      border: "border-amber-200", 
+      heading: "text-amber-800",
+      icon: "text-amber-600"
     }
   };
   
@@ -51,7 +51,7 @@ const AdvantagesList: React.FC<AdvantagesListProps> = ({
   return (
     <div className={`${colors.bg} p-4 rounded-lg border ${colors.border}`}>
       <h3 className={`font-semibold mb-3 ${colors.heading} flex items-center gap-2`}>
-        {colorTheme === "blue" ? "🔵" : "🔴"} {laptopName} Advantages
+        {colorTheme === "blue" ? "🔵" : "🟡"} {laptopName} Advantages
       </h3>
       <ul className="space-y-2">
         {advantages.map((advantage, index) => (
