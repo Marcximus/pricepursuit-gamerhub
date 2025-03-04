@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import SpecificationItem from "./SpecificationItem";
 import ComparisonSections from "./ComparisonSections";
 import type { Product } from "@/types/product";
+import type { ComparisonSection } from "../types";
 
 interface SpecificationsSectionProps {
   laptopLeft: Product | null;

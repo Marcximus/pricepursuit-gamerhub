@@ -139,8 +139,11 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
                 laptopRight={laptopRight}
               />
               
-              {/* Detailed Specs Comparison */}
-              <SpecificationsSection comparisonSections={comparisonSections} />
+              {/* Detailed Specs Comparison - Updated to pass correct props */}
+              <SpecificationsSection 
+                laptopLeft={laptopLeft}
+                laptopRight={laptopRight}
+              />
             </>
           )}
         </div>

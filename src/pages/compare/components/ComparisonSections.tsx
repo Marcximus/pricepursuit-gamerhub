@@ -1,5 +1,4 @@
 
-import React from "react";
 import type { Product } from "@/types/product";
 import { 
   formatPrice, 
@@ -20,7 +19,8 @@ interface ComparisonSectionsProps {
   laptopRight: Product | null;
 }
 
-const ComparisonSections: React.FC<ComparisonSectionsProps> = ({ laptopLeft, laptopRight }) => {
+// Changed from React.FC to a regular function
+const ComparisonSections = ({ laptopLeft, laptopRight }: ComparisonSectionsProps): ComparisonSection[] => {
   // Helper to safely format values
   const formatValue = (value: any): string => {
     if (value === null || value === undefined) return 'N/A';
