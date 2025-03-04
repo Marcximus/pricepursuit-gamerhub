@@ -10,6 +10,14 @@ import { isDedicatedGPU } from "./detectors";
  * @returns Normalized graphics card string
  */
 export const processGraphics = (graphics: string | undefined, title: string): string | undefined => {
+  // Special case for Apple graphics - if database value contains Apple, prioritize it
+  if (graphics && 
+      typeof graphics === 'string' && 
+      !graphics.includes('undefined') &&
+      graphics.toLowerCase().includes('apple')) {
+    return graphics;
+  }
+  
   // First try to use and clean existing graphics information
   if (graphics && typeof graphics === 'string' && !graphics.includes('undefined')) {
     // Normalize the existing graphics info
@@ -19,6 +27,13 @@ export const processGraphics = (graphics: string | undefined, title: string): st
     if (normalizedGraphics && normalizedGraphics.length > 3) {
       return normalizedGraphics;
     }
+  }
+  
+  // Check for Apple-specific patterns in the title
+  const appleSiliconMatch = title.match(/Apple\s+M[123]\s+(?:Pro|Max|Ultra)?/i);
+  if (appleSiliconMatch) {
+    // For Apple Silicon, format as "{Match} GPU"
+    return `${appleSiliconMatch[0]} GPU`;
   }
   
   // Check for Intel HD Graphics in the title

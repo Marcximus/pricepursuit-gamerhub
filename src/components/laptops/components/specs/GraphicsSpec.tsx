@@ -12,8 +12,16 @@ export function GraphicsSpec({ title, graphics }: GraphicsSpecProps) {
   // Improved graphics extraction and display logic
   let displayGraphics = '';
   
-  // First try to use and normalize the existing graphics value from database
-  if (graphics) {
+  // First check if this is an Apple laptop with existing graphics information in database
+  const isAppleLaptop = title.toLowerCase().includes('apple') || 
+                        title.toLowerCase().includes('macbook') ||
+                        title.toLowerCase().includes('mac book');
+  
+  if (isAppleLaptop && graphics && graphics.toLowerCase().includes('apple')) {
+    // Use the existing Apple GPU data from database directly
+    displayGraphics = graphics;
+  } else if (graphics) {
+    // For non-Apple or Apple laptops without specific GPU info, use normal flow
     // Check if the graphics value is a generic brand name without model
     const isGenericGpu = /^(nvidia|amd|intel|radeon|graphics)$/i.test(graphics.trim());
     
@@ -28,7 +36,7 @@ export function GraphicsSpec({ title, graphics }: GraphicsSpecProps) {
   
   // If we don't have a valid graphics value from database or it's too generic, extract from title
   if (!displayGraphics || displayGraphics.length < 5) {
-    const extractedGraphics = processGraphics(undefined, title);
+    const extractedGraphics = processGraphics(graphics, title);
     if (extractedGraphics && extractedGraphics.length > 4) {
       displayGraphics = extractedGraphics;
     } else {
@@ -43,8 +51,9 @@ export function GraphicsSpec({ title, graphics }: GraphicsSpecProps) {
     }
   }
   
-  // Special handling for MacBooks with Apple Silicon
-  if ((displayGraphics === 'Not Specified' || displayGraphics.includes('Apple')) && title) {
+  // Special handling for MacBooks with Apple Silicon if we still don't have specific info
+  if ((displayGraphics === 'Not Specified' || !displayGraphics.includes('Apple')) && 
+      (title.toLowerCase().includes('apple') || title.toLowerCase().includes('macbook'))) {
     const appleSiliconGraphics = getAppleSiliconGraphics(title);
     if (appleSiliconGraphics) {
       displayGraphics = appleSiliconGraphics;
