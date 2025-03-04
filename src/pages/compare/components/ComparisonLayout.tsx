@@ -37,40 +37,22 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
 }) => {
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
-      <div className="flex justify-between items-center mb-6">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleGoBack}
-          className="flex items-center gap-1"
-        >
-          <ChevronLeft className="w-4 h-4" /> Back
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleClearAndGoBack}
-          className="flex items-center gap-1"
-        >
-          <X className="w-4 h-4" /> Clear and Back
-        </Button>
-      </div>
-      
       {!hasSelectedLaptops ? (
         <EmptyComparisonState />
       ) : (
         <>
           <ComparisonHeader 
-            laptopLeft={laptopLeft} 
-            laptopRight={laptopRight} 
+            handleGoBack={handleGoBack} 
+            handleClearAndGoBack={handleClearAndGoBack}
+            laptopLeft={laptopLeft}
+            laptopRight={laptopRight}
           />
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 mt-6">
             <LaptopCard 
               laptop={laptopLeft} 
               side="left" 
-              winner={comparisonResult?.winner} 
+              winner={comparisonResult?.winner}
             />
             <LaptopCard 
               laptop={laptopRight} 
@@ -84,6 +66,8 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
               isLoading={isLoading}
               error={error}
               comparisonResult={comparisonResult}
+              laptopLeft={laptopLeft}
+              laptopRight={laptopRight}
             />
             
             <SpecificationsSection 

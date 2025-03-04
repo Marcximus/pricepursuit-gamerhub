@@ -1,62 +1,56 @@
 
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY')!;
+const RAPIDAPI_HOST = 'real-time-amazon-data.p.rapidapi.com';
 
 serve(async (req) => {
-  console.log("🔍 Fetch Product Details function started");
+  console.log("🔍 Fetch Product Details function started!");
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log("👌 Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
-  
+
   try {
     const { asins } = await req.json();
     
-    if (!asins || !Array.isArray(asins) || asins.length === 0) {
-      throw new Error('Missing or invalid ASINs');
+    if (!asins || !asins.length) {
+      throw new Error('No ASINs provided');
     }
     
     console.log(`📦 Fetching details for ASINs: ${asins.join(', ')}`);
+
+    const url = `https://${RAPIDAPI_HOST}/product-details?asin=${encodeURIComponent(asins.join(','))}&country=US`;
     
-    // Create the path with query parameters for multiple ASINs
-    const asinParam = asins.join('%2C');
-    const path = `/product-details?asin=${asinParam}&country=US`;
-    
-    // Make the request to RapidAPI
-    const response = await fetch(`https://real-time-amazon-data.p.rapidapi.com${path}`, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': RAPIDAPI_KEY,
-        'X-RapidAPI-Host': 'real-time-amazon-data.p.rapidapi.com'
+        'x-rapidapi-key': RAPIDAPI_KEY,
+        'x-rapidapi-host': RAPIDAPI_HOST
       }
     });
-    
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`❌ RapidAPI error: ${response.status}`, errorText);
-      throw new Error(`API returned ${response.status}: ${errorText}`);
+      console.error(`❌ RapidAPI error (${response.status}): ${errorText}`);
+      throw new Error(`RapidAPI error: ${response.status}`);
     }
-    
+
     const data = await response.json();
     console.log('✅ Successfully fetched product details');
     
-    // Process and extract the most important information
-    const result = processProductDetails(data, asins);
+    // Process the data to extract the relevant information
+    const processedData = Array.isArray(data) 
+      ? data.map(processProductData) 
+      : processProductData(data);
     
     return new Response(
-      JSON.stringify(result),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
+      JSON.stringify(processedData),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-    
   } catch (error) {
     console.error('❌ Error in fetch-product-details function:', error);
     
@@ -70,105 +64,43 @@ serve(async (req) => {
   }
 });
 
-// Process product details and extract the most valuable information
-function processProductDetails(apiResponse: any, requestedAsins: string[]) {
-  console.log('🧹 Processing product details');
-  
-  // If only one product was requested
-  if (requestedAsins.length === 1 && apiResponse.data) {
-    return {
-      [apiResponse.data.asin]: extractProductSpecs(apiResponse.data)
-    };
+function processProductData(data: any) {
+  if (!data || !data.data) {
+    return null;
   }
   
-  // Handle multiple products (assuming the response format changes for multiple ASINs)
-  const result: Record<string, any> = {};
+  const productData = data.data;
+  const details = productData.product_details || {};
+  const information = productData.product_information || {};
   
-  // The API might return results in different structures for multiple products
-  // Handling both possible response formats
-  if (Array.isArray(apiResponse.data)) {
-    // Handle array response
-    apiResponse.data.forEach((product: any) => {
-      if (product.asin) {
-        result[product.asin] = extractProductSpecs(product);
-      }
-    });
-  } else if (apiResponse.data && typeof apiResponse.data === 'object') {
-    // If it's just a single object inside data
-    if (apiResponse.data.asin) {
-      result[apiResponse.data.asin] = extractProductSpecs(apiResponse.data);
-    } else {
-      // Check if each property is a product
-      for (const key in apiResponse.data) {
-        const product = apiResponse.data[key];
-        if (product && product.asin) {
-          result[product.asin] = extractProductSpecs(product);
-        }
-      }
-    }
-  }
-  
-  // Check if we have results for all requested ASINs
-  const missingAsins = requestedAsins.filter(asin => !result[asin]);
-  if (missingAsins.length > 0) {
-    console.warn(`⚠️ Missing data for ASINs: ${missingAsins.join(', ')}`);
-  }
-  
-  return result;
-}
-
-// Extract the most important specifications from a product
-function extractProductSpecs(product: any) {
-  const specs: Record<string, any> = {};
-  
-  // Basic information
-  specs.title = product.product_title || '';
-  specs.price = product.product_price || '';
-  specs.rating = product.product_star_rating || '';
-  specs.rating_count = product.product_num_ratings || 0;
-  specs.url = product.product_url || '';
-  specs.image = product.product_photo || '';
-  
-  // Extract detailed specifications
-  if (product.product_details) {
-    specs.details = product.product_details;
-  }
-  
-  // Extract from product information if available
-  if (product.product_information) {
-    const info = product.product_information;
-    specs.ram = info.RAM || info['Ram Memory Installed Size'] || info['Memory Storage Capacity'] || '';
-    specs.processor = info['Processor'] || info['CPU Model'] || info['Processor Brand'] || '';
-    specs.storage = info['Storage'] || info['Memory Storage Capacity'] || info['Hard Disk Size'] || '';
-    specs.graphics = info['Graphics'] || info['Graphics Coprocessor'] || info['Graphics Card Description'] || '';
-    specs.screen_size = info['Screen Size'] || info['Standing screen display size'] || '';
-    specs.screen_resolution = info['Resolution'] || info['Scanner Resolution'] || info['Display Resolution Maximum'] || '';
-    specs.weight = info['Weight'] || info['Item Weight'] || '';
-    specs.battery = info['Battery Power Rating'] || info['Battery Life'] || '';
-    specs.os = info['OS'] || info['Operating System'] || '';
-    specs.brand = info['Brand'] || '';
-    specs.model = info['Item model number'] || info['Model Name'] || '';
-    
-    // Add all other information that might be useful
-    specs.additional_info = {};
-    for (const key in info) {
-      if (!['RAM', 'Processor', 'Storage', 'Graphics', 'Screen Size', 
-            'Resolution', 'Weight', 'OS', 'Brand', 'Item model number', 
-            'Model Name'].includes(key)) {
-        specs.additional_info[key] = info[key];
-      }
-    }
-  }
-  
-  // Add product description if available
-  if (product.product_description) {
-    specs.description = product.product_description;
-  }
-  
-  // Add about product points if available
-  if (product.about_product && Array.isArray(product.about_product)) {
-    specs.highlights = product.about_product;
-  }
-  
-  return specs;
+  // Extract and normalize the relevant fields
+  return {
+    asin: productData.asin,
+    title: productData.product_title,
+    os: information.OS || details.OS || null,
+    processor: details.CPU_Model || information["CPU Model"] || null,
+    ram: information.RAM || details.RAM || null,
+    storage: information["Memory Storage Capacity"] || details["Memory Storage Capacity"] || null,
+    screen_size: information["Standing screen display size"] || details["Standing screen display size"] || null,
+    screen_resolution: information.Resolution || details.Resolution || null,
+    graphics: information["Graphics Coprocessor"] || details["Graphics Coprocessor"] || null,
+    weight: information["Item Weight"] || details["Item Weight"] || null,
+    battery: information["Battery Power Rating"] || details["Battery Power Rating"] || null,
+    // Additional information that might be useful
+    additional_info: {
+      "Wireless communication technologies": information["Wireless communication technologies"] || null,
+      "Connectivity technologies": information["Connectivity technologies"] || null,
+      "Special features": information["Special features"] || null,
+      "Audio": information.Audio || null,
+      "Keyboard": information.Keyboard || null,
+      "Backlit Keyboard": information["Backlit Keyboard"] || null,
+      "Webcam": information.Webcam || null,
+      "USB": information.USB || null,
+      "HDMI": information.HDMI || null,
+      "Thunderbolt": information.Thunderbolt || null,
+      "Battery Life": information["Battery Life"] || null
+    },
+    details: details,
+    information: information
+  };
 }

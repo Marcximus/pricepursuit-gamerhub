@@ -1,24 +1,25 @@
 
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import { useComparison } from "@/contexts/ComparisonContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/types/product";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 
-export type ComparisonResult = {
-  winner: 'left' | 'right' | 'tie';
-  analysis: string;
-  advantages: {
+export interface ComparisonResult {
+  winner: "left" | "right" | "tie";
+  summary: string;
+  leftAdvantages: string[];
+  rightAdvantages: string[];
+  valueProposition: {
+    better_value: "left" | "right" | "tie";
+    explanation: string;
+  };
+  useCases: {
     left: string[];
     right: string[];
   };
-  recommendation: string;
-  valueForMoney: {
-    left: string;
-    right: string;
-  };
-};
+  detailed_analysis: string;
+}
 
 interface ComparisonDataProviderProps {
   children: (props: {
@@ -35,137 +36,135 @@ interface ComparisonDataProviderProps {
 
 const ComparisonDataProvider: React.FC<ComparisonDataProviderProps> = ({ children }) => {
   const { selectedLaptops } = useComparison();
-  const navigate = useNavigate();
-  const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null);
+  const [laptopLeft, setLaptopLeft] = useState<Product | null>(null);
+  const [laptopRight, setLaptopRight] = useState<Product | null>(null);
   const [enhancedSpecsLeft, setEnhancedSpecsLeft] = useState<Record<string, any> | null>(null);
   const [enhancedSpecsRight, setEnhancedSpecsRight] = useState<Record<string, any> | null>(null);
+  const { toast } = useToast();
   
-  // Define the laptops for easier reference
-  const laptopLeft = selectedLaptops[0] || null;
-  const laptopRight = selectedLaptops[1] || null;
-  const hasSelectedLaptops = selectedLaptops.length === 2;
-  
-  // Fetch enhanced product details
+  // Fetch detailed laptop data when selected laptops change
   useEffect(() => {
-    if (!hasSelectedLaptops) return;
-    
-    const fetchEnhancedDetails = async () => {
-      try {
-        const asins = [
-          laptopLeft?.asin, 
-          laptopRight?.asin
-        ].filter(Boolean) as string[];
-        
-        if (asins.length !== 2) {
-          console.warn("Missing ASINs for one or both laptops");
-          return;
-        }
-        
-        console.log("Fetching enhanced details for ASINs:", asins);
-        
-        const { data, error } = await supabase.functions.invoke('fetch-product-details', {
-          body: { asins }
-        });
-        
-        if (error) {
-          console.error("Error fetching enhanced details:", error);
-          toast.error("Failed to fetch enhanced product details");
-          return;
-        }
-        
-        if (data && laptopLeft?.asin && data[laptopLeft.asin]) {
-          setEnhancedSpecsLeft(data[laptopLeft.asin]);
-        }
-        
-        if (data && laptopRight?.asin && data[laptopRight.asin]) {
-          setEnhancedSpecsRight(data[laptopRight.asin]);
-        }
-        
-        console.log("Enhanced specs loaded:", data);
-      } catch (err) {
-        console.error("Error in fetchEnhancedDetails:", err);
-      }
-    };
-    
-    fetchEnhancedDetails();
-  }, [laptopLeft, laptopRight, hasSelectedLaptops]);
-  
-  useEffect(() => {
-    // Don't redirect, just don't fetch comparison if we don't have 2 laptops
-    if (selectedLaptops.length !== 2) {
-      return;
-    }
-    
-    const fetchComparison = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        console.log('Sending laptops for comparison:', laptopLeft?.id, laptopRight?.id);
-        
-        const { data, error } = await supabase.functions.invoke('compare-laptops', {
-          body: { 
-            laptopLeft: {
-              // Send ALL available data for better comparison
-              id: laptopLeft?.id,
-              brand: laptopLeft?.brand,
-              model: laptopLeft?.model || '',
-              title: laptopLeft?.title || '',
-              processor: laptopLeft?.processor || '',
-              ram: laptopLeft?.ram || '',
-              storage: laptopLeft?.storage || '',
-              graphics: laptopLeft?.graphics || '',
-              screen_size: laptopLeft?.screen_size || '',
-              screen_resolution: laptopLeft?.screen_resolution || '',
-              weight: laptopLeft?.weight || '',
-              battery_life: laptopLeft?.battery_life || '',
-              price: laptopLeft?.current_price || 0,
-              original_price: laptopLeft?.original_price || 0,
-              rating: laptopLeft?.rating || 0,
-              rating_count: laptopLeft?.rating_count || 0,
-              benchmark_score: laptopLeft?.benchmark_score || 0,
-              wilson_score: laptopLeft?.wilson_score || 0
-            },
-            laptopRight: {
-              // Send ALL available data for better comparison
-              id: laptopRight?.id,
-              brand: laptopRight?.brand,
-              model: laptopRight?.model || '',
-              title: laptopRight?.title || '',
-              processor: laptopRight?.processor || '',
-              ram: laptopRight?.ram || '',
-              storage: laptopRight?.storage || '',
-              graphics: laptopRight?.graphics || '',
-              screen_size: laptopRight?.screen_size || '',
-              screen_resolution: laptopRight?.screen_resolution || '',
-              weight: laptopRight?.weight || '',
-              battery_life: laptopRight?.battery_life || '',
-              price: laptopRight?.current_price || 0,
-              original_price: laptopRight?.original_price || 0,
-              rating: laptopRight?.rating || 0,
-              rating_count: laptopRight?.rating_count || 0,
-              benchmark_score: laptopRight?.benchmark_score || 0,
-              wilson_score: laptopRight?.wilson_score || 0
-            }
+    const fetchLaptopDetails = async () => {
+      if (selectedLaptops.length === 2) {
+        try {
+          // Get detailed product information from Supabase
+          const { data: leftData, error: leftError } = await supabase
+            .from("products")
+            .select("*")
+            .eq("id", selectedLaptops[0].id)
+            .single();
+            
+          const { data: rightData, error: rightError } = await supabase
+            .from("products")
+            .select("*")
+            .eq("id", selectedLaptops[1].id)
+            .single();
+            
+          if (leftError) throw new Error(`Error fetching left laptop: ${leftError.message}`);
+          if (rightError) throw new Error(`Error fetching right laptop: ${rightError.message}`);
+          
+          setLaptopLeft(leftData);
+          setLaptopRight(rightData);
+          
+          // Now fetch enhanced specifications from RapidAPI
+          if (leftData?.asin && rightData?.asin) {
+            fetchEnhancedSpecs(leftData.asin, rightData.asin);
           }
-        });
-        
-        if (error) throw error;
-        
-        console.log('Comparison result received:', data);
-        setComparisonResult(data);
-      } catch (err) {
-        console.error('Error fetching comparison:', err);
-        setError('Failed to compare laptops. Please try again.');
-      } finally {
-        setIsLoading(false);
+          
+        } catch (err) {
+          console.error("Error fetching laptop details:", err);
+          setError(`Failed to fetch laptop details: ${err.message}`);
+        }
+      } else {
+        setLaptopLeft(null);
+        setLaptopRight(null);
+        setComparisonResult(null);
+        setEnhancedSpecsLeft(null);
+        setEnhancedSpecsRight(null);
       }
     };
     
-    fetchComparison();
-  }, [selectedLaptops, navigate, laptopLeft, laptopRight]);
+    fetchLaptopDetails();
+  }, [selectedLaptops]);
+  
+  // Fetch enhanced specs from the RapidAPI service
+  const fetchEnhancedSpecs = async (leftAsin: string, rightAsin: string) => {
+    try {
+      const response = await fetch('/api/fetch-product-details', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ asins: [leftAsin, rightAsin] })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch enhanced specs');
+      }
+      
+      const enhancedSpecs = await response.json();
+      
+      if (Array.isArray(enhancedSpecs) && enhancedSpecs.length === 2) {
+        // Find which spec corresponds to which laptop
+        const leftSpec = enhancedSpecs.find(spec => spec?.asin === leftAsin) || null;
+        const rightSpec = enhancedSpecs.find(spec => spec?.asin === rightAsin) || null;
+        
+        setEnhancedSpecsLeft(leftSpec);
+        setEnhancedSpecsRight(rightSpec);
+      } else if (enhancedSpecs && !Array.isArray(enhancedSpecs)) {
+        // Handle case where only one result is returned
+        if (enhancedSpecs.asin === leftAsin) {
+          setEnhancedSpecsLeft(enhancedSpecs);
+        } else if (enhancedSpecs.asin === rightAsin) {
+          setEnhancedSpecsRight(enhancedSpecs);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching enhanced specs:", err);
+      toast({
+        title: "Enhanced data error",
+        description: "Could not fetch enhanced specifications. Using basic data only.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Compare laptops when both laptops are loaded
+  useEffect(() => {
+    const compareLaptops = async () => {
+      if (laptopLeft && laptopRight) {
+        setIsLoading(true);
+        setError(null);
+        
+        try {
+          const response = await fetch('/api/compare-laptops', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ laptopLeft, laptopRight })
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Comparison failed');
+          }
+          
+          const result = await response.json();
+          setComparisonResult(result);
+        } catch (err) {
+          console.error("Error comparing laptops:", err);
+          setError(err.message || 'Failed to compare laptops');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    compareLaptops();
+  }, [laptopLeft, laptopRight]);
+  
+  const hasSelectedLaptops = selectedLaptops.length === 2;
   
   return (
     <>
