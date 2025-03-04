@@ -5,16 +5,18 @@ import { Progress } from "@/components/ui/progress";
 import { Loader } from "lucide-react";
 
 const LoadingState: React.FC = () => {
-  const [progress, setProgress] = useState(10);
+  const [progress, setProgress] = useState(5);
   
   useEffect(() => {
-    // Simulate progress
+    // Simulate progress with a slower, more gradual animation
     const timer = setTimeout(() => {
       setProgress(prev => {
-        // Increase progress but cap at 90% since we don't know actual completion
-        return prev >= 90 ? 90 : prev + 10;
+        // Increase progress more slowly and cap at 90%
+        // We cap at 90% since we don't know actual completion
+        const increment = Math.max(1, Math.floor(20 / (prev + 5))); // Slower increments as progress increases
+        return prev >= 90 ? 90 : prev + increment;
       });
-    }, 800);
+    }, 1200); // Longer delay between updates (1.2 seconds)
     
     return () => clearTimeout(timer);
   }, [progress]);
