@@ -19,7 +19,7 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
   laptopRight
 }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Winner Badge - fixed height container */}
       <div className="flex justify-center mb-6 h-14 items-center">
         <WinnerBadge 
@@ -35,7 +35,7 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
       </div>
       
       {/* Advantages */}
-      <div className="grid grid-cols-2 gap-6 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         <AdvantagesList
           laptopName={`${laptopLeft?.brand} ${laptopLeft?.model}`}
           advantages={comparisonResult.advantages.left}
@@ -48,7 +48,7 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
       </div>
       
       {/* Value for Money */}
-      <div className="grid grid-cols-2 gap-6 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         <ValueForMoney
           laptopName={`${laptopLeft?.brand} ${laptopLeft?.model}`}
           valueAssessment={comparisonResult.valueForMoney.left}

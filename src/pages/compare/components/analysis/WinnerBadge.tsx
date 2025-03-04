@@ -1,7 +1,8 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import ConfettiEffect from "./ConfettiEffect";
 import type { Product } from "@/types/product";
 
 interface WinnerBadgeProps {
@@ -15,6 +16,22 @@ const WinnerBadge: React.FC<WinnerBadgeProps> = ({
   laptopLeft,
   laptopRight
 }) => {
+  const [showConfetti, setShowConfetti] = useState(false);
+  
+  useEffect(() => {
+    // Only show confetti when there's a clear winner (not a tie)
+    if (winner !== 'tie') {
+      setShowConfetti(true);
+      
+      // Reset after animation
+      const timer = setTimeout(() => {
+        setShowConfetti(false);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [winner]);
+  
   if (winner === 'tie') {
     return (
       <Badge variant="outline" className="text-lg px-4 py-2 inline-flex items-center gap-2">
@@ -29,10 +46,13 @@ const WinnerBadge: React.FC<WinnerBadgeProps> = ({
     : laptopRight?.brand + ' ' + (laptopRight?.model || '');
 
   return (
-    <Badge variant="default" className="text-lg px-4 py-2 inline-flex items-center gap-2">
-      <Award className="w-5 h-5" />
-      Winner: {winnerLabel}
-    </Badge>
+    <div className="relative">
+      <ConfettiEffect isActive={showConfetti} />
+      <Badge variant="default" className="text-lg px-4 py-2 inline-flex items-center gap-2">
+        <Award className="w-5 h-5" />
+        Winner: {winnerLabel}
+      </Badge>
+    </div>
   );
 };
 
