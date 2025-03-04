@@ -12,8 +12,8 @@ interface AnalysisSectionProps {
   isLoading: boolean;
   error: string | null;
   comparisonResult: ComparisonResult | null;
-  laptopLeft: Product;
-  laptopRight: Product;
+  laptopLeft: Product | null;
+  laptopRight: Product | null;
 }
 
 const AnalysisSection: React.FC<AnalysisSectionProps> = ({
@@ -35,7 +35,7 @@ const AnalysisSection: React.FC<AnalysisSectionProps> = ({
           <LoadingState />
         ) : error ? (
           <ErrorState error={error} />
-        ) : comparisonResult ? (
+        ) : comparisonResult && laptopLeft && laptopRight ? (
           <AnalysisContent 
             comparisonResult={comparisonResult}
             laptopLeft={laptopLeft}
@@ -43,7 +43,7 @@ const AnalysisSection: React.FC<AnalysisSectionProps> = ({
           />
         ) : (
           <div className="text-center p-4">
-            <p className="text-muted-foreground">Analyzing laptops...</p>
+            <p className="text-muted-foreground">Select two laptops to see AI-powered analysis</p>
           </div>
         )}
       </div>

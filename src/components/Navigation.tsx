@@ -65,7 +65,7 @@ const Navigation = () => {
               </Link>
             </div>
             <div className="flex items-center space-x-6">
-              <Link to="/ComparePrice" className="nav-link">Compare</Link>
+              <Link to="/compare" className="nav-link">Compare</Link>
               <Link to="/blog" className="nav-link">Blog</Link>
               <Link to="/about" className="nav-link">About</Link>
               <Link to="/admin" className="nav-link flex items-center space-x-1">

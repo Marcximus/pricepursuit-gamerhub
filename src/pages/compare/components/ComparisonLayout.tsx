@@ -6,6 +6,7 @@ import { formatPrice } from "../utils/comparisonHelpers";
 import type { Product } from "@/types/product";
 import type { ComparisonResult } from "../types";
 import type { ComparisonSection } from "../types";
+import EmptyComparisonState from "./EmptyComparisonState";
 
 interface ComparisonLayoutProps {
   handleGoBack: () => void;
@@ -13,8 +14,9 @@ interface ComparisonLayoutProps {
   isLoading: boolean;
   error: string | null;
   comparisonResult: ComparisonResult | null;
-  laptopLeft: Product;
-  laptopRight: Product;
+  laptopLeft: Product | null;
+  laptopRight: Product | null;
+  hasSelectedLaptops: boolean;
 }
 
 const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
@@ -24,10 +26,13 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
   error,
   comparisonResult,
   laptopLeft,
-  laptopRight
+  laptopRight,
+  hasSelectedLaptops
 }) => {
-  // Generate the comparison sections data
+  // Generate the comparison sections data when laptops are available
   const generateComparisonSections = (): ComparisonSection[] => {
+    if (!laptopLeft || !laptopRight) return [];
+    
     return [
       {
         title: 'Brand & Model',
@@ -106,32 +111,38 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
           
           <h1 className="text-2xl font-bold mb-6">Laptop Comparison</h1>
           
-          {/* Product Header Section */}
-          <div className="grid grid-cols-2 gap-8 mb-8">
-            <LaptopCard 
-              laptop={laptopLeft}
-              isWinner={comparisonResult?.winner === 'left'}
-              formatPrice={formatPrice}
-            />
-            
-            <LaptopCard 
-              laptop={laptopRight}
-              isWinner={comparisonResult?.winner === 'right'}
-              formatPrice={formatPrice}
-            />
-          </div>
-          
-          {/* AI Analysis Section */}
-          <AnalysisSection 
-            isLoading={isLoading}
-            error={error}
-            comparisonResult={comparisonResult}
-            laptopLeft={laptopLeft}
-            laptopRight={laptopRight}
-          />
-          
-          {/* Detailed Specs Comparison */}
-          <SpecificationsSection comparisonSections={comparisonSections} />
+          {!hasSelectedLaptops ? (
+            <EmptyComparisonState />
+          ) : (
+            <>
+              {/* Product Header Section */}
+              <div className="grid grid-cols-2 gap-8 mb-8">
+                <LaptopCard 
+                  laptop={laptopLeft}
+                  isWinner={comparisonResult?.winner === 'left'}
+                  formatPrice={formatPrice}
+                />
+                
+                <LaptopCard 
+                  laptop={laptopRight}
+                  isWinner={comparisonResult?.winner === 'right'}
+                  formatPrice={formatPrice}
+                />
+              </div>
+              
+              {/* AI Analysis Section */}
+              <AnalysisSection 
+                isLoading={isLoading}
+                error={error}
+                comparisonResult={comparisonResult}
+                laptopLeft={laptopLeft}
+                laptopRight={laptopRight}
+              />
+              
+              {/* Detailed Specs Comparison */}
+              <SpecificationsSection comparisonSections={comparisonSections} />
+            </>
+          )}
         </div>
       </main>
     </div>

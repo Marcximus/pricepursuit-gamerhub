@@ -20,7 +20,7 @@ const ComparePage = () => {
   
   return (
     <ComparisonDataProvider>
-      {({ isLoading, error, comparisonResult, laptopLeft, laptopRight }) => (
+      {({ isLoading, error, comparisonResult, laptopLeft, laptopRight, hasSelectedLaptops }) => (
         <ComparisonLayout
           handleGoBack={handleGoBack}
           handleClearAndGoBack={handleClearAndGoBack}
@@ -29,6 +29,7 @@ const ComparePage = () => {
           comparisonResult={comparisonResult}
           laptopLeft={laptopLeft}
           laptopRight={laptopRight}
+          hasSelectedLaptops={hasSelectedLaptops}
         />
       )}
     </ComparisonDataProvider>
