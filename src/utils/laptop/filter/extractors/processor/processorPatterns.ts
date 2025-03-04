@@ -2,6 +2,11 @@
  * Regular expression patterns for processor extraction
  */
 
+// Type definition for pattern objects
+export interface Pattern {
+  [key: string]: RegExp;
+}
+
 // Intel Core Ultra patterns
 export const intelUltraPatterns = {
   coreUltra: /(?:intel\s+)?(?:\d+[-\s]core\s+)?(?:core\s+)?ultra\s+([579])(?:\s+\d{3}[a-z]*)?/i
@@ -47,6 +52,11 @@ export const amdRyzenPatterns = {
 export const mobileProcessorPatterns = {
   mediatek: /mediatek\s+([a-z0-9]+)/i,
   snapdragon: /(?:qualcomm\s+)?snapdragon\s+([a-z0-9]+)/i
+};
+
+// Samsung processor patterns
+export const samsungPatterns = {
+  exynos: /exynos\s*(\d+)/i
 };
 
 // Generation identification patterns

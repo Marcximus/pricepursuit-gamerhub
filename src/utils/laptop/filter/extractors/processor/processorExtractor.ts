@@ -5,7 +5,8 @@ import {
   enhanceAppleProcessor,
   extractAmdProcessor,
   extractMobileProcessor,
-  extractGenericProcessor
+  extractGenericProcessor,
+  extractSamsungProcessor
 } from './extractors';
 
 /**
@@ -31,6 +32,7 @@ export const extractProcessorFromTitle = (
   return extractAppleProcessor(normalizedTitle) ||
          extractIntelProcessor(normalizedTitle) ||
          extractAmdProcessor(normalizedTitle) ||
+         extractSamsungProcessor(normalizedTitle) ||
          extractMobileProcessor(normalizedTitle) ||
          extractGenericProcessor(normalizedTitle) ||
          existingProcessor || null;
