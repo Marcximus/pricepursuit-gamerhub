@@ -1,72 +1,161 @@
 
 import React from "react";
-import { formatPrice, compareProcessors, compareRAM, compareStorage, comparePrices, compareRatings } from "../utils/comparisonHelpers";
 import type { Product } from "@/types/product";
+import { 
+  formatPrice, 
+  compareProcessors, 
+  compareRAM, 
+  compareStorage, 
+  comparePrices, 
+  compareRatings,
+  compareScreenSize,
+  compareResolution,
+  compareWeight,
+  compareBatteryLife
+} from "../utils/comparisonHelpers";
 import type { ComparisonSection } from "../types";
 
 interface ComparisonSectionsProps {
-  laptopLeft: Product;
-  laptopRight: Product;
+  laptopLeft: Product | null;
+  laptopRight: Product | null;
 }
 
-const ComparisonSections: React.FC<ComparisonSectionsProps> = ({ 
-  laptopLeft, 
-  laptopRight 
-}) => {
-  // Define comparison sections
-  const comparisonSections: ComparisonSection[] = [
+const ComparisonSections: React.FC<ComparisonSectionsProps> = ({ laptopLeft, laptopRight }) => {
+  // Helper to safely format values
+  const formatValue = (value: any): string => {
+    if (value === null || value === undefined) return 'N/A';
+    return String(value);
+  };
+
+  // Basic specs comparison
+  const basicSections: ComparisonSection[] = [
     {
-      title: 'Brand & Model',
-      leftValue: `${laptopLeft?.brand || 'N/A'} ${laptopLeft?.model || ''}`,
-      rightValue: `${laptopRight?.brand || 'N/A'} ${laptopRight?.model || ''}`,
+      title: "Brand",
+      leftValue: formatValue(laptopLeft?.brand),
+      rightValue: formatValue(laptopRight?.brand)
     },
     {
-      title: 'Processor',
-      leftValue: laptopLeft?.processor || 'Not Specified',
-      rightValue: laptopRight?.processor || 'Not Specified',
-      compare: compareProcessors
+      title: "Model",
+      leftValue: formatValue(laptopLeft?.model),
+      rightValue: formatValue(laptopRight?.model)
     },
     {
-      title: 'RAM',
-      leftValue: laptopLeft?.ram || 'Not Specified',
-      rightValue: laptopRight?.ram || 'Not Specified',
-      compare: compareRAM
-    },
-    {
-      title: 'Storage',
-      leftValue: laptopLeft?.storage || 'Not Specified',
-      rightValue: laptopRight?.storage || 'Not Specified',
-      compare: compareStorage
-    },
-    {
-      title: 'Graphics',
-      leftValue: laptopLeft?.graphics || 'Not Specified',
-      rightValue: laptopRight?.graphics || 'Not Specified',
-    },
-    {
-      title: 'Display',
-      leftValue: `${laptopLeft?.screen_size || 'N/A'} ${laptopLeft?.screen_resolution ? `(${laptopLeft.screen_resolution})` : ''}`,
-      rightValue: `${laptopRight?.screen_size || 'N/A'} ${laptopRight?.screen_resolution ? `(${laptopRight.screen_resolution})` : ''}`,
-    },
-    {
-      title: 'Price',
+      title: "Price",
       leftValue: formatPrice(laptopLeft?.current_price),
       rightValue: formatPrice(laptopRight?.current_price),
       compare: comparePrices
+    }
+  ];
+
+  // Performance specs comparison
+  const performanceSections: ComparisonSection[] = [
+    {
+      title: "Processor",
+      leftValue: formatValue(laptopLeft?.processor),
+      rightValue: formatValue(laptopRight?.processor),
+      compare: compareProcessors
     },
     {
-      title: 'Rating',
-      leftValue: laptopLeft?.rating ? `${laptopLeft.rating}/5 (${laptopLeft.rating_count} reviews)` : 'No ratings',
-      rightValue: laptopRight?.rating ? `${laptopRight.rating}/5 (${laptopRight.rating_count} reviews)` : 'No ratings',
+      title: "RAM",
+      leftValue: formatValue(laptopLeft?.ram),
+      rightValue: formatValue(laptopRight?.ram),
+      compare: compareRAM
+    },
+    {
+      title: "Storage",
+      leftValue: formatValue(laptopLeft?.storage),
+      rightValue: formatValue(laptopRight?.storage),
+      compare: compareStorage
+    },
+    {
+      title: "Graphics",
+      leftValue: formatValue(laptopLeft?.graphics),
+      rightValue: formatValue(laptopRight?.graphics)
+    }
+  ];
+
+  // Display specs comparison
+  const displaySections: ComparisonSection[] = [
+    {
+      title: "Screen Size",
+      leftValue: formatValue(laptopLeft?.screen_size),
+      rightValue: formatValue(laptopRight?.screen_size),
+      compare: compareScreenSize
+    },
+    {
+      title: "Screen Resolution",
+      leftValue: formatValue(laptopLeft?.screen_resolution),
+      rightValue: formatValue(laptopRight?.screen_resolution),
+      compare: compareResolution
+    }
+  ];
+
+  // Physical specs comparison
+  const physicalSections: ComparisonSection[] = [
+    {
+      title: "Weight",
+      leftValue: formatValue(laptopLeft?.weight),
+      rightValue: formatValue(laptopRight?.weight),
+      compare: compareWeight
+    },
+    {
+      title: "Battery Life",
+      leftValue: formatValue(laptopLeft?.battery_life),
+      rightValue: formatValue(laptopRight?.battery_life),
+      compare: compareBatteryLife
+    }
+  ];
+
+  // Reviews and rating comparison
+  const reviewSections: ComparisonSection[] = [
+    {
+      title: "Rating",
+      leftValue: laptopLeft?.rating ? `${laptopLeft.rating.toFixed(1)}/5` : 'N/A',
+      rightValue: laptopRight?.rating ? `${laptopRight.rating.toFixed(1)}/5` : 'N/A',
       compare: compareRatings
     },
+    {
+      title: "Rating Count",
+      leftValue: formatValue(laptopLeft?.rating_count),
+      rightValue: formatValue(laptopRight?.rating_count)
+    },
+    {
+      title: "Total Reviews",
+      leftValue: formatValue(laptopLeft?.total_reviews),
+      rightValue: formatValue(laptopRight?.total_reviews)
+    }
   ];
-  
-  return (
-    <>
-      {comparisonSections}
-    </>
-  );
+
+  // Benchmark scores comparison
+  const benchmarkSections: ComparisonSection[] = [
+    {
+      title: "Benchmark Score",
+      leftValue: formatValue(laptopLeft?.benchmark_score),
+      rightValue: formatValue(laptopRight?.benchmark_score)
+    },
+    {
+      title: "Processor Score",
+      leftValue: formatValue(laptopLeft?.processor_score),
+      rightValue: formatValue(laptopRight?.processor_score)
+    },
+    {
+      title: "Wilson Score",
+      leftValue: formatValue(laptopLeft?.wilson_score),
+      rightValue: formatValue(laptopRight?.wilson_score)
+    }
+  ];
+
+  // Combine all sections
+  const allSections = [
+    ...basicSections,
+    ...performanceSections,
+    ...displaySections,
+    ...physicalSections,
+    ...reviewSections,
+    ...benchmarkSections
+  ];
+
+  return allSections;
 };
 
 export default ComparisonSections;

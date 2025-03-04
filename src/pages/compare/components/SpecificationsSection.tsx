@@ -2,13 +2,17 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import SpecificationItem from "./SpecificationItem";
-import type { ComparisonSection } from "../types";
+import ComparisonSections from "./ComparisonSections";
+import type { Product } from "@/types/product";
 
 interface SpecificationsSectionProps {
-  comparisonSections: ComparisonSection[];
+  laptopLeft: Product | null;
+  laptopRight: Product | null;
 }
 
-const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({ comparisonSections }) => {
+const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({ laptopLeft, laptopRight }) => {
+  const comparisonSections = ComparisonSections({ laptopLeft, laptopRight });
+  
   return (
     <Card>
       <div className="bg-muted p-4">

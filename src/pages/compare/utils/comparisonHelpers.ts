@@ -86,3 +86,91 @@ export const compareRatings = (a: string, b: string): 'better' | 'worse' | 'equa
   
   return 'unknown';
 };
+
+export const compareScreenSize = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
+  // Extract numeric values from screen size strings (e.g., "15.6" +")
+  const aMatch = a.match(/(\d+\.?\d*)/);
+  const bMatch = b.match(/(\d+\.?\d*)/);
+  
+  if (aMatch && bMatch) {
+    const aSize = parseFloat(aMatch[1]);
+    const bSize = parseFloat(bMatch[1]);
+    
+    // Larger screen is considered better
+    if (aSize > bSize) return 'better';
+    if (aSize < bSize) return 'worse';
+    return 'equal';
+  }
+  
+  return 'unknown';
+};
+
+export const compareResolution = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
+  // Define an order of common resolutions from lowest to highest
+  const resolutionRanking = {
+    'HD': 1,
+    'HD+': 2,
+    'FHD': 3,
+    'Full HD': 3,
+    '1920 x 1080': 3,
+    'QHD': 4,
+    '2560 x 1440': 4,
+    '4K': 5,
+    'UHD': 5,
+    '3840 x 2160': 5,
+    'Retina': 4
+  };
+  
+  // Find the best match for each resolution
+  const findRank = (res: string): number => {
+    for (const [key, value] of Object.entries(resolutionRanking)) {
+      if (res.includes(key)) return value;
+    }
+    return 0;
+  };
+  
+  const aRank = findRank(a);
+  const bRank = findRank(b);
+  
+  if (aRank > bRank) return 'better';
+  if (aRank < bRank) return 'worse';
+  if (aRank > 0 && aRank === bRank) return 'equal';
+  
+  return 'unknown';
+};
+
+export const compareWeight = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
+  // Extract numeric weight values (lighter is better)
+  const aMatch = a.match(/(\d+\.?\d*)/);
+  const bMatch = b.match(/(\d+\.?\d*)/);
+  
+  if (aMatch && bMatch) {
+    const aWeight = parseFloat(aMatch[1]);
+    const bWeight = parseFloat(bMatch[1]);
+    
+    // Lighter is better
+    if (aWeight < bWeight) return 'better';
+    if (aWeight > bWeight) return 'worse';
+    return 'equal';
+  }
+  
+  return 'unknown';
+};
+
+export const compareBatteryLife = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
+  // Extract battery life in hours
+  const aMatch = a.match(/(\d+\.?\d*)/);
+  const bMatch = b.match(/(\d+\.?\d*)/);
+  
+  if (aMatch && bMatch) {
+    const aHours = parseFloat(aMatch[1]);
+    const bHours = parseFloat(bMatch[1]);
+    
+    // Longer battery life is better
+    if (aHours > bHours) return 'better';
+    if (aHours < bHours) return 'worse';
+    return 'equal';
+  }
+  
+  return 'unknown';
+};
