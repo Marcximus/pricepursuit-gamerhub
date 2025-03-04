@@ -36,7 +36,7 @@ export async function processProducts(products: any[], brand: string, detailedLo
       ];
       
       // Check if the title contains any laptop keywords but none of the non-laptop keywords
-      // Also use our more comprehensive forbidden keywords filter
+      // Also use our more comprehensive forbidden keywords filter - ONLY ON TITLE
       const isLaptop = 
         laptopKeywords.some(keyword => title.includes(keyword)) && 
         !nonLaptopKeywords.some(keyword => title.includes(keyword)) &&
