@@ -65,32 +65,46 @@ Your output must be structured EXACTLY as valid JSON in the following format:
 
 IMPORTANT: You must return ONLY valid JSON that follows the exact structure above. No markdown, no explanation outside the JSON, no additional text.`;
 
-    // Create the comparison prompt
-    console.log("💻 Building user prompt with laptop specifications...");
+    // Create the comparison prompt with all available product details
+    console.log("💻 Building comprehensive user prompt with ALL laptop specifications...");
     const userPrompt = `
-Compare these two laptops:
+Compare these two laptops with complete details:
 
-LEFT LAPTOP:
+LEFT LAPTOP (${laptopLeft.id}):
 - Brand: ${laptopLeft.brand || 'Not specified'}
 - Model: ${laptopLeft.model || 'Not specified'}
+- Full Title: ${laptopLeft.title || 'Not specified'}
 - Processor: ${laptopLeft.processor || 'Not specified'}
 - RAM: ${laptopLeft.ram || 'Not specified'}
 - Storage: ${laptopLeft.storage || 'Not specified'}
 - Graphics: ${laptopLeft.graphics || 'Not specified'}
 - Screen: ${laptopLeft.screen_size || 'Not specified'} ${laptopLeft.screen_resolution ? `(${laptopLeft.screen_resolution})` : ''}
+- Operating System: ${laptopLeft.operating_system || 'Not specified'}
+- Weight: ${laptopLeft.weight || 'Not specified'}
+- Battery Life: ${laptopLeft.battery_life || 'Not specified'}
 - Price: $${laptopLeft.price?.toFixed(2) || 'Not specified'}
+- Original Price: $${laptopLeft.original_price?.toFixed(2) || 'Not specified'}
 - Rating: ${laptopLeft.rating ? `${laptopLeft.rating}/5 (${laptopLeft.rating_count} reviews)` : 'Not specified'}
+- Benchmark Score: ${laptopLeft.benchmark_score || 'Not specified'}
+- Wilson Score: ${laptopLeft.wilson_score || 'Not specified'}
 
-RIGHT LAPTOP:
+RIGHT LAPTOP (${laptopRight.id}):
 - Brand: ${laptopRight.brand || 'Not specified'}
 - Model: ${laptopRight.model || 'Not specified'}
+- Full Title: ${laptopRight.title || 'Not specified'}
 - Processor: ${laptopRight.processor || 'Not specified'}
 - RAM: ${laptopRight.ram || 'Not specified'}
 - Storage: ${laptopRight.storage || 'Not specified'}
 - Graphics: ${laptopRight.graphics || 'Not specified'}
 - Screen: ${laptopRight.screen_size || 'Not specified'} ${laptopRight.screen_resolution ? `(${laptopRight.screen_resolution})` : ''}
+- Operating System: ${laptopRight.operating_system || 'Not specified'}
+- Weight: ${laptopRight.weight || 'Not specified'}
+- Battery Life: ${laptopRight.battery_life || 'Not specified'}
 - Price: $${laptopRight.price?.toFixed(2) || 'Not specified'}
+- Original Price: $${laptopRight.original_price?.toFixed(2) || 'Not specified'}
 - Rating: ${laptopRight.rating ? `${laptopRight.rating}/5 (${laptopRight.rating_count} reviews)` : 'Not specified'}
+- Benchmark Score: ${laptopRight.benchmark_score || 'Not specified'}
+- Wilson Score: ${laptopRight.wilson_score || 'Not specified'}
 
 Based on the specifications above, provide a comprehensive comparison. Include which laptop is better overall, which one provides better value for money, and what are the specific advantages of each.`;
 
@@ -116,7 +130,7 @@ Based on the specifications above, provide a comprehensive comparison. Include w
             content: userPrompt
           }
         ],
-        temperature: 0.2  // Lower temperature for more analytical response
+        temperature: 0.1  // Lower temperature for more analytical, deterministic response
       })
     });
 
