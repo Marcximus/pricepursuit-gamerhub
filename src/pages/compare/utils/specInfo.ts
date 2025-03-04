@@ -39,7 +39,7 @@ export const getSpecInfo = (title: string) => {
     case "wilson score":
       return {
         emoji: "⭐",
-        tooltip: "Statistical confidence rating that considers both rating value and number of ratings. Calculated using the lower bound of Wilson score confidence interval for a Bernoulli parameter. A more reliable measure than simple rating average, especially when comparing items with different numbers of ratings."
+        tooltip: "Statistical confidence rating shown as a percentage (0-100%). Considers both rating value and number of ratings, providing a more reliable measure than simple rating average when comparing laptops with different numbers of ratings."
       };
     case "rating":
       return {
