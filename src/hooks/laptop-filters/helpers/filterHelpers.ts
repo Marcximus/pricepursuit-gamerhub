@@ -1,3 +1,4 @@
+
 import type { FilterableProductKeys } from "@/utils/laptop/filter";
 import { 
   normalizeRam,
@@ -86,5 +87,5 @@ export const normalizerMap = {
   'brand': normalizeBrand
 };
 
-// Import these functions from the valueParser utility
-import { getRamValue, getStorageValue, getScreenSizeValue } from "@/utils/laptop/valueParser";
+// Import these functions from the parser utilities
+import { getRamValue, getStorageValue, getScreenSizeValue } from "@/utils/laptop/parsers";

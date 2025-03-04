@@ -1,6 +1,6 @@
 
 import { parseValueWithUnit } from './commonMatchers';
-import { getStorageValue } from '../../valueParser';
+import { getStorageValue } from '../../parsers/storageParser';
 
 /**
  * Matcher for storage filter values with group matching support

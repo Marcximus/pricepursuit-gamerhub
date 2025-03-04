@@ -1,5 +1,5 @@
 
-import { getRamValue } from '../valueParser';
+import { getRamValue } from '../parsers/ramParser';
 
 /**
  * Normalizes RAM strings for consistent display

@@ -1,5 +1,6 @@
 
 import { parseValueWithUnit } from './commonMatchers';
+import { getRamValue } from '../../parsers/ramParser';
 
 /**
  * Matcher for RAM filter values with improved accuracy

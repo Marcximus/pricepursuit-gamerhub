@@ -1,6 +1,5 @@
 
-
-import { getScreenSizeValue } from '../valueParser';
+import { getScreenSizeValue } from '../parsers/screenSizeParser';
 
 /**
  * Normalizes screen size strings for consistent display
@@ -32,4 +31,3 @@ export const normalizeScreenSize = (size: string): string => {
   }
   return '';
 };
-
