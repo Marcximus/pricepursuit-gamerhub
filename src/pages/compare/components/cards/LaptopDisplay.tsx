@@ -45,32 +45,34 @@ const LaptopDisplay: React.FC<LaptopDisplayProps> = ({
       </div>
       
       <div className="mt-auto">
-        <a 
-          href={affiliateUrl} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="block"
-        >
-          <div className="bg-slate-900 p-4 rounded-lg shadow-md border border-slate-800 transition-transform hover:scale-[1.02]">
-            <p className="text-2xl font-bold text-white flex items-center justify-between">
-              {formatPrice(laptop.current_price)}
-              <Zap className="w-5 h-5 text-blue-400" />
-            </p>
-            {laptop.original_price && laptop.original_price > laptop.current_price && (
-              <p className="text-sm text-slate-400 line-through">{formatPrice(laptop.original_price)}</p>
-            )}
-          </div>
-        </a>
-        
-        <a 
-          href={affiliateUrl} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="mt-3 flex items-center justify-center gap-1 text-sm text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-md border border-slate-700"
-        >
-          <span>Tech Specs</span>
-          <ArrowUpRight className="h-3 w-3" />
-        </a>
+        <div className="flex gap-2 items-stretch">
+          <a 
+            href={affiliateUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex-1"
+          >
+            <div className="bg-slate-900 p-3 rounded-lg shadow-md border border-slate-800 transition-transform hover:scale-[1.02] h-full flex flex-col justify-center">
+              <p className="text-xl font-bold text-white flex items-center justify-between">
+                {formatPrice(laptop.current_price)}
+                <Zap className="w-4 h-4 text-blue-400" />
+              </p>
+              {laptop.original_price && laptop.original_price > laptop.current_price && (
+                <p className="text-xs text-slate-400 line-through">{formatPrice(laptop.original_price)}</p>
+              )}
+            </div>
+          </a>
+          
+          <a 
+            href={affiliateUrl} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="flex items-center justify-center gap-1 text-sm text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-md border border-slate-700 h-full"
+          >
+            <span>Tech Specs</span>
+            <ArrowUpRight className="h-3 w-3" />
+          </a>
+        </div>
       </div>
     </>
   );
