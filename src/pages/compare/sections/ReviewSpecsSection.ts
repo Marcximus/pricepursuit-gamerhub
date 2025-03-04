@@ -8,12 +8,12 @@ export const getReviewSpecs = (
   laptopLeft: Product | null, 
   laptopRight: Product | null
 ): ComparisonSection[] => {
-  // Format Wilson Score (convert from -1 to 1 range to 0-100 scale)
+  // Format Wilson Score (convert from -1 to 1 range to 0-100 scale with proper capping)
   const formatWilsonScore = (score: number | null | undefined): string => {
     if (score === null || score === undefined || isNaN(score)) return 'N/A';
     
-    // Convert Wilson score (-1 to 1) to a 0-100 scale
-    const normalizedScore = Math.max(0, (score + 1) * 50);
+    // Convert Wilson score (-1 to 1) to a 0-100 scale and cap at 100
+    const normalizedScore = Math.min(100, Math.max(0, (score + 1) * 50));
     return `${normalizedScore.toFixed(0)}/100`;
   };
 

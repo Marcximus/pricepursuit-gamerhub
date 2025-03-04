@@ -1,5 +1,5 @@
 
-import { calculateProcessorScore as processorScoreCalculator } from "../../../../utils/laptop/processors/processorProcessor";
+import { calculateProcessorScore } from "./index";
 import type { Product } from "@/types/product";
 
 /**
@@ -13,7 +13,7 @@ export function calculateProcessorScoreComponent(laptop: Product): number {
     score = laptop.processor_score * 0.35;
   } else if (laptop.processor) {
     // Calculate processor score if not available
-    const processorScore = processorScoreCalculator(laptop.processor);
+    const processorScore = calculateProcessorScore(laptop.processor);
     score = processorScore * 0.35;
   }
   
