@@ -1,8 +1,19 @@
 
-// Re-export all processor matchers from their respective files
+/**
+ * Processor matcher index module
+ * Exports all processor matcher functionality
+ */
+
+// Export the main processor matcher for backward compatibility
+export * from './processorMatcherCore';
+
+// Export individual matchers
 export * from './appleProcessor';
 export * from './amdProcessor';
+export * from './intel/intelCore';
 export * from './otherProcessor';
-// Export the main Intel processor matcher function and avoid re-exporting the individual matchers
-export { matchesIntelProcessor } from './intel';
-export * from './processorMatcherCore';
+
+// Export Intel-specific matchers
+export * from './intel/intelCoreI';
+export * from './intel/intelCoreUltra';
+export * from './intel/intelBudget';
