@@ -22,10 +22,10 @@ const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }
     if (isWinner) {
       setShowConfetti(true);
       
-      // Reset after animation (5 seconds - longer duration)
+      // Reset after animation (7 seconds - longer duration)
       const timer = setTimeout(() => {
         setShowConfetti(false);
-      }, 5000);
+      }, 7000);
       
       return () => clearTimeout(timer);
     }
@@ -38,20 +38,27 @@ const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }
       const x = rect.left + rect.width / 2;
       const y = rect.top + rect.height / 2;
       
-      // Create a firework effect using the direct confetti API instead of the ref
+      // Create a more gentle firework effect using the direct confetti API
       const fireworkColors = ['#FFD700', '#FFA500', '#FF4500', '#9370DB', '#20B2AA'];
+      
       const defaults = { 
-        startVelocity: 30, 
+        startVelocity: 25,  // Slightly lower velocity
         spread: 360, 
-        ticks: 60, 
+        ticks: 100,  // Increase ticks for longer-lasting confetti
         zIndex: 0,
-        colors: fireworkColors
+        colors: fireworkColors,
+        decay: 0.93,  // Slower decay = longer lasting particles
+        gravity: 0.7,  // Slightly reduced gravity
       };
       
-      // Create a firework effect with multiple bursts
-      const animationEnd = Date.now() + 2000; // animation will last 2 seconds
+      const randomInRange = (min: number, max: number) => {
+        return Math.random() * (max - min) + min;
+      };
       
-      // This interval creates multiple bursts
+      // Create a more gentle firework effect with multiple bursts
+      const animationEnd = Date.now() + 5000; // animation will last 5 seconds
+      
+      // This interval creates multiple bursts at more random intervals
       const interval = setInterval(() => {
         const timeLeft = animationEnd - Date.now();
         
@@ -59,46 +66,49 @@ const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }
           return clearInterval(interval);
         }
         
-        // Reduce particle count as animation progresses
-        const particleCount = 50 * (timeLeft / 2000);
+        // More random particle count
+        const particleCount = Math.floor(randomInRange(20, 40) * (timeLeft / 5000));
         
-        // Central burst
+        // Use more random positions for each burst
+        const xOffset = randomInRange(-0.3, 0.3);
+        const yOffset = randomInRange(-0.2, 0.2);
+        
+        // Central burst with some randomness
         confetti({
           ...defaults,
           particleCount,
           origin: { 
-            x: x / window.innerWidth,
-            y: y / window.innerHeight 
-          },
-          gravity: 0.8,
-          scalar: 1.2
+            x: (x + xOffset * rect.width) / window.innerWidth,
+            y: Math.max(0.1, (y + yOffset * rect.height) / window.innerHeight)
+          }
         });
         
-        // Left side burst
-        confetti({
-          ...defaults,
-          particleCount: particleCount * 0.5,
-          origin: { 
-            x: (x - 100) / window.innerWidth,
-            y: y / window.innerHeight 
-          },
-          gravity: 0.6,
-          scalar: 0.8
-        });
+        // Random chance for additional side bursts
+        if (Math.random() > 0.6) {
+          // Left side burst
+          confetti({
+            ...defaults,
+            particleCount: particleCount * 0.4,
+            origin: { 
+              x: (x - 120 * randomInRange(0.8, 1.2)) / window.innerWidth,
+              y: (y + randomInRange(-30, 30)) / window.innerHeight 
+            }
+          });
+        }
         
-        // Right side burst
-        confetti({
-          ...defaults,
-          particleCount: particleCount * 0.5,
-          origin: { 
-            x: (x + 100) / window.innerWidth,
-            y: y / window.innerHeight 
-          },
-          gravity: 0.6,
-          scalar: 0.8
-        });
+        if (Math.random() > 0.6) {
+          // Right side burst
+          confetti({
+            ...defaults,
+            particleCount: particleCount * 0.4,
+            origin: { 
+              x: (x + 120 * randomInRange(0.8, 1.2)) / window.innerWidth,
+              y: (y + randomInRange(-30, 30)) / window.innerHeight 
+            }
+          });
+        }
         
-      }, 250); // Create bursts every 250ms
+      }, randomInRange(350, 650)); // Random interval between bursts
       
       return () => {
         clearInterval(interval);
