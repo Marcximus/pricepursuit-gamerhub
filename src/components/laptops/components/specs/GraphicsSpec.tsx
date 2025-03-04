@@ -1,6 +1,6 @@
 
 import { processGraphics, isDedicatedGraphics } from "@/utils/laptopUtils/graphics";
-import { normalizeGraphics, isHighPerformanceGraphics, isIntegratedGraphics } from "@/utils/laptop/normalizers/graphicsNormalizer";
+import { normalizeGraphics, isHighPerformanceGraphics, isIntegratedGraphics } from "@/utils/laptop/normalizers/graphics";
 import { getAppleSiliconGraphics } from "./ProcessorUtils";
 
 type GraphicsSpecProps = {

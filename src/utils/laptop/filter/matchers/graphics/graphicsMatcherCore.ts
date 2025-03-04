@@ -1,5 +1,5 @@
 
-import { normalizeGraphics, getGraphicsFilterValue, isIntegratedGraphics, isHighPerformanceGraphics } from "@/utils/laptop/normalizers/graphicsNormalizer";
+import { normalizeGraphics, getGraphicsFilterValue, isIntegratedGraphics, isHighPerformanceGraphics } from "@/utils/laptop/normalizers/graphics";
 import { matchesNvidiaGraphics } from './nvidiaMatcher';
 import { matchesAmdGraphics } from './amdMatcher';
 import { matchesIntelGraphics } from './intelMatcher';
