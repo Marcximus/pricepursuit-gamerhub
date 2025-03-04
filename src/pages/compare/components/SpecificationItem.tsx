@@ -2,6 +2,7 @@
 import React from "react";
 import { SpecificationTitle, SpecificationValue } from "./specification";
 import { getAffiliateUrl } from "../utils/affiliateLink";
+import { getComparisonStatus } from "../utils/comparisonHelpers";
 import type { ComparisonSection } from "../types";
 
 interface SpecificationItemProps {
@@ -15,15 +16,12 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
   laptopLeftId, 
   laptopRightId 
 }) => {
-  // Determine better/worse indicators if compare function exists
-  let leftStatus = 'equal';
-  let rightStatus = 'equal';
-  
-  if (section.compare) {
-    const result = section.compare(section.leftValue, section.rightValue);
-    leftStatus = result;
-    rightStatus = result === 'better' ? 'worse' : result === 'worse' ? 'better' : result;
-  }
+  // Determine better/worse indicators using the utility function
+  const { leftStatus, rightStatus } = getComparisonStatus(
+    section.leftValue, 
+    section.rightValue, 
+    section.compare
+  );
   
   // Create affiliate URLs for both laptops
   const leftAffiliateUrl = getAffiliateUrl(laptopLeftId);
@@ -37,7 +35,7 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
       {/* Left laptop value */}
       <SpecificationValue 
         value={section.leftValue} 
-        status={leftStatus as 'better' | 'worse' | 'equal' | 'unknown'} 
+        status={leftStatus} 
         affiliateUrl={leftAffiliateUrl}
         theme="left"
       />
@@ -45,7 +43,7 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
       {/* Right laptop value */}
       <SpecificationValue 
         value={section.rightValue} 
-        status={rightStatus as 'better' | 'worse' | 'equal' | 'unknown'} 
+        status={rightStatus} 
         affiliateUrl={rightAffiliateUrl}
         theme="right"
       />
