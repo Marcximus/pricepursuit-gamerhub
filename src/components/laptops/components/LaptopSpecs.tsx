@@ -37,6 +37,30 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
   const extractedProcessor = !specs.processor ? extractProcessorFromTitle(title) : null;
   const extractedRam = !specs.ram ? processRam(undefined, title) : null;
   
+  // Apple-specific processor handling for MacBooks
+  let displayProcessor = specs.processor || extractedProcessor || 'Not Specified';
+  
+  // Additional MacBook M-series detection for processor
+  if (displayProcessor === 'Not Specified' && title) {
+    const titleLower = title.toLowerCase();
+    // Check for MacBook with M-series chips
+    if (titleLower.includes('macbook') && titleLower.match(/\bm[123]\b/)) {
+      const mSeries = titleLower.match(/\bm([123])\b/)?.[1];
+      if (mSeries) {
+        // Check for Pro/Max/Ultra variants
+        if (titleLower.includes(' pro')) {
+          displayProcessor = `Apple M${mSeries} Pro chip`;
+        } else if (titleLower.includes(' max')) {
+          displayProcessor = `Apple M${mSeries} Max chip`;
+        } else if (titleLower.includes(' ultra')) {
+          displayProcessor = `Apple M${mSeries} Ultra chip`;
+        } else {
+          displayProcessor = `Apple M${mSeries} chip`;
+        }
+      }
+    }
+  }
+  
   // Improved graphics extraction and display logic
   let displayGraphics = '';
   
@@ -62,6 +86,26 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
     } else {
       // Final fallback to the original value or "Not Specified"
       displayGraphics = specs.graphics || 'Not Specified';
+    }
+  }
+  
+  // Special handling for MacBooks with Apple Silicon
+  if (displayGraphics === 'Not Specified' && title) {
+    const titleLower = title.toLowerCase();
+    if (titleLower.includes('macbook') && titleLower.match(/\bm[123]\b/)) {
+      const mSeries = titleLower.match(/\bm([123])\b/)?.[1];
+      if (mSeries) {
+        // Check for Pro/Max/Ultra variants
+        if (titleLower.includes(' pro')) {
+          displayGraphics = `Apple M${mSeries} Pro GPU`;
+        } else if (titleLower.includes(' max')) {
+          displayGraphics = `Apple M${mSeries} Max GPU`;
+        } else if (titleLower.includes(' ultra')) {
+          displayGraphics = `Apple M${mSeries} Ultra GPU`;
+        } else {
+          displayGraphics = `Apple M${mSeries} GPU`;
+        }
+      }
     }
   }
   
@@ -91,7 +135,6 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
   const extractedScreenResolution = !specs.screenResolution ? processScreenResolution(undefined, title) : null;
   
   // For display, prioritize database values but fall back to extracted values
-  const displayProcessor = specs.processor || extractedProcessor || 'Not Specified';
   const displayRam = specs.ram || extractedRam || 'Not Specified';
   const displayStorage = specs.storage || extractedStorage || 'Not Specified';
   const displayScreenSize = specs.screenSize || extractedScreenSize || 'Not Specified';
