@@ -1,5 +1,5 @@
 
-import { processOxylabsResponse } from "../oxylabsDataProcessor";
+import { processOxylabsResponse } from "../oxylabs";
 import { logLaptopProcessingDetails } from "../collection/status/processingLogs";
 
 // Create a helper function to process an update response directly
