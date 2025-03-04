@@ -36,8 +36,8 @@ export function FilterSection({
   // Sort options based on filter type
   const sortedOptions = title === "Processors" 
     ? sortProcessorOptions(filteredOptions)
-    : title === "Brands" 
-      ? filteredOptions.sort((a, b) => a.localeCompare(b)) // Sort brands alphabetically
+    : title === "Brands" || title === "Graphics"
+      ? filteredOptions.sort((a, b) => a.localeCompare(b)) // Sort brands and graphics alphabetically
       : filteredOptions;
 
   const handleCheckboxChange = useCallback((option: string, checked: boolean) => {
