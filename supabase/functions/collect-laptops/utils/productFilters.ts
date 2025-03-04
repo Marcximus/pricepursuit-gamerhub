@@ -22,7 +22,7 @@ const FORBIDDEN_KEYWORDS = [
   'Jump Starter', 'New 90%',
   // New additions
   'tablet', 'accessory', 'replacement part', 'portable monitor', 'pc case',
-  'hard drive enclosure', 'external cd', 'webcam', 'usb hub',
+  'hard drive enclosure', 'external cd', 'usb hub',
   // Additional keywords to catch more non-laptop items
   'power bank', 'external battery', 'wireless earbuds', 'headset', 'headphones',
   'speaker', 'office chair', 'desk lamp', 'desk pad', 'desk mat',
@@ -35,7 +35,7 @@ const FORBIDDEN_KEYWORDS = [
   'laptop accessories bundle', 'laptop kit', 'laptop fan',
   'laptop memory', 'laptop ram only', 'ram stick',
   'memory module', 'compatible with', 'fits for',
-  'designed for', 'made for', 'replacement for'
+  'made for', 'replacement for'
 ];
 
 /**
