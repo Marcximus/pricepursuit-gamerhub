@@ -5,6 +5,7 @@ import { Trophy } from "lucide-react";
 import type { Product } from "@/types/product";
 import type { ConfettiRef } from "@/components/ui/confetti";
 import { Confetti } from "@/components/ui/confetti";
+import confetti from "canvas-confetti";
 
 interface LaptopCardProps {
   laptop: Product | null;
@@ -31,62 +32,77 @@ const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }
   }, [isWinner]);
   
   useEffect(() => {
-    if (showConfetti && confettiRef.current && cardRef.current) {
-      // Firework confetti effect
+    if (showConfetti && cardRef.current) {
+      // Get the card's position for the animation
       const rect = cardRef.current.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      
+      // Create a firework effect using the direct confetti API instead of the ref
+      const fireworkColors = ['#FFD700', '#FFA500', '#FF4500', '#9370DB', '#20B2AA'];
+      const defaults = { 
+        startVelocity: 30, 
+        spread: 360, 
+        ticks: 60, 
+        zIndex: 0,
+        colors: fireworkColors
+      };
       
       // Create a firework effect with multiple bursts
-      const fireworkColors = ['#FFD700', '#FFA500', '#FF4500', '#9370DB', '#20B2AA'];
+      const animationEnd = Date.now() + 2000; // animation will last 2 seconds
       
-      // First central burst
-      confettiRef.current.fire({
-        particleCount: 80,
-        spread: 360,
-        startVelocity: 30,
-        origin: { 
-          x: 0.5,
-          y: 0.5
-        },
-        gravity: 0.8,
-        colors: fireworkColors,
-        shapes: ['circle', 'square'],
-        scalar: 1,
-      });
-      
-      // Add delayed secondary bursts for firework effect
-      setTimeout(() => {
-        confettiRef.current?.fire({
-          particleCount: 50,
-          spread: 180,
-          startVelocity: 25,
+      // This interval creates multiple bursts
+      const interval = setInterval(() => {
+        const timeLeft = animationEnd - Date.now();
+        
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+        
+        // Reduce particle count as animation progresses
+        const particleCount = 50 * (timeLeft / 2000);
+        
+        // Central burst
+        confetti({
+          ...defaults,
+          particleCount,
           origin: { 
-            x: 0.4,
-            y: 0.45
+            x: x / window.innerWidth,
+            y: y / window.innerHeight 
           },
-          gravity: 0.7,
-          colors: fireworkColors,
-          shapes: ['circle'],
-          scalar: 0.8,
+          gravity: 0.8,
+          scalar: 1.2
         });
-      }, 200);
-      
-      setTimeout(() => {
-        confettiRef.current?.fire({
-          particleCount: 50,
-          spread: 180,
-          startVelocity: 25,
+        
+        // Left side burst
+        confetti({
+          ...defaults,
+          particleCount: particleCount * 0.5,
           origin: { 
-            x: 0.6,
-            y: 0.45
+            x: (x - 100) / window.innerWidth,
+            y: y / window.innerHeight 
           },
-          gravity: 0.7,
-          colors: fireworkColors,
-          shapes: ['circle'],
-          scalar: 0.8,
+          gravity: 0.6,
+          scalar: 0.8
         });
-      }, 400);
+        
+        // Right side burst
+        confetti({
+          ...defaults,
+          particleCount: particleCount * 0.5,
+          origin: { 
+            x: (x + 100) / window.innerWidth,
+            y: y / window.innerHeight 
+          },
+          gravity: 0.6,
+          scalar: 0.8
+        });
+        
+      }, 250); // Create bursts every 250ms
+      
+      return () => {
+        clearInterval(interval);
+      };
     }
   }, [showConfetti]);
   
