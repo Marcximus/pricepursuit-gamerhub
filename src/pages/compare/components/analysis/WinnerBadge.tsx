@@ -47,7 +47,10 @@ const WinnerBadge: React.FC<WinnerBadgeProps> = ({
 
   return (
     <div className="relative">
-      <ConfettiEffect isActive={showConfetti} />
+      {/* Position confetti effect based on which side won */}
+      <div className={`absolute -top-10 ${winner === 'left' ? 'left-0' : 'right-0'}`}>
+        <ConfettiEffect isActive={showConfetti} />
+      </div>
       <Badge variant="default" className="text-lg px-4 py-2 inline-flex items-center gap-2">
         <Award className="w-5 h-5" />
         Winner: {winnerLabel}

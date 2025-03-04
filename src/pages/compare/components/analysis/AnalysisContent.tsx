@@ -20,8 +20,8 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
 }) => {
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Winner Badge - fixed height container */}
-      <div className="flex justify-center mb-6 h-14 items-center">
+      {/* Winner Badge - fixed height container with relative positioning */}
+      <div className="flex justify-center mb-6 h-16 items-center relative">
         <WinnerBadge 
           winner={comparisonResult.winner} 
           laptopLeft={laptopLeft} 

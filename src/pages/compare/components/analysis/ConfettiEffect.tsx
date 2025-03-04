@@ -17,8 +17,9 @@ const ConfettiEffect: React.FC<ConfettiEffectProps> = ({ isActive }) => {
     const newParticles = [];
     
     for (let i = 0; i < 30; i++) {
-      const left = `${Math.random() * 100}%`;
-      const top = `${Math.random() * 100}%`;
+      // Reduced spread area to focus more on the winning side
+      const left = `${Math.random() * 60 - 30}%`;
+      const top = `${Math.random() * 50}%`;
       const color = colors[Math.floor(Math.random() * colors.length)];
       const size = `${Math.random() * 0.5 + 0.5}rem`;
       const duration = `${Math.random() * 2 + 1}s`;
@@ -46,7 +47,7 @@ const ConfettiEffect: React.FC<ConfettiEffectProps> = ({ isActive }) => {
   if (!isActive) return null;
   
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="absolute w-40 h-40 overflow-visible pointer-events-none z-10">
       {particles.map((p) => (
         <div
           key={p.id}
@@ -85,4 +86,3 @@ const ConfettiEffect: React.FC<ConfettiEffectProps> = ({ isActive }) => {
 };
 
 export default ConfettiEffect;
-
