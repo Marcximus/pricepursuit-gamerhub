@@ -30,8 +30,15 @@ const LaptopDisplay: React.FC<LaptopDisplayProps> = ({
         </a>
       </div>
       
-      <h3 className="text-lg font-semibold mb-1">{laptop.brand} {laptop.model}</h3>
-      <p className="text-sm text-muted-foreground mb-2">{laptop.title}</p>
+      <a 
+        href={affiliateUrl} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="hover:text-blue-600 transition-colors"
+      >
+        <h3 className="text-lg font-semibold mb-1">{laptop.brand} {laptop.model}</h3>
+        <p className="text-sm text-muted-foreground mb-2">{laptop.title}</p>
+      </a>
       
       <div className="mt-auto pt-4">
         <a 
