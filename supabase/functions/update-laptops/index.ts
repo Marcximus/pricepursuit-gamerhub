@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { corsHeaders } from "../_shared/cors.ts";
 import { fetchProductData } from "./oxylabsService.ts";
-import { updateProductInDatabase, logUpdateStats } from "./databaseService.ts";
+import { updateProductInDatabase, logUpdateStats } from "./services/database/index.ts";
 
 console.log("Hello from update-laptops function!");
 
