@@ -17,7 +17,8 @@ const WinnerBadge: React.FC<WinnerBadgeProps> = ({
 }) => {
   if (winner === 'tie') {
     return (
-      <Badge variant="outline" className="text-lg px-4 py-2">
+      <Badge variant="outline" className="text-lg px-4 py-2 inline-flex items-center gap-2">
+        <Award className="w-5 h-5 opacity-70" />
         It's a tie! Both laptops have their strengths.
       </Badge>
     );
@@ -28,7 +29,7 @@ const WinnerBadge: React.FC<WinnerBadgeProps> = ({
     : laptopRight?.brand + ' ' + (laptopRight?.model || '');
 
   return (
-    <Badge variant="default" className="text-lg px-4 py-2 flex items-center gap-2">
+    <Badge variant="default" className="text-lg px-4 py-2 inline-flex items-center gap-2">
       <Award className="w-5 h-5" />
       Winner: {winnerLabel}
     </Badge>

@@ -22,15 +22,17 @@ const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }
   }
   
   return (
-    <Card className="p-4 h-full flex flex-col">
+    <Card className="p-4 h-full flex flex-col relative">
+      {/* Winner badge positioned absolutely to not affect layout */}
       {isWinner && (
-        <div className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full self-start flex items-center gap-1 text-sm font-medium mb-3">
+        <div className="absolute top-3 left-3 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full flex items-center gap-1 text-sm font-medium shadow-sm">
           <Trophy className="w-4 h-4" />
           Winner
         </div>
       )}
       
-      <div className="text-center mb-4">
+      {/* Add min-height to ensure consistent image area regardless of winner badge */}
+      <div className="text-center mb-4 mt-8 min-h-[10rem] flex items-center justify-center">
         <img 
           src={laptop.image_url || '/placeholder.svg'} 
           alt={laptop.title || 'Laptop'} 
