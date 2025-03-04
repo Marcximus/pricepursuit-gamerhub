@@ -79,6 +79,19 @@ export const matchesGraphicsFilter = (
     return matchesAppleGraphics(filterLower, productLower);
   }
   
+  // Check for generic GPU terms
+  if (filterLower === 'nvidia' && productLower.includes('nvidia')) {
+    return true;
+  }
+  
+  if (filterLower === 'amd' && productLower.includes('amd')) {
+    return true;
+  }
+  
+  if (filterLower === 'intel' && productLower.includes('intel')) {
+    return true;
+  }
+  
   // Reject vague or meaningless graphics terms
   if (filterLower === 'graphics' || filterLower === 'gpu' || 
       filterLower === 'integrated' || filterLower === 'dedicated' || 

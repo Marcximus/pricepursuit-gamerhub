@@ -81,6 +81,12 @@ export const matchesAmdGraphics = (
            normalizedProduct.includes('radeon');
   }
   
+  // Added detection for generic "AMD Graphics" pattern often found in integrated solutions
+  if (normalizedFilter.includes('amd') && normalizedFilter.includes('graphics') &&
+      normalizedProduct.includes('amd') && normalizedProduct.includes('graphics')) {
+    return true;
+  }
+  
   // If we get here, the specs don't match for specific models
   return false;
 }

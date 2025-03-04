@@ -64,6 +64,20 @@ export const matchesNvidiaGraphics = (
            normalizedProduct.includes('gtx');
   }
   
+  // Enhanced MX series detection (entry-level NVIDIA GPUs)
+  if (normalizedFilter.includes('mx') && normalizedProduct.includes('mx')) {
+    // Extract MX model numbers if present
+    const filterMxMatch = normalizedFilter.match(/mx\s*(\d{3})/i);
+    const productMxMatch = normalizedProduct.match(/mx\s*(\d{3})/i);
+    
+    if (filterMxMatch && productMxMatch) {
+      return filterMxMatch[1] === productMxMatch[1];
+    }
+    
+    // If both just mention MX without specific models
+    return true;
+  }
+  
   // Generic case - both don't have specific model info but are NVIDIA
   return (normalizedFilter.includes('nvidia') === normalizedProduct.includes('nvidia')) &&
          (normalizedFilter.includes('geforce') === normalizedProduct.includes('geforce'));
