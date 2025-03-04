@@ -29,7 +29,7 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
   const reviewsUrl = laptop.asin ? `${baseProductUrl}#customerReviews` : '';
 
   return (
-    <Card className="flex p-4 gap-4 hover:shadow-lg transition-shadow relative">
+    <Card className="flex p-4 gap-4 hover:shadow-lg transition-shadow">
       {/* Left side - Image and Price */}
       <div className="flex flex-col items-center gap-2 w-40">
         <LaptopImage 
@@ -55,21 +55,27 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
 
       {/* Right side - Specs and Reviews */}
       <div className="flex-1">
-        <LaptopSpecs 
-          title={laptop.title || 'Untitled Laptop'}
-          productUrl={productUrl}
-          specs={{
-            screenSize: laptop.screen_size,
-            screenResolution: laptop.screen_resolution,
-            processor: laptop.processor,
-            graphics: laptop.graphics,
-            ram: laptop.ram,
-            storage: laptop.storage,
-            weight: laptop.weight
-          }}
-          brand={laptop.brand}
-          model={laptop.model}
-        />
+        <div className="flex justify-between items-start mb-2">
+          <LaptopSpecs 
+            title={laptop.title || 'Untitled Laptop'}
+            productUrl={productUrl}
+            specs={{
+              screenSize: laptop.screen_size,
+              screenResolution: laptop.screen_resolution,
+              processor: laptop.processor,
+              graphics: laptop.graphics,
+              ram: laptop.ram,
+              storage: laptop.storage,
+              weight: laptop.weight
+            }}
+            brand={laptop.brand}
+            model={laptop.model}
+          />
+          
+          <div className="ml-2 mt-1">
+            <LaptopCompareButton laptop={laptop} />
+          </div>
+        </div>
 
         {laptop.review_data?.recent_reviews && laptop.review_data.recent_reviews.length > 0 && (
           <LaptopReviews 
@@ -78,9 +84,6 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
           />
         )}
       </div>
-      
-      {/* Compare button */}
-      <LaptopCompareButton laptop={laptop} />
     </Card>
   );
 }

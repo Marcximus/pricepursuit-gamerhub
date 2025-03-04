@@ -22,16 +22,22 @@ export function LaptopCompareButton({ laptop }: LaptopCompareButtonProps) {
   
   return (
     <Button 
-      variant={selected ? "default" : "ghost"}
+      variant={selected ? "default" : "outline"}
       size="sm"
-      className={`absolute bottom-2 right-2 h-8 w-8 p-0 rounded-full ${selected ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`}
+      className={`flex items-center gap-1 ${selected ? 'bg-primary text-primary-foreground' : 'border border-muted-foreground/30 hover:bg-accent'}`}
       onClick={handleToggle}
       title={selected ? "Remove from comparison" : "Add to comparison"}
     >
       {selected ? (
-        <Check className="w-4 h-4" />
+        <>
+          <Check className="w-4 h-4" />
+          <span>Selected</span>
+        </>
       ) : (
-        <GitCompare className="w-4 h-4" />
+        <>
+          <GitCompare className="w-4 h-4" />
+          <span>Compare</span>
+        </>
       )}
     </Button>
   );
