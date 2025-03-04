@@ -1,4 +1,3 @@
-
 import type { Product } from "@/types/product";
 import { 
   formatPrice, 
@@ -148,9 +147,7 @@ const extractRefreshRate = (screenResolution?: string, title?: string): string =
 };
 
 // Extract operating system from title or directly from laptop data
-const formatOS = (os?: string, title?: string): string => {
-  if (os) return os;
-  
+const formatOS = (title?: string): string => {
   if (title) {
     if (title.match(/Windows\s+11/i)) return 'Windows 11';
     if (title.match(/Windows\s+10/i)) return 'Windows 10';
@@ -255,8 +252,8 @@ const ComparisonSections = ({ laptopLeft, laptopRight }: ComparisonSectionsProps
     },
     {
       title: "OS",
-      leftValue: formatOS(laptopLeft?.operating_system, laptopLeft?.title),
-      rightValue: formatOS(laptopRight?.operating_system, laptopRight?.title)
+      leftValue: formatOS(laptopLeft?.title),
+      rightValue: formatOS(laptopRight?.title)
     },
     {
       title: "Release Year",
