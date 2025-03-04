@@ -29,11 +29,13 @@ export const normalizeIntelGraphics = (normalizedString: string): string | null 
   
   // Standardize other Intel graphics
   let result = normalizedString
-    .replace(/intel\s+iris\s+xe\s+graphics/i, `Intel Iris Xe${genNumber} Graphics`)
-    .replace(/intel\s+iris\s+graphics/i, `Intel Iris${genNumber} Graphics`)
+    // Combine Iris Xe and regular Iris into one category
+    .replace(/intel\s+iris\s+xe\s+graphics/i, `Intel Iris Graphics`)
+    .replace(/intel\s+iris\s+graphics/i, `Intel Iris Graphics`)
+    .replace(/intel\s+iris\s+plus\s+graphics/i, `Intel Iris Plus Graphics`)
     .replace(/intel\s+uhd\s+graphics/i, `Intel UHD${genNumber} Graphics`)
     .replace(/intel\s+hd\s+graphics/i, `Intel HD${genNumber} Graphics`)
-    .replace(/\bIris\s+Xe\b/i, `Intel Iris Xe${genNumber} Graphics`)
+    .replace(/\bIris\s+Xe\b/i, `Intel Iris Graphics`)
     .replace(/\bUHD\s+Graphics\b/i, `Intel UHD${genNumber} Graphics`)
     .replace(/\bHD\s+Graphics\b/i, `Intel HD${genNumber} Graphics`);
   

@@ -44,12 +44,12 @@ export const matchesIntelGraphics = (
     return true;
   }
   
-  // Check for Iris Xe graphics
-  const filterHasIrisXe = normalizedFilter.includes('iris xe');
-  const productHasIrisXe = normalizedProduct.includes('iris xe');
-  
-  if (filterHasIrisXe && productHasIrisXe) {
-    return true;
+  // Combined category for all Iris Graphics (including Xe)
+  if (normalizedFilter === 'intel iris graphics') {
+    return (normalizedProduct.includes('iris xe') || 
+            (normalizedProduct.includes('iris') && 
+             !normalizedProduct.includes('iris plus') && 
+             !normalizedProduct.includes('iris pro')));
   }
   
   // Check for Iris Plus/Pro graphics
@@ -57,18 +57,6 @@ export const matchesIntelGraphics = (
   const productHasIrisPlus = normalizedProduct.includes('iris plus');
   
   if (filterHasIrisPlus && productHasIrisPlus) {
-    return true;
-  }
-  
-  // Check for Iris (generic) graphics
-  const filterHasIris = normalizedFilter.includes('iris') && 
-                        !normalizedFilter.includes('iris xe') &&
-                        !normalizedFilter.includes('iris plus');
-  const productHasIris = normalizedProduct.includes('iris') && 
-                         !normalizedProduct.includes('iris xe') &&
-                         !normalizedProduct.includes('iris plus');
-  
-  if (filterHasIris && productHasIris) {
     return true;
   }
   
@@ -147,7 +135,7 @@ export const matchesIntelGraphics = (
   // If filter contains "intel" but no specific model
   if (normalizedFilter.includes('intel') && 
       normalizedFilter.includes('graphics') &&
-      !filterHasArc && !filterHasIrisXe && !filterHasIris && !filterHasUHD && !filterHasHD) {
+      !filterHasArc && !filterHasIrisPlus && !filterHasUHD && !filterHasHD) {
     return normalizedProduct.includes('intel') && 
            (normalizedProduct.includes('graphics') || normalizedProduct.includes('gpu'));
   }
