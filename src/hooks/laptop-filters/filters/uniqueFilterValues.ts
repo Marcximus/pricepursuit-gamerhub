@@ -81,7 +81,7 @@ export const getUniqueFilterValues = (
       'Intel Iris Plus Graphics',
       'Intel Iris Graphics',
       'Intel UHD Graphics 700 Series',
-      'Intel UHD Graphics 600 Series', 
+      'Intel HD Graphics 600 Series', 
       'Intel UHD Graphics',
       'Intel HD Graphics 500 Series',
       'Intel HD Graphics 400 Series',

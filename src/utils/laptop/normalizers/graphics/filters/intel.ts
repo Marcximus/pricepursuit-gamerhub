@@ -30,7 +30,7 @@ export const getIntelFilterValue = (normalized: string): string | null => {
   if (/uhd\s*graphics\s*(\d+)/i.test(normalized)) {
     const model = extractModelNumber(normalized, /uhd\s*graphics\s*(\d+)/i);
     if (model) {
-      if (model.match(/^6\d\d$/)) return 'Intel UHD Graphics 600 Series';
+      if (model.match(/^6\d\d$/)) return 'Intel HD Graphics 600 Series';
       if (model.match(/^7\d\d$/)) return 'Intel UHD Graphics 700 Series';
       return `Intel UHD Graphics ${model}`;
     }
