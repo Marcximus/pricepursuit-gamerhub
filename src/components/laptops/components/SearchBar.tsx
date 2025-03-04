@@ -38,8 +38,9 @@ export function SearchBar({ onSearch, placeholder = "Search laptops..." }: Searc
         onClick={handleSearch}
         variant="default"
         className="bg-blue-600 hover:bg-blue-700"
+        size="icon"
       >
-        Search
+        <Search className="h-4 w-4" />
       </Button>
     </div>
   );
