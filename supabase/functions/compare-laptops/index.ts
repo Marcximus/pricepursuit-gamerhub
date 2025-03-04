@@ -66,7 +66,7 @@ serve(async (req) => {
       throw new Error('Invalid JSON response from DeepSeek');
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error in compare-laptops function:', error);
     console.error('⏱️ Error occurred after:', (Date.now() - startTime) / 1000, "seconds");
     
