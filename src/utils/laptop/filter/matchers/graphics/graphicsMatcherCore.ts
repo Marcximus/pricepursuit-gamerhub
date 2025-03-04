@@ -105,6 +105,22 @@ export const matchesGraphicsFilter = (
   // Get category-based filter values for better matching
   const productFilterValue = getGraphicsFilterValue(normalizedProduct);
   
+  // Special case for GTX 1650 - check for direct match
+  if (filterValue === 'NVIDIA GTX 1650' && 
+      (productFilterValue === 'NVIDIA GTX 1650' || 
+       normalizedProduct.toLowerCase().includes('gtx 1650') ||
+       normalizedProduct.toLowerCase().includes('gtx1650'))) {
+    return true;
+  }
+  
+  // Special case for GTX 1660 - check for direct match
+  if (filterValue === 'NVIDIA GTX 1660' && 
+      (productFilterValue === 'NVIDIA GTX 1660' || 
+       normalizedProduct.toLowerCase().includes('gtx 1660') ||
+       normalizedProduct.toLowerCase().includes('gtx1660'))) {
+    return true;
+  }
+  
   // Primary case: direct category match
   if (productFilterValue.toLowerCase() === filterValue.toLowerCase()) {
     return true;

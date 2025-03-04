@@ -27,7 +27,16 @@ export const getGraphicsFilterValue = (graphics: string): string => {
     if (model) return `NVIDIA RTX ${model[1]}`;
   }
   
-  // NVIDIA GTX Series
+  // NVIDIA GTX Series - Enhanced to specifically match GTX 1650
+  if (/\bgtx\s*1650\b/i.test(normalized)) {
+    return `NVIDIA GTX 1650`;
+  }
+  
+  // NVIDIA GTX Series - Enhanced to specifically match other common models
+  if (/\bgtx\s*1660\b/i.test(normalized)) {
+    return `NVIDIA GTX 1660`;
+  }
+  
   if (/\bgtx\s*16\d0/i.test(normalized)) {
     const model = normalized.match(/\bgtx\s*(16\d0)/i);
     if (model) return `NVIDIA GTX ${model[1]}`;
@@ -169,7 +178,16 @@ export const getGraphicsFilterValue = (graphics: string): string => {
     return 'NVIDIA RTX Graphics';
   }
   
+  // Better check for specific GTX models
   if (normalized.includes('nvidia') && normalized.includes('gtx')) {
+    // Special case to catch GTX 1650 that might be formatted differently
+    if (normalized.includes('1650')) {
+      return 'NVIDIA GTX 1650';
+    }
+    // Special case for GTX 1660
+    if (normalized.includes('1660')) {
+      return 'NVIDIA GTX 1660';
+    }
     return 'NVIDIA GTX Graphics';
   }
   

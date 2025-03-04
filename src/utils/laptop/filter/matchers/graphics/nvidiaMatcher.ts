@@ -11,6 +11,16 @@ export const matchesNvidiaGraphics = (
   const normalizedFilter = filterLower.replace(/\s+/g, ' ');
   const normalizedProduct = productLower.replace(/\s+/g, ' ');
   
+  // Special case for GTX 1650 - direct matching
+  if (normalizedFilter.includes('gtx 1650') || normalizedFilter === 'nvidia gtx 1650') {
+    return normalizedProduct.includes('gtx 1650') || normalizedProduct.includes('gtx1650');
+  }
+  
+  // Special case for GTX 1660 - direct matching
+  if (normalizedFilter.includes('gtx 1660') || normalizedFilter === 'nvidia gtx 1660') {
+    return normalizedProduct.includes('gtx 1660') || normalizedProduct.includes('gtx1660');
+  }
+  
   // Check specific architecture (RTX vs GTX)
   const filterIsRTX = normalizedFilter.includes('rtx');
   const productIsRTX = normalizedProduct.includes('rtx');
@@ -29,13 +39,12 @@ export const matchesNvidiaGraphics = (
   
   if (filterSeriesMatch) {
     // If filter specifies a model number, product must match that model or better
-    // For simplicity, we just check for exact match of the model number
     if (productSeriesMatch) {
       // Compare model numbers numerically
       const filterModel = parseInt(filterSeriesMatch[1], 10);
       const productModel = parseInt(productSeriesMatch[1], 10);
       
-      // Return true if models match, considering 4-digit and 3-digit model numbers
+      // Return true if models match exactly
       if (filterModel === productModel) {
         return true;
       }
@@ -57,6 +66,11 @@ export const matchesNvidiaGraphics = (
   }
   
   // If filter just contains "nvidia" or "geforce" without specific model
+  if (normalizedFilter.includes('nvidia gtx graphics') && 
+      (normalizedProduct.includes('gtx') && normalizedProduct.includes('nvidia'))) {
+    return true;
+  }
+  
   if (normalizedFilter.includes('nvidia') || normalizedFilter.includes('geforce')) {
     return normalizedProduct.includes('nvidia') || 
            normalizedProduct.includes('geforce') || 

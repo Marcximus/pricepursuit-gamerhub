@@ -1,4 +1,3 @@
-
 import type { Product } from "@/types/product";
 import type { FilterableProductKeys } from "@/utils/laptop/filter";
 import { normalizerMap, validatorMap } from "../helpers/filterHelpers";
@@ -62,7 +61,7 @@ export const getUniqueFilterValues = (
       // NVIDIA RTX 20 series
       'NVIDIA RTX 2080', 'NVIDIA RTX 2070', 'NVIDIA RTX 2060',
       
-      // NVIDIA GTX series
+      // NVIDIA GTX series - Add specific models
       'NVIDIA GTX 1660', 'NVIDIA GTX 1650',
       
       // NVIDIA MX series
@@ -126,7 +125,6 @@ export const getUniqueFilterValues = (
     
     // Log the categorization results
     console.log(`Generated ${graphicsCategories.size} graphics filter categories`);
-    console.log('Graphics category counts:', Object.fromEntries(categoryCount));
     
     // Return the categories set without further sorting (they're already in priority order)
     return graphicsCategories;
