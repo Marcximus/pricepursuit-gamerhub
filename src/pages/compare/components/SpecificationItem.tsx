@@ -120,7 +120,7 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
   const { emoji, tooltip } = getSpecInfo(section.title);
   
   return (
-    <div className="grid grid-cols-7 px-4 py-3">
+    <div className="grid grid-cols-7 px-4 py-3 hover:bg-slate-50 transition-colors">
       {/* Specification title - moved to left column */}
       <div className="col-span-3 flex items-center">
         <TooltipProvider>
@@ -137,32 +137,32 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
         </TooltipProvider>
       </div>
       
-      {/* Left laptop value - moved to middle column */}
+      {/* Left laptop value - moved to middle column with blue theme */}
       <div className="col-span-2 text-center">
         <a 
           href={leftAffiliateUrl} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-1 hover:text-blue-600 transition-colors group"
+          className="inline-flex items-center justify-center gap-1 hover:text-sky-600 transition-colors group"
         >
-          {leftStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
+          {leftStatus === 'better' && <ChevronsUp className="w-4 h-4 text-sky-600" />}
           {leftStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
-          <span>{section.leftValue}</span>
+          <span className={leftStatus === 'better' ? 'text-sky-700 font-medium' : ''}>{section.leftValue}</span>
           <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />
         </a>
       </div>
       
-      {/* Right laptop value - kept in the right column */}
+      {/* Right laptop value - kept in the right column with red theme */}
       <div className="col-span-2 text-center">
         <a 
           href={rightAffiliateUrl} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-1 hover:text-blue-600 transition-colors group"
+          className="inline-flex items-center justify-center gap-1 hover:text-red-600 transition-colors group"
         >
-          {rightStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
-          {rightStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
-          <span>{section.rightValue}</span>
+          {rightStatus === 'better' && <ChevronsUp className="w-4 h-4 text-red-600" />}
+          {rightStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-sky-600" />}
+          <span className={rightStatus === 'better' ? 'text-red-700 font-medium' : ''}>{section.rightValue}</span>
           <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />
         </a>
       </div>
