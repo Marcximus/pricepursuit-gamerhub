@@ -63,23 +63,26 @@ const ConfettiEffect: React.FC<ConfettiEffectProps> = ({ isActive }) => {
         </div>
       ))}
       
-      <style jsx>{`
-        @keyframes fall {
-          0% {
-            transform: translateY(-10px) rotate(0deg);
-            opacity: 0;
+      <style>
+        {`
+          @keyframes fall {
+            0% {
+              transform: translateY(-10px) rotate(0deg);
+              opacity: 0;
+            }
+            10% {
+              opacity: 1;
+            }
+            100% {
+              transform: translateY(100px) rotate(360deg);
+              opacity: 0;
+            }
           }
-          10% {
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(100px) rotate(360deg);
-            opacity: 0;
-          }
-        }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
 
 export default ConfettiEffect;
+
