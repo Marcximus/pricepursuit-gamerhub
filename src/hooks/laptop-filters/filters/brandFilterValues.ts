@@ -24,9 +24,9 @@ export const getGroupedBrandValues = (
   const brandCounts: Record<string, number> = {};
   
   laptops.forEach(laptop => {
-    if (!laptop.brand) return;
+    if (!laptop.brand && !laptop.title) return;
     
-    const normalizedBrand = normalizer(laptop.brand);
+    const normalizedBrand = normalizer(laptop.brand || '');
     if (!normalizedBrand || (validator && !validator(normalizedBrand))) return;
     
     brandCounts[normalizedBrand] = (brandCounts[normalizedBrand] || 0) + 1;

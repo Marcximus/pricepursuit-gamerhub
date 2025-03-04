@@ -24,33 +24,27 @@ export const applyBrandFilter = (
   const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title);
   const hasOtherBrandsFilter = filters.brands.has('Other');
   
+  // Standard brand filtering without "Other" category
+  const matchesSpecificBrand = Array.from(filters.brands)
+    .filter(brand => brand !== 'Other')
+    .some(selectedBrand => 
+      matchesFilter(selectedBrand, normalizedBrand, 'brand', laptop.title)
+    );
+  
+  // If matches a specific selected brand, include it
+  if (matchesSpecificBrand) {
+    return true;
+  }
+  
   // Special handling for "Other" category
   if (hasOtherBrandsFilter) {
     // Check if the laptop brand is a major brand (in the mainBrandsSet)
-    const isMainBrand = mainBrandsSet.has(normalizedBrand);
+    const isMainBrand = mainBrandsSet.has(normalizedBrand.toLowerCase());
     
-    // Check if it matches any specifically selected brand
-    const matchesSelectedBrand = Array.from(filters.brands)
-      .filter(brand => brand !== 'Other')
-      .some(brand => 
-        matchesFilter(brand, normalizedBrand, 'brand', laptop.title)
-      );
-    
-    // If "Other" is selected and this is not a main brand and doesn't match any selected brand
-    if (!isMainBrand && !matchesSelectedBrand) {
-      return true;
-    }
-    
-    // If a specific brand is selected and this laptop matches it
-    if (matchesSelectedBrand) {
-      return true;
-    }
-    
-    return false;
-  } else {
-    // Standard brand filtering without "Other" category
-    return Array.from(filters.brands).some(selectedBrand => 
-      matchesFilter(selectedBrand, normalizedBrand, 'brand', laptop.title)
-    );
+    // Only include in "Other" if it's not a main brand and not matching any specific selected brand
+    return !isMainBrand && !matchesSpecificBrand;
   }
+  
+  // If no specific brand matches and "Other" is not selected, exclude
+  return false;
 };
