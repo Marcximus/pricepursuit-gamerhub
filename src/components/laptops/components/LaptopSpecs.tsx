@@ -1,4 +1,3 @@
-
 import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
 import { normalizeModel } from "@/utils/laptop/valueNormalizer";
 import { extractProcessorFromTitle } from "@/utils/laptop/filter/extractors/processor/processorExtractor";
@@ -40,23 +39,21 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
   // Apple-specific processor handling for MacBooks
   let displayProcessor = specs.processor || extractedProcessor || 'Not Specified';
   
-  // Additional MacBook M-series detection for processor
-  if (displayProcessor === 'Not Specified' && title) {
+  // Improved MacBook processor detection
+  if ((displayProcessor === 'Not Specified' || displayProcessor === 'Apple') && title) {
     const titleLower = title.toLowerCase();
     // Check for MacBook with M-series chips
-    if (titleLower.includes('macbook') && titleLower.match(/\bm[123]\b/)) {
-      const mSeries = titleLower.match(/\bm([123])\b/)?.[1];
-      if (mSeries) {
-        // Check for Pro/Max/Ultra variants
-        if (titleLower.includes(' pro')) {
-          displayProcessor = `Apple M${mSeries} Pro chip`;
-        } else if (titleLower.includes(' max')) {
-          displayProcessor = `Apple M${mSeries} Max chip`;
-        } else if (titleLower.includes(' ultra')) {
-          displayProcessor = `Apple M${mSeries} Ultra chip`;
-        } else {
-          displayProcessor = `Apple M${mSeries} chip`;
-        }
+    const mSeriesMatch = titleLower.match(/\bm([1234])\s*(pro|max|ultra)?\b/i);
+    if (mSeriesMatch && titleLower.includes('macbook')) {
+      const mSeries = mSeriesMatch[1];
+      const variant = mSeriesMatch[2] ? ` ${mSeriesMatch[2].charAt(0).toUpperCase() + mSeriesMatch[2].slice(1)}` : '';
+      displayProcessor = `Apple M${mSeries}${variant} chip`;
+    }
+    // If title explicitly mentions "chip", make sure we capture it
+    else if (titleLower.match(/apple\s+m[1234]\s+chip/i)) {
+      const chipMatch = titleLower.match(/apple\s+m([1234])\s+chip/i);
+      if (chipMatch) {
+        displayProcessor = `Apple M${chipMatch[1]} chip`;
       }
     }
   }
@@ -90,22 +87,18 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
   }
   
   // Special handling for MacBooks with Apple Silicon
-  if (displayGraphics === 'Not Specified' && title) {
+  if ((displayGraphics === 'Not Specified' || displayGraphics.includes('Apple')) && title) {
     const titleLower = title.toLowerCase();
-    if (titleLower.includes('macbook') && titleLower.match(/\bm[123]\b/)) {
-      const mSeries = titleLower.match(/\bm([123])\b/)?.[1];
-      if (mSeries) {
-        // Check for Pro/Max/Ultra variants
-        if (titleLower.includes(' pro')) {
-          displayGraphics = `Apple M${mSeries} Pro GPU`;
-        } else if (titleLower.includes(' max')) {
-          displayGraphics = `Apple M${mSeries} Max GPU`;
-        } else if (titleLower.includes(' ultra')) {
-          displayGraphics = `Apple M${mSeries} Ultra GPU`;
-        } else {
-          displayGraphics = `Apple M${mSeries} GPU`;
-        }
-      }
+    const mSeriesMatch = titleLower.match(/\bm([1234])\s*(pro|max|ultra)?\b/i);
+    if (mSeriesMatch && titleLower.includes('macbook')) {
+      const mSeries = mSeriesMatch[1];
+      const variant = mSeriesMatch[2] ? ` ${mSeriesMatch[2].charAt(0).toUpperCase() + mSeriesMatch[2].slice(1)}` : '';
+      
+      // Check for GPU core count in title (e.g., "10-core GPU")
+      const coreMatch = titleLower.match(/(\d+)[\s-]core\s+gpu/i);
+      const coreInfo = coreMatch ? ` with ${coreMatch[1]}-core` : '';
+      
+      displayGraphics = `Apple M${mSeries}${variant}${coreInfo} GPU`;
     }
   }
   
@@ -130,12 +123,33 @@ export function LaptopSpecs({ title, productUrl, specs, brand, model }: LaptopSp
     }
   }
   
+  // Enhanced RAM extraction for Apple MacBooks
+  let displayRam = specs.ram || extractedRam || 'Not Specified';
+  
+  // If RAM is "Unified" or missing, try to extract from title for MacBooks
+  if ((displayRam === 'Not Specified' || displayRam === 'Unified') && title) {
+    const titleLower = title.toLowerCase();
+    if (titleLower.includes('macbook') || brand?.toLowerCase() === 'apple') {
+      // Look for GB RAM pattern in MacBook titles
+      const ramMatch = titleLower.match(/(\d+)\s*gb(?:\s+unified)?\s+(?:ram|memory)/i);
+      if (ramMatch) {
+        displayRam = `${ramMatch[1]}GB${titleLower.includes('unified') ? ' Unified' : ''}`;
+      }
+      // Also try looking for "8GB" pattern
+      else {
+        const simpleRamMatch = titleLower.match(/(\d+)\s*gb\b(?!\s*(?:ssd|storage|drive))/i);
+        if (simpleRamMatch) {
+          displayRam = `${simpleRamMatch[1]}GB${titleLower.includes('unified') ? ' Unified' : ''}`;
+        }
+      }
+    }
+  }
+  
   const extractedStorage = !specs.storage ? processStorage(undefined, title) : null;
   const extractedScreenSize = !specs.screenSize ? processScreenSize(undefined, title) : null;
   const extractedScreenResolution = !specs.screenResolution ? processScreenResolution(undefined, title) : null;
   
   // For display, prioritize database values but fall back to extracted values
-  const displayRam = specs.ram || extractedRam || 'Not Specified';
   const displayStorage = specs.storage || extractedStorage || 'Not Specified';
   const displayScreenSize = specs.screenSize || extractedScreenSize || 'Not Specified';
   const displayScreenResolution = specs.screenResolution || extractedScreenResolution || '';

@@ -1,4 +1,3 @@
-
 /**
  * Regular expression patterns for processor extraction
  */
@@ -15,7 +14,6 @@ export const intelCorePatterns = {
   coreI: /core_i([3579])/i,
   ghzWithCore: /(\d+(?:\.\d+)?)\s*ghz\s*(?:core_i|core\s+i|i)([3579])/i,
   coreWithGhz: /(?:core_i|core\s+i|i)([3579]).*?(\d+(?:\.\d+)?)\s*ghz/i,
-  // New pattern specifically for i5-13420H style notation
   intelModelDash: /\bi([3579])-(\d{5}[a-z]*)/i
 };
 
@@ -29,10 +27,13 @@ export const intelBudgetPatterns = {
   pentiumWithGhz: /(?:intel\s+)?pentium\s+.*?(\d+(?:\.\d+)?)\s*ghz/i
 };
 
-// Apple Silicon patterns
+// Apple Silicon patterns - enhanced to catch more variants and formats
 export const appleSiliconPatterns = {
   appleWithVariant: /apple\s+m([1234])(?:\s+(pro|max|ultra))?/i,
-  mSeriesWithVariant: /\bm([1234])(?:\s+(pro|max|ultra))?\b/i
+  mSeriesWithVariant: /\bm([1234])(?:\s+(pro|max|ultra))?\b/i,
+  macbookWithM: /macbook.*m([1234])(?:\s+(pro|max|ultra))?/i,
+  mWithCore: /m([1234])(?:\s+(pro|max|ultra))?\s+(?:with\s+)?(\d+)[\s-]core/i,
+  mSeriesWithRam: /m([1234])(?:\s+(pro|max|ultra))?\s+(?:chip)?\s+(?:with\s+)?(\d+)\s*gb/i
 };
 
 // AMD Ryzen patterns
