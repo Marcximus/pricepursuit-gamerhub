@@ -12,16 +12,14 @@ export function processAndFilterLaptops(
   page: number,
   itemsPerPage: number
 ) {
-  // First filter out products with forbidden keywords - but only do this once
-  const laptopsWithoutForbiddenKeywords = allLaptops.filter(
-    laptop => !containsForbiddenKeywords(laptop.title || '')
-  );
-
+  // Skip the forbidden keywords filter since it's already applied during collection
+  // and the database query already filters for is_laptop = true
+  let filteredLaptops = allLaptops;
+  
   // Step 1: Apply text search if there's a search query
-  let filteredLaptops = laptopsWithoutForbiddenKeywords;
   if (filters.searchQuery && filters.searchQuery.trim() !== "") {
     const searchTerms = filters.searchQuery.toLowerCase().trim().split(/\s+/);
-    filteredLaptops = laptopsWithoutForbiddenKeywords.filter(laptop => {
+    filteredLaptops = allLaptops.filter(laptop => {
       const titleText = (laptop.title || "").toLowerCase();
       const brandText = (laptop.brand || "").toLowerCase();
       const processorText = (laptop.processor || "").toLowerCase();
@@ -55,6 +53,6 @@ export function processAndFilterLaptops(
     laptops: paginatedLaptops,
     totalCount: sortedLaptops.length,
     totalPages,
-    allLaptops: laptopsWithoutForbiddenKeywords, // We're already filtering here, don't need to do it again later
+    allLaptops: allLaptops, // Return all laptops without redundant filtering
   };
 }

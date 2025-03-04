@@ -34,8 +34,8 @@ const FORBIDDEN_KEYWORDS = [
   'laptop table', 'lap desk', 'laptop pillow',
   'laptop accessories bundle', 'laptop kit', 'laptop fan',
   'laptop memory', 'laptop ram only', 'ram stick',
-  'memory module', 'compatible with', 'fits for',
-  'made for', 'replacement for'
+  'memory module'
+  // Removed: 'compatible with', 'fits for', 'made for', 'replacement for'
 ];
 
 /**
@@ -48,10 +48,17 @@ export function containsForbiddenKeywords(title: string): boolean {
   
   const lowerTitle = title.toLowerCase();
   
-  // Check if title contains any forbidden keywords
-  return FORBIDDEN_KEYWORDS.some(keyword => 
-    lowerTitle.includes(keyword.toLowerCase())
-  );
+  // Apply a more lenient check: require exact keyword matches with word boundaries
+  return FORBIDDEN_KEYWORDS.some(keyword => {
+    // For multi-word keywords, check if the title includes the exact phrase
+    if (keyword.includes(' ')) {
+      return lowerTitle.includes(keyword.toLowerCase());
+    }
+    
+    // For single-word keywords, try to match on word boundaries
+    const regex = new RegExp(`\\b${keyword.toLowerCase()}\\b`);
+    return regex.test(lowerTitle);
+  });
 }
 
 /**
