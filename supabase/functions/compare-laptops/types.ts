@@ -14,11 +14,16 @@ export interface Product {
   weight?: string;
   battery_life?: string;
   price?: number;
+  current_price?: number;
   original_price?: number;
   rating?: number;
   rating_count?: number;
   benchmark_score?: number;
   wilson_score?: number;
+  asin?: string;
+  image_url?: string;
+  processor_score?: number;
+  total_reviews?: number;
 }
 
 export interface ComparisonResult {
