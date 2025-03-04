@@ -15,27 +15,39 @@ interface LaptopCardProps {
 const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }) => {
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiRef = useRef<ConfettiRef>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     if (isWinner) {
       setShowConfetti(true);
       
-      // Reset after animation (4 seconds)
+      // Reset after animation (5 seconds - longer duration)
       const timer = setTimeout(() => {
         setShowConfetti(false);
-      }, 4000);
+      }, 5000);
       
       return () => clearTimeout(timer);
     }
   }, [isWinner]);
   
   useEffect(() => {
-    if (showConfetti && confettiRef.current) {
-      // Fire confetti with some nice options
+    if (showConfetti && confettiRef.current && cardRef.current) {
+      // Get card dimensions to center the confetti
+      const rect = cardRef.current.getBoundingClientRect();
+      
+      // Fire confetti with improved options
       confettiRef.current.fire({
-        particleCount: 100,
+        particleCount: 150,
         spread: 70,
-        origin: { y: 0.6 }
+        origin: { 
+          // Center the confetti in the card
+          x: 0.5,
+          y: 0.5
+        },
+        gravity: 0.8,
+        decay: 0.9,
+        ticks: 200, // Increase ticks for longer animation
+        colors: ['#FFD700', '#FFA500', '#FF4500', '#9370DB', '#20B2AA']
       });
     }
   }, [showConfetti]);
@@ -51,8 +63,8 @@ const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }
   }
   
   return (
-    <Card className="p-4 h-full flex flex-col relative">
-      {/* New confetti effect for winner */}
+    <Card ref={cardRef} className="p-4 h-full flex flex-col relative">
+      {/* Confetti effect for winner - positioned to fill the card */}
       {isWinner && (
         <Confetti
           ref={confettiRef}
