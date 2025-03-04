@@ -167,7 +167,7 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
         </TooltipProvider>
       </div>
       
-      {/* Left laptop value - blue theme with green winning indicator or red losing indicator */}
+      {/* Left laptop value - Use green for winning indicator */}
       <div className="col-span-2 text-left">
         <a 
           href={leftAffiliateUrl} 
@@ -177,12 +177,12 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
         >
           {leftStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
           {leftStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
-          <span className={leftStatus === 'better' ? 'text-sky-700 font-medium' : ''}>{section.leftValue}</span>
+          <span className={leftStatus === 'better' ? 'text-green-700 font-medium' : ''}>{section.leftValue}</span>
           <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />
         </a>
       </div>
       
-      {/* Right laptop value - yellow theme with green winning indicator or red losing indicator */}
+      {/* Right laptop value - Use green for winning indicator */}
       <div className="col-span-2 text-left">
         <a 
           href={rightAffiliateUrl} 
@@ -192,7 +192,7 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
         >
           {rightStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
           {rightStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
-          <span className={rightStatus === 'better' ? 'text-amber-700 font-medium' : ''}>{section.rightValue}</span>
+          <span className={rightStatus === 'better' ? 'text-green-700 font-medium' : ''}>{section.rightValue}</span>
           <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />
         </a>
       </div>
