@@ -106,15 +106,8 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({ section }) => {
   
   return (
     <div className="grid grid-cols-7 px-4 py-3">
-      <div className="col-span-2 text-center">
-        <div className="flex items-center justify-center gap-1">
-          {leftStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
-          {leftStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
-          <span>{section.leftValue}</span>
-        </div>
-      </div>
-      
-      <div className="col-span-3 flex items-center justify-center">
+      {/* Specification title - moved to left column */}
+      <div className="col-span-3 flex items-center">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -129,6 +122,16 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({ section }) => {
         </TooltipProvider>
       </div>
       
+      {/* Left laptop value - moved to middle column */}
+      <div className="col-span-2 text-center">
+        <div className="flex items-center justify-center gap-1">
+          {leftStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
+          {leftStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
+          <span>{section.leftValue}</span>
+        </div>
+      </div>
+      
+      {/* Right laptop value - kept in the right column */}
       <div className="col-span-2 text-center">
         <div className="flex items-center justify-center gap-1">
           {rightStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
