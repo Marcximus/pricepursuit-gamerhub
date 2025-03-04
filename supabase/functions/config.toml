@@ -1,20 +1,2 @@
 
 project_id = "kkebyebrhdpcwqnxhjcx"
-
-[collect-laptops]
-verify_jwt = false
-
-[fetch-laptops] 
-verify_jwt = false
-
-[fetch-product]
-verify_jwt = false
-
-[process-laptops-ai]
-verify_jwt = false
-
-[scheduled-update]
-verify_jwt = false
-
-[update-laptops]
-verify_jwt = false

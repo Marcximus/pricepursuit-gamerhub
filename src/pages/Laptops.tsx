@@ -7,6 +7,7 @@ import { LaptopList } from "@/components/laptops/LaptopList";
 import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
+import CompareFloatingButton from "@/components/CompareFloatingButton";
 
 const ComparePriceLaptops = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,7 +23,6 @@ const ComparePriceLaptops = () => {
     searchQuery: "",
   });
 
-  // Add debugging useEffect to track filter changes
   useEffect(() => {
     console.log('Filter state updated:', {
       processors: Array.from(filters.processors),
@@ -44,7 +44,6 @@ const ComparePriceLaptops = () => {
     refetch
   } = useLaptops(currentPage, sortBy, filters);
 
-  // No additional filtering here - data.laptops is already filtered in processAndFilterLaptops
   const laptops = data?.laptops ?? [];
   const totalCount = data?.totalCount ?? 0;
   const totalPages = data?.totalPages ?? 1;
@@ -53,7 +52,7 @@ const ComparePriceLaptops = () => {
 
   const handleSortChange = (newSortBy: SortOption) => {
     setSortBy(newSortBy);
-    setCurrentPage(1); // Reset page when sort changes
+    setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
@@ -61,7 +60,6 @@ const ComparePriceLaptops = () => {
   };
 
   const handleFiltersChange = (newFilters: FilterOptions) => {
-    // Create a deep copy of the filter sets to avoid reference issues
     const updatedFilters: FilterOptions = {
       priceRange: { ...newFilters.priceRange },
       processors: new Set(newFilters.processors),
@@ -74,7 +72,7 @@ const ComparePriceLaptops = () => {
     };
     
     setFilters(updatedFilters);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   };
 
   const handleRetry = () => {
@@ -126,6 +124,8 @@ const ComparePriceLaptops = () => {
               />
             }
           />
+          
+          <CompareFloatingButton />
         </div>
       </main>
     </div>

@@ -6,6 +6,7 @@ import { LaptopPrice } from "./components/LaptopPrice";
 import { LaptopRating } from "./components/LaptopRating";
 import { LaptopSpecs } from "./components/LaptopSpecs";
 import { LaptopReviews } from "./components/LaptopReviews";
+import { LaptopCompareButton } from "./components/LaptopCompareButton";
 
 type LaptopCardProps = {
   laptop: Product;
@@ -50,6 +51,8 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
             reviewsUrl={reviewsUrl}
           />
         )}
+        
+        <LaptopCompareButton laptop={laptop} />
       </div>
 
       {/* Right side - Specs and Reviews */}
