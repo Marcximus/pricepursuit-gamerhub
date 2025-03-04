@@ -88,7 +88,7 @@ const formatRAM = (ram?: string, title?: string): string => {
     }
   }
   
-  return ram;
+  return normalizeRam(ram);
 };
 
 const formatStorage = (storage?: string, title?: string): string => {
@@ -132,6 +132,87 @@ const formatGraphics = (graphics?: string, title?: string): string => {
   return graphics;
 };
 
+// Extract refresh rate from title or screen resolution
+const extractRefreshRate = (screenResolution?: string, title?: string): string => {
+  if (screenResolution && screenResolution.match(/\d+Hz/i)) {
+    const match = screenResolution.match(/(\d+)Hz/i);
+    if (match) return `${match[1]}Hz`;
+  }
+  
+  if (title) {
+    const match = title.match(/(\d+)\s*Hz/i);
+    if (match) return `${match[1]}Hz`;
+  }
+  
+  return 'Not Specified';
+};
+
+// Extract operating system from title or directly from laptop data
+const formatOS = (os?: string, title?: string): string => {
+  if (os) return os;
+  
+  if (title) {
+    if (title.match(/Windows\s+11/i)) return 'Windows 11';
+    if (title.match(/Windows\s+10/i)) return 'Windows 10';
+    if (title.match(/macOS|Mac\s+OS/i)) return 'macOS';
+    if (title.match(/ChromeOS|Chrome\s+OS/i)) return 'ChromeOS';
+    if (title.match(/Linux/i)) return 'Linux';
+  }
+  
+  return 'Not Specified';
+};
+
+// Extract ports information from title
+const extractPorts = (title?: string): string => {
+  const ports = [];
+  
+  if (!title) return 'Not Specified';
+  
+  if (title.match(/USB(?:-C)?\s+\d/i)) ports.push('USB');
+  if (title.match(/Thunderbolt/i)) ports.push('Thunderbolt');
+  if (title.match(/HDMI/i)) ports.push('HDMI');
+  if (title.match(/DisplayPort|DP/i)) ports.push('DisplayPort');
+  if (title.match(/Ethernet|RJ45/i)) ports.push('Ethernet');
+  if (title.match(/SD\s+card|SD\s+reader/i)) ports.push('SD Card');
+  
+  return ports.length > 0 ? ports.join(', ') : 'Standard Ports';
+};
+
+// Estimate release year based on processor generation
+const estimateReleaseYear = (processor?: string, title?: string): string => {
+  const currentYear = new Date().getFullYear();
+  
+  const processToCheck = processor || title || '';
+  
+  // Intel processors with generation info
+  const intelMatch = processToCheck.match(/i[3579]-(\d{1})(\d{3})/i);
+  if (intelMatch) {
+    const generation = parseInt(intelMatch[1], 10);
+    if (generation >= 1 && generation <= 13) {
+      // Approximate: 10th gen -> 2020, 11th gen -> 2021, etc.
+      return `~${2010 + generation}`;
+    }
+  }
+  
+  // Apple Silicon
+  if (processToCheck.match(/M1/i)) return '2020-2021';
+  if (processToCheck.match(/M2/i)) return '2022-2023';
+  if (processToCheck.match(/M3/i)) return '2023-2024';
+  
+  // AMD Ryzen generations
+  if (processToCheck.match(/Ryzen\s+\d{4}/i)) {
+    const ryzenMatch = processToCheck.match(/Ryzen\s+(\d)(\d{3})/i);
+    if (ryzenMatch) {
+      const generation = parseInt(ryzenMatch[1], 10);
+      const year = 2016 + generation;
+      return `~${year}`;
+    }
+  }
+  
+  // Default: return N/A for unknown
+  return 'N/A';
+};
+
 // Changed from React.FC to a regular function
 const ComparisonSections = ({ laptopLeft, laptopRight }: ComparisonSectionsProps): ComparisonSection[] => {
   // Helper to safely format values
@@ -171,6 +252,16 @@ const ComparisonSections = ({ laptopLeft, laptopRight }: ComparisonSectionsProps
       leftValue: formatPrice(laptopLeft?.current_price),
       rightValue: formatPrice(laptopRight?.current_price),
       compare: comparePrices
+    },
+    {
+      title: "OS",
+      leftValue: formatOS(laptopLeft?.operating_system, laptopLeft?.title),
+      rightValue: formatOS(laptopRight?.operating_system, laptopRight?.title)
+    },
+    {
+      title: "Release Year",
+      leftValue: estimateReleaseYear(laptopLeft?.processor, laptopLeft?.title),
+      rightValue: estimateReleaseYear(laptopRight?.processor, laptopRight?.title)
     }
   ];
 
@@ -214,6 +305,19 @@ const ComparisonSections = ({ laptopLeft, laptopRight }: ComparisonSectionsProps
       leftValue: formatValue(laptopLeft?.screen_resolution),
       rightValue: formatValue(laptopRight?.screen_resolution),
       compare: compareResolution
+    },
+    {
+      title: "Refresh Rate",
+      leftValue: extractRefreshRate(laptopLeft?.screen_resolution, laptopLeft?.title),
+      rightValue: extractRefreshRate(laptopRight?.screen_resolution, laptopRight?.title),
+      compare: (a: string, b: string) => {
+        const rateA = parseInt(a, 10);
+        const rateB = parseInt(b, 10);
+        if (isNaN(rateA) || isNaN(rateB)) return 'equal';
+        if (rateA > rateB) return 'better';
+        if (rateA < rateB) return 'worse';
+        return 'equal';
+      }
     }
   ];
 
@@ -230,6 +334,11 @@ const ComparisonSections = ({ laptopLeft, laptopRight }: ComparisonSectionsProps
       leftValue: formatValue(laptopLeft?.battery_life),
       rightValue: formatValue(laptopRight?.battery_life),
       compare: compareBatteryLife
+    },
+    {
+      title: "Ports",
+      leftValue: extractPorts(laptopLeft?.title),
+      rightValue: extractPorts(laptopRight?.title)
     }
   ];
 

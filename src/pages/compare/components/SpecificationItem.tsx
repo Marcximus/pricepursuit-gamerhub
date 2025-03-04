@@ -113,6 +113,26 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
           emoji: "🔋",
           tooltip: "How long the laptop can run on battery power. Longer is better for portable use."
         };
+      case "refresh rate":
+        return {
+          emoji: "🔄",
+          tooltip: "Number of times per second that the display refreshes. Higher refresh rates result in smoother motion, important for gaming and video editing."
+        };
+      case "ports":
+        return {
+          emoji: "🔌",
+          tooltip: "Available connection ports such as USB, HDMI, Thunderbolt, etc. More variety and quantity typically offer better connectivity options."
+        };
+      case "os":
+        return {
+          emoji: "💻",
+          tooltip: "Operating system that comes pre-installed on the laptop."
+        };
+      case "release year":
+        return {
+          emoji: "📅",
+          tooltip: "The year when this laptop model was released. Newer releases typically have more modern technology."
+        };
       default:
         return { emoji: "", tooltip: "" };
     }
@@ -147,7 +167,7 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
         </TooltipProvider>
       </div>
       
-      {/* Left laptop value - blue theme */}
+      {/* Left laptop value - blue theme with green winning indicator or red losing indicator */}
       <div className="col-span-2 text-left">
         <a 
           href={leftAffiliateUrl} 
@@ -155,14 +175,14 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 hover:text-sky-600 transition-colors group"
         >
-          {leftStatus === 'better' && <ChevronsUp className="w-4 h-4 text-sky-600" />}
-          {leftStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-amber-600" />}
+          {leftStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
+          {leftStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
           <span className={leftStatus === 'better' ? 'text-sky-700 font-medium' : ''}>{section.leftValue}</span>
           <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />
         </a>
       </div>
       
-      {/* Right laptop value - yellow theme */}
+      {/* Right laptop value - yellow theme with green winning indicator or red losing indicator */}
       <div className="col-span-2 text-left">
         <a 
           href={rightAffiliateUrl} 
@@ -170,8 +190,8 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 hover:text-amber-600 transition-colors group"
         >
-          {rightStatus === 'better' && <ChevronsUp className="w-4 h-4 text-amber-600" />}
-          {rightStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-sky-600" />}
+          {rightStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
+          {rightStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
           <span className={rightStatus === 'better' ? 'text-amber-700 font-medium' : ''}>{section.rightValue}</span>
           <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />
         </a>
