@@ -24,14 +24,44 @@ export const matchesGraphicsFilter = (
     // Get the filter value for the product
     const productFilterValue = getGraphicsFilterValue(normalizedProduct);
     
-    // Check if this is a common graphics option by checking for key patterns
-    const isCommonNvidia = /NVIDIA (RTX|GTX) \d{4}|NVIDIA (RTX|GTX) Graphics|NVIDIA MX \d{3}/i.test(productFilterValue);
-    const isCommonAmd = /AMD Radeon RX \d{4}|AMD Radeon Vega|AMD Radeon Graphics/i.test(productFilterValue);
-    const isCommonIntel = /Intel (Arc|Iris Xe|Iris|UHD|HD) Graphics/i.test(productFilterValue);
-    const isCommonApple = /Apple M[123] (Ultra|Max|Pro)? GPU/i.test(productFilterValue);
+    // Define the main graphics categories that shouldn't be included in "Other"
+    const mainCategories = [
+      // NVIDIA RTX 40 series
+      'NVIDIA RTX 4090', 'NVIDIA RTX 4080', 'NVIDIA RTX 4070', 
+      'NVIDIA RTX 4060', 'NVIDIA RTX 4050',
+      
+      // NVIDIA RTX 30 series
+      'NVIDIA RTX 3090', 'NVIDIA RTX 3080', 'NVIDIA RTX 3070', 
+      'NVIDIA RTX 3060', 'NVIDIA RTX 3050',
+      
+      // NVIDIA RTX 20 series
+      'NVIDIA RTX 2080', 'NVIDIA RTX 2070', 'NVIDIA RTX 2060',
+      
+      // NVIDIA GTX series
+      'NVIDIA GTX 1660', 'NVIDIA GTX 1650',
+      
+      // NVIDIA MX series
+      'NVIDIA MX 550', 'NVIDIA MX 450', 'NVIDIA MX 350', 'NVIDIA MX 250',
+      
+      // AMD Radeon
+      'AMD Radeon RX 7900', 'AMD Radeon RX 7800', 'AMD Radeon RX 7700', 'AMD Radeon RX 7600',
+      'AMD Radeon RX 6800', 'AMD Radeon RX 6700', 'AMD Radeon RX 6600', 'AMD Radeon RX 6500',
+      'AMD Radeon RX 5700', 'AMD Radeon RX 5600', 'AMD Radeon RX 5500',
+      'AMD Radeon Vega',
+      
+      // Intel Graphics
+      'Intel Arc A770', 'Intel Arc A750', 'Intel Arc A380',
+      'Intel Iris Xe Graphics', 'Intel UHD Graphics', 'Intel HD Graphics',
+      
+      // Apple
+      'Apple M3 GPU', 'Apple M2 GPU', 'Apple M1 GPU',
+      
+      // Generic categories
+      'High Performance GPU', 'Integrated GPU', 'Dedicated GPU'
+    ];
     
-    // If it doesn't match any common pattern, it's considered "Other Graphics"
-    return !(isCommonNvidia || isCommonAmd || isCommonIntel || isCommonApple);
+    // Check if the product's filter value is not in the main categories
+    return !mainCategories.includes(productFilterValue);
   }
   
   // Normalize both filter and product values for consistency
