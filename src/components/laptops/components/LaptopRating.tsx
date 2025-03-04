@@ -53,9 +53,13 @@ export function LaptopRating({ rating, totalReviews, reviewsUrl }: LaptopRatingP
       <div className="flex">
         {renderStarRating(rating)}
       </div>
-      {totalReviews && totalReviews > 0 && (
+      {totalReviews && totalReviews > 0 ? (
         <span className="text-sm text-gray-600">
           {totalReviews.toLocaleString()} reviews
+        </span>
+      ) : (
+        <span className="text-sm text-gray-500 italic">
+          No reviews yet
         </span>
       )}
     </>

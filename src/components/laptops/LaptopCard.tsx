@@ -26,7 +26,13 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
   
   // URLs for different purposes
   const productUrl = baseProductUrl;
-  const reviewsUrl = laptop.asin ? `${baseProductUrl}#customerReviews` : '';
+  const reviewsUrl = laptop.asin && laptop.rating_count && laptop.rating_count > 0 
+    ? `${baseProductUrl}#customerReviews` 
+    : '';
+
+  // Check if we have valid review data to display
+  const hasReviews = laptop.review_data?.recent_reviews && 
+                     laptop.review_data.recent_reviews.length > 0;
 
   return (
     <Card className="flex p-4 gap-4 hover:shadow-lg transition-shadow">
@@ -77,7 +83,8 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
           </div>
         </div>
 
-        {laptop.review_data?.recent_reviews && laptop.review_data.recent_reviews.length > 0 && (
+        {/* Only show reviews section if we have actual review data */}
+        {hasReviews && (
           <LaptopReviews 
             reviewData={laptop.review_data}
             productUrl={reviewsUrl}
