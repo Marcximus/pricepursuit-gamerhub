@@ -28,6 +28,11 @@ export const normalizeProcessor = (processor: string): string => {
     .replace(/\s+/g, ' ')
     .trim();
     
+  // Standardize Intel Ultra naming
+  normalized = normalized
+    .replace(/intel\s+(?:core\s+)?ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i, 'Intel Core Ultra $1-$2')
+    .replace(/intel\s+(?:core\s+)?ultra\s+([579])/i, 'Intel Core Ultra $1');
+  
   // Standardize Intel naming
   normalized = normalized
     .replace(/intel\s+core\s+i([3579])[- ](\d{4,5})(H|U|HQ|K)?/i, 'Intel Core i$1-$2$3')
@@ -39,7 +44,6 @@ export const normalizeProcessor = (processor: string): string => {
     .replace(/intel\s+celeron\s+(n\d{4})/i, 'Intel Celeron $1')
     .replace(/intel\s+celeron/i, 'Intel Celeron')
     .replace(/intel\s+pentium/i, 'Intel Pentium')
-    .replace(/intel\s+core\s+ultra\s+([579])/i, 'Intel Core Ultra $1')
     .replace(/(\d+)-core\s+ultra\s+([579])/i, 'Intel Core Ultra $2 ($1-core)');
     
   // Standardize AMD naming
@@ -79,6 +83,20 @@ export const normalizeProcessor = (processor: string): string => {
 export const getProcessorFilterValue = (processor: string): string => {
   const normalized = normalizeProcessor(processor).toLowerCase();
   
+  // Intel Core Ultra
+  if (normalized.includes('core ultra 9') || normalized.match(/ultra\s+9/)) {
+    return 'Intel Core Ultra 9';
+  }
+  if (normalized.includes('core ultra 7') || normalized.match(/ultra\s+7/)) {
+    return 'Intel Core Ultra 7';
+  }
+  if (normalized.includes('core ultra 5') || normalized.match(/ultra\s+5/)) {
+    return 'Intel Core Ultra 5';
+  }
+  if (normalized.includes('core ultra') || normalized.includes('ultra')) {
+    return 'Intel Core Ultra';
+  }
+  
   // Apple
   if (normalized.includes('m4 ultra')) return 'Apple M4 Ultra';
   if (normalized.includes('m4 max')) return 'Apple M4 Max';
@@ -99,18 +117,6 @@ export const getProcessorFilterValue = (processor: string): string => {
   if (normalized.includes('m1 max')) return 'Apple M1 Max';
   if (normalized.includes('m1 pro')) return 'Apple M1 Pro';
   if (normalized.includes('m1')) return 'Apple M1';
-  
-  // Intel CPU categories
-  if (normalized.includes('core ultra 9') || normalized.match(/\d+-core\s+ultra\s+9/)) {
-    return 'Intel Core Ultra 9';
-  }
-  if (normalized.includes('core ultra 7') || normalized.match(/\d+-core\s+ultra\s+7/)) {
-    return 'Intel Core Ultra 7';
-  }
-  if (normalized.includes('core ultra 5') || normalized.match(/\d+-core\s+ultra\s+5/)) {
-    return 'Intel Core Ultra 5';
-  }
-  if (normalized.includes('core ultra')) return 'Intel Core Ultra';
   
   // Check for core_i patterns
   if (normalized.match(/core_i9/)) return 'Intel Core i9';
@@ -182,4 +188,3 @@ export const getProcessorFilterValue = (processor: string): string => {
   
   return 'Other Processor';
 };
-

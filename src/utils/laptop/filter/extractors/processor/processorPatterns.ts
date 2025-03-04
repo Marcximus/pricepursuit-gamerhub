@@ -10,7 +10,8 @@ export interface Pattern {
 
 // Intel Core Ultra patterns
 export const intelUltraPatterns = {
-  coreUltra: /(?:intel\s+)?(?:\d+[-\s]core\s+)?(?:core\s+)?ultra\s+([579])(?:\s+\d{3}[a-z]*)?/i
+  coreUltra: /(?:intel\s+)?(?:\d+[-\s]core\s+)?(?:core\s+)?ultra\s+([579])(?:\s+\d{3}[a-z]*)?/i,
+  coreUltraWithModel: /(?:intel\s+)?(?:core\s+)?ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i
 };
 
 // Intel Core i-series patterns

@@ -14,16 +14,19 @@ export function BrandModelSpec({ title, brand, model }: BrandModelSpecProps) {
   // Extract model name if not provided using the normalizer
   const displayModel = model || normalizeModel(null, title, correctedBrand);
   
+  // If the title starts with the brand, remove the brand from the display model to avoid duplication
+  const cleanedModel = displayModel ? displayModel.replace(new RegExp(`^${correctedBrand}\\s+${correctedBrand}\\s+`, 'i'), `${correctedBrand} `) : displayModel;
+  
   return (
     <>
       <li>
         <span className="font-bold">Brand:</span>{" "}
         {correctedBrand || 'Not Specified'}
       </li>
-      {displayModel && (
+      {cleanedModel && (
         <li>
           <span className="font-bold">Model:</span>{" "}
-          {displayModel}
+          {cleanedModel}
         </li>
       )}
     </>

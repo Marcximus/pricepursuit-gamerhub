@@ -10,6 +10,13 @@ import {
  * Extracts Intel Ultra processors from a laptop title
  */
 export const extractIntelUltraProcessor = (normalizedTitle: string): string | null => {
+  // Check for Intel Ultra with model number (e.g. Ultra 7-155H)
+  const ultraModelMatch = normalizedTitle.match(/intel\s+(?:core\s+)?ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i);
+  if (ultraModelMatch) {
+    return `Intel Core Ultra ${ultraModelMatch[1]}-${ultraModelMatch[2]}`;
+  }
+  
+  // Check for generic Ultra mention (e.g. Ultra 7)
   const ultraMatch = normalizedTitle.match(intelUltraPatterns.coreUltra);
   if (ultraMatch) {
     return `Intel Core Ultra ${ultraMatch[1]}`;
