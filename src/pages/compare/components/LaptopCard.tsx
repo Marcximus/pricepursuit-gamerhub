@@ -1,9 +1,10 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Trophy } from "lucide-react";
 import type { Product } from "@/types/product";
-import ConfettiEffect from "./analysis/ConfettiEffect";
+import type { ConfettiRef } from "@/components/ui/confetti";
+import { Confetti } from "@/components/ui/confetti";
 
 interface LaptopCardProps {
   laptop: Product | null;
@@ -13,6 +14,7 @@ interface LaptopCardProps {
 
 const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }) => {
   const [showConfetti, setShowConfetti] = useState(false);
+  const confettiRef = useRef<ConfettiRef>(null);
   
   useEffect(() => {
     if (isWinner) {
@@ -27,6 +29,17 @@ const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }
     }
   }, [isWinner]);
   
+  useEffect(() => {
+    if (showConfetti && confettiRef.current) {
+      // Fire confetti with some nice options
+      confettiRef.current.fire({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
+  }, [showConfetti]);
+  
   if (!laptop) {
     return (
       <Card className="p-4 h-full flex flex-col">
@@ -39,8 +52,18 @@ const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }
   
   return (
     <Card className="p-4 h-full flex flex-col relative">
-      {/* Confetti effect positioned over the winning laptop */}
-      {isWinner && <ConfettiEffect isActive={showConfetti} />}
+      {/* New confetti effect for winner */}
+      {isWinner && (
+        <Confetti
+          ref={confettiRef}
+          className="absolute inset-0 pointer-events-none"
+          manualstart={true}
+          options={{
+            colors: ['#FFD700', '#FFA500', '#FF4500', '#9370DB', '#20B2AA'],
+            disableForReducedMotion: true
+          }}
+        />
+      )}
       
       {/* Winner badge positioned absolutely to not affect layout */}
       {isWinner && (

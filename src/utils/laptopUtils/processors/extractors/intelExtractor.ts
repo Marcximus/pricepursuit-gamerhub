@@ -9,7 +9,7 @@ export function extractIntelProcessor(text: string): string | null {
   
   const normalizedText = text.toLowerCase();
   
-  // Check for Core Ultra patterns (with model numbers)
+  // Check for Core Ultra patterns (with model numbers) - improved pattern
   const coreUltraWithModelMatch = normalizedText.match(/intel\s+(?:core\s+)?ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i);
   if (coreUltraWithModelMatch) {
     return `Intel Core Ultra ${coreUltraWithModelMatch[1]}-${coreUltraWithModelMatch[2]}`;

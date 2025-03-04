@@ -13,7 +13,7 @@ export function ProcessorSpec({ title, processor }: ProcessorSpecProps) {
   // Use enhanced processor processor when we have generic "AMD" or "Intel"
   let displayProcessor = processor;
   
-  // Check for Intel Ultra in title
+  // Check for Intel Ultra in title with a more comprehensive pattern
   const intelUltraMatch = title.match(/Intel\s+(?:Core\s+)?Ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i);
   if (intelUltraMatch) {
     displayProcessor = `Intel Core Ultra ${intelUltraMatch[1]}-${intelUltraMatch[2]}`;
