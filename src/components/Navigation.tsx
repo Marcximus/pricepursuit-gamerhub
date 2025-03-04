@@ -43,6 +43,7 @@ const Navigation = () => {
                 <Laptop className="w-4 h-4" />
                 <span>Laptops</span>
               </Link>
+              <Link to="/compare" className="nav-link">Compare</Link>
               <Link to="/ComparePrice/Desktops" className="nav-link flex items-center space-x-1">
                 <Computer className="w-4 h-4" />
                 <span>Desktops</span>
@@ -65,7 +66,6 @@ const Navigation = () => {
               </Link>
             </div>
             <div className="flex items-center space-x-6">
-              <Link to="/compare" className="nav-link">Compare</Link>
               <Link to="/blog" className="nav-link">Blog</Link>
               <Link to="/about" className="nav-link">About</Link>
               <Link to="/admin" className="nav-link flex items-center space-x-1">
