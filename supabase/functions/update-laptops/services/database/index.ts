@@ -1,4 +1,4 @@
 
 // Re-export all database service functionality
-export * from './updateProduct';
+export * from './product/index';
 export * from './statsLogger';
