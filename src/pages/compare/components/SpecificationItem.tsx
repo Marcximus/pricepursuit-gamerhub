@@ -106,6 +106,7 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({ section }) => {
   
   return (
     <div className="grid grid-cols-7 px-4 py-3">
+      {/* Left value column */}
       <div className="col-span-2 text-center">
         <div className="flex items-center justify-center gap-1">
           {leftStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
@@ -114,7 +115,8 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({ section }) => {
         </div>
       </div>
       
-      <div className="col-span-3 flex items-center justify-center">
+      {/* Specification title column - moved to left side styling */}
+      <div className="col-span-3 flex items-center justify-start pl-4">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -129,6 +131,7 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({ section }) => {
         </TooltipProvider>
       </div>
       
+      {/* Right value column */}
       <div className="col-span-2 text-center">
         <div className="flex items-center justify-center gap-1">
           {rightStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
