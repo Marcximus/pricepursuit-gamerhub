@@ -11,28 +11,30 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("🚀 Compare Laptops function started!");
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log("👌 Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log("📦 Extracting request data...");
     const { laptopLeft, laptopRight } = await req.json();
     
     if (!laptopLeft || !laptopRight) {
+      console.error("❌ Missing laptop data!");
       throw new Error('Missing laptop data for comparison');
     }
     
-    console.log('Comparing laptops:', {
-      leftId: laptopLeft.id,
-      leftBrand: laptopLeft.brand,
-      leftModel: laptopLeft.model,
-      rightId: laptopRight.id,
-      rightBrand: laptopRight.brand,
-      rightModel: laptopRight.model
+    console.log("🔍 Comparing laptops:", {
+      left: `${laptopLeft.brand} ${laptopLeft.model} (ID: ${laptopLeft.id})`,
+      right: `${laptopRight.brand} ${laptopRight.model} (ID: ${laptopRight.id})`
     });
 
     // System prompt to guide the AI response
+    console.log("📝 Preparing system prompt...");
     const systemPrompt = `
 You are an expert laptop comparison assistant. You provide detailed, accurate, and fair comparisons between two laptops.
 
@@ -63,6 +65,7 @@ Your output must be structured EXACTLY as valid JSON in the following format:
 IMPORTANT: You must return ONLY valid JSON that follows the exact structure above. No markdown, no explanation outside the JSON, no additional text.`;
 
     // Create the comparison prompt
+    console.log("💻 Building user prompt with laptop specifications...");
     const userPrompt = `
 Compare these two laptops:
 
@@ -91,7 +94,7 @@ RIGHT LAPTOP:
 Based on the specifications above, provide a comprehensive comparison. Include which laptop is better overall, which one provides better value for money, and what are the specific advantages of each.`;
 
     // Call DeepSeek API for the comparison
-    console.log('Calling DeepSeek API...');
+    console.log("🤖 Calling DeepSeek API...");
     const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -116,29 +119,39 @@ Based on the specifications above, provide a comprehensive comparison. Include w
 
     if (!deepseekResponse.ok) {
       const errorText = await deepseekResponse.text();
-      console.error('DeepSeek API error:', deepseekResponse.status, errorText);
+      console.error('❌ DeepSeek API error:', deepseekResponse.status, errorText);
       throw new Error(`DeepSeek API error: ${deepseekResponse.status}`);
     }
 
     const deepseekData = await deepseekResponse.json();
-    console.log('DeepSeek response received');
+    console.log('✅ DeepSeek response received!');
     
     // Extract the content from the DeepSeek response
     const aiContent = deepseekData.choices[0]?.message?.content;
     if (!aiContent) {
+      console.error('❌ No content in DeepSeek response');
       throw new Error('No content in DeepSeek response');
     }
 
     // Parse the response to ensure it's valid JSON
     try {
+      console.log('🧹 Cleaning up response...');
       // Clean up any potential markdown formatting
       let cleanContent = aiContent.trim()
         .replace(/^```json\s*/, '')
         .replace(/\s*```$/, '');
         
+      console.log('🔄 Parsing JSON response...');
       const comparisonResult = JSON.parse(cleanContent);
       
+      console.log('🏆 Winner determined:', comparisonResult.winner);
+      console.log('📊 Advantages found:', {
+        leftCount: comparisonResult.advantages?.left?.length || 0,
+        rightCount: comparisonResult.advantages?.right?.length || 0
+      });
+      
       // Return the comparison result
+      console.log('🎁 Returning comparison result');
       return new Response(
         JSON.stringify(comparisonResult),
         { 
@@ -149,13 +162,13 @@ Based on the specifications above, provide a comprehensive comparison. Include w
         }
       );
     } catch (parseError) {
-      console.error('Error parsing DeepSeek response:', parseError);
-      console.error('Raw content:', aiContent);
+      console.error('❌ Error parsing DeepSeek response:', parseError);
+      console.error('📄 Raw content:', aiContent);
       throw new Error('Invalid JSON response from DeepSeek');
     }
 
   } catch (error) {
-    console.error('Error in compare-laptops function:', error);
+    console.error('❌ Error in compare-laptops function:', error);
     
     return new Response(
       JSON.stringify({ error: error.message }),
