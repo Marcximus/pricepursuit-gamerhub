@@ -17,7 +17,7 @@ const WinnerBadge: React.FC<WinnerBadgeProps> = ({
   if (winner === "tie") {
     return (
       <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-gradient-to-r from-sky-100 to-amber-100 text-slate-800 rounded-full border border-slate-200 shadow-sm">
-        <span>It's a tie! Both laptops are excellent choices</span>
+        <span>🤝 It's a tie! Both laptops are excellent choices</span>
       </div>
     );
   }
