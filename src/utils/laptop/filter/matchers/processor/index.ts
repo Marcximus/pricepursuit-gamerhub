@@ -5,15 +5,14 @@
  */
 
 // Export the main processor matcher for backward compatibility
-export * from './processorMatcherCore';
+export { matchesProcessorFilter } from './core/processorMatcher';
 
 // Export individual matchers
-export * from './appleProcessor';
-export * from './amdProcessor';
-export * from './intel/intelCore';
-export * from './otherProcessor';
+export { matchesAppleProcessor } from './appleProcessor';
+export { matchesAmdProcessor } from './amdProcessor';
+export { matchesIntelProcessor } from './intel/intelCore';
+export { matchesOtherProcessor } from './otherProcessor';
 
-// Export Intel-specific matchers
-export * from './intel/intelCoreI';
-export * from './intel/intelCoreUltra';
-export * from './intel/intelBudget';
+// These exports are causing conflicts, so I'm removing the direct exports
+// and only exporting them through their respective modules
+// The functions will still be available through the modules that already export them
