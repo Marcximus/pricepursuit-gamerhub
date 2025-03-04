@@ -106,16 +106,14 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({ section }) => {
   
   return (
     <div className="grid grid-cols-7 px-4 py-3">
-      {/* Right column (now on the left) */}
       <div className="col-span-2 text-center">
         <div className="flex items-center justify-center gap-1">
-          {rightStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
-          {rightStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
-          <span>{section.rightValue}</span>
+          {leftStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
+          {leftStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
+          <span>{section.leftValue}</span>
         </div>
       </div>
       
-      {/* Middle column with spec name */}
       <div className="col-span-3 flex items-center justify-center">
         <TooltipProvider>
           <Tooltip>
@@ -131,12 +129,11 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({ section }) => {
         </TooltipProvider>
       </div>
       
-      {/* Left column (now on the right) */}
       <div className="col-span-2 text-center">
         <div className="flex items-center justify-center gap-1">
-          {leftStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
-          {leftStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
-          <span>{section.leftValue}</span>
+          {rightStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
+          {rightStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
+          <span>{section.rightValue}</span>
         </div>
       </div>
     </div>
