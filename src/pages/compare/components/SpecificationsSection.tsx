@@ -22,7 +22,12 @@ const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({ laptopLef
       
       <div className="divide-y">
         {comparisonSections.map((section, index) => (
-          <SpecificationItem key={index} section={section} />
+          <SpecificationItem 
+            key={index} 
+            section={section} 
+            laptopLeftId={laptopLeft?.asin} 
+            laptopRightId={laptopRight?.asin}
+          />
         ))}
       </div>
     </Card>

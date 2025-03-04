@@ -116,6 +116,12 @@ const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }
     }
   }, [showConfetti]);
   
+  // Create an affiliate URL for the product
+  const getAffiliateUrl = (product: Product | null): string => {
+    if (!product || !product.asin) return '#';
+    return `https://amazon.com/dp/${product.asin}?tag=with-laptop-discount-20`;
+  };
+  
   if (!laptop) {
     return (
       <Card className="p-4 h-full flex flex-col">
@@ -125,6 +131,8 @@ const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }
       </Card>
     );
   }
+  
+  const affiliateUrl = getAffiliateUrl(laptop);
   
   return (
     <Card ref={cardRef} className="p-4 h-full flex flex-col relative">
@@ -151,21 +159,35 @@ const LaptopCard: React.FC<LaptopCardProps> = ({ laptop, isWinner, formatPrice }
       
       {/* Add min-height to ensure consistent image area regardless of winner badge */}
       <div className="text-center mb-4 mt-8 min-h-[10rem] flex items-center justify-center">
-        <img 
-          src={laptop.image_url || '/placeholder.svg'} 
-          alt={laptop.title || 'Laptop'} 
-          className="h-40 object-contain mx-auto"
-        />
+        <a 
+          href={affiliateUrl} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="hover:opacity-90 transition-opacity"
+        >
+          <img 
+            src={laptop.image_url || '/placeholder.svg'} 
+            alt={laptop.title || 'Laptop'} 
+            className="h-40 object-contain mx-auto"
+          />
+        </a>
       </div>
       
       <h3 className="text-lg font-semibold mb-1">{laptop.brand} {laptop.model}</h3>
       <p className="text-sm text-muted-foreground mb-2">{laptop.title}</p>
       
       <div className="mt-auto pt-4">
-        <p className="text-2xl font-bold">{formatPrice(laptop.current_price)}</p>
-        {laptop.original_price && laptop.original_price > laptop.current_price && (
-          <p className="text-sm text-muted-foreground line-through">{formatPrice(laptop.original_price)}</p>
-        )}
+        <a 
+          href={affiliateUrl} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="hover:text-blue-600 transition-colors"
+        >
+          <p className="text-2xl font-bold">{formatPrice(laptop.current_price)}</p>
+          {laptop.original_price && laptop.original_price > laptop.current_price && (
+            <p className="text-sm text-muted-foreground line-through">{formatPrice(laptop.original_price)}</p>
+          )}
+        </a>
       </div>
     </Card>
   );

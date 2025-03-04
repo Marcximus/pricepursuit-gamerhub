@@ -1,14 +1,20 @@
 
 import React from "react";
-import { ChevronsUp, ChevronsDown, HelpCircle } from "lucide-react";
+import { ChevronsUp, ChevronsDown, HelpCircle, ExternalLink } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ComparisonSection } from "../types";
 
 interface SpecificationItemProps {
   section: ComparisonSection;
+  laptopLeftId?: string;
+  laptopRightId?: string;
 }
 
-const SpecificationItem: React.FC<SpecificationItemProps> = ({ section }) => {
+const SpecificationItem: React.FC<SpecificationItemProps> = ({ 
+  section, 
+  laptopLeftId, 
+  laptopRightId 
+}) => {
   // Determine better/worse indicators if compare function exists
   let leftStatus = 'equal';
   let rightStatus = 'equal';
@@ -102,6 +108,15 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({ section }) => {
     }
   };
   
+  // Create affiliate URLs for both laptops
+  const getAffiliateUrl = (asin?: string): string => {
+    if (!asin) return '#';
+    return `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
+  };
+  
+  const leftAffiliateUrl = getAffiliateUrl(laptopLeftId);
+  const rightAffiliateUrl = getAffiliateUrl(laptopRightId);
+  
   const { emoji, tooltip } = getSpecInfo(section.title);
   
   return (
@@ -124,20 +139,32 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({ section }) => {
       
       {/* Left laptop value - moved to middle column */}
       <div className="col-span-2 text-center">
-        <div className="flex items-center justify-center gap-1">
+        <a 
+          href={leftAffiliateUrl} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-1 hover:text-blue-600 transition-colors group"
+        >
           {leftStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
           {leftStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
           <span>{section.leftValue}</span>
-        </div>
+          <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+        </a>
       </div>
       
       {/* Right laptop value - kept in the right column */}
       <div className="col-span-2 text-center">
-        <div className="flex items-center justify-center gap-1">
+        <a 
+          href={rightAffiliateUrl} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-1 hover:text-blue-600 transition-colors group"
+        >
           {rightStatus === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
           {rightStatus === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
           <span>{section.rightValue}</span>
-        </div>
+          <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+        </a>
       </div>
     </div>
   );
