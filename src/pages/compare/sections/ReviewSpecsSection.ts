@@ -8,19 +8,20 @@ export const getReviewSpecs = (
   laptopLeft: Product | null, 
   laptopRight: Product | null
 ): ComparisonSection[] => {
-  // Format Wilson Score (convert from -1 to 1 range to 0-100 scale with proper capping)
+  // Format Wilson Score (from -1 to 1 range to a percentage with proper explanation)
   const formatWilsonScore = (score: number | null | undefined): string => {
     if (score === null || score === undefined || isNaN(score)) return 'N/A';
     
-    // Convert Wilson score (-1 to 1) to a 0-100 scale and cap at 100
-    const normalizedScore = Math.min(100, Math.max(0, (score + 1) * 50));
-    return `${normalizedScore.toFixed(0)}/100`;
+    // Wilson score is typically between -1 and 1, 
+    // convert to a confidence percentage (0-100%)
+    const confidencePercentage = Math.min(100, Math.max(0, Math.round((score + 1) * 50)));
+    return `${confidencePercentage}% confidence`;
   };
 
   // Compare Wilson scores
   const compareWilsonScores = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
-    const aMatch = a.match(/(\d+)\/100/);
-    const bMatch = b.match(/(\d+)\/100/);
+    const aMatch = a.match(/(\d+)%/);
+    const bMatch = b.match(/(\d+)%/);
     
     if (aMatch && bMatch) {
       const aScore = parseInt(aMatch[1], 10);
