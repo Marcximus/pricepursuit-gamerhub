@@ -7,7 +7,10 @@ type StorageSpecProps = {
 };
 
 export function StorageSpec({ title, storage }: StorageSpecProps) {
+  // If storage is not provided, try to extract it from the title
   const extractedStorage = !storage ? processStorage(undefined, title) : null;
+  
+  // Use provided storage or extracted storage, with a fallback
   const displayStorage = storage || extractedStorage || 'Not Specified';
   
   return (

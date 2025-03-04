@@ -11,12 +11,12 @@ export const updateProductStorage = async (asin: string, storageSpec: string) =>
   return updateProductByAsin(asin, { storage: storageSpec });
 };
 
-// Function to update the Lenovo IdeaPad storage from 512 TB to 512 GB
-export const updateLenovoIdeaPadStorage = async () => {
-  const ASIN = 'B07QQB7552'; // Using the ASIN provided in the user message
-  const NEW_STORAGE = '512 GB SSD';
+// Function to update the Samsung Galaxy Book3 Pro storage from 16GB to 1TB
+export const updateSamsungGalaxyBook3Storage = async () => {
+  const ASIN = 'B0BSMSDK49'; // This is a placeholder ASIN - replace with actual ASIN
+  const NEW_STORAGE = '1 TB SSD';
   
-  console.log(`Updating storage for product ${ASIN} to "${NEW_STORAGE}"`);
+  console.log(`Updating storage for Samsung Galaxy Book3 Pro to "${NEW_STORAGE}"`);
   const result = await updateProductStorage(ASIN, NEW_STORAGE);
   
   return result;

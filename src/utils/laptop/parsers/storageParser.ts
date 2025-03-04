@@ -69,3 +69,18 @@ export const getStorageValue = (storage: string): number => {
       return 0;
   }
 };
+
+/**
+ * Formats a storage value (in GB) to a human-readable string
+ */
+export const formatStorageValue = (gbValue: number): string => {
+  if (gbValue <= 0) return 'N/A';
+  
+  // Convert to TB for larger values
+  if (gbValue >= 1000) {
+    const tbValue = gbValue / 1024;
+    return `${tbValue.toFixed(tbValue % 1 === 0 ? 0 : 1)} TB`;
+  }
+  
+  return `${Math.round(gbValue)} GB`;
+};

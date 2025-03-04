@@ -26,76 +26,46 @@ export const processStorage = (storage: string | undefined, title: string, descr
   
   // Look for storage in the text (more specific patterns first)
   const storagePatterns = [
-    // Match specific SSD types with size
-    /\b(\d+)\s*(?:GB|TB)\s*(?:Gen ?[1-5]|PCIe|NVMe|M\.2)?\s*SSD\b/i,
+    // Match explicit storage mentions with size and unit
+    /\b(\d+)\s*(?:TB|GB)\s*(?:SSD|HDD|storage|flash|drive)\b/i,
     
-    // Match SSD with PCIE/NVME generation
-    /\b(\d+)\s*(?:GB|TB)\s*(?:PCIe|NVMe)\s*(?:Gen ?[1-5])?\s*(?:x[24])?\s*(?:SSD|Storage)\b/i,
+    // Match numerical values followed by TB/GB near storage indicators
+    /\b(\d+)\s*(?:TB|GB)\b(?=[^.]*?(?:storage|ssd|drive))/i,
     
-    // Match SSD/HDD with size and optional type
-    /\b(\d+)\s*(?:GB|TB)\s*(?:Solid State Drive|Hard Drive|SSD|HDD|eMMC|Storage)\b/i,
+    // Match storage in technical specs format
+    /\bstorage:?\s*(\d+)\s*(?:TB|GB)\b/i,
+    /\b(?:ssd|hdd|storage):?\s*(\d+)\s*(?:TB|GB)\b/i,
     
-    // Match storage keywords with sizes
-    /\bStorage:?\s*(\d+)\s*(?:GB|TB)\s*(?:SSD|HDD|PCIe|NVMe|eMMC)?\b/i,
-    /\b(?:SSD|HDD|Hard Drive):?\s*(\d+)\s*(?:GB|TB)\b/i,
+    // Match storage mentions in product title format (like 16GB / 1TB)
+    /\b(?:\d+\s*GB\s*\/\s*)(\d+)\s*TB\b/i,
+    /\b(?:\d+\s*GB\s*[\/,]\s*)(\d+)\s*GB\b/i,
     
-    // Match storage mentions with Gen/PCIe/NVMe specification
-    /\b(?:Gen ?[1-5]|PCIe|NVMe|M\.2)?\s*(\d+)\s*(?:GB|TB)\s*(?:SSD|Storage)\b/i,
+    // Slashes often separate RAM and storage
+    /\b\d+\s*GB\s*\/\s*(\d+)\s*(?:TB|GB)\b/i,
     
-    // Match general storage pattern after specific ones
-    /\b(\d+)\s*(?:GB|TB)\s*(?:Storage|Drive)\b/i,
-    
-    // Match dual storage configurations
-    /\b(\d+)\s*(?:GB|TB)\s*(?:SSD|PCIe|NVMe)\s*\+\s*(\d+)\s*(?:GB|TB)\s*(?:HDD|SSD)\b/i,
-    
-    // Generic storage pattern - this should catch "1TB SSD" in our example
-    /\b(\d+)\s*(?:GB|TB)\b(?!.*(?:RAM|Memory))/i,
+    // Match any TB/GB mention that doesn't look like RAM
+    /\b(\d+)\s*TB\b(?!.*?RAM)/i,
+    /\b(\d+)\s*GB\b(?!.*?(?:RAM|memory))/i,
   ];
   
   for (const pattern of storagePatterns) {
     const match = textToSearch.match(pattern);
     if (match) {
-      // Check for dual storage configuration
-      if (pattern.source.includes('\\+') && match[2]) {
-        const primarySize = match[1];
-        const primaryUnit = textToSearch.substring(match.index, match.index + 50).includes('TB') ? 'TB' : 'GB';
-        
-        const secondarySize = match[2];
-        const secondaryUnit = textToSearch.substring(match.index + match[0].indexOf('+'), match.index + 50).includes('TB') ? 'TB' : 'GB';
-        
-        const primaryType = textToSearch.substring(match.index, match.index + match[0].indexOf('+')).includes('SSD') ? 'SSD' : 'HDD';
-        const secondaryType = textToSearch.substring(match.index + match[0].indexOf('+'), match.index + 50).includes('SSD') ? 'SSD' : 'HDD';
-        
-        // For standardized filtering, format as the larger of the two storage values
-        const primarySizeNum = parseInt(primarySize, 10) * (primaryUnit === 'TB' ? 1024 : 1);
-        const secondarySizeNum = parseInt(secondarySize, 10) * (secondaryUnit === 'TB' ? 1024 : 1);
-        const totalStorageGB = primarySizeNum + secondarySizeNum;
-        
-        if (totalStorageGB >= 1024) {
-          const tbSize = (totalStorageGB / 1024).toFixed(1);
-          return `${primarySize}${primaryUnit} ${primaryType} + ${secondarySize}${secondaryUnit} ${secondaryType} (${tbSize}TB Total)`;
-        }
-        
-        return `${primarySize}${primaryUnit} ${primaryType} + ${secondarySize}${secondaryUnit} ${secondaryType}`;
-      }
-      
-      // Process single storage
       const size = match[1];
-      let unit = match[0].toLowerCase().includes('tb') ? 'TB' : 'GB';
+      let unit = textToSearch.substring(match.index || 0, (match.index || 0) + match[0].length).toLowerCase().includes('tb') ? 'TB' : 'GB';
       
-      // Validate storage values for realism
-      // Common laptop SSD/HDD sizes are typically 128GB, 256GB, 512GB, 1TB, 2TB
-      // Catching unrealistic values like 512TB when it should be 512GB
+      // Validate storage size is reasonable for laptops
       const sizeNum = parseInt(size, 10);
+      
+      // Correct obvious errors (e.g., 512 TB should be 512 GB)
+      let correctedUnit = unit;
       if (unit.toLowerCase() === 'tb' && sizeNum > 16) {
-        console.warn(`Unrealistic TB storage value detected: ${sizeNum}TB. Likely a typo for GB.`);
-        // Auto-correct common laptop storage sizes
+        // Auto-correct common laptop storage sizes that would be unrealistic as TB
         if (sizeNum === 128 || sizeNum === 256 || sizeNum === 512 || sizeNum === 1000 || sizeNum === 2000) {
-          unit = 'GB';
-          console.log(`Auto-corrected storage unit from TB to GB: ${sizeNum}${unit}`);
+          correctedUnit = 'GB';
+          console.log(`Auto-corrected storage from ${sizeNum}TB to ${sizeNum}GB`);
         } else {
-          // Skip this match if it's unrealistic and we couldn't auto-correct it
-          continue;
+          continue; // Skip unrealistic storage values
         }
       }
       
@@ -115,51 +85,48 @@ export const processStorage = (storage: string | undefined, title: string, descr
         type = 'PCIe ' + type;
       }
       
-      // Validate storage size is reasonable for laptops
-      // Common sizes: 128GB, 256GB, 512GB, 1TB, 2TB
-      const normalizedSizeGB = unit.toLowerCase() === 'tb' ? sizeNum * 1024 : sizeNum;
-      
-      if (normalizedSizeGB < 32 || normalizedSizeGB > 16384) { // 32GB to 16TB range
-        console.warn(`Storage value outside reasonable range: ${size}${unit} (${normalizedSizeGB}GB)`);
-        continue; // Skip unrealistic storage values
-      }
-      
-      return `${size}${unit} ${type}`.trim();
+      return `${size} ${correctedUnit} ${type}`.trim();
     }
   }
   
-  // Advanced fallback: look for storage specifications in description
-  if (description) {
-    const descStorageMatch = description.match(/\b(?:storage|ssd|hard drive|hdd)[:\s]+(\d+)\s*(?:GB|TB)\b/i);
-    if (descStorageMatch) {
-      const storageSize = descStorageMatch[1];
-      const storageUnit = descStorageMatch[0].toLowerCase().includes('tb') ? 'TB' : 'GB';
-      
-      // Detect storage type
-      let storageType = 'SSD'; // Default to SSD for modern laptops
-      if (descStorageMatch[0].toLowerCase().includes('hdd') || 
-          descStorageMatch[0].toLowerCase().includes('hard drive')) {
-        storageType = 'HDD';
-      }
-      
-      // Validate storage size
-      const sizeNum = parseInt(storageSize, 10);
-      
-      // Correct obvious errors (e.g., 512 TB should be 512 GB)
-      let correctedUnit = storageUnit;
-      if (storageUnit.toLowerCase() === 'tb' && sizeNum > 16) {
-        // Auto-correct common laptop storage sizes that would be unrealistic as TB
-        if (sizeNum === 128 || sizeNum === 256 || sizeNum === 512 || sizeNum === 1000 || sizeNum === 2000) {
-          correctedUnit = 'GB';
-          console.log(`Auto-corrected description storage from ${sizeNum}TB to ${sizeNum}GB`);
-        } else {
-          return undefined; // Skip unrealistic storage values
-        }
-      }
-      
-      return `${storageSize}${correctedUnit} ${storageType}`;
+  // If no match found but we see "1TB" in title or description
+  if (textToSearch.match(/\b1\s*TB\b/i)) {
+    return "1 TB SSD";
+  }
+  
+  // If no match found but we see common storage patterns like "512GB"
+  const commonSizes = ["256GB", "512GB", "1TB", "2TB"];
+  for (const size of commonSizes) {
+    if (textToSearch.includes(size)) {
+      return `${size.replace(/(GB|TB)$/i, " $1")} SSD`;
     }
   }
   
   return undefined;
+};
+
+// Helper function to validate storage values
+export const isRealisticStorageValue = (storage: string): boolean => {
+  if (!storage) return false;
+  
+  // Check for obviously wrong values like "512 TB" which should be "512 GB"
+  if (storage.match(/\b(128|256|512|1000|2000)\s*TB\b/i)) {
+    return false;
+  }
+  
+  // Extract the numeric value and unit
+  const match = storage.match(/(\d+)\s*(TB|GB)/i);
+  if (!match) return true; // Can't validate without a match
+  
+  const value = parseInt(match[1], 10);
+  const unit = match[2].toLowerCase();
+  
+  // Typical laptop storage ranges
+  if (unit === 'tb') {
+    return value >= 1 && value <= 16; // 1TB to 16TB is reasonable
+  } else if (unit === 'gb') {
+    return value >= 128 && value <= 4000; // 128GB to 4000GB is reasonable
+  }
+  
+  return true;
 };
