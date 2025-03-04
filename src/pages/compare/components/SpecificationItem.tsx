@@ -51,17 +51,17 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
       case "benchmark score":
         return {
           emoji: "🚀",
-          tooltip: "Overall performance score. Higher values indicate better overall system performance."
+          tooltip: "Overall performance score calculated based on processor (35%), RAM (20%), storage (15%), graphics (20%), and screen resolution (10%). Higher values indicate better overall system performance."
         };
       case "processor score":
         return {
           emoji: "⚡",
-          tooltip: "CPU performance score. Higher values indicate faster processing capabilities."
+          tooltip: "CPU performance score based on processor type, generation, and model. For example, Apple M3 Ultra (95), Intel i9 (90), AMD Ryzen 9 (88), Intel i7/M2 (80), Intel i5/M1 (70), Intel i3 (50), Celeron/Pentium (30). Higher values indicate faster processing capabilities."
         };
       case "wilson score":
         return {
           emoji: "⭐",
-          tooltip: "Statistical confidence rating that considers both rating value and number of ratings. A more reliable measure than simple rating average."
+          tooltip: "Statistical confidence rating that considers both rating value and number of ratings. Calculated using the lower bound of Wilson score confidence interval for a Bernoulli parameter. A more reliable measure than simple rating average, especially when comparing items with different numbers of ratings."
         };
       case "rating":
         return {
