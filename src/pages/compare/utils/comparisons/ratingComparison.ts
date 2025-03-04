@@ -1,4 +1,10 @@
 
+// Format ratings consistently and handle comparison
+export const formatRating = (rating: number | null | undefined): string => {
+  if (!rating) return 'N/A';
+  return `${rating.toFixed(1)}/5`;
+};
+
 export const compareRatings = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
   const aMatch = a.match(/(\d+\.\d+)\/5/);
   const bMatch = b.match(/(\d+\.\d+)\/5/);
