@@ -15,6 +15,25 @@ export const matchesGraphicsFilter = (
 ): boolean => {
   if (!productValue) return false;
   
+  // Special case for "Other Graphics" category
+  if (filterValue === 'Other Graphics') {
+    // Normalize the product value
+    const normalizedProduct = normalizeGraphics(productValue);
+    if (!normalizedProduct) return false;
+    
+    // Get the filter value for the product
+    const productFilterValue = getGraphicsFilterValue(normalizedProduct);
+    
+    // Check if this is a common graphics option by checking for key patterns
+    const isCommonNvidia = /NVIDIA (RTX|GTX) \d{4}|NVIDIA (RTX|GTX) Graphics|NVIDIA MX \d{3}/i.test(productFilterValue);
+    const isCommonAmd = /AMD Radeon RX \d{4}|AMD Radeon Vega|AMD Radeon Graphics/i.test(productFilterValue);
+    const isCommonIntel = /Intel (Arc|Iris Xe|Iris|UHD|HD) Graphics/i.test(productFilterValue);
+    const isCommonApple = /Apple M[123] (Ultra|Max|Pro)? GPU/i.test(productFilterValue);
+    
+    // If it doesn't match any common pattern, it's considered "Other Graphics"
+    return !(isCommonNvidia || isCommonAmd || isCommonIntel || isCommonApple);
+  }
+  
   // Normalize both filter and product values for consistency
   const normalizedProduct = normalizeGraphics(productValue);
   

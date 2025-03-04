@@ -29,6 +29,30 @@ export const getUniqueFilterValues = (
   // Get validated values
   const values = getValidValues(laptops, key, normalizer, validator);
   
+  // Special handling for graphics cards to group them
+  if (key === 'graphics') {
+    // Count occurrences of each graphics card value
+    const valueCounts = new Map<string, number>();
+    values.forEach(value => {
+      const count = valueCounts.get(value) || 0;
+      valueCounts.set(value, count + 1);
+    });
+    
+    // Filter out options with fewer than 10 occurrences and add them to "Other Graphics"
+    const popularOptions = values.filter(value => (valueCounts.get(value) || 0) >= 10);
+    const hasRareOptions = values.some(value => (valueCounts.get(value) || 0) < 10);
+    
+    // Sort the popular options
+    const sortedPopularOptions = sorter(popularOptions);
+    
+    // Add "Other Graphics" if there are rare options
+    if (hasRareOptions) {
+      return new Set([...sortedPopularOptions, 'Other Graphics']);
+    }
+    
+    return new Set(sortedPopularOptions);
+  }
+  
   // Add specific logging for storage to help debug the issue
   if (key === 'storage') {
     console.log(`Storage values before sorting: ${values.length} values`);
