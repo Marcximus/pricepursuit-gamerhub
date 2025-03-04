@@ -62,27 +62,15 @@ const LaptopDisplay: React.FC<LaptopDisplayProps> = ({
           </div>
         </a>
         
-        <div className="mt-3 flex gap-2">
-          <a 
-            href={affiliateUrl} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="flex-1 flex items-center justify-center gap-1 text-sm text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 py-2 rounded-md border border-slate-700"
-          >
-            <span>View</span>
-            <ArrowUpRight className="h-3 w-3" />
-          </a>
-          
-          <a 
-            href={affiliateUrl} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="flex-1 flex items-center justify-center gap-1 text-sm text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 py-2 rounded-md border border-slate-700"
-          >
-            <span>Tech Specs</span>
-            <ArrowUpRight className="h-3 w-3" />
-          </a>
-        </div>
+        <a 
+          href={affiliateUrl} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="mt-3 flex items-center justify-center gap-1 text-sm text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-md border border-slate-700"
+        >
+          <span>Tech Specs</span>
+          <ArrowUpRight className="h-3 w-3" />
+        </a>
       </div>
     </>
   );
