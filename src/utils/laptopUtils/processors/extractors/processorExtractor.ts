@@ -50,7 +50,9 @@ export function standardizeProcessor(processor: string): string {
     .replace(/intel pentium gold/i, 'Intel Pentium Gold')
     .replace(/intel pentium silver/i, 'Intel Pentium Silver')
     .replace(/intel pentium/i, 'Intel Pentium')
-    // Normalize AMD naming
+    // Improved pattern for Intel Gen processors (e.g., "Intel 12th Gen i7")
+    .replace(/intel\s+(\d+)(?:th|nd|rd)\s+gen\s+i([3579])/i, 'Intel Core i$2 $1th Gen')
+    // Standardize AMD naming
     .replace(/amd ryzen/i, 'AMD Ryzen')
     .replace(/\br([3579])[-\s](\d{4}[a-z]*)/i, 'AMD Ryzen $1-$2')
     .replace(/\bryzen\s+(\d)\s+(\d{4}[a-z]*)/i, 'AMD Ryzen $1-$2')

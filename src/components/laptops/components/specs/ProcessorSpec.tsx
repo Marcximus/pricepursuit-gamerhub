@@ -13,11 +13,18 @@ export function ProcessorSpec({ title, processor }: ProcessorSpecProps) {
   // Use enhanced processor processor when we have generic "AMD" or "Intel"
   let displayProcessor = processor;
   
+  // Check for Intel generation format in title (e.g., "Intel 12th Gen i7")
+  const intelGenMatch = title.match(/Intel\s+(\d+)(?:th|nd|rd)\s+Gen\s+i([3579])/i);
+  if (intelGenMatch) {
+    displayProcessor = `Intel Core i${intelGenMatch[2]} ${intelGenMatch[1]}th Gen`;
+  }
   // Check for Intel Ultra in title with a more comprehensive pattern
-  const intelUltraMatch = title.match(/Intel\s+(?:Core\s+)?Ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i);
-  if (intelUltraMatch) {
-    displayProcessor = `Intel Core Ultra ${intelUltraMatch[1]}-${intelUltraMatch[2]}`;
-  } else if (!processor || processor === 'AMD' || processor === 'Intel') {
+  else if (title.match(/Intel\s+(?:Core\s+)?Ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i)) {
+    const ultraMatch = title.match(/Intel\s+(?:Core\s+)?Ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i);
+    displayProcessor = `Intel Core Ultra ${ultraMatch[1]}-${ultraMatch[2]}`;
+  } 
+  // If processor is generic or missing, try to extract from title
+  else if (!processor || processor === 'AMD' || processor === 'Intel') {
     // Try using the enhanced processor extractor for better results
     const enhancedProcessor = processProcessor(processor, title);
     if (enhancedProcessor && enhancedProcessor !== 'AMD' && enhancedProcessor !== 'Intel') {

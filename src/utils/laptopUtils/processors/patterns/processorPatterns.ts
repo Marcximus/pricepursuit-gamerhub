@@ -23,6 +23,8 @@ export const amdRyzenPatterns = {
 
 // Intel Core patterns
 export const intelCorePatterns = {
+  // NEW: Add pattern for "Intel 12th Gen i7" format
+  intelGenFormat: /\bintel\s+(\d+)(?:th|nd|rd)\s+gen\s+i([3579])\b/i,
   coreUltra: /\b(?:intel\s+)?core\s+ultra\s+([579])\s*(?:[0-9]{3}[a-z]*)?/i,
   coreI: /\b(?:intel\s+)?core\s+i([3579])(?:[- ](\d{4,5}[a-z]*))?/i,
   iSeries: /\bi([3579])(?:[- ](\d{4,5}[a-z]*))?/i,

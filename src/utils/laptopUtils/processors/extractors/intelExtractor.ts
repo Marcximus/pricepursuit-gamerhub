@@ -9,6 +9,12 @@ export function extractIntelProcessor(text: string): string | null {
   
   const normalizedText = text.toLowerCase();
   
+  // NEW PATTERN: Check for "Intel Xth Gen iY" format (e.g., "Intel 12th Gen i7")
+  const intelGenMatch = normalizedText.match(/intel\s+(\d+)(?:th|nd|rd)\s+gen\s+i([3579])/i);
+  if (intelGenMatch) {
+    return `Intel Core i${intelGenMatch[2]} ${intelGenMatch[1]}th Gen`;
+  }
+  
   // Check for Core Ultra patterns (with model numbers) - improved pattern
   const coreUltraWithModelMatch = normalizedText.match(/intel\s+(?:core\s+)?ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i);
   if (coreUltraWithModelMatch) {
@@ -42,7 +48,6 @@ export function extractIntelProcessor(text: string): string | null {
   }
   
   // Check for Intel budget processors
-  // Fix: Use the existing celeron pattern to check for and extract model
   if (intelBudgetPatterns.celeron.test(normalizedText)) {
     const match = normalizedText.match(/\b(?:intel\s+)?celeron\s+([a-z0-9]+)\b/i);
     if (match && match[1]) {
