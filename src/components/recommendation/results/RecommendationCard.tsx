@@ -10,6 +10,7 @@ import { ProductRating } from './components/ProductRating';
 import { ProductPrice } from './components/ProductPrice';
 import { ProductReason } from './components/ProductReason';
 import { ProductActions } from './components/ProductActions';
+import { ProductHighlights } from './components/ProductHighlights';
 
 interface RecommendationCardProps {
   result: RecommendationResult;
@@ -60,6 +61,8 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
           deliveryInfo={productData.deliveryInfo}
           url={productData.productUrl}
         />
+        
+        <ProductHighlights highlights={productData.highlights} />
         
         <ProductReason reason={productData.reason} />
         

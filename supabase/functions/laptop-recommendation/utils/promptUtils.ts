@@ -26,13 +26,15 @@ Provide your response in the following JSON format:
       "model": "Specific laptop model name",
       "searchQuery": "Search query for Amazon (brand + model)",
       "priceRange": {"min": minimum_price, "max": maximum_price},
-      "reason": "Detailed explanation of why this laptop is recommended for the user's needs"
+      "reason": "Detailed explanation of why this laptop is recommended for the user's needs",
+      "usage": "Brief summary of what this laptop is best for"
     },
     {
       "model": "Second specific laptop model name",
       "searchQuery": "Search query for Amazon (brand + model)",
       "priceRange": {"min": minimum_price, "max": maximum_price},
-      "reason": "Detailed explanation of why this laptop is recommended for the user's needs"
+      "reason": "Detailed explanation of why this laptop is recommended for the user's needs",
+      "usage": "Brief summary of what this laptop is best for"
     }
   ]
 }
@@ -42,8 +44,9 @@ Important guidelines:
 2. The searchQuery should be optimized for Amazon search (typically brand + model)
 3. Set a reasonable price range around the expected price of the laptop
 4. Provide detailed reasoning that references the user's specific requirements
-5. The two recommendations should be different from each other to provide alternatives
-6. Ensure the recommendations match the user's budget`;
+5. Include a brief "usage" field that summarizes what the laptop is best suited for (e.g., "Gaming", "Productivity", "Creative work")
+6. The two recommendations should be different from each other to provide alternatives
+7. Ensure the recommendations match the user's budget`;
 }
 
 /**

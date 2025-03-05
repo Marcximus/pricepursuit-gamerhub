@@ -1,10 +1,11 @@
-
 /**
  * Utilities for formatting product data from recommendation results
  */
 import { RecommendationResult } from '../../types/quizTypes';
 import { formatPrice, calculateDiscount } from './priceFormatter';
 import { getProductUrl } from './urlFormatter';
+import { Battery, Check, Sparkle, Star, ThumbsUp, Weight, Zap } from 'lucide-react';
+import React from 'react';
 
 /**
  * Extract formatted product information from a recommendation result
@@ -23,7 +24,72 @@ export interface FormattedProductData {
   reason: string;
   index: number;
   searchQuery: string;
+  highlights: {text: string, icon: React.ReactNode}[];
 }
+
+/**
+ * Generate highlights based on product and recommendation data
+ */
+const generateHighlights = (result: RecommendationResult): {text: string, icon: React.ReactNode}[] => {
+  const highlights: {text: string, icon: React.ReactNode}[] = [];
+  const { recommendation, product } = result;
+  
+  // Add processor highlight if available
+  if (product?.processor) {
+    highlights.push({
+      text: `Powerful ${product.processor}`,
+      icon: <Zap size={16} />
+    });
+  }
+  
+  // Add RAM highlight if available
+  if (product?.ram) {
+    highlights.push({
+      text: `${product.ram} for smooth multitasking`,
+      icon: <Check size={16} />
+    });
+  }
+  
+  // Add storage highlight if available
+  if (product?.storage) {
+    highlights.push({
+      text: `Ample ${product.storage} storage`,
+      icon: <Sparkle size={16} />
+    });
+  }
+  
+  // Add graphics highlight if available
+  if (product?.graphics) {
+    highlights.push({
+      text: `Great visuals with ${product.graphics}`,
+      icon: <Star size={16} />
+    });
+  }
+  
+  // Add battery life highlight if available
+  if (product?.battery_life) {
+    highlights.push({
+      text: `Long battery life: ${product.battery_life}`,
+      icon: <Battery size={16} />
+    });
+  }
+  
+  // Add weight highlight if available
+  if (product?.weight) {
+    highlights.push({
+      text: `Lightweight at ${product.weight}`,
+      icon: <Weight size={16} />
+    });
+  }
+  
+  // General recommendation highlight
+  highlights.push({
+    text: `Recommended for ${recommendation.usage || 'your needs'}`,
+    icon: <ThumbsUp size={16} />
+  });
+  
+  return highlights.slice(0, 4); // Limit to 4 highlights
+};
 
 /**
  * Extract and format all product data from a recommendation result
@@ -57,6 +123,9 @@ export const formatProductData = (
     ? calculateDiscount(product.product_price, product.product_original_price)
     : undefined;
 
+  // Generate highlights based on product information
+  const highlights = generateHighlights(result);
+
   return {
     title: product?.product_title || recommendation.model,
     imageUrl: product?.product_photo,
@@ -70,6 +139,7 @@ export const formatProductData = (
     deliveryInfo: product?.delivery,
     reason: recommendation.reason,
     index,
-    searchQuery: recommendation.searchQuery
+    searchQuery: recommendation.searchQuery,
+    highlights
   };
 };
