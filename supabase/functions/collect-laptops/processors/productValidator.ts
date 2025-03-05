@@ -1,0 +1,52 @@
+
+import { containsForbiddenKeywords } from "../utils/productFilters.ts";
+
+/**
+ * Validates and filters products to ensure they're laptops
+ * @param products Raw product data array
+ * @param brand Brand name
+ * @param detailedLogging Whether to log detailed information
+ * @returns Filtered array of laptop products
+ */
+export function validateAndFilterProducts(products: any[], brand: string, detailedLogging = false): any[] {
+  // Validate input
+  if (!products || !Array.isArray(products)) {
+    console.error(`Invalid products array for brand ${brand}:`, products);
+    return [];
+  }
+  
+  console.log(`Validating ${products.length} products for brand ${brand}`);
+  
+  // Filter out non-laptop products by checking titles
+  const laptopProducts = products.filter(product => {
+    const title = (product.title || '').toLowerCase();
+    
+    // Keywords that indicate the product is likely a laptop
+    const laptopKeywords = ['laptop', 'notebook', 'ultrabook', 'chromebook', 'gaming laptop', 'macbook'];
+    
+    // Keywords that indicate the product is NOT a laptop
+    const nonLaptopKeywords = [
+      'laptop stand', 'laptop bag', 'laptop sleeve', 'laptop backpack', 'laptop case',
+      'laptop mount', 'laptop desk', 'laptop tray', 'laptop battery', 'laptop screen protector',
+      'laptop charger', 'laptop cooler', 'laptop cooling pad', 'laptop skin', 'laptop sticker',
+      'laptop accessory', 'laptop power adapter', 'laptop cart', 'laptop table', 'laptop riser'
+    ];
+    
+    // Check if the title contains any laptop keywords but none of the non-laptop keywords
+    // Also use our more comprehensive forbidden keywords filter - ONLY ON TITLE
+    const isLaptop = 
+      laptopKeywords.some(keyword => title.includes(keyword)) && 
+      !nonLaptopKeywords.some(keyword => title.includes(keyword)) &&
+      !containsForbiddenKeywords(product.title || '');
+    
+    if (detailedLogging && !isLaptop) {
+      console.log(`Filtering out non-laptop: "${title}"`);
+    }
+    
+    return isLaptop;
+  });
+  
+  console.log(`Filtered to ${laptopProducts.length} laptop products out of ${products.length} total products`);
+  
+  return laptopProducts;
+}
