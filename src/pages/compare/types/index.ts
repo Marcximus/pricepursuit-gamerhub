@@ -6,8 +6,4 @@ export interface ComparisonSection {
   leftValue: string;
   rightValue: string;
   compare?: (a: string, b: string) => 'better' | 'worse' | 'equal' | 'unknown';
-  specInfo?: {
-    emoji: string;
-    tooltip: string;
-  };
 }
