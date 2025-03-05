@@ -117,10 +117,9 @@ const LaptopToolbar: React.FC<LaptopToolbarProps> = ({
           <LaptopSort onChange={onSortChange} value={sortOption} />
         </div>
       </div>
-      <SearchBar 
-        onSearch={setSearchTerm} 
-        placeholder="Search by name, brand, specs..." 
-      />
+      
+      {/* Removing the search bar that was here */}
+      
     </div>
   );
 };
