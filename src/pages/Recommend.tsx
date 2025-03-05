@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
+import LaptopParticles from '../components/recommendation/LaptopParticles';
 
 const Recommend = () => {
   const navigate = useNavigate();
@@ -27,12 +28,17 @@ const Recommend = () => {
             </Button>
           </div>
 
-          <Card className="bg-white shadow-md border-0">
-            <CardContent className="pt-6">
-              <h1 className="text-3xl font-bold text-center mb-6">Find Your Perfect Laptop</h1>
-              <p className="text-center text-gray-600 mb-8">
-                Answer a few questions and we'll recommend the best laptops for your needs
-              </p>
+          <Card className="bg-white shadow-md border-0 relative overflow-hidden">
+            <div className="relative">
+              <LaptopParticles />
+              <div className="relative pt-6 z-10 bg-gradient-to-b from-transparent via-white to-white">
+                <h1 className="text-3xl font-bold text-center mb-2">Find Your Perfect Laptop</h1>
+                <p className="text-center text-gray-600 mb-6">
+                  Answer a few questions and we'll recommend the best laptops for your needs
+                </p>
+              </div>
+            </div>
+            <CardContent className="pt-0">
               <RecommendationQuiz />
             </CardContent>
           </Card>
