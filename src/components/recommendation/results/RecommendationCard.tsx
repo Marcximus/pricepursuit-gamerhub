@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -48,6 +47,103 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
     } else {
       return `https://www.amazon.com/s?k=${encodeURIComponent(result.recommendation.searchQuery)}`;
     }
+  };
+
+  // Format the recommendation reason with emojis and paragraphs
+  const formatRecommendationReason = (reason: string): React.ReactNode => {
+    if (!reason) return <p className="text-gray-600 text-sm">No details available 🤔</p>;
+    
+    // Split reason into paragraphs on periods followed by spaces
+    // but only if there are at least 2 sentences worth splitting
+    const sentences = reason.split(/\.\s+/);
+    
+    if (sentences.length <= 1) {
+      // If it's just one sentence, add some emojis but don't split
+      const emojiReason = addEmojisToText(reason);
+      return <p className="text-gray-600 text-sm">{emojiReason}</p>;
+    }
+    
+    // Group sentences into 1-2 sentences per paragraph
+    const paragraphs: string[] = [];
+    let currentParagraph = "";
+    
+    sentences.forEach((sentence, i) => {
+      // Add period back if this isn't the last sentence
+      const formattedSentence = i < sentences.length - 1 ? sentence + "." : sentence;
+      
+      if (currentParagraph.length === 0) {
+        currentParagraph = formattedSentence;
+      } else if (currentParagraph.split(" ").length + formattedSentence.split(" ").length < 20) {
+        // If combined would be less than ~20 words, keep in same paragraph
+        currentParagraph += " " + formattedSentence;
+      } else {
+        // Otherwise start a new paragraph
+        paragraphs.push(currentParagraph);
+        currentParagraph = formattedSentence;
+      }
+    });
+    
+    // Add the last paragraph if not empty
+    if (currentParagraph.length > 0) {
+      paragraphs.push(currentParagraph);
+    }
+    
+    // Add emojis to each paragraph
+    const emojiParagraphs = paragraphs.map(paragraph => addEmojisToText(paragraph));
+    
+    return (
+      <>
+        {emojiParagraphs.map((paragraph, i) => (
+          <p key={i} className="text-gray-600 text-sm mb-2 last:mb-0">{paragraph}</p>
+        ))}
+      </>
+    );
+  };
+  
+  // Add relevant emojis to the text based on keywords
+  const addEmojisToText = (text: string): string => {
+    const keywords = [
+      { terms: ['powerful', 'performance', 'fast', 'speed'], emoji: '🚀' },
+      { terms: ['graphics', 'gaming', 'display', 'visual'], emoji: '🎮' },
+      { terms: ['battery', 'life', 'long-lasting'], emoji: '🔋' },
+      { terms: ['lightweight', 'portable', 'thin'], emoji: '🪶' },
+      { terms: ['professional', 'work', 'productivity'], emoji: '💼' },
+      { terms: ['budget', 'affordable', 'value'], emoji: '💰' },
+      { terms: ['storage', 'memory', 'ram'], emoji: '💾' },
+      { terms: ['screen', 'display', 'resolution'], emoji: '🖥️' },
+      { terms: ['innovative', 'modern', 'latest'], emoji: '✨' },
+      { terms: ['perfect', 'ideal', 'excellent'], emoji: '🏆' }
+    ];
+    
+    // Check if text contains any keywords
+    let emojiText = text;
+    let emojisAdded = 0;
+    
+    // Only add up to 2 emojis per paragraph
+    keywords.forEach(({ terms, emoji }) => {
+      if (emojisAdded >= 2) return;
+      
+      const lowerText = emojiText.toLowerCase();
+      if (terms.some(term => lowerText.includes(term.toLowerCase()))) {
+        // Add emoji at the start or end with ~70% probability at end for more natural feel
+        if (Math.random() < 0.3 && !emojiText.startsWith(emoji)) {
+          emojiText = `${emoji} ${emojiText}`;
+          emojisAdded++;
+        } else if (!emojiText.endsWith(emoji)) {
+          emojiText = `${emojiText} ${emoji}`;
+          emojisAdded++;
+        }
+      }
+    });
+    
+    // If no emojis were added, add a general positive one
+    if (emojisAdded === 0) {
+      const generalEmojis = ['👍', '⭐', '🔥', '👌', '😎'];
+      const randomEmoji = generalEmojis[Math.floor(Math.random() * generalEmojis.length)];
+      emojiText = `${emojiText} ${randomEmoji}`;
+    }
+    
+    return emojiText;
   };
 
   return (
@@ -157,7 +253,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
         
         <div className="mb-6">
           <h3 className="font-semibold text-gray-800 mb-2">Why we recommend this:</h3>
-          <p className="text-gray-600 text-sm">{result.recommendation.reason}</p>
+          {formatRecommendationReason(result.recommendation.reason)}
         </div>
         
         <div className="flex flex-col space-y-3">
