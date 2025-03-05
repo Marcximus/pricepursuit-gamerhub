@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -89,15 +90,6 @@ const RecommendationQuiz = () => {
   const totalQuestions = 6;
   const progress = ((currentQuestion) / totalQuestions) * 100;
 
-  const questionEmojis = {
-    usage: "🎯",       // Target/purpose
-    price: "💰",       // Money bag
-    brand: "🏷️",       // Tag
-    screenSize: "📏",  // Ruler
-    graphics: "🎮",    // Game controller
-    storage: "💾"      // Floppy disk/storage
-  };
-
   const handleOptionSelect = (question, answer) => {
     setAnswers({ ...answers, [question]: answer });
   };
@@ -168,6 +160,7 @@ const RecommendationQuiz = () => {
     }
   };
 
+  // Reset the quiz
   const handleReset = () => {
     setCurrentQuestion(0);
     setAnswers({
@@ -185,6 +178,7 @@ const RecommendationQuiz = () => {
     setError(null);
   };
 
+  // If completed, show results
   if (completed) {
     return <RecommendationResults results={results} onReset={handleReset} />;
   }
@@ -203,18 +197,12 @@ const RecommendationQuiz = () => {
             options={usageOptions}
             selected={answers.usage}
             onSelect={(value) => handleOptionSelect('usage', value)}
-            emoji={questionEmojis.usage}
           />
         )}
 
         {currentQuestion === 1 && (
           <>
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-3">
-              <span className="text-2xl" role="img" aria-label="price emoji">
-                {questionEmojis.price}
-              </span>
-              What is your price range?
-            </h2>
+            <h2 className="text-xl font-semibold mb-4">What is your price range?</h2>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-2">
                 {priceRangeOptions.map((option) => (
@@ -248,7 +236,6 @@ const RecommendationQuiz = () => {
             options={brandOptions}
             selected={answers.brand}
             onSelect={(value) => handleOptionSelect('brand', value)}
-            emoji={questionEmojis.brand}
           />
         )}
 
@@ -258,7 +245,6 @@ const RecommendationQuiz = () => {
             options={screenSizeOptions}
             selected={answers.screenSize}
             onSelect={(value) => handleOptionSelect('screenSize', value)}
-            emoji={questionEmojis.screenSize}
           />
         )}
 
@@ -268,7 +254,6 @@ const RecommendationQuiz = () => {
             options={graphicsOptions}
             selected={answers.graphics}
             onSelect={(value) => handleOptionSelect('graphics', value)}
-            emoji={questionEmojis.graphics}
           />
         )}
 
@@ -278,7 +263,6 @@ const RecommendationQuiz = () => {
             options={storageOptions}
             selected={answers.storage}
             onSelect={(value) => handleOptionSelect('storage', value)}
-            emoji={questionEmojis.storage}
           />
         )}
       </Card>
