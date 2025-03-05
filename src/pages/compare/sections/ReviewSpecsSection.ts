@@ -12,16 +12,17 @@ export const getReviewSpecs = (
   const formatWilsonScore = (score: number | null | undefined): string => {
     if (score === null || score === undefined || isNaN(score)) return 'N/A';
     
-    // Format Wilson score in standard format
-    return score.toFixed(2);
+    // Format Wilson score to show as X/5
+    return `${score.toFixed(2)}/5`;
   };
 
   // Compare Wilson scores in standard format (-1 to 1 scale)
   const compareWilsonScores = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
     if (a === 'N/A' || b === 'N/A') return 'unknown';
     
-    const aScore = parseFloat(a);
-    const bScore = parseFloat(b);
+    // Extract numeric value before the "/5" suffix
+    const aScore = parseFloat(a.split('/')[0]);
+    const bScore = parseFloat(b.split('/')[0]);
     
     if (isNaN(aScore) || isNaN(bScore)) return 'unknown';
     
