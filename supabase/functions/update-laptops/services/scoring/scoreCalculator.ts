@@ -5,6 +5,16 @@
 export function calculateProcessorScore(processor: string): number {
   processor = processor.toLowerCase();
   
+  // Intel Core Ultra (newest series)
+  if (processor.includes('ultra 9')) {
+    return 95;
+  }
+  if (processor.includes('ultra 7')) {
+    return 93;
+  }
+  if (processor.includes('ultra 5')) {
+    return 91;
+  }
   // Intel Core i9
   if (processor.includes('i9')) {
     return 90;

@@ -8,8 +8,14 @@ export const getProcessorValue = (processor: string): number => {
   const normalizedProcessor = processor.toLowerCase();
   let score = 0;
   
+  // Intel Core Ultra processors (newest Intel series)
+  if (normalizedProcessor.includes('ultra')) {
+    if (normalizedProcessor.includes('ultra 9')) score += 9500;
+    else if (normalizedProcessor.includes('ultra 7')) score += 9000;
+    else if (normalizedProcessor.includes('ultra 5')) score += 8500;
+  }
   // CPU series and generation scores
-  if (normalizedProcessor.includes('intel')) {
+  else if (normalizedProcessor.includes('intel')) {
     // Intel Core i-series processors
     if (normalizedProcessor.includes('i9')) score += 9000;
     else if (normalizedProcessor.includes('i7')) score += 7000;

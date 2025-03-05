@@ -1,7 +1,25 @@
 
 // Define comparison functions for different laptop performance specs
 export const compareProcessors = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
-  // Simple keyword-based comparison for processors
+  // First check for Intel Core Ultra processors - they are newer and better than regular Core i-series
+  const ultraAMatch = a.match(/ultra\s+([579])/i);
+  const ultraBMatch = b.match(/ultra\s+([579])/i);
+  
+  // If both are Ultra processors, compare their numbers
+  if (ultraAMatch && ultraBMatch) {
+    const ultraAValue = parseInt(ultraAMatch[1], 10);
+    const ultraBValue = parseInt(ultraBMatch[1], 10);
+    
+    if (ultraAValue > ultraBValue) return 'better';
+    if (ultraAValue < ultraBValue) return 'worse';
+    return 'equal';
+  }
+  
+  // If only one is Ultra, it's better than non-Ultra
+  if (ultraAMatch && !ultraBMatch) return 'better';
+  if (!ultraAMatch && ultraBMatch) return 'worse';
+  
+  // Simple keyword-based comparison for regular processors
   const keywords = ['i9', 'i7', 'i5', 'i3', 'Ryzen 9', 'Ryzen 7', 'Ryzen 5', 'Ryzen 3', 'M3', 'M2', 'M1'];
   
   for (const keyword of keywords) {
