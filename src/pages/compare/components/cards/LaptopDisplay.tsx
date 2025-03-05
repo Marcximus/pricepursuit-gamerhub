@@ -1,10 +1,13 @@
 
 import React from "react";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Button } from "@/components/ui/button";
+import { ExternalLink } from "lucide-react";
+import LaptopImage from "@/components/LaptopImage";
 import type { Product } from "@/types/product";
-import { ArrowUpRight, MessageSquare, Zap } from "lucide-react";
 
 interface LaptopDisplayProps {
-  laptop: Product;
+  laptop: Product & { displayTitle?: string };
   affiliateUrl: string;
   formatPrice: (price?: number) => string;
 }
@@ -15,78 +18,62 @@ const LaptopDisplay: React.FC<LaptopDisplayProps> = ({
   formatPrice 
 }) => {
   return (
-    <>
-      <div className="text-center mb-6 mt-8 min-h-[10rem] flex items-center justify-center group">
-        <a 
-          href={affiliateUrl} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="relative overflow-hidden transition-all duration-300 hover:scale-105"
-        >
-          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-50/0 via-indigo-50/0 to-indigo-100/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <img 
-            src={laptop.image_url || '/placeholder.svg'} 
-            alt={laptop.title || 'Laptop'} 
-            className="h-40 object-contain mx-auto drop-shadow-md"
+    <div className="flex flex-col h-full">
+      <div className="flex-none mb-4">
+        <AspectRatio ratio={16 / 9} className="bg-slate-100 rounded-md overflow-hidden">
+          <LaptopImage 
+            src={laptop.image_url || ''} 
+            title={laptop.title || 'Laptop image'} 
+            className="object-contain w-full h-full" 
           />
-        </a>
+        </AspectRatio>
       </div>
       
-      <div className="space-y-3">
-        <a 
-          href={affiliateUrl} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="hover:text-blue-600 transition-colors"
-        >
-          <h3 className="text-lg font-semibold mb-1 tracking-tight">{laptop.brand} {laptop.model}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{laptop.title}</p>
-        </a>
-      </div>
-      
-      <div className="mt-auto">
-        <div className="flex gap-2 items-stretch">
-          <a 
-            href={affiliateUrl} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex-1"
-          >
-            <div className="bg-slate-900 p-3 rounded-lg shadow-md border border-slate-800 transition-transform hover:scale-[1.02] h-full flex flex-col justify-center">
-              <p className="text-xl font-bold text-white flex items-center justify-between">
-                {formatPrice(laptop.current_price)}
-                <Zap className="w-4 h-4 text-blue-400" />
-              </p>
-              {laptop.original_price && laptop.original_price > laptop.current_price && (
-                <p className="text-xs text-slate-400 line-through">{formatPrice(laptop.original_price)}</p>
-              )}
-            </div>
-          </a>
-          
-          <div className="flex flex-col gap-1.5">
-            <a 
-              href={affiliateUrl} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="flex items-center justify-center gap-1 text-xs text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded-md border border-slate-700 h-full"
-            >
-              <span>Tech Specs</span>
-              <ArrowUpRight className="h-3 w-3" />
-            </a>
-            
-            <a 
-              href={affiliateUrl} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="flex items-center justify-center gap-1 text-xs text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded-md border border-slate-700"
-            >
-              <span>Reviews</span>
-              <MessageSquare className="h-3 w-3" />
-            </a>
-          </div>
+      <div className="flex-1">
+        <h3 className="text-lg font-bold mb-2 line-clamp-2">
+          {laptop.displayTitle || `${laptop.brand || ''} ${laptop.model || ''}`}
+        </h3>
+        
+        <div className="flex flex-wrap gap-2 mb-4">
+          {laptop.processor && (
+            <span className="inline-block px-2 py-1 bg-slate-100 rounded-full text-xs">
+              {laptop.processor}
+            </span>
+          )}
+          {laptop.ram && (
+            <span className="inline-block px-2 py-1 bg-slate-100 rounded-full text-xs">
+              {laptop.ram}
+            </span>
+          )}
+          {laptop.storage && (
+            <span className="inline-block px-2 py-1 bg-slate-100 rounded-full text-xs">
+              {laptop.storage}
+            </span>
+          )}
         </div>
       </div>
-    </>
+      
+      <div className="flex-none mt-auto">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col">
+            <span className="text-2xl font-bold">
+              {formatPrice(laptop.current_price)}
+            </span>
+            {laptop.original_price && laptop.original_price > laptop.current_price && (
+              <span className="text-sm line-through text-muted-foreground">
+                {formatPrice(laptop.original_price)}
+              </span>
+            )}
+          </div>
+          
+          <Button asChild size="sm">
+            <a href={affiliateUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center">
+              View <ExternalLink className="ml-1 h-3 w-3" />
+            </a>
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
