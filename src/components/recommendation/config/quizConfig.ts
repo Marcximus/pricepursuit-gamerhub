@@ -1,4 +1,3 @@
-
 // iOS-style emojis for different option types
 export const usageEmojis = [
   '🎓', // School/Education
@@ -15,14 +14,14 @@ export const usageEmojis = [
 
 export const priceRangeEmojis = [
   '💰', // USD 100 - 300
-  '💰💰', // USD 300 - 600
-  '💰💰💰', // USD 600 - 900
-  '💰💰💰💰', // USD 900 - 1200
-  '💰💰💰💰💰', // USD 1200 - 1500
-  '💎', // USD 1500 - 2000
-  '💎💎', // USD 2000 - 2500
-  '💎💎💎', // USD 3000 - 4000
-  '💎💎💎💎', // USD 4000 - 6000
+  '💸', // USD 300 - 600
+  '💵', // USD 600 - 900
+  '💴', // USD 900 - 1200
+  '💶', // USD 1200 - 1500
+  '💷', // USD 1500 - 2000
+  '💎', // USD 2000 - 2500
+  '🏦', // USD 3000 - 4000
+  '💱', // USD 4000 - 6000
   '⚙️', // Custom Range
 ];
 
