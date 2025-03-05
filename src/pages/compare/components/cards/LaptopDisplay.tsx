@@ -1,7 +1,7 @@
 
 import React from "react";
 import type { Product } from "@/types/product";
-import { ArrowUpRight, MessageSquare, ThumbsUp, Zap } from "lucide-react";
+import { ArrowUpRight, MessageSquare, Zap } from "lucide-react";
 
 interface LaptopDisplayProps {
   laptop: Product;
@@ -14,26 +14,6 @@ const LaptopDisplay: React.FC<LaptopDisplayProps> = ({
   affiliateUrl,
   formatPrice 
 }) => {
-  // Format Wilson Score as a percentage with confidence indicator
-  const formatWilsonScore = (score: number | null | undefined): string => {
-    if (score === null || score === undefined || isNaN(score)) return 'N/A';
-    
-    // Convert Wilson score (-1 to 1) to a percentage (0-100%)
-    const percentage = Math.min(100, Math.max(0, (score + 1) * 50));
-    
-    if (percentage >= 90) {
-      return `${percentage.toFixed(0)}% (Very High)`;
-    } else if (percentage >= 75) {
-      return `${percentage.toFixed(0)}% (High)`;
-    } else if (percentage >= 60) {
-      return `${percentage.toFixed(0)}% (Moderate)`;
-    } else if (percentage >= 40) {
-      return `${percentage.toFixed(0)}% (Fair)`;
-    } else {
-      return `${percentage.toFixed(0)}% (Low)`;
-    }
-  };
-
   return (
     <>
       <div className="text-center mb-6 mt-8 min-h-[10rem] flex items-center justify-center group">
@@ -62,15 +42,6 @@ const LaptopDisplay: React.FC<LaptopDisplayProps> = ({
           <h3 className="text-lg font-semibold mb-1 tracking-tight">{laptop.brand} {laptop.model}</h3>
           <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{laptop.title}</p>
         </a>
-        
-        {laptop.wilson_score !== undefined && laptop.wilson_score !== null && (
-          <div className="flex items-center gap-2 px-2 py-1 bg-green-50 border border-green-100 rounded-md">
-            <ThumbsUp className="h-4 w-4 text-green-600" />
-            <span className="text-sm font-medium text-green-800">
-              Wilson Score: {formatWilsonScore(laptop.wilson_score)}
-            </span>
-          </div>
-        )}
       </div>
       
       <div className="mt-auto">
