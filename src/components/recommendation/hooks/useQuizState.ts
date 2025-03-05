@@ -1,20 +1,20 @@
 
 import { useState } from 'react';
-import { QuizAnswers, RecommendationResult } from '../types/quizTypes';
+import { QuizAnswers, RecommendationResult, UsageType, BrandType, ScreenSizeType, GraphicsType, StorageType, PriceRangeType } from '../types/quizTypes';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useQuizState = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswers>({
-    usage: '',
-    priceRange: '',
+    usage: '' as UsageType,
+    priceRange: '' as PriceRangeType,
     customMinPrice: 500,
     customMaxPrice: 1500,
-    brand: '',
-    screenSize: '',
-    graphics: '',
-    storage: ''
+    brand: '' as BrandType,
+    screenSize: '' as ScreenSizeType,
+    graphics: '' as GraphicsType,
+    storage: '' as StorageType
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [completed, setCompleted] = useState(false);
@@ -33,7 +33,7 @@ export const useQuizState = () => {
       ...answers, 
       customMinPrice: min, 
       customMaxPrice: max,
-      priceRange: `Custom: USD ${min} - ${max}`
+      priceRange: `Custom: USD ${min} - ${max}` as PriceRangeType
     });
   };
 
@@ -56,7 +56,7 @@ export const useQuizState = () => {
     try {
       // Format price range for API request
       let priceRange = answers.priceRange;
-      if (answers.priceRange === 'Custom Range' || answers.priceRange.startsWith('Custom:')) {
+      if (typeof priceRange === 'string' && (priceRange === 'Custom Range' || priceRange.startsWith('Custom:'))) {
         priceRange = `USD ${answers.customMinPrice} - ${answers.customMaxPrice}`;
       }
       
@@ -105,14 +105,14 @@ export const useQuizState = () => {
   const handleReset = () => {
     setCurrentQuestion(0);
     setAnswers({
-      usage: '',
-      priceRange: '',
+      usage: '' as UsageType,
+      priceRange: '' as PriceRangeType,
       customMinPrice: 500,
       customMaxPrice: 1500,
-      brand: '',
-      screenSize: '',
-      graphics: '',
-      storage: ''
+      brand: '' as BrandType,
+      screenSize: '' as ScreenSizeType,
+      graphics: '' as GraphicsType,
+      storage: '' as StorageType
     });
     setCompleted(false);
     setResults(null);
