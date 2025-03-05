@@ -9,6 +9,12 @@ export function extractIntelProcessor(text: string): string | null {
   
   const normalizedText = text.toLowerCase();
   
+  // Check for specific model format like i7-1355U
+  const specificModelMatch = normalizedText.match(/i([3579])-(\d{4}[a-z]?)/i);
+  if (specificModelMatch) {
+    return `Intel Core i${specificModelMatch[1]}-${specificModelMatch[2]}`;
+  }
+  
   // Check for "Intel Xth Gen iY" format (e.g., "Intel 12th Gen i7")
   const intelGenMatch = normalizedText.match(intelCorePatterns.intelGenFormat);
   if (intelGenMatch) {

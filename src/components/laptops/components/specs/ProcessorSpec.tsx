@@ -13,10 +13,17 @@ export function ProcessorSpec({ title, processor }: ProcessorSpecProps) {
   // Use enhanced processor processor when we have generic "AMD" or "Intel"
   let displayProcessor = processor;
   
+  // Check for direct i7-1355U format in title 
+  const intelModelMatch = title.match(/i[3579]-\d{4}[A-Z]?/i);
+  if (intelModelMatch) {
+    displayProcessor = `Intel Core ${intelModelMatch[0]}`;
+  }
   // Check for Intel generation format in title (e.g., "Intel 12th Gen i7")
-  const intelGenMatch = title.match(/Intel\s+(\d+)(?:th|nd|rd)\s+Gen\s+i([3579])/i);
-  if (intelGenMatch) {
-    displayProcessor = `Intel Core i${intelGenMatch[2]} ${intelGenMatch[1]}th Gen`;
+  else if (title.match(/Intel\s+(\d+)(?:th|nd|rd)\s+Gen\s+i([3579])/i)) {
+    const intelGenMatch = title.match(/Intel\s+(\d+)(?:th|nd|rd)\s+Gen\s+i([3579])/i);
+    if (intelGenMatch) {
+      displayProcessor = `Intel Core i${intelGenMatch[2]} ${intelGenMatch[1]}th Gen`;
+    }
   }
   // Check for Intel Ultra in title with an improved comprehensive pattern
   else if (title.match(/Intel\s+(?:Core\s+)?Ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i)) {

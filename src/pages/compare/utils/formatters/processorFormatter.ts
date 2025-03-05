@@ -6,6 +6,12 @@ export const formatProcessor = (processor?: string, title?: string): string => {
   if (!processor || processor === 'Not Specified' || processor === 'N/A') {
     // Try to extract from title if processor is missing
     if (title) {
+      // Check for Intel processor with specific model number format (i7-1355U)
+      const intelSpecificModelMatch = title.match(/i[3579]-\d{4}[A-Z]?/i);
+      if (intelSpecificModelMatch) {
+        return normalizeProcessor(`Intel Core ${intelSpecificModelMatch[0]}`);
+      }
+      
       // Check for "Intel Xth Gen iY" format (e.g. "Intel 12th Gen i7")
       const intelGenMatch = title.match(/Intel\s+(\d+)(?:th|nd|rd)\s+Gen\s+i([3579])/i);
       if (intelGenMatch) {
@@ -33,6 +39,14 @@ export const formatProcessor = (processor?: string, title?: string): string => {
   // Handle generic processor entries
   if (processor === 'Intel' || processor === 'AMD' || processor === 'Apple') {
     if (title) {
+      // Check for i7-1355U style format (specific Intel model number)
+      if (processor === 'Intel' && title.match(/i[3579]-\d{4}[A-Z]?/i)) {
+        const match = title.match(/i[3579]-\d{4}[A-Z]?/i);
+        if (match) {
+          return normalizeProcessor(`Intel Core ${match[0]}`);
+        }
+      }
+    
       // Check for "Intel Xth Gen iY" format (e.g. "Intel 12th Gen i7")
       if (processor === 'Intel' && title.match(/Intel\s+(\d+)(?:th|nd|rd)\s+Gen\s+i([3579])/i)) {
         const match = title.match(/Intel\s+(\d+)(?:th|nd|rd)\s+Gen\s+i([3579])/i);

@@ -23,9 +23,11 @@ export const amdRyzenPatterns = {
 
 // Intel Core patterns
 export const intelCorePatterns = {
+  // Direct specific model format (e.g., "i7-1355U")
+  specificIntelModel: /i([3579])-(\d{4}[a-z]?)/i,
   // Intel Generation format (e.g., "Intel 12th Gen i7")
   intelGenFormat: /\bintel\s+(\d+)(?:th|nd|rd)\s+gen\s+i([3579])\b/i,
-  // NEW: Improved Intel Ultra pattern to match "Ultra 7-155H" format
+  // Improved Intel Ultra pattern to match "Ultra 7-155H" format
   coreUltra: /\b(?:intel\s+)?(?:core\s+)?ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)\b/i,
   // Original Ultra pattern as fallback
   coreUltraSimple: /\b(?:intel\s+)?core\s+ultra\s+([579])\s*(?:[0-9]{3}[a-z]*)?/i,
