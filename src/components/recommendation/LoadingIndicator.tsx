@@ -7,28 +7,39 @@ interface LoadingIndicatorProps {
 }
 
 const loadingMessages = [
-  "Scouring the internet for the perfect laptop...",
-  "Comparing specs and benchmarks...",
-  "Checking prices across multiple retailers...",
-  "Analyzing your requirements...",
-  "Consulting with digital laptop experts...",
-  "Running advanced matching algorithms...",
-  "Filtering out the not-so-great options...",
-  "Applying secret laptop finding techniques...",
-  "Almost there! Ranking your top matches...",
-  "Preparing your personalized recommendations..."
+  "Asking ChatGPT which laptops are its favorites...",
+  "Waking up the laptop gnomes who live in our servers...",
+  "Bribing the CPU gods with extra thermal paste...",
+  "Consulting with cats walking across keyboards for recommendations...",
+  "Checking if any laptops can run Crysis (still the benchmark in 2024)...",
+  "Exploring the dark web for secret gaming laptop deals...",
+  "Arguing with AI about whether Macs are real computers...",
+  "Telling the RGB lighting to calm down so we can see the specs...",
+  "Calculating how many browser tabs this laptop can handle before crying...",
+  "Measuring laptop weight against a banana for scale...",
+  "Converting specs from nerd-speak to human language...",
+  "Checking if any laptops can survive being used as a dinner tray...",
+  "Determining which laptop has the most intimidating startup sound...",
+  "Finding laptops thin enough to slice cheese but thick enough to not bend...",
+  "Testing which laptop fans are quiet enough for 3AM gaming sessions...",
+  "Counting how many coffees you can spill before warranty is void...",
+  "Consulting with professional lap-warmers about heat management...",
+  "Measuring battery life in Netflix episodes rather than hours..."
 ];
 
 export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({ isLoading }) => {
   const [progressValue, setProgressValue] = useState(10);
-  const [messageIndex, setMessageIndex] = useState(0);
+  const [message, setMessage] = useState("");
   
   useEffect(() => {
     if (!isLoading) {
       setProgressValue(10);
-      setMessageIndex(0);
+      setMessage("");
       return;
     }
+    
+    // Set initial random message
+    setMessage(loadingMessages[Math.floor(Math.random() * loadingMessages.length)]);
     
     // Progress animation
     const progressInterval = setInterval(() => {
@@ -38,16 +49,21 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({ isLoading })
       });
     }, 700);
     
-    // Message rotation
+    // Message rotation - randomly select a new message every few seconds
     const messageInterval = setInterval(() => {
-      setMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+      let newIndex;
+      do {
+        newIndex = Math.floor(Math.random() * loadingMessages.length);
+      } while (loadingMessages[newIndex] === message && loadingMessages.length > 1);
+      
+      setMessage(loadingMessages[newIndex]);
     }, 3000);
     
     return () => {
       clearInterval(progressInterval);
       clearInterval(messageInterval);
     };
-  }, [isLoading]);
+  }, [isLoading, message]);
   
   if (!isLoading) return null;
   
@@ -55,7 +71,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({ isLoading })
     <div className="w-full space-y-4 py-4">
       <Progress value={progressValue} className="h-2" />
       <p className="text-center text-gray-600 animate-pulse">
-        {loadingMessages[messageIndex]}
+        {message}
       </p>
     </div>
   );
