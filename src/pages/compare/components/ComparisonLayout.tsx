@@ -6,6 +6,7 @@ import type { Product } from "@/types/product";
 import type { ComparisonResult } from "../types";
 import type { ComparisonSection } from "../types";
 import EmptyComparisonState from "./EmptyComparisonState";
+
 interface ComparisonLayoutProps {
   handleGoBack: () => void;
   handleClearAndGoBack: () => void;
@@ -16,6 +17,7 @@ interface ComparisonLayoutProps {
   laptopRight: Product | null;
   hasSelectedLaptops: boolean;
 }
+
 const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
   handleGoBack,
   handleClearAndGoBack,
@@ -26,59 +28,72 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
   laptopRight,
   hasSelectedLaptops
 }) => {
-  // Generate the comparison sections data when laptops are available
   const generateComparisonSections = (): ComparisonSection[] => {
     if (!laptopLeft || !laptopRight) return [];
-    return [{
-      title: 'Brand & Model',
-      leftValue: `${laptopLeft?.brand || 'N/A'} ${laptopLeft?.model || ''}`,
-      rightValue: `${laptopRight?.brand || 'N/A'} ${laptopRight?.model || ''}`
-    }, {
-      title: 'Processor',
-      leftValue: laptopLeft?.processor || 'Not Specified',
-      rightValue: laptopRight?.processor || 'Not Specified',
-      compare: (a: string, b: string) => formatPrice(laptopLeft?.current_price) === a ? 'equal' : 'unknown'
-    }, {
-      title: 'RAM',
-      leftValue: laptopLeft?.ram || 'Not Specified',
-      rightValue: laptopRight?.ram || 'Not Specified',
-      compare: (a: string, b: string) => a === b ? 'equal' : a > b ? 'better' : 'worse'
-    }, {
-      title: 'Storage',
-      leftValue: laptopLeft?.storage || 'Not Specified',
-      rightValue: laptopRight?.storage || 'Not Specified',
-      compare: (a: string, b: string) => a === b ? 'equal' : a > b ? 'better' : 'worse'
-    }, {
-      title: 'Graphics',
-      leftValue: laptopLeft?.graphics || 'Not Specified',
-      rightValue: laptopRight?.graphics || 'Not Specified'
-    }, {
-      title: 'Display',
-      leftValue: `${laptopLeft?.screen_size || 'N/A'} ${laptopLeft?.screen_resolution ? `(${laptopLeft.screen_resolution})` : ''}`,
-      rightValue: `${laptopRight?.screen_size || 'N/A'} ${laptopRight?.screen_resolution ? `(${laptopRight.screen_resolution})` : ''}`
-    }, {
-      title: 'Price',
-      leftValue: formatPrice(laptopLeft?.current_price),
-      rightValue: formatPrice(laptopRight?.current_price),
-      compare: (a: string, b: string) => a === b ? 'equal' : parseFloat(a.replace('$', '')) < parseFloat(b.replace('$', '')) ? 'better' : 'worse'
-    }, {
-      title: 'Rating',
-      leftValue: laptopLeft?.rating ? `${laptopLeft.rating}/5 (${laptopLeft.rating_count} reviews)` : 'No ratings',
-      rightValue: laptopRight?.rating ? `${laptopRight.rating}/5 (${laptopRight.rating_count} reviews)` : 'No ratings',
-      compare: (a: string, b: string) => {
-        const aMatch = a.match(/(\d+\.\d+)\/5/);
-        const bMatch = b.match(/(\d+\.\d+)\/5/);
-        if (aMatch && bMatch) {
-          const aRating = parseFloat(aMatch[1]);
-          const bRating = parseFloat(bMatch[1]);
-          if (aRating > bRating) return 'better';
-          if (aRating < bRating) return 'worse';
-          return 'equal';
+    return [
+      {
+        title: 'Brand & Model',
+        leftValue: `${laptopLeft?.brand || 'N/A'} ${laptopLeft?.model || ''}`,
+        rightValue: `${laptopRight?.brand || 'N/A'} ${laptopRight?.model || ''}`
+      },
+      {
+        title: 'Processor',
+        leftValue: laptopLeft?.processor || 'Not Specified',
+        rightValue: laptopRight?.processor || 'Not Specified',
+        compare: (a: string, b: string) => formatPrice(laptopLeft?.current_price) === a ? 'equal' : 'unknown'
+      },
+      {
+        title: 'RAM',
+        leftValue: laptopLeft?.ram || 'Not Specified',
+        rightValue: laptopRight?.ram || 'Not Specified',
+        compare: (a: string, b: string) => a === b ? 'equal' : a > b ? 'better' : 'worse'
+      },
+      {
+        title: 'Storage',
+        leftValue: laptopLeft?.storage || 'Not Specified',
+        rightValue: laptopRight?.storage || 'Not Specified',
+        compare: (a: string, b: string) => a === b ? 'equal' : a > b ? 'better' : 'worse'
+      },
+      {
+        title: 'Graphics',
+        leftValue: laptopLeft?.graphics || 'Not Specified',
+        rightValue: laptopRight?.graphics || 'Not Specified'
+      },
+      {
+        title: 'Display',
+        leftValue: `${laptopLeft?.screen_size || 'N/A'} ${laptopLeft?.screen_resolution ? `(${laptopLeft.screen_resolution})` : ''}`,
+        rightValue: `${laptopRight?.screen_size || 'N/A'} ${laptopRight?.screen_resolution ? `(${laptopRight.screen_resolution})` : ''}`
+      },
+      {
+        title: 'Price',
+        leftValue: formatPrice(laptopLeft?.current_price),
+        rightValue: formatPrice(laptopRight?.current_price),
+        compare: (a: string, b: string) => {
+          const aPrice = parseFloat(a.replace('$', '').replace(/,/g, ''));
+          const bPrice = parseFloat(b.replace('$', '').replace(/,/g, ''));
+          return aPrice === bPrice ? 'equal' : aPrice < bPrice ? 'better' : 'worse';
         }
-        return 'unknown';
+      },
+      {
+        title: 'Rating',
+        leftValue: laptopLeft?.rating ? `${laptopLeft.rating}/5 (${laptopLeft.rating_count} reviews)` : 'No ratings',
+        rightValue: laptopRight?.rating ? `${laptopRight.rating}/5 (${laptopRight.rating_count} reviews)` : 'No ratings',
+        compare: (a: string, b: string) => {
+          const aMatch = a.match(/(\d+\.\d+)\/5/);
+          const bMatch = b.match(/(\d+\.\d+)\/5/);
+          if (aMatch && bMatch) {
+            const aRating = parseFloat(aMatch[1]);
+            const bRating = parseFloat(bMatch[1]);
+            if (aRating > bRating) return 'better';
+            if (aRating < bRating) return 'worse';
+            return 'equal';
+          }
+          return 'unknown';
+        }
       }
-    }];
+    ];
   };
+
   const comparisonSections = generateComparisonSections();
   return <div className="min-h-screen bg-slate-50">
       <Navigation />
@@ -90,21 +105,19 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
           <h1 className="text-2xl font-bold mb-6">Best Laptop Comparison</h1>
           
           {!hasSelectedLaptops ? <EmptyComparisonState /> : <>
-              {/* Product Header Section */}
               <div className="grid grid-cols-2 gap-8 mb-8">
                 <LaptopCard laptop={laptopLeft} isWinner={comparisonResult?.winner === 'left'} formatPrice={formatPrice} />
                 
                 <LaptopCard laptop={laptopRight} isWinner={comparisonResult?.winner === 'right'} formatPrice={formatPrice} />
               </div>
               
-              {/* AI Analysis Section */}
               <AnalysisSection isLoading={isLoading} error={error} comparisonResult={comparisonResult} laptopLeft={laptopLeft} laptopRight={laptopRight} />
               
-              {/* Detailed Specs Comparison - Updated to pass correct props */}
               <SpecificationsSection laptopLeft={laptopLeft} laptopRight={laptopRight} />
             </>}
         </div>
       </main>
     </div>;
 };
+
 export default ComparisonLayout;
