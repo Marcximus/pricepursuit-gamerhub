@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import ComparePriceLaptops from "./pages/Laptops";
 import ComparePage from "./pages/Compare";
+import Recommend from "./pages/Recommend";
 import NotFound from "./pages/NotFound";
 import { ComparisonProvider } from "./contexts/ComparisonContext";
 
@@ -36,6 +37,7 @@ function App() {
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/" element={<ComparePriceLaptops />} />
                   <Route path="/compare" element={<ComparePage />} />
+                  <Route path="/recommend" element={<Recommend />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
