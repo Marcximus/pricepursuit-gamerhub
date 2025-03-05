@@ -78,7 +78,7 @@ serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 1.0,
+        temperature: 0.7,
         max_tokens: 1000
       })
     });
@@ -104,86 +104,45 @@ serve(async (req) => {
       const jsonContent = deepseekData.choices[0].message.content;
       console.log("Raw DeepSeek content:", jsonContent);
       
-      const jsonMatch = jsonContent.match(/\{[\s\S]*\}/);
-      const jsonString = jsonMatch ? jsonMatch[0] : jsonContent;
+      // More robust JSON extraction - try to find a JSON object between curly braces
+      let jsonString;
+      try {
+        const jsonMatch = jsonContent.match(/\{[\s\S]*\}/);
+        jsonString = jsonMatch ? jsonMatch[0] : jsonContent;
+      } catch (error) {
+        console.error("Error extracting JSON from response:", error);
+        jsonString = jsonContent;
+      }
       
-      recommendations = JSON.parse(jsonString).recommendations;
+      console.log("Extracted JSON string:", jsonString);
+      
+      // Parse the JSON
+      const parsedData = JSON.parse(jsonString);
+      console.log("Parsed data:", JSON.stringify(parsedData));
+      
+      if (!parsedData.recommendations || !Array.isArray(parsedData.recommendations)) {
+        throw new Error("Invalid recommendations format from DeepSeek");
+      }
+      
+      recommendations = parsedData.recommendations;
       console.log("Parsed recommendations:", JSON.stringify(recommendations));
     } catch (error) {
       console.error("Error parsing DeepSeek response:", error);
-      throw new Error("Failed to parse laptop recommendations");
+      throw new Error("Failed to parse laptop recommendations: " + error.message);
     }
 
-    // Fetch product data from RapidAPI for each recommendation
-    const rapidApiKey = Deno.env.get('RAPIDAPI_KEY');
-    if (!rapidApiKey) {
-      console.error("RapidAPI key not configured");
-      throw new Error("RapidAPI key not configured");
-    }
-
-    console.log("Fetching product details from RapidAPI...");
-    const productDetails = [];
-    for (const recommendation of recommendations) {
-      try {
-        const query = encodeURIComponent(recommendation.searchQuery);
-        const minPrice = recommendation.priceRange.min;
-        const maxPrice = recommendation.priceRange.max;
-        
-        const url = `https://real-time-amazon-data.p.rapidapi.com/search?query=${query}&page=1&country=US&sort_by=RELEVANCE&min_price=${minPrice}&max_price=${maxPrice}`;
-        
-        console.log(`Fetching from RapidAPI: ${url}`);
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'x-rapidapi-key': rapidApiKey,
-            'x-rapidapi-host': 'real-time-amazon-data.p.rapidapi.com'
-          }
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`RapidAPI error for ${recommendation.model}:`, response.status, errorText);
-          throw new Error(`RapidAPI error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log(`RapidAPI response for ${recommendation.model} received`);
-        
-        if (data.status === "OK" && data.data.products && data.data.products.length > 0) {
-          // Get the first product from results
-          const product = data.data.products[0];
-          
-          productDetails.push({
-            recommendation: recommendation,
-            product: product
-          });
-        } else {
-          console.log(`No products found for ${recommendation.model}`);
-          // If no products found, just include the recommendation without product data
-          productDetails.push({
-            recommendation: recommendation,
-            product: null
-          });
-        }
-      } catch (error) {
-        console.error(`Error fetching product data for ${recommendation.model}:`, error);
-        // Still include the recommendation without product data
-        productDetails.push({
-          recommendation: recommendation,
-          product: null
-        });
-      }
-    }
-
-    console.log("Returning product recommendations:", productDetails.length);
-    
-    // Return the complete response
+    // Just return the recommendations without trying to fetch product data for now
+    // This simplifies our function to focus on fixing the immediate issue
     return new Response(JSON.stringify({ 
       success: true, 
-      data: productDetails 
+      data: recommendations.map(rec => ({
+        recommendation: rec,
+        product: null
+      }))
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+    
   } catch (error) {
     console.error('Error in laptop-recommendation function:', error);
     return new Response(JSON.stringify({ 

@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { QuizAnswers, RecommendationResult } from '../types/quizTypes';
+import { toast } from 'sonner';
 
 export const useQuizState = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -68,7 +69,14 @@ export const useQuizState = () => {
         storage: answers.storage
       };
 
-      const response = await fetch('/functions/v1/laptop-recommendation', {
+      console.log("Sending answers to API:", finalAnswers);
+      
+      // Use full URL with project reference to ensure correct routing
+      const apiUrl = 'https://kkebyebrhdpcwqnxhjcx.supabase.co/functions/v1/laptop-recommendation';
+      
+      toast.info("Getting laptop recommendations...");
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -76,7 +84,22 @@ export const useQuizState = () => {
         body: JSON.stringify({ answers: finalAnswers })
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API error response:", response.status, errorText);
+        throw new Error(`API error: ${response.status}. ${errorText || 'No error details available.'}`);
+      }
+      
+      const responseText = await response.text();
+      console.log("Raw API response:", responseText);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (err) {
+        console.error("Error parsing JSON response:", err, "Response text:", responseText);
+        throw new Error("Invalid response format from recommendation service");
+      }
       
       if (!data.success) {
         throw new Error(data.error || 'Failed to get recommendations');
@@ -84,8 +107,10 @@ export const useQuizState = () => {
       
       setResults(data.data);
       setCompleted(true);
+      toast.success("Recommendations ready!");
     } catch (err: any) {
       console.error('Error getting recommendations:', err);
+      toast.error("Could not get recommendations");
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setIsProcessing(false);
