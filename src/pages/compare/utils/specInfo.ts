@@ -39,7 +39,7 @@ export const getSpecInfo = (title: string) => {
     case "wilson score":
       return {
         emoji: "📊",
-        tooltip: "Statistical confidence rating shown as a percentage (0-100%). Considers both rating value and number of ratings, providing a more reliable measure than simple rating average when comparing laptops with different numbers of ratings."
+        tooltip: "A statistical confidence rating that balances rating value with sample size. It answers the question: 'What's the true quality of this laptop considering both its average rating and number of reviews?' Higher scores indicate more reliable product quality."
       };
     case "rating":
       return {
