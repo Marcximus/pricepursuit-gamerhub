@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Battery, Check, Sparkle, Star, ThumbsUp, Weight, Zap } from 'lucide-react';
 
 interface HighlightItem {
   text: string;

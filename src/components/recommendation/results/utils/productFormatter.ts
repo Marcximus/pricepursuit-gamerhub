@@ -1,3 +1,4 @@
+
 /**
  * Utilities for formatting product data from recommendation results
  */
@@ -38,7 +39,7 @@ const generateHighlights = (result: RecommendationResult): {text: string, icon: 
   if (product?.processor) {
     highlights.push({
       text: `Powerful ${product.processor}`,
-      icon: <Zap size={16} />
+      icon: React.createElement(Zap, { size: 16 })
     });
   }
   
@@ -46,7 +47,7 @@ const generateHighlights = (result: RecommendationResult): {text: string, icon: 
   if (product?.ram) {
     highlights.push({
       text: `${product.ram} for smooth multitasking`,
-      icon: <Check size={16} />
+      icon: React.createElement(Check, { size: 16 })
     });
   }
   
@@ -54,7 +55,7 @@ const generateHighlights = (result: RecommendationResult): {text: string, icon: 
   if (product?.storage) {
     highlights.push({
       text: `Ample ${product.storage} storage`,
-      icon: <Sparkle size={16} />
+      icon: React.createElement(Sparkle, { size: 16 })
     });
   }
   
@@ -62,7 +63,7 @@ const generateHighlights = (result: RecommendationResult): {text: string, icon: 
   if (product?.graphics) {
     highlights.push({
       text: `Great visuals with ${product.graphics}`,
-      icon: <Star size={16} />
+      icon: React.createElement(Star, { size: 16 })
     });
   }
   
@@ -70,7 +71,7 @@ const generateHighlights = (result: RecommendationResult): {text: string, icon: 
   if (product?.battery_life) {
     highlights.push({
       text: `Long battery life: ${product.battery_life}`,
-      icon: <Battery size={16} />
+      icon: React.createElement(Battery, { size: 16 })
     });
   }
   
@@ -78,14 +79,14 @@ const generateHighlights = (result: RecommendationResult): {text: string, icon: 
   if (product?.weight) {
     highlights.push({
       text: `Lightweight at ${product.weight}`,
-      icon: <Weight size={16} />
+      icon: React.createElement(Weight, { size: 16 })
     });
   }
   
   // General recommendation highlight
   highlights.push({
     text: `Recommended for ${recommendation.usage || 'your needs'}`,
-    icon: <ThumbsUp size={16} />
+    icon: React.createElement(ThumbsUp, { size: 16 })
   });
   
   return highlights.slice(0, 4); // Limit to 4 highlights
