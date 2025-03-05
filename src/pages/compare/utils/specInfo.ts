@@ -38,12 +38,12 @@ export const getSpecInfo = (title: string) => {
       };
     case "wilson score":
       return {
-        emoji: "⭐",
+        emoji: "📊",
         tooltip: "Statistical confidence rating shown as a percentage (0-100%). Considers both rating value and number of ratings, providing a more reliable measure than simple rating average when comparing laptops with different numbers of ratings."
       };
     case "rating":
       return {
-        emoji: "★",
+        emoji: "⭐️",
         tooltip: "Average user rating out of 5 stars."
       };
     case "price":
@@ -115,3 +115,4 @@ export const getSpecInfo = (title: string) => {
       return { emoji: "", tooltip: "" };
   }
 };
+
