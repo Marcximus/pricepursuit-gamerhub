@@ -101,13 +101,18 @@ const ComparePriceLaptops = () => {
             }
             toolbar={
               <LaptopToolbar
-                totalLaptops={totalCount}
-                sortBy={sortBy}
+                totalCount={totalCount}
+                filteredCount={laptops.length}
+                sortOption={sortBy}
                 onSortChange={handleSortChange}
+                filters={filters}
+                setFilters={handleFiltersChange}
+                searchTerm={filters.searchQuery}
+                setSearchTerm={(value) => {
+                  handleFiltersChange({...filters, searchQuery: value});
+                }}
                 isLoading={isLaptopsLoading}
                 isRefetching={isRefetching}
-                filters={filters}
-                onFiltersChange={handleFiltersChange}
                 filterOptions={filterOptions}
               />
             }

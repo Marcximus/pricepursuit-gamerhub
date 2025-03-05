@@ -19,6 +19,16 @@ interface LaptopToolbarProps {
   setFilters: React.Dispatch<React.SetStateAction<FilterOptions>>;
   searchTerm: string;
   setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
+  isLoading: boolean;
+  isRefetching: boolean;
+  filterOptions: {
+    processors: Set<string>;
+    ramSizes: Set<string>;
+    storageOptions: Set<string>;
+    graphicsCards: Set<string>;
+    screenSizes: Set<string>;
+    brands: Set<string>;
+  };
 }
 
 const LaptopToolbar: React.FC<LaptopToolbarProps> = ({
@@ -30,15 +40,33 @@ const LaptopToolbar: React.FC<LaptopToolbarProps> = ({
   setFilters,
   searchTerm,
   setSearchTerm,
+  isLoading,
+  isRefetching,
+  filterOptions,
 }) => {
   const navigate = useNavigate();
+  
+  // Calculate the number of active filters
+  const activeFiltersCount = Object.entries(filters).reduce((count, [key, value]) => {
+    if (key === 'priceRange') {
+      return count + ((value.min > 0 || value.max < 10000) ? 1 : 0);
+    }
+    if (key === 'searchQuery' && value) {
+      return count + 1;
+    }
+    if (value instanceof Set && value.size > 0) {
+      return count + 1;
+    }
+    return count;
+  }, 0);
   
   return (
     <div className="flex flex-col gap-4 mb-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <LaptopToolbarCounter
-          totalCount={totalCount}
-          filteredCount={filteredCount}
+          isLoading={isLoading}
+          isRefetching={isRefetching}
+          totalLaptops={totalCount}
         />
         <div className="flex items-center gap-2 w-full md:w-auto">
           <Button
@@ -50,15 +78,18 @@ const LaptopToolbar: React.FC<LaptopToolbarProps> = ({
             <span>Find Perfect Laptop</span>
           </Button>
           <MobileFilterDrawer
+            open={false} 
+            setOpen={() => {}}
+            activeFiltersCount={activeFiltersCount}
             filters={filters}
-            setFilters={setFilters}
+            onFiltersChange={setFilters}
+            filterOptions={filterOptions}
           />
           <LaptopSort onChange={onSortChange} value={sortOption} />
         </div>
       </div>
       <SearchBar 
-        value={searchTerm} 
-        onChange={setSearchTerm} 
+        onSearch={setSearchTerm} 
         placeholder="Search by name, brand, specs..." 
       />
     </div>

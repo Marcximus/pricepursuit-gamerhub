@@ -17,7 +17,7 @@ export function SearchBar({ onSearch, placeholder = "Search laptops..." }: Searc
   }, [searchQuery, onSearch]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter') {.
       handleSearch();
     }
   }, [handleSearch]);

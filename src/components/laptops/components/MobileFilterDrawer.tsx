@@ -3,6 +3,7 @@ import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LaptopFilters, FilterOptions } from "../LaptopFilters";
+import { useState } from "react";
 
 type MobileFilterDrawerProps = {
   open: boolean;
@@ -28,8 +29,15 @@ export function MobileFilterDrawer({
   onFiltersChange,
   filterOptions
 }: MobileFilterDrawerProps) {
+  const [isOpen, setIsOpen] = useState(open);
+  
+  const handleOpenChange = (openState: boolean) => {
+    setIsOpen(openState);
+    setOpen(openState);
+  }
+  
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button 
           variant="outline" 
