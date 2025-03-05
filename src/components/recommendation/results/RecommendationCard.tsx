@@ -2,8 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { RecommendationResult } from '../types/quizTypes';
-import { formatPrice, calculateDiscount } from './utils/priceFormatter';
-import { getProductUrl } from './utils/urlFormatter';
+import { formatProductData } from './utils/productFormatter';
 import { ProductImage } from './components/ProductImage';
 import { ProductHeader } from './components/ProductHeader';
 import { ProductTitle } from './components/ProductTitle';
@@ -21,69 +20,52 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
   result,
   index
 }) => {
-  // Get the appropriate URL for the product or search query
-  const productUrl = getProductUrl(
-    result.product?.product_url,
-    result.recommendation.searchQuery
-  );
-
-  // Get formatted prices
-  const formattedCurrentPrice = result.product 
-    ? formatPrice(result.product.product_price, result.recommendation.priceRange.min, result.recommendation.priceRange.max)
-    : `$${result.recommendation.priceRange.min.toLocaleString()} - $${result.recommendation.priceRange.max.toLocaleString()}`;
-  
-  const formattedOriginalPrice = result.product?.product_original_price 
-    ? formatPrice(result.product.product_original_price, 0, 0)
-    : undefined;
-
-  // Calculate discount if both prices are available
-  const discountPercentage = result.product?.product_original_price
-    ? calculateDiscount(result.product.product_price, result.product.product_original_price)
-    : undefined;
+  // Format all product data using the dedicated formatter
+  const productData = formatProductData(result, index);
 
   return (
     <Card className="overflow-hidden border-0 shadow-lg">
       <ProductHeader 
-        title={result.product?.product_title || result.recommendation.model}
-        productUrl={productUrl}
-        index={index}
+        title={productData.title}
+        productUrl={productData.productUrl}
+        index={productData.index}
       />
       
       <ProductImage 
-        imageUrl={result.product?.product_photo}
-        altText={result.product?.product_title || result.recommendation.model}
+        imageUrl={productData.imageUrl}
+        altText={productData.title}
         fallbackText={result.recommendation.model}
-        url={productUrl}
+        url={productData.productUrl}
       />
       
       <CardContent className="p-6">
         <ProductTitle 
-          title={result.product?.product_title || result.recommendation.model}
-          url={productUrl}
+          title={productData.title}
+          url={productData.productUrl}
         />
         
         {result.product && (
           <ProductRating 
-            rating={result.product.product_star_rating}
-            ratingCount={result.product.product_num_ratings}
-            isPrime={result.product.is_prime}
-            url={productUrl}
+            rating={productData.rating}
+            ratingCount={productData.ratingCount}
+            isPrime={productData.isPrime}
+            url={productData.productUrl}
           />
         )}
         
         <ProductPrice 
-          currentPrice={formattedCurrentPrice}
-          originalPrice={formattedOriginalPrice}
-          discountPercentage={discountPercentage}
-          deliveryInfo={result.product?.delivery}
-          url={productUrl}
+          currentPrice={productData.currentPrice}
+          originalPrice={productData.originalPrice}
+          discountPercentage={productData.discountPercentage}
+          deliveryInfo={productData.deliveryInfo}
+          url={productData.productUrl}
         />
         
-        <ProductReason reason={result.recommendation.reason} />
+        <ProductReason reason={productData.reason} />
         
         <ProductActions 
           productUrl={result.product?.product_url}
-          searchQuery={result.recommendation.searchQuery}
+          searchQuery={productData.searchQuery}
         />
       </CardContent>
     </Card>
