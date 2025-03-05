@@ -1,6 +1,6 @@
 
 import { Link, useNavigate } from "react-router-dom";
-import { Monitor, Laptop, Computer, Gamepad, Keyboard, Mouse, Headphones, Settings, LogOut, GitCompare } from "lucide-react";
+import { Monitor, Laptop, Computer, Gamepad, Keyboard, Mouse, Headphones, Settings, LogOut, GitCompare, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -46,6 +46,10 @@ const Navigation = () => {
               <Link to="/compare" className="nav-link flex items-center space-x-1">
                 <GitCompare className="w-4 h-4" />
                 <span>Compare</span>
+              </Link>
+              <Link to="/recommend" className="nav-link flex items-center space-x-1">
+                <Sparkles className="w-4 h-4" />
+                <span>Personal Laptop Finder</span>
               </Link>
               <Link to="/ComparePrice/Desktops" className="nav-link flex items-center space-x-1">
                 <Computer className="w-4 h-4" />

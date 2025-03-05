@@ -1,14 +1,11 @@
 
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { LaptopSort } from "./LaptopSort";
 import { LaptopToolbarCounter } from "./components/LaptopToolbarCounter";
 import { MobileFilterDrawer } from "./components/MobileFilterDrawer";
 import { SearchBar } from "./components/SearchBar";
 import { SortOption } from "./LaptopSort";
 import { FilterOptions } from "./LaptopFilters";
-import { Check, Sparkles, Wand2 } from "lucide-react";
 
 interface LaptopToolbarProps {
   totalCount: number;
@@ -44,8 +41,6 @@ const LaptopToolbar: React.FC<LaptopToolbarProps> = ({
   isRefetching,
   filterOptions,
 }) => {
-  const navigate = useNavigate();
-  
   // Calculate the number of active filters
   const activeFiltersCount = Object.entries(filters).reduce((count, [key, value]) => {
     if (key === 'priceRange') {
@@ -71,14 +66,6 @@ const LaptopToolbar: React.FC<LaptopToolbarProps> = ({
           totalLaptops={totalCount}
         />
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <Button
-            variant="outline"
-            className="flex-grow md:flex-grow-0 bg-white hover:bg-gray-50 text-primary border-primary hover:text-primary-dark hover:border-primary-dark flex items-center gap-2"
-            onClick={() => navigate('/recommend')}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Find Perfect Laptop</span>
-          </Button>
           <MobileFilterDrawer
             open={false} 
             setOpen={() => {}}
