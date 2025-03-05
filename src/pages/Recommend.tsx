@@ -16,7 +16,7 @@ const Recommend = () => {
   return <div className="min-h-screen bg-slate-50">
       <Navigation />
       
-      <main className="pt-24 pb-20">
+      <main className="pt-20 pb-20">
         <div className="container mx-auto px-4 py-4">
           <Card className="bg-white/80 shadow-md border-0 relative overflow-hidden rounded-2xl">
             <div className="relative">
