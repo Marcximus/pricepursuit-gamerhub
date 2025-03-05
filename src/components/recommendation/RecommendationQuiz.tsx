@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -22,6 +21,20 @@ const usageOptions = [
   '3D Modeling/CAD'
 ];
 
+// iOS-style emojis for usage options
+const usageEmojis = [
+  '🎓', // School/Education
+  '💼', // Business/Office Work
+  '🎬', // Video Editing
+  '📸', // Photo Editing
+  '🤖', // AI/Machine Learning
+  '🎮', // Gaming
+  '💻', // Programming/Coding
+  '🌐', // Web Browsing/Everyday Use
+  '🎨', // Content Creation
+  '📊', // 3D Modeling/CAD
+];
+
 const priceRangeOptions = [
   'USD 100 - 300',
   'USD 300 - 600',
@@ -33,6 +46,20 @@ const priceRangeOptions = [
   'USD 3000 - 4000',
   'USD 4000 - 6000',
   'Custom Range'
+];
+
+// iOS-style emojis for price ranges
+const priceRangeEmojis = [
+  '💰', // USD 100 - 300
+  '💰💰', // USD 300 - 600
+  '💰💰💰', // USD 600 - 900
+  '💰💰💰💰', // USD 900 - 1200
+  '💰💰💰💰💰', // USD 1200 - 1500
+  '💎', // USD 1500 - 2000
+  '💎💎', // USD 2000 - 2500
+  '💎💎💎', // USD 3000 - 4000
+  '💎💎💎💎', // USD 4000 - 6000
+  '⚙️', // Custom Range
 ];
 
 const brandOptions = [
@@ -52,10 +79,35 @@ const brandOptions = [
   'Toshiba'
 ];
 
+// iOS-style emojis for brands
+const brandEmojis = [
+  '🌐', // No preference
+  '🔵', // Dell
+  '⚪', // HP
+  '🔴', // Lenovo
+  '🍎', // Apple
+  '🔷', // ASUS
+  '🟢', // Acer
+  '🐉', // MSI
+  '📱', // Microsoft Surface
+  '📱', // Samsung
+  '🐍', // Razer
+  '🌈', // LG
+  '⚡', // Gigabyte
+  '🔶', // Toshiba
+];
+
 const screenSizeOptions = [
   '13 inches or smaller (ultra-portable)',
   '14–15 inches (balanced)',
   '17 inches or larger (desktop replacement)'
+];
+
+// iOS-style emojis for screen sizes
+const screenSizeEmojis = [
+  '📱', // 13 inches or smaller
+  '💻', // 14-15 inches
+  '🖥️', // 17 inches or larger
 ];
 
 const graphicsOptions = [
@@ -64,10 +116,24 @@ const graphicsOptions = [
   'High-end GPU (advanced rendering, AAA gaming)'
 ];
 
+// iOS-style emojis for graphics options
+const graphicsEmojis = [
+  '📊', // Integrated graphics
+  '🎮', // Dedicated GPU
+  '🚀', // High-end GPU
+];
+
 const storageOptions = [
   'Not much (200 GB - 500GB)',
   'I need a bit (500 GB - 1000GB)',
   'I need a lot (1000GB - 8000GB)'
+];
+
+// iOS-style emojis for storage options
+const storageEmojis = [
+  '💾', // Not much
+  '💿', // I need a bit
+  '🗄️', // I need a lot
 ];
 
 const RecommendationQuiz = () => {
@@ -197,6 +263,7 @@ const RecommendationQuiz = () => {
             options={usageOptions}
             selected={answers.usage}
             onSelect={(value) => handleOptionSelect('usage', value)}
+            emojis={usageEmojis}
           />
         )}
 
@@ -205,13 +272,16 @@ const RecommendationQuiz = () => {
             <h2 className="text-xl font-semibold mb-4">What is your price range?</h2>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-2">
-                {priceRangeOptions.map((option) => (
+                {priceRangeOptions.map((option, index) => (
                   <Button
                     key={option}
                     variant={answers.priceRange === option ? "default" : "outline"}
-                    className="justify-start text-left"
+                    className="justify-start text-left h-auto py-3"
                     onClick={() => handleOptionSelect('priceRange', option)}
                   >
+                    <span className="mr-2 text-xl" aria-hidden="true">
+                      {priceRangeEmojis[index]}
+                    </span>
                     {option}
                   </Button>
                 ))}
@@ -236,6 +306,7 @@ const RecommendationQuiz = () => {
             options={brandOptions}
             selected={answers.brand}
             onSelect={(value) => handleOptionSelect('brand', value)}
+            emojis={brandEmojis}
           />
         )}
 
@@ -245,6 +316,7 @@ const RecommendationQuiz = () => {
             options={screenSizeOptions}
             selected={answers.screenSize}
             onSelect={(value) => handleOptionSelect('screenSize', value)}
+            emojis={screenSizeEmojis}
           />
         )}
 
@@ -254,6 +326,7 @@ const RecommendationQuiz = () => {
             options={graphicsOptions}
             selected={answers.graphics}
             onSelect={(value) => handleOptionSelect('graphics', value)}
+            emojis={graphicsEmojis}
           />
         )}
 
@@ -263,6 +336,7 @@ const RecommendationQuiz = () => {
             options={storageOptions}
             selected={answers.storage}
             onSelect={(value) => handleOptionSelect('storage', value)}
+            emojis={storageEmojis}
           />
         )}
       </Card>
