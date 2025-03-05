@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Slider } from '@/components/ui/slider';
 
 interface PriceRangeSliderProps {
@@ -18,6 +18,11 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
       onChange(values[0], values[1]);
     }
   };
+
+  // Calculate the tick marks based on predefined price ranges 
+  const tickValues = useMemo(() => {
+    return [100, 300, 600, 900, 1200, 1500, 2000, 2500, 3000, 4000, 6000];
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -39,7 +44,7 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
             onValueChange={handleRangeChange}
             className="my-4"
             showTicks={true}
-            tickCount={5}
+            tickLabels={tickValues.map(v => `$${v}`)}
           />
           
           <div className="flex justify-between items-center">
@@ -71,4 +76,3 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
     </div>
   );
 };
-
