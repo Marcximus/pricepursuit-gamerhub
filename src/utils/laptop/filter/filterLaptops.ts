@@ -11,7 +11,7 @@ import {
   applyScreenSizeFilter,
   hasActiveFilters
 } from "./filtering";
-import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
+import { normalizeBrand } from "@/utils/laptop/normalizers/brandNormalizer";
 import { extractProcessorFromTitle } from "./extractors/processor/processorExtractor";
 
 /**
@@ -96,6 +96,23 @@ export const filterLaptops = (laptops: Product[], filters: FilterOptions): Produ
   });
 
   console.log(`Filtering complete: ${filteredLaptops.length} out of ${laptops.length} laptops matched filters`);
+  
+  // Add more detailed logging for brand filtering results
+  if (filters.brands.size > 0) {
+    // Count laptops by brand after filtering
+    const filteredBrandCounts: Record<string, number> = {};
+    filteredLaptops.forEach(laptop => {
+      if (!laptop.brand && !laptop.title) return;
+      const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title);
+      filteredBrandCounts[normalizedBrand] = (filteredBrandCounts[normalizedBrand] || 0) + 1;
+    });
+    
+    console.log('Filtered laptops by brand:', filteredBrandCounts);
+    
+    // Specifically check for "Ist computers" or similar problematic brands
+    const istComputersCount = filteredBrandCounts['IST'] || 0;
+    console.log(`Laptops matching 'IST' brand after filtering: ${istComputersCount}`);
+  }
   
   // Log a sample of filtered laptops for debugging
   if (filteredLaptops.length > 0) {

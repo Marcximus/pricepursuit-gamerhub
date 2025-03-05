@@ -20,47 +20,35 @@ export const useLaptopFilters = (laptops: Product[] | undefined) => {
       };
     }
 
-    // Log sample laptops to check storage values
-    console.log('Sample laptop storage values:', 
-      laptops.slice(0, 10)
-        .map(laptop => ({ 
-          id: laptop.id, 
-          storage: laptop.storage,
-          price: laptop.current_price
-        }))
-    );
+    // Log total number of laptops being analyzed for filters
+    console.log(`Generating filter options from ${laptops.length} laptops`);
 
-    // Get storage options and log them to debug the issue
-    const storageOptions = getUniqueFilterValues(laptops, 'storage');
-    console.log('Generated storage options:', Array.from(storageOptions));
-
-    // Count laptops with storage between 100-199 GB
-    const laptopsWith100To199GB = laptops.filter(laptop => {
-      if (!laptop.storage) return false;
-      const storageMatch = laptop.storage.match(/(\d+)\s*(GB|TB|gb|tb)/i);
-      if (!storageMatch) return false;
-      
-      const value = parseInt(storageMatch[1], 10);
-      const unit = storageMatch[2].toLowerCase();
-      const gbValue = unit === 'tb' ? value * 1024 : value;
-      
-      return gbValue >= 100 && gbValue < 200;
-    });
+    // Get unique brand values and check if "IST" or "Ist computers" appears
+    const brands = getGroupedBrandValues(laptops, 15);
+    console.log('Generated brand options:', Array.from(brands));
     
-    console.log(`Found ${laptopsWith100To199GB.length} laptops with storage between 100-199 GB`);
-    if (laptopsWith100To199GB.length > 0) {
-      console.log('Sample of 100-199 GB laptops:', 
-        laptopsWith100To199GB.slice(0, 5)
-          .map(laptop => ({ id: laptop.id, storage: laptop.storage }))
-      );
+    // Check if problematic brands exist in the dataset
+    const istBrands = laptops.filter(laptop => {
+      const brand = laptop.brand?.toLowerCase() || '';
+      return brand.includes('ist') || brand === 'ist computers';
+    });
+    console.log(`Found ${istBrands.length} laptops with IST/Ist brand`);
+    
+    if (istBrands.length > 0) {
+      // Log a sample of IST laptops to understand what's there
+      console.log('Sample IST laptops:', istBrands.slice(0, 3).map(l => ({
+        brand: l.brand,
+        title: l.title?.substring(0, 50),
+        price: l.current_price
+      })));
     }
 
     return {
       // Use grouped brands instead of all individual brands
-      brands: getGroupedBrandValues(laptops, 15),  // Group brands with fewer than 15 laptops
+      brands: brands,  // Group brands with fewer than 15 laptops
       processors: getUniqueFilterValues(laptops, 'processor'),
       ramSizes: getUniqueFilterValues(laptops, 'ram'),
-      storageOptions: storageOptions,
+      storageOptions: getUniqueFilterValues(laptops, 'storage'),
       graphicsCards: getUniqueFilterValues(laptops, 'graphics'),
       screenSizes: getUniqueFilterValues(laptops, 'screen_size'),
     };

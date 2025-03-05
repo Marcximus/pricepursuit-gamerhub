@@ -2,7 +2,7 @@
 import type { Product } from "@/types/product";
 import type { FilterOptions } from "@/components/laptops/LaptopFilters";
 import { matchesFilter } from "../matchers";
-import { normalizeBrand } from "@/utils/laptop/valueNormalizer";
+import { normalizeBrand } from "@/utils/laptop/normalizers/brandNormalizer";
 
 /**
  * Apply brand filtering to a laptop
@@ -22,6 +22,7 @@ export const applyBrandFilter = (
   }
   
   const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title);
+  const normalizedBrandLower = normalizedBrand.toLowerCase();
   const hasOtherBrandsFilter = filters.brands.has('Other');
   
   // Standard brand filtering without "Other" category
@@ -31,6 +32,16 @@ export const applyBrandFilter = (
       matchesFilter(selectedBrand, normalizedBrand, 'brand', laptop.title)
     );
   
+  // Add more detailed logging for specific problematic brands
+  if (normalizedBrandLower.includes('ist') || laptop.brand?.toLowerCase().includes('ist')) {
+    console.log(`IST brand laptop matched filter: ${matchesSpecificBrand}`, {
+      originalBrand: laptop.brand,
+      normalizedBrand,
+      title: laptop.title?.substring(0, 50),
+      selectedBrands: Array.from(filters.brands)
+    });
+  }
+  
   // If matches a specific selected brand, include it
   if (matchesSpecificBrand) {
     return true;
@@ -39,7 +50,7 @@ export const applyBrandFilter = (
   // Special handling for "Other" category
   if (hasOtherBrandsFilter) {
     // Check if the laptop brand is a major brand (in the mainBrandsSet)
-    const isMainBrand = mainBrandsSet.has(normalizedBrand.toLowerCase());
+    const isMainBrand = mainBrandsSet.has(normalizedBrandLower);
     
     // Only include in "Other" if it's not a main brand and not matching any specific selected brand
     return !isMainBrand && !matchesSpecificBrand;

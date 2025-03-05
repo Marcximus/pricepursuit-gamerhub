@@ -39,7 +39,10 @@ const BRAND_CORRECTIONS: {[key: string]: string} = {
   'vaio': 'VAIO',
   'fsjun': 'FSJUN',
   'jumper': 'Jumper',
-  'acemagic': 'ACEMAGIC'
+  'acemagic': 'ACEMAGIC',
+  // Fix specific problematic brands
+  'ist': 'IST',
+  'ist computers': 'IST'
 };
 
 /**

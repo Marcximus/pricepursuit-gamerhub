@@ -3,6 +3,7 @@ import type { Product } from "@/types/product";
 import { normalizerMap, validatorMap } from "../helpers/filterHelpers";
 import { sorterMap } from "../helpers/filterSorters";
 import { getValidValues } from "../helpers/filterUtils";
+import { normalizeBrand } from "@/utils/laptop/normalizers/brandNormalizer";
 
 /**
  * Groups brands with fewer than the threshold occurrences into an "Other" category
@@ -26,11 +27,16 @@ export const getGroupedBrandValues = (
   laptops.forEach(laptop => {
     if (!laptop.brand && !laptop.title) return;
     
-    const normalizedBrand = normalizer(laptop.brand || '');
+    const normalizedBrand = normalizeBrand(laptop.brand || '', laptop.title);
     if (!normalizedBrand || (validator && !validator(normalizedBrand))) return;
     
     brandCounts[normalizedBrand] = (brandCounts[normalizedBrand] || 0) + 1;
   });
+  
+  // Log all brands with their counts for debugging
+  console.log('All brands with counts:', Object.entries(brandCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20));
   
   // Separate brands into main brands and "Other"
   const mainBrands: string[] = [];
@@ -38,6 +44,7 @@ export const getGroupedBrandValues = (
   
   Object.entries(brandCounts).forEach(([brand, count]) => {
     // Only include brands that actually have laptops in the results
+    // and that have at least one matching laptop (count > 0)
     if (count > 0) {
       if (count >= threshold) {
         mainBrands.push(brand);
@@ -62,5 +69,6 @@ export const getGroupedBrandValues = (
     sortedMainBrands.push('Other');
   }
   
+  console.log("Final brand filter options:", sortedMainBrands);
   return new Set(sortedMainBrands);
 };
