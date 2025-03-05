@@ -20,9 +20,9 @@ const Recommend = () => {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-blue-50">
       <Navigation />
       
-      <main className="pt-20 pb-20">
+      <main className="pt-16 pb-20">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center mb-6">
+          <div className="flex items-center mb-4">
             <Button 
               variant="outline"
               onClick={() => navigate('/')}
@@ -36,21 +36,21 @@ const Recommend = () => {
           <Card className="bg-white shadow-md border-0 relative overflow-hidden rounded-2xl">
             <div className="relative">
               <LaptopParticles />
-              <div className="relative pt-10 z-10 bg-gradient-to-b from-transparent via-white to-white">
+              <div className="relative pt-6 z-10 bg-gradient-to-b from-transparent via-white to-white">
                 {!showingResults ? (
                   <>
-                    <div className="flex justify-center mb-2">
+                    <div className="flex justify-center mb-1">
                       <div className="bg-blue-100 p-3 rounded-full">
                         <Laptop className="w-8 h-8 text-blue-600" />
                       </div>
                     </div>
                     <h1 className="text-3xl font-bold text-center mb-2 text-gray-800">Find Your Perfect Laptop</h1>
-                    <p className="text-center text-gray-600 mb-8 max-w-lg mx-auto">
+                    <p className="text-center text-gray-600 mb-6 max-w-lg mx-auto">
                       Answer a few questions and we'll recommend the best laptops for your needs
                     </p>
                   </>
                 ) : (
-                  <div className="pb-6">
+                  <div className="pb-4">
                     {/* Empty div to maintain spacing - the ResultsHeader component in RecommendationResults will display the title */}
                   </div>
                 )}
