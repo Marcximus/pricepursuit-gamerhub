@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { QuizAnswers, RecommendationResult } from '../types/quizTypes';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useQuizState = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -71,35 +72,19 @@ export const useQuizState = () => {
 
       console.log("Sending answers to API:", finalAnswers);
       
-      // Use full URL with project reference to ensure correct routing
-      const apiUrl = 'https://kkebyebrhdpcwqnxhjcx.supabase.co/functions/v1/laptop-recommendation';
-      
       toast.info("Getting laptop recommendations...");
       
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ answers: finalAnswers })
+      // Use Supabase client to call the function
+      const { data, error: functionError } = await supabase.functions.invoke('laptop-recommendation', {
+        body: { answers: finalAnswers }
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API error response:", response.status, errorText);
-        throw new Error(`API error: ${response.status}. ${errorText || 'No error details available.'}`);
+      
+      if (functionError) {
+        console.error("Function error:", functionError);
+        throw new Error(`API error: ${functionError.message || 'Unknown error'}`);
       }
       
-      const responseText = await response.text();
-      console.log("Raw API response:", responseText);
-      
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (err) {
-        console.error("Error parsing JSON response:", err, "Response text:", responseText);
-        throw new Error("Invalid response format from recommendation service");
-      }
+      console.log("API response:", data);
       
       if (!data.success) {
         throw new Error(data.error || 'Failed to get recommendations');

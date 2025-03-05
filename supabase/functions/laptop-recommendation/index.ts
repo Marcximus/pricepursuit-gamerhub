@@ -65,7 +65,7 @@ serve(async (req) => {
 
     console.log("Calling DeepSeek API...");
     
-    // Call DeepSeek API
+    // Call DeepSeek API with the API key from environment variables
     const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
