@@ -1,6 +1,5 @@
 
 import React, { useEffect } from 'react';
-import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';
 import { QuizQuestion } from './QuizQuestion';
 import { PriceRangeQuestion } from './PriceRangeQuestion';
@@ -46,13 +45,7 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({ onResultsDispla
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-500">Question {currentQuestion + 1} of {totalQuestions}</span>
-          <span className="text-sm font-medium text-blue-600">{Math.round(progress)}%</span>
-        </div>
-        <Progress value={progress} className="h-2 bg-gray-100 rounded-full overflow-hidden" />
-      </div>
+      {/* Progress bar section removed */}
 
       <Card className="p-6 mb-6 bg-white/90 shadow-sm border-gray-100 rounded-2xl">
         {isProcessing ? (
