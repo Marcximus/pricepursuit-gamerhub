@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -14,7 +13,20 @@ const funnyLoadingTexts = [
   "Translating technical jargon to English...",
   "Consulting with tech wizards...",
   "Determining which laptop survives coffee spills better...",
-  "Figuring out laptop battery life in Netflix episodes..."
+  "Figuring out laptop battery life in Netflix episodes...",
+  "Benchmarking laptops against a toaster...",
+  "Counting pixels one by one...",
+  "Asking ChatGPT which laptop it would date...",
+  "Calculating how many browser tabs each laptop can handle...",
+  "Measuring performance in units of 90s dial-up connections...",
+  "Checking if either laptop can make a decent cup of coffee...",
+  "Determining how many cat videos can be watched simultaneously...",
+  "Converting specs into emoji explanations...",
+  "Asking both laptops to solve world peace...",
+  "Testing if either laptop floats (don't try this at home)...",
+  "Calculating price-to-cool-factor ratio...",
+  "Determining which laptop makes you look smarter in coffee shops...",
+  "Measuring battery life in Zoom meetings..."
 ];
 
 const LoadingState: React.FC = () => {
