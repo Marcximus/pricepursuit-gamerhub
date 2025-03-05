@@ -1,7 +1,7 @@
 
 import React from "react";
 import type { Product } from "@/types/product";
-import { ArrowUpRight, Zap } from "lucide-react";
+import { ArrowUpRight, MessageSquare, Zap } from "lucide-react";
 
 interface LaptopDisplayProps {
   laptop: Product;
@@ -63,15 +63,27 @@ const LaptopDisplay: React.FC<LaptopDisplayProps> = ({
             </div>
           </a>
           
-          <a 
-            href={affiliateUrl} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="flex items-center justify-center gap-1 text-sm text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-md border border-slate-700 h-full"
-          >
-            <span>Tech Specs</span>
-            <ArrowUpRight className="h-3 w-3" />
-          </a>
+          <div className="flex flex-col gap-2">
+            <a 
+              href={affiliateUrl} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center justify-center gap-1 text-sm text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-md border border-slate-700 h-full"
+            >
+              <span>Tech Specs</span>
+              <ArrowUpRight className="h-3 w-3" />
+            </a>
+            
+            <a 
+              href={affiliateUrl} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center justify-center gap-1 text-sm text-slate-200 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-md border border-slate-700"
+            >
+              <span>Reviews</span>
+              <MessageSquare className="h-3 w-3" />
+            </a>
+          </div>
         </div>
       </div>
     </>
