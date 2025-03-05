@@ -1,3 +1,4 @@
+
 import { XCircle } from "lucide-react";
 import { FilterOptions } from "../LaptopFilters";
 

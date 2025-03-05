@@ -6,6 +6,7 @@ import { MobileFilterDrawer } from "./components/MobileFilterDrawer";
 import { SearchBar } from "./components/SearchBar";
 import { SortOption } from "./LaptopSort";
 import { FilterOptions } from "./LaptopFilters";
+import { ActiveFilterPills } from "./components/ActiveFilterPills";
 
 interface LaptopToolbarProps {
   totalCount: number;
@@ -57,6 +58,30 @@ const LaptopToolbar: React.FC<LaptopToolbarProps> = ({
     return count;
   }, 0);
   
+  // Handle removing an individual filter
+  const handleRemoveFilter = (filterType: string, value: string) => {
+    const newFilters = { ...filters };
+    
+    if (filterType in newFilters && filterType !== 'priceRange' && filterType !== 'searchQuery') {
+      // Create a new Set without the selected value
+      const currentSet = newFilters[filterType as keyof typeof newFilters] as Set<string>;
+      const newSet = new Set(currentSet);
+      newSet.delete(value);
+      
+      // Update the filters
+      newFilters[filterType as keyof typeof newFilters] = newSet as any;
+      setFilters(newFilters);
+    }
+  };
+  
+  // Handle clearing the search term
+  const handleClearSearch = () => {
+    if (typeof setSearchTerm === 'function') {
+      // If value is a function (setState updater), use an empty string
+      setSearchTerm('');
+    }
+  };
+  
   return (
     <div className="flex flex-col gap-4 mb-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -64,7 +89,13 @@ const LaptopToolbar: React.FC<LaptopToolbarProps> = ({
           isLoading={isLoading}
           isRefetching={isRefetching}
           totalLaptops={totalCount}
-        />
+        >
+          <ActiveFilterPills 
+            filters={filters}
+            onRemoveFilter={handleRemoveFilter}
+            onClearSearch={handleClearSearch}
+          />
+        </LaptopToolbarCounter>
         <div className="flex items-center gap-2 w-full md:w-auto">
           <MobileFilterDrawer
             open={false} 
