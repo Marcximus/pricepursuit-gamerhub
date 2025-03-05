@@ -86,6 +86,7 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
       </div>
       
       <Slider
+        defaultValue={[localMin, localMax]}
         value={[localMin, localMax]}
         min={0}
         max={MAX_SLIDER_PRICE}
