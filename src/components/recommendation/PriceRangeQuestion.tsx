@@ -3,9 +3,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { PriceRangeSlider } from './PriceRangeSlider';
 import { priceRangeOptions, priceRangeEmojis } from './config/quizConfig';
+import { PriceRangeType } from './types/quizTypes';
 
 interface PriceRangeQuestionProps {
-  selectedOption: string;
+  selectedOption: PriceRangeType;  // Changed from string to PriceRangeType
   customMinPrice: number;
   customMaxPrice: number;
   onSelect: (value: string) => void;
@@ -19,6 +20,9 @@ export const PriceRangeQuestion: React.FC<PriceRangeQuestionProps> = ({
   onSelect,
   onRangeChange
 }) => {
+  // Convert selectedOption to string for comparison if it's an array
+  const selectedOptionStr = Array.isArray(selectedOption) ? `${selectedOption[0]} - ${selectedOption[1]}` : selectedOption;
+
   return (
     <>
       <h2 className="text-xl font-semibold mb-4">What is your price range?</h2>
@@ -27,7 +31,7 @@ export const PriceRangeQuestion: React.FC<PriceRangeQuestionProps> = ({
           {priceRangeOptions.map((option, index) => (
             <Button
               key={option}
-              variant={selectedOption === option ? "default" : "outline"}
+              variant={selectedOptionStr === option ? "default" : "outline"}
               className="justify-start text-left h-auto py-3"
               onClick={() => onSelect(option)}
             >
@@ -39,7 +43,7 @@ export const PriceRangeQuestion: React.FC<PriceRangeQuestionProps> = ({
           ))}
         </div>
         
-        {(selectedOption === 'Custom Range' || selectedOption.startsWith('Custom:')) && (
+        {(selectedOptionStr === 'Custom Range' || (typeof selectedOptionStr === 'string' && selectedOptionStr.startsWith('Custom:'))) && (
           <div className="mt-4">
             <PriceRangeSlider 
               minPrice={customMinPrice} 
