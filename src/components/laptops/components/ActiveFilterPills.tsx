@@ -6,15 +6,30 @@ type ActiveFilterPillsProps = {
   filters: FilterOptions;
   onRemoveFilter: (filterType: string, value: string) => void;
   onClearSearch: () => void;
+  onResetPriceRange?: () => void;
 };
 
 export function ActiveFilterPills({ 
   filters, 
   onRemoveFilter, 
-  onClearSearch 
+  onClearSearch,
+  onResetPriceRange
 }: ActiveFilterPillsProps) {
   // Check if there is an active search
   const hasActiveSearch = filters?.searchQuery && filters.searchQuery.trim() !== "";
+  
+  // Check if the price range filter is active
+  const isPriceRangeActive = filters?.priceRange && 
+    (filters.priceRange.min > 0 || filters.priceRange.max < 10000);
+  
+  // Format price for display
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
   
   // Get all active filter selections for displaying
   const getActiveFilterSelections = () => {
@@ -63,6 +78,17 @@ export function ActiveFilterPills({
 
   return (
     <div className="flex flex-wrap gap-1 ml-2">
+      {/* Show price range filter if active */}
+      {isPriceRangeActive && onResetPriceRange && (
+        <button
+          onClick={onResetPriceRange}
+          className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 transition-colors"
+        >
+          Price: {formatPrice(filters.priceRange.min)} - {formatPrice(filters.priceRange.max)}
+          <XCircle className="h-3 w-3 ml-0.5" />
+        </button>
+      )}
+      
       {/* Show search query as a filter */}
       {hasActiveSearch && (
         <button

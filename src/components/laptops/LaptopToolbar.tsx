@@ -82,6 +82,14 @@ const LaptopToolbar: React.FC<LaptopToolbarProps> = ({
     }
   };
   
+  // Handle resetting the price range
+  const handleResetPriceRange = () => {
+    setFilters({
+      ...filters,
+      priceRange: { min: 0, max: 10000 }
+    });
+  };
+  
   return (
     <div className="flex flex-col gap-4 mb-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -94,6 +102,7 @@ const LaptopToolbar: React.FC<LaptopToolbarProps> = ({
             filters={filters}
             onRemoveFilter={handleRemoveFilter}
             onClearSearch={handleClearSearch}
+            onResetPriceRange={handleResetPriceRange}
           />
         </LaptopToolbarCounter>
         <div className="flex items-center gap-2 w-full md:w-auto">
