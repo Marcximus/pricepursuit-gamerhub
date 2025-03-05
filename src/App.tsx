@@ -9,6 +9,7 @@ import ComparePriceLaptops from "./pages/Laptops";
 import ComparePage from "./pages/Compare";
 import Recommend from "./pages/Recommend";
 import NotFound from "./pages/NotFound";
+import P5Demo from "./pages/P5Demo";
 import { ComparisonProvider } from "./contexts/ComparisonContext";
 
 // Create a new query client with specific options for better debugging
@@ -38,6 +39,7 @@ function App() {
                   <Route path="/" element={<ComparePriceLaptops />} />
                   <Route path="/compare" element={<ComparePage />} />
                   <Route path="/recommend" element={<Recommend />} />
+                  <Route path="/p5" element={<P5Demo />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
