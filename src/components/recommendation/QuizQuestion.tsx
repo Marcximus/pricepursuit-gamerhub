@@ -21,21 +21,25 @@ export const QuizQuestion: React.FC<QuizQuestionProps> = ({
 }) => {
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">{question}</h2>
-      <div className={`grid ${stacked ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-2`}>
+      <h2 className="text-xl font-semibold text-gray-800">{question}</h2>
+      <div className={`grid ${stacked ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-3`}>
         {options.map((option, index) => (
           <Button
             key={option}
             variant={selected === option ? "default" : "outline"}
-            className="justify-start text-left h-auto py-3"
+            className={`justify-start text-left h-auto py-4 px-5 transition-all duration-200 hover:shadow-md ${
+              selected === option 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                : 'bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 border-gray-200'
+            } rounded-xl`}
             onClick={() => onSelect(option)}
           >
             {emojis && emojis[index] && (
-              <span className="mr-2 text-xl" aria-hidden="true">
+              <span className="mr-3 text-xl" aria-hidden="true">
                 {emojis[index]}
               </span>
             )}
-            {option}
+            <span className="font-medium">{option}</span>
           </Button>
         ))}
       </div>

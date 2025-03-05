@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Laptop } from 'lucide-react';
+import { Laptop, ArrowLeft, ArrowRight } from 'lucide-react';
 import { QuizAnswers } from './types/quizTypes';
 
 interface QuizNavigationProps {
@@ -35,12 +35,14 @@ export const QuizNavigation: React.FC<QuizNavigationProps> = ({
   };
 
   return (
-    <div className="flex justify-between">
+    <div className="flex justify-between mt-8">
       <Button
         variant="outline"
         onClick={onBack}
         disabled={currentQuestion === 0 || isProcessing}
+        className="px-5 py-2 rounded-xl border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200"
       >
+        <ArrowLeft className="w-4 h-4 mr-2" />
         Back
       </Button>
 
@@ -48,14 +50,16 @@ export const QuizNavigation: React.FC<QuizNavigationProps> = ({
         <Button
           onClick={onNext}
           disabled={isNextDisabled()}
+          className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 transition-all duration-200"
         >
           Next
+          <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       ) : (
         <Button 
           onClick={onSubmit} 
           disabled={!answers.storage || isProcessing}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 transition-all duration-200"
         >
           {isProcessing ? (
             <>

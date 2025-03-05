@@ -1,7 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Slider } from '@/components/ui/slider';
-import { Input } from '@/components/ui/input';
 
 interface PriceRangeSliderProps {
   minPrice: number;
@@ -14,88 +13,56 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
   maxPrice,
   onChange
 }) => {
-  const [localMin, setLocalMin] = useState(minPrice);
-  const [localMax, setLocalMax] = useState(maxPrice);
-  
-  // Max possible price for slider
-  const MAX_SLIDER_PRICE = 6000;
-
-  useEffect(() => {
-    setLocalMin(minPrice);
-    setLocalMax(maxPrice);
-  }, [minPrice, maxPrice]);
-
-  const handleSliderChange = (values: number[]) => {
-    if (values.length === 2) {
-      const [min, max] = values;
-      setLocalMin(min);
-      setLocalMax(max);
-      onChange(min, max);
+  const handleMinPriceChange = (value: number[]) => {
+    // Ensure min price doesn't exceed max price
+    if (value[0] < maxPrice) {
+      onChange(value[0], maxPrice);
     }
   };
 
-  const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (!isNaN(value) && value >= 0 && value < localMax) {
-      setLocalMin(value);
-      onChange(value, localMax);
-    }
-  };
-
-  const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (!isNaN(value) && value > localMin && value <= MAX_SLIDER_PRICE) {
-      setLocalMax(value);
-      onChange(localMin, value);
+  const handleMaxPriceChange = (value: number[]) => {
+    // Ensure max price doesn't go below min price
+    if (value[0] > minPrice) {
+      onChange(minPrice, value[0]);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center space-x-6">
-        <div className="flex-1">
-          <label className="text-sm text-gray-600 mb-1 block">Min Price ($)</label>
-          <div className="relative">
-            <Input
-              type="number"
-              value={localMin}
-              onChange={handleMinChange}
-              min={0}
-              max={localMax - 50}
-              step={50}
-              className="pl-7"
-            />
-            <div className="absolute left-2 top-2.5 text-gray-500">$</div>
-          </div>
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <label className="text-sm text-blue-600 font-medium">Minimum Price: <span className="font-bold">${minPrice}</span></label>
         </div>
-        <div className="flex-1">
-          <label className="text-sm text-gray-600 mb-1 block">Max Price ($)</label>
-          <div className="relative">
-            <Input
-              type="number"
-              value={localMax}
-              onChange={handleMaxChange}
-              min={localMin + 50}
-              max={MAX_SLIDER_PRICE}
-              step={50}
-              className="pl-7"
-            />
-            <div className="absolute left-2 top-2.5 text-gray-500">$</div>
-          </div>
-        </div>
+        <Slider
+          defaultValue={[minPrice]}
+          max={6000}
+          min={100}
+          step={50}
+          value={[minPrice]}
+          onValueChange={handleMinPriceChange}
+          className="my-4"
+        />
       </div>
       
-      <Slider
-        defaultValue={[localMin, localMax]}
-        value={[localMin, localMax]}
-        min={0}
-        max={MAX_SLIDER_PRICE}
-        step={50}
-        onValueChange={handleSliderChange}
-        className="my-6"
-        showTicks={true}
-        tickLabels={["$0", "$1500", "$3000", "$4500", "$6000"]}
-      />
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <label className="text-sm text-blue-600 font-medium">Maximum Price: <span className="font-bold">${maxPrice}</span></label>
+        </div>
+        <Slider
+          defaultValue={[maxPrice]}
+          max={6000}
+          min={100}
+          step={50}
+          value={[maxPrice]}
+          onValueChange={handleMaxPriceChange}
+          className="my-4"
+        />
+      </div>
+      
+      <div className="py-3 px-4 bg-white rounded-lg border border-blue-200 flex justify-between">
+        <div className="text-sm font-medium text-gray-700">Range:</div>
+        <div className="text-sm font-bold text-blue-700">${minPrice} - ${maxPrice}</div>
+      </div>
     </div>
   );
 };
