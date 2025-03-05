@@ -101,30 +101,22 @@ export const splitIntoParagraphs = (text: string): string[] => {
 };
 
 /**
- * Format recommendation reasons with emojis and paragraph breaks
+ * Formats the text for the recommendation reasons
  * @param reason The recommendation reason text
- * @returns React node with formatted paragraphs
+ * @returns Formatted paragraphs with emojis
  */
-export const formatRecommendationReason = (reason: string): React.ReactNode => {
-  if (!reason) return <p className="text-gray-600 text-sm">No details available 🤔</p>;
+export const formatRecommendationReason = (reason: string): string[] => {
+  if (!reason) return ["No details available 🤔"];
   
   // If it's a short reason, just add emojis without splitting
   if (!reason.includes('.') || reason.split('.').length <= 1) {
     const emojiReason = addEmojisToText(reason);
-    return <p className="text-gray-600 text-sm">{emojiReason}</p>;
+    return [emojiReason];
   }
   
   // For longer text, split into paragraphs
   const paragraphs = splitIntoParagraphs(reason);
   
   // Add emojis to each paragraph
-  const emojiParagraphs = paragraphs.map(paragraph => addEmojisToText(paragraph));
-  
-  return (
-    <>
-      {emojiParagraphs.map((paragraph, i) => (
-        <p key={i} className="text-gray-600 text-sm mb-2 last:mb-0">{paragraph}</p>
-      ))}
-    </>
-  );
+  return paragraphs.map(paragraph => addEmojisToText(paragraph));
 };
