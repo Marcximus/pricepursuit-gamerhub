@@ -21,7 +21,7 @@ export async function callDeepseekAPI(systemPrompt: string, userPrompt: string):
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      temperature: 0.1,
+      temperature: 1.0,
       max_tokens: 1000
     })
   });
