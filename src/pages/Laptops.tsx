@@ -109,7 +109,15 @@ const ComparePriceLaptops = () => {
                 setFilters={handleFiltersChange}
                 searchTerm={filters.searchQuery}
                 setSearchTerm={(value) => {
-                  handleFiltersChange({...filters, searchQuery: value});
+                  // Fix the TypeScript error by ensuring we pass a string value
+                  if (typeof value === 'function') {
+                    // If value is a function (setState updater), call it with current searchQuery
+                    const newValue = value(filters.searchQuery);
+                    handleFiltersChange({...filters, searchQuery: newValue});
+                  } else {
+                    // If value is a direct string, use it directly
+                    handleFiltersChange({...filters, searchQuery: value});
+                  }
                 }}
                 isLoading={isLaptopsLoading}
                 isRefetching={isRefetching}

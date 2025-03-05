@@ -49,7 +49,9 @@ const LaptopToolbar: React.FC<LaptopToolbarProps> = ({
   // Calculate the number of active filters
   const activeFiltersCount = Object.entries(filters).reduce((count, [key, value]) => {
     if (key === 'priceRange') {
-      return count + ((value.min > 0 || value.max < 10000) ? 1 : 0);
+      // Fix TypeScript error by type guarding for priceRange
+      const priceRange = value as { min: number; max: number };
+      return count + ((priceRange.min > 0 || priceRange.max < 10000) ? 1 : 0);
     }
     if (key === 'searchQuery' && value) {
       return count + 1;
