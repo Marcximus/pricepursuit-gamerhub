@@ -54,6 +54,13 @@ export const normalizeBrand = (brand: string, title?: string): string => {
   // First check if title contains known brand keywords
   if (title) {
     const titleLower = title.toLowerCase();
+    
+    // Special priority check for Apple products - if MacBook or M1/M2/M3 in title, it's likely Apple
+    if (/macbook|m[123]( pro| max| ultra)?/i.test(titleLower)) {
+      return 'Apple';
+    }
+    
+    // Check other brand patterns
     for (const [brandName, patterns] of Object.entries(BRAND_PATTERNS)) {
       for (const pattern of patterns) {
         if (pattern.test(titleLower)) {
