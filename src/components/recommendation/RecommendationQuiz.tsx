@@ -53,8 +53,8 @@ const RecommendationQuiz = () => {
         {currentQuestion === 1 && (
           <PriceRangeQuestion
             selectedOption={answers.priceRange}
-            customMinPrice={answers.customMinPrice}
-            customMaxPrice={answers.customMaxPrice}
+            customMinPrice={answers.customMinPrice || 500}
+            customMaxPrice={answers.customMaxPrice || 1500}
             onSelect={(value) => handleOptionSelect('priceRange', value)}
             onRangeChange={handlePriceRangeChange}
           />

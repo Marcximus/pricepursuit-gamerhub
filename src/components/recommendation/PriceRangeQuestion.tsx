@@ -6,7 +6,7 @@ import { priceRangeOptions, priceRangeEmojis } from './config/quizConfig';
 import { PriceRangeType } from './types/quizTypes';
 
 interface PriceRangeQuestionProps {
-  selectedOption: PriceRangeType;  // Changed from string to PriceRangeType
+  selectedOption: PriceRangeType;
   customMinPrice: number;
   customMaxPrice: number;
   onSelect: (value: string) => void;
@@ -21,7 +21,9 @@ export const PriceRangeQuestion: React.FC<PriceRangeQuestionProps> = ({
   onRangeChange
 }) => {
   // Convert selectedOption to string for comparison if it's an array
-  const selectedOptionStr = Array.isArray(selectedOption) ? `${selectedOption[0]} - ${selectedOption[1]}` : selectedOption;
+  const selectedOptionStr = Array.isArray(selectedOption) 
+    ? `Custom: USD ${selectedOption[0]} - ${selectedOption[1]}` 
+    : selectedOption;
 
   return (
     <>

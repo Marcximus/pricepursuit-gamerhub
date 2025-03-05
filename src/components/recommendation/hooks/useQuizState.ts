@@ -25,7 +25,11 @@ export const useQuizState = () => {
   const progress = ((currentQuestion) / totalQuestions) * 100;
 
   const handleOptionSelect = (question: keyof QuizAnswers, answer: string) => {
-    setAnswers({ ...answers, [question]: answer });
+    if (question === 'priceRange') {
+      setAnswers({ ...answers, [question]: answer as PriceRangeType });
+    } else {
+      setAnswers({ ...answers, [question]: answer });
+    }
   };
 
   const handlePriceRangeChange = (min: number, max: number) => {
@@ -33,7 +37,7 @@ export const useQuizState = () => {
       ...answers, 
       customMinPrice: min, 
       customMaxPrice: max,
-      priceRange: `Custom: USD ${min} - ${max}` as PriceRangeType
+      priceRange: [min, max] as PriceRangeType // Store as tuple
     });
   };
 
@@ -55,9 +59,13 @@ export const useQuizState = () => {
     
     try {
       // Format price range for API request
-      let priceRange = answers.priceRange;
-      if (typeof priceRange === 'string' && (priceRange === 'Custom Range' || priceRange.startsWith('Custom:'))) {
+      let priceRange: string;
+      if (Array.isArray(answers.priceRange)) {
+        priceRange = `USD ${answers.priceRange[0]} - ${answers.priceRange[1]}`;
+      } else if (answers.priceRange === 'Custom Range' || (typeof answers.priceRange === 'string' && answers.priceRange.startsWith('Custom:'))) {
         priceRange = `USD ${answers.customMinPrice} - ${answers.customMaxPrice}`;
+      } else {
+        priceRange = answers.priceRange as string;
       }
       
       // Prepare final answers
