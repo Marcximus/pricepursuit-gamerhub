@@ -3,6 +3,7 @@ import type { Product } from "@/types/product";
 import type { ComparisonSection } from "../types";
 import { compareRatings, formatRating } from "../utils/comparisons/ratingComparison";
 import { formatValue } from "../utils/formatters";
+import { getSpecInfo } from "../utils/specInfo";
 
 export const getReviewSpecs = (
   laptopLeft: Product | null, 
@@ -36,7 +37,8 @@ export const getReviewSpecs = (
       title: "Rating",
       leftValue: formatRating(laptopLeft?.rating),
       rightValue: formatRating(laptopRight?.rating),
-      compare: compareRatings
+      compare: compareRatings,
+      specInfo: getSpecInfo("wilson score") // Changed this to use Wilson Score's emoji
     },
     {
       title: "Rating Count",
@@ -52,7 +54,8 @@ export const getReviewSpecs = (
       title: "Wilson Score",
       leftValue: formatWilsonScore(laptopLeft?.wilson_score),
       rightValue: formatWilsonScore(laptopRight?.wilson_score),
-      compare: compareWilsonScores
+      compare: compareWilsonScores,
+      specInfo: getSpecInfo("rating") // Changed this to use Rating's emoji
     }
   ];
 };
