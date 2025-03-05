@@ -1,11 +1,10 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { processChunksSequentially } from "./chunkProcessor";
 import { applyAllProductFilters } from "../productFilters";
 
 export const updateLaptops = async () => {
   try {
-    console.log('Starting silent update for ALL laptops...');
+    console.log('Starting update for ALL laptops...');
     
     // Get ALL laptops with priority for those that haven't been updated in the longest time
     // or missing important data like price or image_url
@@ -14,7 +13,7 @@ export const updateLaptops = async () => {
       .select('id, asin, current_price, title, last_checked, image_url, update_status')
       .eq('is_laptop', true)
       .order('last_checked', { nullsFirst: true }) // Prioritize laptops that have never been checked
-      .limit(300); // Increased limit to process more laptops (from 200 to 300)
+      .limit(500); // Increased limit to process more laptops (from 300 to 500)
 
     if (fetchError) {
       console.error('Error fetching laptops:', fetchError);
@@ -26,6 +25,8 @@ export const updateLaptops = async () => {
       return { success: false, message: 'No laptops found to update' };
     }
 
+    console.log(`Fetched ${laptops.length} laptops to update`);
+
     // Filter out any obviously non-laptop products using filters
     const filteredLaptops = applyAllProductFilters(laptops);
     
@@ -33,6 +34,8 @@ export const updateLaptops = async () => {
       console.log('No valid laptops found after filtering');
       return { success: false, message: 'No valid laptops found after filtering' };
     }
+
+    console.log(`After filtering: ${filteredLaptops.length} valid laptops remaining for update`);
 
     // Prioritize laptops with missing prices or images, but still keep all laptops in the queue
     const prioritizedLaptops = [...filteredLaptops].sort((a, b) => {
@@ -63,14 +66,19 @@ export const updateLaptops = async () => {
     // Log detailed info about laptops to be updated
     console.log(`Found ${prioritizedLaptops.length} laptops to update with the following priority:`);
     formattedLaptops.forEach((laptop, index) => {
-      console.log(`${index + 1}. ASIN: ${laptop.asin}, Title: ${laptop.title?.substring(0, 30)}..., Last Checked: ${laptop.formattedLastChecked}, Current Price: ${laptop.current_price === null ? 'NULL' : `$${laptop.current_price}`}, Has Image: ${laptop.image_url ? 'Yes' : 'No'}, Status: ${laptop.update_status || 'pending'}`);
+      if (index < 10 || index >= prioritizedLaptops.length - 10) {
+        // Only log first 10 and last 10 to avoid excessive logging
+        console.log(`${index + 1}. ASIN: ${laptop.asin}, Title: ${laptop.title?.substring(0, 30)}..., Last Checked: ${laptop.formattedLastChecked}, Current Price: ${laptop.current_price === null ? 'NULL' : `$${laptop.current_price}`}, Has Image: ${laptop.image_url ? 'Yes' : 'No'}, Status: ${laptop.update_status || 'pending'}`);
+      } else if (index === 10) {
+        console.log(`... (${prioritizedLaptops.length - 20} more laptops) ...`);
+      }
     });
 
     // Log priority distribution
     logPriorityDistribution(formattedLaptops);
 
-    // Split laptops into chunks of 20 (increased from 10)
-    const chunkSize = 20;
+    // Split laptops into chunks of 50 (increased from 20)
+    const chunkSize = 50;
     const chunks = [];
     for (let i = 0; i < prioritizedLaptops.length; i += chunkSize) {
       chunks.push(prioritizedLaptops.slice(i, i + chunkSize));

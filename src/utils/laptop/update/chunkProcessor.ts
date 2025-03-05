@@ -2,16 +2,19 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // Timeout configuration (in milliseconds)
-const FUNCTION_TIMEOUT = 60000; // 60 seconds timeout
-const DELAY_BETWEEN_CHUNKS = 1500; // Reduced from 2000ms to 1500ms
+const FUNCTION_TIMEOUT = 120000; // 120 seconds timeout (increased from 60s)
+const DELAY_BETWEEN_CHUNKS = 1000; // Reduced from 1500ms to 1000ms
 
 export async function processChunksSequentially(chunks) {
+  // Log a summary of all chunks before processing
+  console.log(`Preparing to process ${chunks.length} chunks with a total of ${chunks.reduce((count, chunk) => count + chunk.length, 0)} laptops`);
+  
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
     const chunkAsins = chunk.map(l => l.asin);
     
-    console.log(`----- Processing chunk ${i + 1}/${chunks.length} -----`);
-    console.log(`Chunk ${i + 1} laptops:`, chunk.map(l => ({ 
+    console.log(`----- Processing chunk ${i + 1}/${chunks.length} with ${chunk.length} laptops -----`);
+    console.log(`First 5 laptops in chunk ${i + 1}:`, chunk.slice(0, 5).map(l => ({ 
       asin: l.asin, 
       lastChecked: l.last_checked ? new Date(l.last_checked).toLocaleString() : 'Never',
       price: l.current_price === null ? 'NULL' : `$${l.current_price}`,
@@ -20,7 +23,7 @@ export async function processChunksSequentially(chunks) {
     })));
 
     // Mark chunk laptops as pending update
-    console.log(`Marking ${chunk.length} laptops (ASINs: ${chunkAsins.join(', ')}) as pending_update`);
+    console.log(`Marking ${chunk.length} laptops as pending_update`);
     const { error: statusError } = await supabase
       .from('products')
       .update({ 
@@ -36,7 +39,7 @@ export async function processChunksSequentially(chunks) {
 
     // Call edge function for this chunk with proper timeout handling
     try {
-      console.log(`Invoking update-laptops function for chunk ${i + 1} with ${chunk.length} laptops (ASINs: ${chunkAsins.join(', ')})`);
+      console.log(`Invoking update-laptops function for chunk ${i + 1} with ${chunk.length} laptops`);
       
       // Create a promise that rejects after the timeout
       const timeoutPromise = new Promise((_, reject) => {
@@ -63,22 +66,29 @@ export async function processChunksSequentially(chunks) {
       const result: any = await Promise.race([functionPromise, timeoutPromise]);
       
       if (result && result.error) {
-        console.error(`Error processing chunk ${i + 1} (ASINs: ${chunkAsins.join(', ')}):`, result.error);
+        console.error(`Error processing chunk ${i + 1}:`, result.error);
         console.log(`Marking chunk ${i + 1} laptops as error due to function invocation failure`);
         await supabase
           .from('products')
           .update({ update_status: 'error' })
           .in('asin', chunkAsins);
       } else if (result && result.data) {
-        console.log(`Successfully initiated update for chunk ${i + 1} with response:`, result.data);
+        console.log(`Successfully initiated update for chunk ${i + 1}`);
         
-        // Update the status to completed for this batch if no further action needed
+        // Log successful results summary
         if (result.data && result.data.success) {
-          console.log(`Update-laptops function successfully processed chunk ${i + 1}`);
+          const statsData = result.data.stats || {};
+          console.log(`Update-laptops function processed chunk ${i + 1} with results:`, {
+            total: chunk.length,
+            successful: statsData.successCount || 0,
+            priceUpdates: statsData.priceUpdates || 0,
+            imageUpdates: statsData.imageUpdates || 0,
+            errors: statsData.errorCount || 0
+          });
         }
       }
     } catch (error) {
-      console.error(`Failed to process chunk ${i + 1} (ASINs: ${chunkAsins.join(', ')}):`, error);
+      console.error(`Failed to process chunk ${i + 1}:`, error);
       
       // Check if this is a timeout error
       const isTimeout = error.message && error.message.includes('timed out');

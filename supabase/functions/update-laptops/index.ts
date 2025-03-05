@@ -25,58 +25,87 @@ serve(async (req) => {
       throw new Error("No laptops provided for update");
     }
 
-    console.log(`Received request to update ${laptops.length} laptops:`, 
-      laptops.map(l => `ASIN: ${l.asin}, ID: ${l.id}`));
+    console.log(`Received request to update ${laptops.length} laptops`);
+    console.log(`First 5 laptops: ${laptops.slice(0, 5).map(l => l.asin).join(', ')}`);
+    console.log(`Last 5 laptops: ${laptops.slice(-5).map(l => l.asin).join(', ')}`);
 
-    // Process updates in parallel with enhanced error handling
-    const updatePromises = laptops.map(async (laptop) => {
-      try {
-        console.log(`Fetching data for ASIN ${laptop.asin} from Amazon...`);
-        
-        // Mark laptop as in_progress
-        await supabase
-          .from('products')
-          .update({ update_status: 'in_progress' })
-          .eq('id', laptop.id);
-        
-        // Fetch latest data from Oxylabs
-        const productData = await fetchProductData(laptop.asin);
-        
-        if (!productData) {
-          console.error(`Failed to fetch data for ASIN ${laptop.asin}`);
+    // Increase parallelism based on laptop count
+    // For large batches, process fewer in parallel to avoid timeouts
+    let maxParallel = 5; // Default parallel processing
+    if (laptops.length > 30) {
+      maxParallel = 3; // For large batches, reduce parallel processing
+    }
+    
+    console.log(`Processing with parallelism of ${maxParallel}`);
+
+    // Process updates in batches with controlled parallelism
+    const results = [];
+    const batchSize = maxParallel;
+    
+    for (let i = 0; i < laptops.length; i += batchSize) {
+      const batch = laptops.slice(i, i + batchSize);
+      console.log(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(laptops.length/batchSize)} with ${batch.length} laptops`);
+      
+      const batchPromises = batch.map(async (laptop) => {
+        try {
+          console.log(`Fetching data for ASIN ${laptop.asin} from Amazon...`);
+          
+          // Mark laptop as in_progress
+          await supabase
+            .from('products')
+            .update({ update_status: 'in_progress' })
+            .eq('id', laptop.id);
+          
+          // Fetch latest data from Oxylabs
+          const productData = await fetchProductData(laptop.asin);
+          
+          if (!productData) {
+            console.error(`Failed to fetch data for ASIN ${laptop.asin}`);
+            await supabase
+              .from('products')
+              .update({ update_status: 'error' })
+              .eq('id', laptop.id);
+            return { asin: laptop.asin, success: false, error: 'Data fetch failed' };
+          }
+          
+          // Process the data and update in database with enhanced processing
+          const updateResult = await updateProductInDatabase(supabase, laptop, productData);
+          
+          return { 
+            asin: laptop.asin, 
+            success: updateResult.success, 
+            priceUpdated: updateResult.priceUpdated,
+            imageUpdated: updateResult.imageUpdated,
+            specsUpdated: updateResult.specsUpdated,
+            error: updateResult.error 
+          };
+        } catch (error) {
+          console.error(`Error updating laptop ${laptop.asin}:`, error);
+          // Mark as error in database
           await supabase
             .from('products')
             .update({ update_status: 'error' })
             .eq('id', laptop.id);
-          return { asin: laptop.asin, success: false, error: 'Data fetch failed' };
+          return { asin: laptop.asin, success: false, error: error.message };
         }
-        
-        // Process the data and update in database with enhanced processing
-        const updateResult = await updateProductInDatabase(supabase, laptop, productData);
-        
-        return { 
-          asin: laptop.asin, 
-          success: updateResult.success, 
-          priceUpdated: updateResult.priceUpdated,
-          imageUpdated: updateResult.imageUpdated,
-          specsUpdated: updateResult.specsUpdated,
-          error: updateResult.error 
-        };
-      } catch (error) {
-        console.error(`Error updating laptop ${laptop.asin}:`, error);
-        // Mark as error in database
-        await supabase
-          .from('products')
-          .update({ update_status: 'error' })
-          .eq('id', laptop.id);
-        return { asin: laptop.asin, success: false, error: error.message };
-      }
-    });
+      });
 
-    const results = await Promise.all(updatePromises);
+      // Wait for this batch to complete
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
+      
+      console.log(`Completed batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(laptops.length/batchSize)}`);
+      
+      // Add a small delay between batches to avoid rate limiting
+      if (i + batchSize < laptops.length) {
+        console.log("Adding small delay between batches...");
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
     
     // Log aggregate statistics
     const stats = logUpdateStats(results);
+    console.log(`Completed updating ${laptops.length} laptops with stats:`, stats);
     
     return new Response(
       JSON.stringify({
