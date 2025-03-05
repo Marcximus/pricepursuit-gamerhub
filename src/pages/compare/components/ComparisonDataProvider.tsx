@@ -42,6 +42,11 @@ const ComparisonDataProvider: React.FC<ComparisonDataProviderProps> = ({ childre
   const laptopRight = selectedLaptops[1] || null;
   const hasSelectedLaptops = selectedLaptops.length === 2;
   
+  // Scroll to top when component mounts or when comparison changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [selectedLaptops]);
+  
   useEffect(() => {
     // Don't redirect, just don't fetch comparison if we don't have 2 laptops
     if (selectedLaptops.length !== 2) {

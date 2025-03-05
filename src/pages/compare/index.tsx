@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useComparison } from "@/contexts/ComparisonContext";
 import ComparisonDataProvider from "./components/ComparisonDataProvider";
@@ -8,6 +8,11 @@ import ComparisonLayout from "./components/ComparisonLayout";
 const ComparePage = () => {
   const { clearComparison } = useComparison();
   const navigate = useNavigate();
+  
+  // Scroll to top when the page loads
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   
   const handleGoBack = () => {
     navigate('/');
