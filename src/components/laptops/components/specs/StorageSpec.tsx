@@ -59,9 +59,8 @@ export function StorageSpec({ title, storage }: StorageSpecProps) {
       // Replace TB with GB for these common values
       finalDisplayStorage = displayStorage.replace(/(\b(?:128|256|512))\s*TB\b/i, '$1 GB');
       warningMessage = "(Corrected from TB → GB)";
-    } else {
-      warningMessage = "(Unusual storage size)";
-    }
+    } 
+    // Removed the "(Unusual storage size)" warning message
   }
   
   return (
