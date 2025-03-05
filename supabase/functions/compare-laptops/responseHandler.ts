@@ -18,5 +18,12 @@ export function parseComparisonResult(aiContent: string): ComparisonResult {
     rightCount: comparisonResult.advantages?.right?.length || 0
   });
   
+  // Validate that analysis has proper paragraph breaks
+  if (comparisonResult.analysis && !comparisonResult.analysis.includes('\n\n')) {
+    console.log('⚠️ Analysis lacks paragraph breaks, this might affect readability');
+  } else {
+    console.log('✅ Analysis contains paragraph breaks for better readability');
+  }
+  
   return comparisonResult;
 }

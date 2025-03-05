@@ -18,6 +18,15 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
   laptopLeft,
   laptopRight
 }) => {
+  // Function to render paragraphs with proper spacing
+  const renderAnalysisParagraphs = (text: string) => {
+    return text.split('\n\n').map((paragraph, index) => (
+      <p key={index} className={index > 0 ? 'mt-4' : ''}>
+        {paragraph}
+      </p>
+    ));
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Winner Badge */}
@@ -31,7 +40,7 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
       
       {/* Analysis Text */}
       <div className="text-base leading-relaxed">
-        <p>{comparisonResult.analysis}</p>
+        {renderAnalysisParagraphs(comparisonResult.analysis)}
       </div>
       
       {/* Advantages - Updated with blue vs yellow theme */}
