@@ -8,6 +8,7 @@ interface QuizQuestionProps {
   selected: string;
   onSelect: (value: string) => void;
   emojis?: string[]; // Add optional emojis array prop
+  stacked?: boolean; // Add option for stacked layout
 }
 
 export const QuizQuestion: React.FC<QuizQuestionProps> = ({ 
@@ -15,12 +16,13 @@ export const QuizQuestion: React.FC<QuizQuestionProps> = ({
   options, 
   selected, 
   onSelect,
-  emojis 
+  emojis,
+  stacked = false // Default to side-by-side layout
 }) => {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">{question}</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <div className={`grid ${stacked ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-2`}>
         {options.map((option, index) => (
           <Button
             key={option}

@@ -77,6 +77,7 @@ const RecommendationQuiz = () => {
             selected={answers.screenSize}
             onSelect={(value) => handleOptionSelect('screenSize', value)}
             emojis={quizQuestions[3].emojis}
+            stacked={true} // Stack options for screen size question
           />
         )}
 
@@ -87,6 +88,7 @@ const RecommendationQuiz = () => {
             selected={answers.graphics}
             onSelect={(value) => handleOptionSelect('graphics', value)}
             emojis={quizQuestions[4].emojis}
+            stacked={true} // Stack options for graphics question
           />
         )}
 
@@ -97,6 +99,7 @@ const RecommendationQuiz = () => {
             selected={answers.storage}
             onSelect={(value) => handleOptionSelect('storage', value)}
             emojis={quizQuestions[5].emojis}
+            stacked={true} // Stack options for storage question
           />
         )}
       </Card>
