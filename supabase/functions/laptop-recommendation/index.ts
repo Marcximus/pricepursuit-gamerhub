@@ -10,17 +10,49 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Log request information
+  console.log("🔍 Request received:", {
+    method: req.method,
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries())
+  });
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log("👌 Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log("Laptop recommendation function started");
-    const { answers } = await req.json();
+    console.log("🚀 Laptop recommendation function started");
+    
+    // Get request body and log it
+    const requestText = await req.text();
+    console.log("📦 Raw request body:", requestText);
+    
+    let requestData;
+    try {
+      requestData = JSON.parse(requestText);
+      console.log("✅ Parsed request data:", JSON.stringify(requestData));
+    } catch (parseError) {
+      console.error("❌ Error parsing request JSON:", parseError);
+      throw new Error("Invalid JSON in request body");
+    }
+    
+    const { answers } = requestData;
+    if (!answers) {
+      console.error("❌ Missing answers in request data");
+      throw new Error("Missing answers in request data");
+    }
     
     // Log the answers for debugging
-    console.log("Received user answers:", JSON.stringify(answers));
+    console.log("📋 Received user answers:", JSON.stringify(answers));
+
+    // Check if DEEPSEEK_API_KEY exists
+    if (!Deno.env.get('DEEPSEEK_API_KEY')) {
+      console.error("❌ DEEPSEEK_API_KEY environment variable is not set");
+      throw new Error("DEEPSEEK_API_KEY is not configured");
+    }
 
     // Prepare the prompt for DeepSeek
     const systemPrompt = `You are an expert laptop advisor with years of experience in the computer hardware industry. 
@@ -63,7 +95,21 @@ serve(async (req) => {
     
     Please recommend two specific laptop models that would best meet these requirements.`;
 
-    console.log("Calling DeepSeek API...");
+    console.log("📝 System prompt:", systemPrompt);
+    console.log("📝 User prompt:", userPrompt);
+    console.log("🔑 Calling DeepSeek API with key:", Deno.env.get('DEEPSEEK_API_KEY')?.substring(0, 5) + "..." + "(masked for security)");
+    
+    // Log DeepSeek request
+    const deepseekRequest = {
+      model: 'deepseek-chat',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
+    };
+    console.log("📤 DeepSeek request payload:", JSON.stringify(deepseekRequest));
     
     // Call DeepSeek API with the API key from environment variables
     const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -72,29 +118,33 @@ serve(async (req) => {
         'Authorization': `Bearer ${Deno.env.get('DEEPSEEK_API_KEY')}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000
-      })
+      body: JSON.stringify(deepseekRequest)
     });
+
+    console.log("📥 DeepSeek API response status:", deepseekResponse.status);
+    console.log("📥 DeepSeek API response headers:", Object.fromEntries(deepseekResponse.headers.entries()));
 
     if (!deepseekResponse.ok) {
       const errorText = await deepseekResponse.text();
-      console.error("DeepSeek API error:", deepseekResponse.status, errorText);
-      throw new Error(`DeepSeek API error: ${deepseekResponse.status}`);
+      console.error("❌ DeepSeek API error:", deepseekResponse.status, errorText);
+      throw new Error(`DeepSeek API error: ${deepseekResponse.status}. Response: ${errorText}`);
     }
 
-    const deepseekData = await deepseekResponse.json();
-    console.log("DeepSeek response received");
+    const responseText = await deepseekResponse.text();
+    console.log("📥 Raw DeepSeek response:", responseText);
+    
+    let deepseekData;
+    try {
+      deepseekData = JSON.parse(responseText);
+      console.log("✅ Parsed DeepSeek response:", JSON.stringify(deepseekData));
+    } catch (parseError) {
+      console.error("❌ Error parsing DeepSeek response JSON:", parseError);
+      throw new Error("Invalid JSON response from DeepSeek");
+    }
 
     if (!deepseekData.choices || !deepseekData.choices[0]?.message?.content) {
-      console.error("Invalid response from DeepSeek");
-      throw new Error("Invalid response from DeepSeek");
+      console.error("❌ Invalid response structure from DeepSeek");
+      throw new Error("Invalid response structure from DeepSeek");
     }
 
     // Extract and parse DeepSeek's recommendations
@@ -102,52 +152,60 @@ serve(async (req) => {
     try {
       // Extract JSON from the response
       const jsonContent = deepseekData.choices[0].message.content;
-      console.log("Raw DeepSeek content:", jsonContent);
+      console.log("📄 DeepSeek content:", jsonContent);
       
       // More robust JSON extraction - try to find a JSON object between curly braces
       let jsonString;
       try {
         const jsonMatch = jsonContent.match(/\{[\s\S]*\}/);
         jsonString = jsonMatch ? jsonMatch[0] : jsonContent;
+        console.log("📄 Extracted JSON string:", jsonString);
       } catch (error) {
-        console.error("Error extracting JSON from response:", error);
+        console.error("❌ Error extracting JSON from response:", error);
         jsonString = jsonContent;
       }
       
-      console.log("Extracted JSON string:", jsonString);
-      
       // Parse the JSON
       const parsedData = JSON.parse(jsonString);
-      console.log("Parsed data:", JSON.stringify(parsedData));
+      console.log("✅ Parsed recommendation data:", JSON.stringify(parsedData));
       
       if (!parsedData.recommendations || !Array.isArray(parsedData.recommendations)) {
+        console.error("❌ Invalid recommendations format from DeepSeek");
         throw new Error("Invalid recommendations format from DeepSeek");
       }
       
       recommendations = parsedData.recommendations;
-      console.log("Parsed recommendations:", JSON.stringify(recommendations));
+      console.log("🎁 Final recommendations:", JSON.stringify(recommendations));
     } catch (error) {
-      console.error("Error parsing DeepSeek response:", error);
+      console.error("❌ Error parsing DeepSeek response:", error);
       throw new Error("Failed to parse laptop recommendations: " + error.message);
     }
 
-    // Return the recommendations without authentication check
-    return new Response(JSON.stringify({ 
+    // Prepare the final response
+    const finalResponse = {
       success: true, 
       data: recommendations.map(rec => ({
         recommendation: rec,
         product: null
       }))
-    }), {
+    };
+    console.log("📤 Final response to client:", JSON.stringify(finalResponse));
+
+    // Return the recommendations without authentication check
+    return new Response(JSON.stringify(finalResponse), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
     
   } catch (error) {
-    console.error('Error in laptop-recommendation function:', error);
-    return new Response(JSON.stringify({ 
+    console.error('❌ Error in laptop-recommendation function:', error);
+    
+    const errorResponse = { 
       success: false, 
       error: error.message 
-    }), {
+    };
+    console.log("📤 Error response to client:", JSON.stringify(errorResponse));
+    
+    return new Response(JSON.stringify(errorResponse), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
