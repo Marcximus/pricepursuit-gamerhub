@@ -7,21 +7,24 @@ import { ArrowLeft, Laptop } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import LaptopParticles from '../components/recommendation/LaptopParticles';
+
 const Recommend = () => {
   const navigate = useNavigate();
   const [showingResults, setShowingResults] = React.useState(false);
+  
   const handleResultsDisplayChange = (isShowingResults: boolean) => {
     setShowingResults(isShowingResults);
   };
+  
   return <div className="min-h-screen bg-slate-50">
       <Navigation />
       
       <main className="pt-20 pb-20">
         <div className="container mx-auto px-4 py-4">
-          <Card className="bg-white/80 shadow-md border-0 relative overflow-hidden rounded-2xl">
+          <Card className="bg-transparent shadow-none border-0 relative overflow-hidden rounded-2xl">
             <div className="relative">
               <LaptopParticles />
-              <div className="relative pt-4 z-10 bg-gradient-to-b from-transparent via-white/90 to-white/90">
+              <div className="relative pt-4 z-10">
                 <div className="px-4 md:px-8">
                   <Button variant="outline" onClick={() => navigate('/')} className="mb-4 flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 shadow-sm transition-all duration-200">
                     <ArrowLeft className="w-4 h-4" />
@@ -50,4 +53,5 @@ const Recommend = () => {
       </main>
     </div>;
 };
+
 export default Recommend;
