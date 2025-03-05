@@ -13,48 +13,27 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
   maxPrice,
   onChange
 }) => {
-  const handleMinPriceChange = (value: number[]) => {
-    // Ensure min price doesn't exceed max price
-    if (value[0] < maxPrice) {
-      onChange(value[0], maxPrice);
-    }
-  };
-
-  const handleMaxPriceChange = (value: number[]) => {
-    // Ensure max price doesn't go below min price
-    if (value[0] > minPrice) {
-      onChange(minPrice, value[0]);
+  const handleRangeChange = (values: number[]) => {
+    if (values.length === 2) {
+      onChange(values[0], values[1]);
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <label className="text-sm text-blue-600 font-medium">Minimum Price: <span className="font-bold">${minPrice}</span></label>
+          <div className="text-sm text-blue-600 font-medium">Minimum Price: <span className="font-bold">${minPrice}</span></div>
+          <div className="text-sm text-blue-600 font-medium">Maximum Price: <span className="font-bold">${maxPrice}</span></div>
         </div>
+        
         <Slider
-          defaultValue={[minPrice]}
+          defaultValue={[minPrice, maxPrice]}
           max={6000}
           min={100}
           step={50}
-          value={[minPrice]}
-          onValueChange={handleMinPriceChange}
-          className="my-4"
-        />
-      </div>
-      
-      <div className="space-y-3">
-        <div className="flex justify-between items-center">
-          <label className="text-sm text-blue-600 font-medium">Maximum Price: <span className="font-bold">${maxPrice}</span></label>
-        </div>
-        <Slider
-          defaultValue={[maxPrice]}
-          max={6000}
-          min={100}
-          step={50}
-          value={[maxPrice]}
-          onValueChange={handleMaxPriceChange}
+          value={[minPrice, maxPrice]}
+          onValueChange={handleRangeChange}
           className="my-4"
         />
       </div>
