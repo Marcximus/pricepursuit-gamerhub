@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -29,18 +30,34 @@ const funnyLoadingTexts = [
   "Measuring battery life in Zoom meetings..."
 ];
 
+// Function to shuffle array using Fisher-Yates algorithm
+const shuffleArray = (array: string[]) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 const LoadingState: React.FC = () => {
   const [progress, setProgress] = useState(5);
   const [textIndex, setTextIndex] = useState(0);
+  const [shuffledTexts, setShuffledTexts] = useState<string[]>([]);
+  
+  // Initialize shuffled texts on first render
+  useEffect(() => {
+    setShuffledTexts(shuffleArray(funnyLoadingTexts));
+  }, []);
   
   useEffect(() => {
     // Rotate through funny loading texts
     const textTimer = setInterval(() => {
-      setTextIndex(prev => (prev + 1) % funnyLoadingTexts.length);
+      setTextIndex(prev => (prev + 1) % shuffledTexts.length);
     }, 3000);
     
     return () => clearInterval(textTimer);
-  }, []);
+  }, [shuffledTexts]);
   
   useEffect(() => {
     // Slower progress (20% slower) with more random increments
@@ -69,7 +86,9 @@ const LoadingState: React.FC = () => {
           <span className="font-medium">Analyzing laptops...</span>
         </div>
         <Progress value={progress} className="w-full h-2" indicatorClassName="bg-primary" />
-        <p className="text-sm text-muted-foreground">{funnyLoadingTexts[textIndex]}</p>
+        <p className="text-sm text-muted-foreground">
+          {shuffledTexts.length > 0 ? shuffledTexts[textIndex] : "Analyzing laptops..."}
+        </p>
       </div>
       
       <Skeleton className="h-4 w-full" />
