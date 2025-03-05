@@ -121,9 +121,9 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
 };
 
 // Helper function to calculate discount percentage
-function calculateDiscount(currentPrice: string, originalPrice: string): number {
-  const current = parseFloat(currentPrice.replace(/[^0-9.]/g, ''));
-  const original = parseFloat(originalPrice.replace(/[^0-9.]/g, ''));
+function calculateDiscount(currentPrice: string | number, originalPrice: string | number): number {
+  const current = typeof currentPrice === 'string' ? parseFloat(currentPrice.replace(/[^0-9.]/g, '')) : currentPrice;
+  const original = typeof originalPrice === 'string' ? parseFloat(originalPrice.replace(/[^0-9.]/g, '')) : originalPrice;
   
   if (isNaN(current) || isNaN(original) || original <= 0) {
     return 0;
