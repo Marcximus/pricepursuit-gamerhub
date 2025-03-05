@@ -6,6 +6,7 @@ import ComparisonSections from "./ComparisonSections";
 import type { Product } from "@/types/product";
 import type { ComparisonSection } from "../types";
 import { ClipboardList } from "lucide-react";
+import { formatLaptopDisplayTitle } from "../utils/titleFormatter";
 
 interface SpecificationsSectionProps {
   laptopLeft: Product | null;
@@ -28,10 +29,10 @@ const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({ laptopLef
         <div className="grid grid-cols-7 p-4 bg-slate-50 font-medium">
           <div className="col-span-3 text-left">Specification</div>
           <div className="col-span-2 text-left text-sky-700">
-            {laptopLeft?.brand} {laptopLeft?.model?.substring(0, 20)}{laptopLeft?.model && laptopLeft.model.length > 20 ? "..." : ""}
+            {formatLaptopDisplayTitle(laptopLeft)}
           </div>
           <div className="col-span-2 text-left text-amber-700">
-            {laptopRight?.brand} {laptopRight?.model?.substring(0, 20)}{laptopRight?.model && laptopRight.model.length > 20 ? "..." : ""}
+            {formatLaptopDisplayTitle(laptopRight)}
           </div>
         </div>
         {comparisonSections.map((section, index) => (

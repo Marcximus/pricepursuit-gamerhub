@@ -2,6 +2,7 @@
 import React from "react";
 import type { Product } from "@/types/product";
 import { ArrowUpRight, MessageSquare, Zap } from "lucide-react";
+import { formatLaptopDisplayTitle } from "../../utils/titleFormatter";
 
 interface LaptopDisplayProps {
   laptop: Product;
@@ -39,7 +40,7 @@ const LaptopDisplay: React.FC<LaptopDisplayProps> = ({
           rel="noopener noreferrer"
           className="hover:text-blue-600 transition-colors"
         >
-          <h3 className="text-lg font-semibold mb-1 tracking-tight">{laptop.brand} {laptop.model}</h3>
+          <h3 className="text-lg font-semibold mb-1 tracking-tight">{formatLaptopDisplayTitle(laptop)}</h3>
           <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{laptop.title}</p>
         </a>
       </div>

@@ -7,6 +7,7 @@ import type { Product } from "@/types/product";
 import type { ComparisonResult } from "../types";
 import type { ComparisonSection } from "../types";
 import EmptyComparisonState from "./EmptyComparisonState";
+import { formatLaptopDisplayTitle } from "../utils/titleFormatter";
 
 interface ComparisonLayoutProps {
   handleGoBack: () => void;
@@ -34,8 +35,8 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
     return [
       {
         title: 'Brand & Model',
-        leftValue: `${laptopLeft?.brand || 'N/A'} ${laptopLeft?.model || ''}`,
-        rightValue: `${laptopRight?.brand || 'N/A'} ${laptopRight?.model || ''}`
+        leftValue: formatLaptopDisplayTitle(laptopLeft),
+        rightValue: formatLaptopDisplayTitle(laptopRight)
       },
       {
         title: 'Processor',

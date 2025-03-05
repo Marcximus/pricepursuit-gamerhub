@@ -9,7 +9,8 @@ const MODEL_PATTERNS: {[key: string]: RegExp} = {
   'Dell': /(?:XPS|Inspiron|Latitude|Precision|Vostro)\s+(\d+)(?:[A-Z0-9]+)?/i,
   'ASUS': /(?:ZenBook|VivoBook|ROG|TUF)\s+([A-Z0-9]+(?:-[A-Z0-9]+)?)/i,
   'Acer': /(?:Aspire|Predator|Nitro|Swift|Spin)\s+([A-Z0-9]+(?:-[A-Z0-9]+)?)/i,
-  'MSI': /(?:Stealth|Raider|Titan|Prestige|Sword|Katana)\s+([A-Z0-9]+(?:-[A-Z0-9]+)?)/i
+  'MSI': /(?:Stealth|Raider|Titan|Prestige|Sword|Katana)\s+([A-Z0-9]+(?:-[A-Z0-9]+)?)/i,
+  'LG': /(?:Gram|Ultra)\s+([A-Z0-9]+(?:-[A-Z0-9]+)?)|([A-Z0-9]+[A-Za-z][0-9]+[A-Za-z0-9]+)/i
 };
 
 /**
@@ -56,6 +57,12 @@ export const normalizeModel = (model: string | null, title: string, brand?: stri
       // Extract ASUS model (ZenBook, ROG, VivoBook, etc.)
       const asusMatch = title.match(/\b(ZenBook|ROG|VivoBook|TUF)\s+\w+(-\w+)?/i);
       return asusMatch ? asusMatch[0] : '';
+      
+    case 'lg':
+      // Extract LG model (Gram series or model numbers)
+      const lgMatch = title.match(/\b(Gram|Ultra)\s+\w+(-\w+)?/i) || 
+                     title.match(/\b([A-Z0-9]+[A-Za-z][0-9]+[A-Za-z0-9]+)\b/i);
+      return lgMatch ? lgMatch[0] : '';
       
     default:
       return '';
