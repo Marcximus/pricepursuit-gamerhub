@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Zap } from 'lucide-react';
 
 interface ProductActionsProps {
   productUrl?: string;
@@ -23,8 +23,8 @@ export const ProductActions: React.FC<ProductActionsProps> = ({
           onClick={() => handleViewOnAmazon(productUrl)}
           className="w-full bg-blue-600 hover:bg-blue-700 transform hover:-translate-y-0.5 transition-all"
         >
-          View on Amazon
-          <ArrowUpRight className="w-4 h-4 ml-2 animate-pulse" />
+          Check it out
+          <Zap className="w-4 h-4 ml-2 animate-pulse" />
         </Button>
       ) : (
         <Button
