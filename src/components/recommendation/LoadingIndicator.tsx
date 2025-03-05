@@ -10,7 +10,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({ isLoading })
   if (!isLoading) return null;
   
   return (
-    <div className="flex flex-col items-center justify-center py-10">
+    <div className="flex flex-col items-center justify-center py-8">
       <div className="relative">
         <Laptop className="w-16 h-16 text-blue-500" />
         <RefreshCw className="w-8 h-8 text-blue-700 absolute -right-2 -top-2 animate-spin" />
