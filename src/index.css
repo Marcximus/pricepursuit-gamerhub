@@ -61,7 +61,7 @@
 }
 
 .nav-link {
-  @apply relative px-4 py-2 text-sm font-medium text-gaming-800 hover:text-gaming-600 transition-colors;
+  @apply relative px-2 py-2 text-sm font-medium text-gaming-800 hover:text-gaming-600 transition-colors;
 }
 
 .nav-link::after {
