@@ -47,7 +47,7 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({ onResultsDispla
     <div className="max-w-2xl mx-auto">
       {/* Progress bar section removed */}
 
-      <Card className="p-6 mb-6 bg-white/90 shadow-sm border-gray-100 rounded-2xl">
+      <Card className="p-6 mb-6 bg-white/90 shadow-sm border-2 border-blue-200 rounded-2xl">
         {isProcessing ? (
           <LoadingIndicator isLoading={isProcessing} />
         ) : (
