@@ -1,6 +1,5 @@
 
 import React from "react";
-import { TestTube, Dna } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import LoadingState from "./analysis/LoadingState";
 import ErrorState from "./analysis/ErrorState";
@@ -26,9 +25,9 @@ const AnalysisSection: React.FC<AnalysisSectionProps> = ({
   return (
     <Card className="mb-8 overflow-hidden">
       <div className="bg-primary/10 p-4 flex items-center justify-center gap-3">
-        <TestTube className="w-5 h-5 text-primary" />
+        <span className="text-xl" aria-label="Test Tube">🧪</span>
         <h2 className="text-lg font-semibold">AI Analysis</h2>
-        <Dna className="w-5 h-5 text-primary" />
+        <span className="text-xl" aria-label="DNA">🧬</span>
       </div>
       
       <div className="p-6">
