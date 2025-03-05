@@ -22,11 +22,6 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <div className="text-sm text-blue-600 font-medium">Minimum Price: <span className="font-bold">${minPrice}</span></div>
-          <div className="text-sm text-blue-600 font-medium">Maximum Price: <span className="font-bold">${maxPrice}</span></div>
-        </div>
-        
         <Slider
           defaultValue={[minPrice, maxPrice]}
           max={6000}
@@ -34,13 +29,27 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
           step={50}
           value={[minPrice, maxPrice]}
           onValueChange={handleRangeChange}
-          className="my-4"
+          className="my-6"
+          showTicks={true}
+          tickCount={5}
         />
+        
+        <div className="flex justify-between items-center mt-2">
+          <div className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg text-white text-xs font-medium shadow-md">
+            Min: ${minPrice}
+          </div>
+          <div className="text-sm font-medium text-gray-500">
+            Price Range
+          </div>
+          <div className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg text-white text-xs font-medium shadow-md">
+            Max: ${maxPrice}
+          </div>
+        </div>
       </div>
       
-      <div className="py-3 px-4 bg-white rounded-lg border border-blue-200 flex justify-between">
-        <div className="text-sm font-medium text-gray-700">Range:</div>
-        <div className="text-sm font-bold text-blue-700">${minPrice} - ${maxPrice}</div>
+      <div className="py-3 px-4 bg-gradient-to-r from-slate-800/90 to-slate-900/90 rounded-lg border border-slate-700 flex justify-between items-center shadow-lg backdrop-blur-sm">
+        <div className="text-sm font-medium text-slate-300">Selected Range:</div>
+        <div className="text-sm font-bold text-blue-400">${minPrice} - ${maxPrice}</div>
       </div>
     </div>
   );
