@@ -51,3 +51,29 @@ export interface RecommendationResult {
   recommendation: Recommendation;
   product?: Product;
 }
+
+// Add the missing type definitions
+export type UsageType = string;
+export type BrandType = string;
+export type ScreenSizeType = string;
+export type GraphicsType = string;
+export type StorageType = string;
+export type PriceRangeType = string | [number, number];
+
+// QuizAnswers type for useQuizState.ts
+export interface QuizAnswers {
+  usage: UsageType;
+  priceRange: PriceRangeType;
+  customMinPrice: number;
+  customMaxPrice: number;
+  brand: BrandType;
+  screenSize: ScreenSizeType;
+  graphics: GraphicsType;
+  storage: StorageType;
+}
+
+// HighlightItem interface for ProductHighlights component
+export interface HighlightItem {
+  text: string;
+  icon: React.ReactNode;
+}
