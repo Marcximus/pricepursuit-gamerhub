@@ -12,6 +12,39 @@ interface RecommendationItem {
 }
 
 /**
+ * Extracts price from different possible formats
+ */
+function extractPrice(priceData: any): string | number {
+  // If it's already a number, return it
+  if (typeof priceData === 'number' && !isNaN(priceData)) {
+    return priceData;
+  }
+  
+  // If it's a string that contains a price (e.g. "$599.99")
+  if (typeof priceData === 'string') {
+    // Try to extract numeric value from string
+    const numericValue = parseFloat(priceData.replace(/[^0-9.]/g, ''));
+    if (!isNaN(numericValue)) {
+      return numericValue;
+    }
+  }
+  
+  // If it's an object with price-related properties
+  if (priceData && typeof priceData === 'object') {
+    // Check common price field names
+    const possibleFields = ['value', 'current', 'amount', 'currentPrice'];
+    for (const field of possibleFields) {
+      if (priceData[field] !== undefined) {
+        return extractPrice(priceData[field]); // Recursively extract from nested object
+      }
+    }
+  }
+  
+  // Default fallback - return the recommendation price range min
+  return null;
+}
+
+/**
  * Fetches product data from Oxylabs for a recommendation
  */
 export async function fetchProductData(recommendation: RecommendationItem): Promise<{ recommendation: RecommendationItem, product: any | null }> {
@@ -72,9 +105,33 @@ export async function fetchProductData(recommendation: RecommendationItem): Prom
         oxylabsData.results[0].content.results.organic.length > 0) {
       
       const firstProduct = oxylabsData.results[0].content.results.organic[0];
+      
+      // Log detailed price information for debugging
+      console.log(`🔍 Price data for ${recommendation.model}:`, {
+        rawPrice: firstProduct.price,
+        priceType: typeof firstProduct.price,
+        priceUpper: firstProduct.price_upper,
+        originalPrice: firstProduct.original_price,
+        allPriceRelatedFields: Object.keys(firstProduct).filter(key => key.includes('price'))
+      });
+      
+      // Extract price using the improved function
+      const extractedPrice = extractPrice(firstProduct.price);
+      const extractedOriginalPrice = extractPrice(firstProduct.price_upper || firstProduct.original_price);
+      
+      console.log(`💰 Extracted price for ${recommendation.model}:`, {
+        extractedPrice,
+        extractedOriginalPrice,
+        usingFallbackPrice: extractedPrice === null
+      });
+      
+      // If we couldn't extract a price, use the recommendation price range min as fallback
+      const finalPrice = extractedPrice !== null ? extractedPrice : recommendation.priceRange.min;
+      
       console.log(`🎯 Found matching product for ${recommendation.model}:`, {
         title: firstProduct.title,
-        price: firstProduct.price,
+        price: finalPrice,
+        originalExtractedPrice: extractedPrice,
         url: firstProduct.url
       });
       
@@ -82,8 +139,8 @@ export async function fetchProductData(recommendation: RecommendationItem): Prom
       const processedProduct = {
         asin: firstProduct.asin,
         product_title: firstProduct.title,
-        product_price: firstProduct.price || 0,
-        product_original_price: firstProduct.price_upper || firstProduct.price,
+        product_price: finalPrice,
+        product_original_price: extractedOriginalPrice || null,
         product_url: firstProduct.url,
         product_photo: firstProduct.url_image || firstProduct.images?.[0] || null,
         product_star_rating: firstProduct.rating || 0,

@@ -17,6 +17,24 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
   const handleViewOnAmazon = (url: string) => {
     window.open(url, '_blank');
   };
+  
+  // Format price for display
+  const formatPrice = (price: string | number | null | undefined): string => {
+    if (price === null || price === undefined || price === 0 || price === '0') {
+      return `$${result.recommendation.priceRange.min} - $${result.recommendation.priceRange.max}`;
+    }
+    
+    if (typeof price === 'number') {
+      return `$${price.toFixed(2)}`;
+    }
+    
+    if (typeof price === 'string') {
+      if (price.startsWith('$')) return price;
+      return `$${price}`;
+    }
+    
+    return `$${result.recommendation.priceRange.min} - $${result.recommendation.priceRange.max}`;
+  };
 
   return (
     <Card className="overflow-hidden border-0 shadow-lg">
@@ -68,12 +86,12 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
         
         <div className="mb-4">
           <div className="text-2xl font-bold text-blue-700">
-            {result.product ? result.product.product_price : `$${result.recommendation.priceRange.min} - $${result.recommendation.priceRange.max}`}
+            {result.product ? formatPrice(result.product.product_price) : `$${result.recommendation.priceRange.min} - $${result.recommendation.priceRange.max}`}
           </div>
           
           {result.product && result.product.product_original_price && (
             <div className="text-sm text-gray-500">
-              <span className="line-through">{result.product.product_original_price}</span>
+              <span className="line-through">{formatPrice(result.product.product_original_price)}</span>
               {' '}
               <span className="text-green-600 font-medium">
                 {calculateDiscount(result.product.product_price, result.product.product_original_price)}% off
