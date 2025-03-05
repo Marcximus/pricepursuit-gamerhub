@@ -8,15 +8,15 @@ export const getReviewSpecs = (
   laptopLeft: Product | null, 
   laptopRight: Product | null
 ): ComparisonSection[] => {
-  // Format Wilson Score in standard format
+  // Format Wilson Score in its standard format (-1 to 1 scale)
   const formatWilsonScore = (score: number | null | undefined): string => {
     if (score === null || score === undefined || isNaN(score)) return 'N/A';
     
-    // Format Wilson score in its standard format (-1 to 1 scale)
+    // Format Wilson score in standard format
     return score.toFixed(2);
   };
 
-  // Compare Wilson scores in standard format
+  // Compare Wilson scores in standard format (-1 to 1 scale)
   const compareWilsonScores = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
     if (a === 'N/A' || b === 'N/A') return 'unknown';
     
