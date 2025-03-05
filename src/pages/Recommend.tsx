@@ -29,7 +29,10 @@ const Recommend = () => {
 
           <Card className="bg-white shadow-md border-0">
             <CardContent className="pt-6">
-              <h1 className="text-3xl font-bold text-center mb-6">Find Your Perfect Laptop</h1>
+              <h1 className="text-3xl font-bold text-center mb-6 flex items-center justify-center gap-3">
+                <span className="text-3xl" role="img" aria-label="laptop emoji">🧠</span>
+                Find Your Perfect Laptop
+              </h1>
               <p className="text-center text-gray-600 mb-8">
                 Answer a few questions and we'll recommend the best laptops for your needs
               </p>
