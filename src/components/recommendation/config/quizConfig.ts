@@ -1,3 +1,4 @@
+
 // iOS-style emojis for different option types
 export const usageEmojis = [
   '🎓', // School/Education
@@ -43,9 +44,9 @@ export const brandEmojis = [
 ];
 
 export const screenSizeEmojis = [
-  '📱', // 13 inches or smaller
-  '💻', // 14-15 inches
-  '🖥️', // 17 inches or larger
+  '📱', // 10-13+ inches
+  '💻', // 14-16+ inches
+  '🖥️', // 17-19+ inches
 ];
 
 export const graphicsEmojis = [
@@ -105,9 +106,9 @@ export const brandOptions = [
 ];
 
 export const screenSizeOptions = [
-  '13 inches or smaller (ultra-portable)',
-  '14–15 inches (balanced)',
-  '17 inches or larger (desktop replacement)'
+  '10-13+ inches (ultra-portable)',
+  '14-16+ inches (balanced)',
+  '17-19+ inches (desktop replacement)'
 ];
 
 export const graphicsOptions = [
