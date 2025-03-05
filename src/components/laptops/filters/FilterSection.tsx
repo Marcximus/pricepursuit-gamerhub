@@ -1,8 +1,6 @@
-
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { SearchInput } from "./components/SearchInput";
 import { FilterOptionsList } from "./components/FilterOptionsList";
 import { FilterIcon } from "./components/FilterIcon";
 import { sortProcessorOptions } from "./utils/processorSort";
@@ -24,23 +22,17 @@ export function FilterSection({
   defaultExpanded = false,
   icon = "box"
 }: FilterSectionProps) {
-  const [searchQuery, setSearchQuery] = useState("");
   const optionsArray = Array.from(options);
   const hasSelections = selectedOptions.size > 0;
 
-  // Filter options based on search query
-  const filteredOptions = optionsArray.filter(option => 
-    option.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   // Sort options based on filter type
   const sortedOptions = title === "Processors" 
-    ? sortProcessorOptions(filteredOptions)
+    ? sortProcessorOptions(optionsArray)
     : title === "Graphics"
-      ? sortGraphicsOptions(filteredOptions)
+      ? sortGraphicsOptions(optionsArray)
       : title === "Brands"
-        ? filteredOptions.sort((a, b) => a.localeCompare(b)) // Sort brands alphabetically
-        : filteredOptions;
+        ? optionsArray.sort((a, b) => a.localeCompare(b)) // Sort brands alphabetically
+        : optionsArray;
 
   const handleCheckboxChange = useCallback((option: string, checked: boolean) => {
     const newSelected = new Set(selectedOptions);
@@ -51,10 +43,6 @@ export function FilterSection({
     }
     onChange(newSelected);
   }, [selectedOptions, onChange]);
-
-  const handleClearFilter = useCallback(() => {
-    onChange(new Set());
-  }, [onChange]);
 
   return (
     <AccordionItem value={title} className="border-b border-slate-200">
@@ -74,15 +62,6 @@ export function FilterSection({
         </div>
       </AccordionTrigger>
       <AccordionContent className="pt-3 pb-5 px-3">
-        {options.size > 8 && (
-          <SearchInput
-            placeholder={`Search ${title.toLowerCase()}...`}
-            value={searchQuery}
-            onChange={setSearchQuery}
-            className="mb-3"
-          />
-        )}
-        
         <FilterOptionsList
           title={title}
           options={sortedOptions}
