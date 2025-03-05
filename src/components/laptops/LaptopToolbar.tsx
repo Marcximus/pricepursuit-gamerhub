@@ -2,10 +2,10 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import LaptopSort from "./LaptopSort";
-import LaptopToolbarCounter from "./components/LaptopToolbarCounter";
-import MobileFilterDrawer from "./components/MobileFilterDrawer";
-import SearchBar from "./components/SearchBar";
+import { LaptopSort } from "./LaptopSort";
+import { LaptopToolbarCounter } from "./components/LaptopToolbarCounter";
+import { MobileFilterDrawer } from "./components/MobileFilterDrawer";
+import { SearchBar } from "./components/SearchBar";
 import { SortOption } from "./LaptopSort";
 import { FilterOptions } from "./LaptopFilters";
 import { Check, Sparkles, Wand2 } from "lucide-react";

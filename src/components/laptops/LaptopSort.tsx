@@ -4,15 +4,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export type SortOption = "price-asc" | "price-desc" | "rating-desc";
 
 type LaptopSortProps = {
-  sortBy: SortOption;
-  onSortChange: (value: SortOption) => void;
+  value: SortOption;
+  onChange: (value: SortOption) => void;
 };
 
-export function LaptopSort({ sortBy, onSortChange }: LaptopSortProps) {
+export function LaptopSort({ value, onChange }: LaptopSortProps) {
   return (
     <Select
-      value={sortBy}
-      onValueChange={(value) => onSortChange(value as SortOption)}
+      value={value}
+      onValueChange={(value) => onChange(value as SortOption)}
     >
       <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm">
         <SelectValue placeholder="Sort by..." />

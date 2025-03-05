@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
 import { LaptopFilters, type FilterOptions } from "@/components/laptops/LaptopFilters";
 import type { SortOption } from "@/components/laptops/LaptopSort";
 import { LaptopList } from "@/components/laptops/LaptopList";
-import { LaptopToolbar } from "@/components/laptops/LaptopToolbar";
+import LaptopToolbar from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
 import CompareFloatingButton from "@/components/CompareFloatingButton";
