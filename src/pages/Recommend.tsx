@@ -17,15 +17,15 @@ const Recommend = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-blue-50">
       <Navigation />
       
       <main className="pt-16 pb-20">
         <div className="container mx-auto px-4 py-4">
-          <Card className="bg-white/80 shadow-md border-0 relative overflow-hidden rounded-2xl">
+          <Card className="bg-white shadow-md border-0 relative overflow-hidden rounded-2xl">
             <div className="relative">
               <LaptopParticles />
-              <div className="relative pt-4 z-10 bg-gradient-to-b from-transparent via-white/90 to-white/90">
+              <div className="relative pt-6 z-10 bg-gradient-to-b from-transparent via-white to-white">
                 <div className="px-4 md:px-8">
                   <Button 
                     variant="outline"
