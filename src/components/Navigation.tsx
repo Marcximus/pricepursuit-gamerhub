@@ -1,10 +1,11 @@
 
 import { Link, useNavigate } from "react-router-dom";
-import { Monitor, Laptop, Computer, Gamepad, Keyboard, Mouse, Headphones, Settings, LogOut, GitCompare, Sparkles } from "lucide-react";
+import { Monitor, Laptop, Computer, Gamepad, Keyboard, Mouse, Headphones, Settings, LogOut, GitCompare, Sparkles, FileText, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 const Navigation = () => {
   const { user } = useAuth();
@@ -34,8 +35,6 @@ const Navigation = () => {
           </Link>
           
           <div className="flex items-center space-x-4">
-            <Link to="/blog" className="nav-link">Blog</Link>
-            <Link to="/about" className="nav-link">About</Link>
             <Link to="/admin" className="nav-link flex items-center space-x-1">
               <Settings className="w-4 h-4" />
               <span>Admin</span>
@@ -71,6 +70,19 @@ const Navigation = () => {
                 <Sparkles className="w-4 h-4" />
                 <span>Personal Laptop Finder</span>
               </Link>
+              <Link to="/blog" className="nav-link flex items-center space-x-1">
+                <FileText className="w-4 h-4" />
+                <span>Blog</span>
+              </Link>
+              <Link to="/about" className="nav-link flex items-center space-x-1">
+                <User className="w-4 h-4" />
+                <span>About</span>
+              </Link>
+              
+              <div className="mx-2">
+                <Separator orientation="vertical" className="h-6" />
+              </div>
+              
               <Link to="/ComparePrice/Desktops" className="nav-link flex items-center space-x-1">
                 <Computer className="w-4 h-4" />
                 <span>Desktops</span>
