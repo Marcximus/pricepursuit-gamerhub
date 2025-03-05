@@ -34,10 +34,10 @@ export const PriceRangeQuestion: React.FC<PriceRangeQuestionProps> = ({
             <Button
               key={option}
               variant={selectedOptionStr === option ? "default" : "outline"}
-              className={`justify-start text-left h-auto py-3 px-4 transition-all duration-200 hover:shadow-md ${
+              className={`justify-start text-left h-auto py-2.5 px-3.5 transition-all duration-200 hover:shadow-md ${
                 selectedOptionStr === option 
                   ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                  : 'bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 border-gray-200'
+                  : 'bg-white/80 hover:bg-blue-50 text-gray-700 hover:text-blue-600 border-gray-200'
               } rounded-xl`}
               onClick={() => onSelect(option)}
             >
@@ -50,7 +50,7 @@ export const PriceRangeQuestion: React.FC<PriceRangeQuestionProps> = ({
         </div>
         
         {(selectedOptionStr === 'Custom Range' || (typeof selectedOptionStr === 'string' && selectedOptionStr.startsWith('Custom:'))) && (
-          <div className="mt-5 p-4 bg-blue-50 rounded-xl border border-blue-100">
+          <div className="mt-5 p-4 bg-blue-50/80 rounded-xl border border-blue-100">
             <p className="text-sm font-medium text-blue-700 mb-3">Drag the sliders to set your custom price range</p>
             <PriceRangeSlider 
               minPrice={customMinPrice} 

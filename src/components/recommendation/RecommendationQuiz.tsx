@@ -54,7 +54,7 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({ onResultsDispla
         <Progress value={progress} className="h-2 bg-gray-100 rounded-full overflow-hidden" />
       </div>
 
-      <Card className="p-8 mb-6 bg-white shadow-sm border-gray-100 rounded-2xl">
+      <Card className="p-6 mb-6 bg-white/90 shadow-sm border-gray-100 rounded-2xl">
         {isProcessing ? (
           <LoadingIndicator isLoading={isProcessing} />
         ) : (
