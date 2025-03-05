@@ -26,10 +26,12 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
   }, [minPrice, maxPrice]);
 
   const handleSliderChange = (values: number[]) => {
-    const [min, max] = values;
-    setLocalMin(min);
-    setLocalMax(max);
-    onChange(min, max);
+    if (values.length === 2) {
+      const [min, max] = values;
+      setLocalMin(min);
+      setLocalMax(max);
+      onChange(min, max);
+    }
   };
 
   const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,15 +92,9 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
         step={50}
         onValueChange={handleSliderChange}
         className="my-6"
+        showTicks={true}
+        tickLabels={["$0", "$1500", "$3000", "$4500", "$6000"]}
       />
-      
-      <div className="flex justify-between text-xs text-gray-500">
-        <span>$0</span>
-        <span>$1500</span>
-        <span>$3000</span>
-        <span>$4500</span>
-        <span>$6000</span>
-      </div>
     </div>
   );
 };
