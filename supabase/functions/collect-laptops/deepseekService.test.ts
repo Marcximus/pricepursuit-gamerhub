@@ -1,5 +1,5 @@
 
-import { assertEquals, assertExists } from "https://deno.land/std@0.168.0/testing/asserts.ts";
+import { assertEquals, assertExists, assertRejects } from "https://deno.land/std@0.168.0/testing/asserts.ts";
 import { processWithDeepseek } from "./deepseekService.ts";
 
 Deno.test({
