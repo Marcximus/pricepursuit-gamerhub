@@ -51,7 +51,6 @@ export const PriceRangeQuestion: React.FC<PriceRangeQuestionProps> = ({
         
         {(selectedOptionStr === 'Custom Range' || (typeof selectedOptionStr === 'string' && selectedOptionStr.startsWith('Custom:'))) && (
           <div className="mt-5 p-4 bg-blue-50/80 rounded-xl border border-blue-100">
-            <p className="text-sm font-medium text-blue-700 mb-3">Drag the sliders to set your custom price range</p>
             <PriceRangeSlider 
               minPrice={customMinPrice} 
               maxPrice={customMaxPrice}
