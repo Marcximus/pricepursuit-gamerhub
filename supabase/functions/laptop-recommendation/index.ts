@@ -131,8 +131,7 @@ serve(async (req) => {
       throw new Error("Failed to parse laptop recommendations: " + error.message);
     }
 
-    // Just return the recommendations without trying to fetch product data for now
-    // This simplifies our function to focus on fixing the immediate issue
+    // Return the recommendations without authentication check
     return new Response(JSON.stringify({ 
       success: true, 
       data: recommendations.map(rec => ({
