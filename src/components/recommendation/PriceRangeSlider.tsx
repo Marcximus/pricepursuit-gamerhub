@@ -21,36 +21,54 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <Slider
-          defaultValue={[minPrice, maxPrice]}
-          max={6000}
-          min={100}
-          step={50}
-          value={[minPrice, maxPrice]}
-          onValueChange={handleRangeChange}
-          className="my-6"
-          showTicks={true}
-          tickCount={5}
-        />
+      <div className="relative pt-2">
+        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-indigo-900/10 to-purple-900/10 rounded-xl -z-10"></div>
         
-        <div className="flex justify-between items-center mt-2">
-          <div className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg text-white text-xs font-medium shadow-md">
-            Min: ${minPrice}
+        <div className="mb-8 space-y-3">
+          <div className="flex justify-between items-center px-1">
+            <div className="text-xs uppercase tracking-wider text-indigo-500 font-semibold">Min</div>
+            <div className="text-xs uppercase tracking-wider text-indigo-500 font-semibold">Max</div>
           </div>
-          <div className="text-sm font-medium text-gray-500">
-            Price Range
-          </div>
-          <div className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg text-white text-xs font-medium shadow-md">
-            Max: ${maxPrice}
+          
+          <Slider
+            defaultValue={[minPrice, maxPrice]}
+            max={6000}
+            min={100}
+            step={50}
+            value={[minPrice, maxPrice]}
+            onValueChange={handleRangeChange}
+            className="my-4"
+            showTicks={true}
+            tickCount={5}
+          />
+          
+          <div className="flex justify-between items-center">
+            <div className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg text-white text-xs font-medium shadow-md ring-1 ring-white/10">
+              ${minPrice}
+            </div>
+            <div className="text-xs font-medium text-indigo-300 uppercase tracking-wider">
+              Price Range
+            </div>
+            <div className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg text-white text-xs font-medium shadow-md ring-1 ring-white/10">
+              ${maxPrice}
+            </div>
           </div>
         </div>
       </div>
       
-      <div className="py-3 px-4 bg-gradient-to-r from-slate-800/90 to-slate-900/90 rounded-lg border border-slate-700 flex justify-between items-center shadow-lg backdrop-blur-sm">
-        <div className="text-sm font-medium text-slate-300">Selected Range:</div>
-        <div className="text-sm font-bold text-blue-400">${minPrice} - ${maxPrice}</div>
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-indigo-500/5 blur-xl"></div>
+        <div className="py-3.5 px-5 bg-gradient-to-r from-slate-900/90 to-indigo-900/80 rounded-xl border border-indigo-500/30 flex justify-between items-center shadow-lg backdrop-blur-sm relative z-10">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></div>
+            <div className="text-sm font-medium text-indigo-200">Selected Range</div>
+          </div>
+          <div className="text-sm font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            ${minPrice} - ${maxPrice}
+          </div>
+        </div>
       </div>
     </div>
   );
 };
+
