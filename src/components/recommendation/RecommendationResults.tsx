@@ -1,10 +1,12 @@
 
 import React from 'react';
+import { useComparison } from '@/contexts/ComparisonContext';
 import { RecommendationResult } from './types/quizTypes';
 import { EmptyResults } from './results/EmptyResults';
 import { ResultsHeader } from './results/ResultsHeader';
 import { ResultsActionButtons } from './results/ResultsActionButtons';
 import { RecommendationCard } from './results/RecommendationCard';
+import type { Product as GlobalProduct } from '@/types/product'; // Import the global Product type
 
 interface RecommendationResultsProps {
   results: RecommendationResult[];
@@ -15,15 +17,53 @@ export const RecommendationResults: React.FC<RecommendationResultsProps> = ({
   results, 
   onReset 
 }) => {
-  const [comparisonUrl, setComparisonUrl] = React.useState<string | null>(null);
+  // Use the ComparisonContext
+  const { addToComparison, clearComparison } = useComparison();
 
   const handleCompare = () => {
     if (results && results.length >= 2 && results[0].product && results[1].product) {
-      const laptop1Id = results[0].product.asin;
-      const laptop2Id = results[1].product.asin;
-      const url = `/compare?left=${laptop1Id}&right=${laptop2Id}`;
-      setComparisonUrl(url);
-      window.open(url, '_blank');
+      // Clear any previous comparison selections
+      clearComparison();
+      
+      // Convert recommendation Product to the global Product type
+      const convertToGlobalProduct = (recProduct: RecommendationResult['product']): GlobalProduct => {
+        if (!recProduct) throw new Error("Product is undefined");
+        
+        return {
+          id: recProduct.asin, // Use ASIN as ID
+          title: recProduct.product_title,
+          brand: recProduct.processor?.split(' ')[0] || 'Unknown', // Extract brand from processor or use unknown
+          model: recProduct.product_title?.split(' ').slice(1, 3).join(' ') || 'Unknown Model',
+          current_price: recProduct.product_price,
+          original_price: recProduct.product_original_price,
+          rating: recProduct.product_star_rating,
+          rating_count: recProduct.product_num_ratings || 0,
+          processor: recProduct.processor || 'Not specified',
+          ram: recProduct.ram || 'Not specified',
+          storage: recProduct.storage || 'Not specified',
+          graphics: recProduct.graphics || 'Not specified',
+          screen_size: recProduct.screen_size || 'Not specified',
+          screen_resolution: recProduct.screen_resolution || 'Not specified',
+          weight: recProduct.weight || 'Not specified',
+          battery_life: recProduct.battery_life || 'Not specified',
+          asin: recProduct.asin,
+          image_url: recProduct.product_photo,
+        };
+      };
+      
+      try {
+        // Add both products to comparison
+        const product1 = convertToGlobalProduct(results[0].product);
+        const product2 = convertToGlobalProduct(results[1].product);
+        
+        addToComparison(product1);
+        addToComparison(product2);
+        
+        // Navigate to compare page
+        window.open('/compare', '_blank');
+      } catch (error) {
+        console.error("Error setting up comparison:", error);
+      }
     }
   };
 

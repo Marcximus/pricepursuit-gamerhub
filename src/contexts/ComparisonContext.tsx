@@ -17,6 +17,11 @@ export function ComparisonProvider({ children }: { children: ReactNode }) {
   const [selectedLaptops, setSelectedLaptops] = useState<Product[]>([]);
   
   const addToComparison = (laptop: Product) => {
+    // Ensure laptop has an ID (use asin as fallback if needed)
+    if (!laptop.id && laptop.asin) {
+      laptop = { ...laptop, id: laptop.asin };
+    }
+    
     if (selectedLaptops.length < 2 && !isSelected(laptop.id)) {
       setSelectedLaptops([...selectedLaptops, laptop]);
     }

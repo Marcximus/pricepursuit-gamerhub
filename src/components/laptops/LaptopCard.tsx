@@ -15,8 +15,13 @@ type LaptopCardProps = {
 export function LaptopCard({ laptop }: LaptopCardProps) {
   // Validate required fields
   if (!laptop || !laptop.id) {
-    console.error('Invalid laptop data received:', laptop);
-    return null;
+    // If laptop has no ID but has an ASIN, use the ASIN as the ID
+    if (laptop.asin && !laptop.id) {
+      laptop = { ...laptop, id: laptop.asin };
+    } else {
+      console.error('Invalid laptop data received:', laptop);
+      return null;
+    }
   }
 
   // Base product URL with affiliate tag

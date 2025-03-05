@@ -27,6 +27,7 @@ export interface Recommendation {
 }
 
 export interface Product {
+  id?: string; // Add ID field to match the expected format
   asin: string;
   product_title: string;
   product_photo?: string;
