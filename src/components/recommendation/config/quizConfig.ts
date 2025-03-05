@@ -20,8 +20,8 @@ export const priceRangeEmojis = [
   '💶', // USD 1200 - 1500
   '💷', // USD 1500 - 2000
   '💎', // USD 2000 - 2500
-  '🏦', // USD 3000 - 4000
-  '💱', // USD 4000 - 6000
+  '💲', // USD 3000 - 4000
+  '👑', // USD 4000 - 6000
   '⚙️', // Custom Range
 ];
 
@@ -34,7 +34,7 @@ export const brandEmojis = [
   '🔷', // ASUS
   '🟢', // Acer
   '🐉', // MSI
-  '📱', // Microsoft Surface
+  '🪟', // Microsoft Surface
   '📱', // Samsung
   '🐍', // Razer
   '🌈', // LG
