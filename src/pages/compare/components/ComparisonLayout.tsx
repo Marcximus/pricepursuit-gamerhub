@@ -1,3 +1,4 @@
+
 import React from "react";
 import Navigation from "@/components/Navigation";
 import { ComparisonHeader, LaptopCard, AnalysisSection, SpecificationsSection } from "./index";
@@ -69,8 +70,8 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
         leftValue: formatPrice(laptopLeft?.current_price),
         rightValue: formatPrice(laptopRight?.current_price),
         compare: (a: string, b: string) => {
-          const aPrice = parseFloat(a.replace('$', '').replace(/,/g, ''));
-          const bPrice = parseFloat(b.replace('$', '').replace(/,/g, ''));
+          const aPrice = parseFloat(a.replace('$ ', '').replace(/,/g, ''));
+          const bPrice = parseFloat(b.replace('$ ', '').replace(/,/g, ''));
           return aPrice === bPrice ? 'equal' : aPrice < bPrice ? 'better' : 'worse';
         }
       },
