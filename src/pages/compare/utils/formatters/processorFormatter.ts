@@ -12,6 +12,12 @@ export const formatProcessor = (processor?: string, title?: string): string => {
         return normalizeProcessor(`Intel Core i${intelGenMatch[2]} ${intelGenMatch[1]}th Gen`);
       }
       
+      // Check for Intel Ultra format (e.g. "Intel Ultra 7-155H")
+      const intelUltraMatch = title.match(/Intel\s+(?:Core\s+)?Ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i);
+      if (intelUltraMatch) {
+        return normalizeProcessor(`Intel Core Ultra ${intelUltraMatch[1]}-${intelUltraMatch[2]}`);
+      }
+      
       const intelMatch = title.match(/Intel\s+Core\s+i[3579](?:\-\d{4,5})?|Intel\s+Core\s+Ultra\s+\d(?:\-\d{3})?/i);
       if (intelMatch) return normalizeProcessor(intelMatch[0]);
       
@@ -32,6 +38,14 @@ export const formatProcessor = (processor?: string, title?: string): string => {
         const match = title.match(/Intel\s+(\d+)(?:th|nd|rd)\s+Gen\s+i([3579])/i);
         if (match) {
           return normalizeProcessor(`Intel Core i${match[2]} ${match[1]}th Gen`);
+        }
+      }
+      
+      // Check for Intel Ultra format
+      if (processor === 'Intel' && title.match(/Intel\s+(?:Core\s+)?Ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i)) {
+        const match = title.match(/Intel\s+(?:Core\s+)?Ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i);
+        if (match) {
+          return normalizeProcessor(`Intel Core Ultra ${match[1]}-${match[2]}`);
         }
       }
       

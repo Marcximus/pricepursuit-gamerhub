@@ -18,10 +18,12 @@ export function ProcessorSpec({ title, processor }: ProcessorSpecProps) {
   if (intelGenMatch) {
     displayProcessor = `Intel Core i${intelGenMatch[2]} ${intelGenMatch[1]}th Gen`;
   }
-  // Check for Intel Ultra in title with a more comprehensive pattern
+  // Check for Intel Ultra in title with an improved comprehensive pattern
   else if (title.match(/Intel\s+(?:Core\s+)?Ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i)) {
     const ultraMatch = title.match(/Intel\s+(?:Core\s+)?Ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i);
-    displayProcessor = `Intel Core Ultra ${ultraMatch[1]}-${ultraMatch[2]}`;
+    if (ultraMatch) {
+      displayProcessor = `Intel Core Ultra ${ultraMatch[1]}-${ultraMatch[2]}`;
+    }
   } 
   // If processor is generic or missing, try to extract from title
   else if (!processor || processor === 'AMD' || processor === 'Intel') {

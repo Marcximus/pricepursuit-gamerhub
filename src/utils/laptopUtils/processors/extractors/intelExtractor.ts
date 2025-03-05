@@ -9,22 +9,22 @@ export function extractIntelProcessor(text: string): string | null {
   
   const normalizedText = text.toLowerCase();
   
-  // NEW PATTERN: Check for "Intel Xth Gen iY" format (e.g., "Intel 12th Gen i7")
-  const intelGenMatch = normalizedText.match(/intel\s+(\d+)(?:th|nd|rd)\s+gen\s+i([3579])/i);
+  // Check for "Intel Xth Gen iY" format (e.g., "Intel 12th Gen i7")
+  const intelGenMatch = normalizedText.match(intelCorePatterns.intelGenFormat);
   if (intelGenMatch) {
     return `Intel Core i${intelGenMatch[2]} ${intelGenMatch[1]}th Gen`;
   }
   
-  // Check for Core Ultra patterns (with model numbers) - improved pattern
-  const coreUltraWithModelMatch = normalizedText.match(/intel\s+(?:core\s+)?ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i);
-  if (coreUltraWithModelMatch) {
-    return `Intel Core Ultra ${coreUltraWithModelMatch[1]}-${coreUltraWithModelMatch[2]}`;
-  }
-  
-  // Check for Core Ultra patterns (without model numbers)
+  // Enhanced check for Intel Ultra with model numbers
   const coreUltraMatch = normalizedText.match(intelCorePatterns.coreUltra);
   if (coreUltraMatch) {
-    return `Intel Core Ultra ${coreUltraMatch[1]}`;
+    return `Intel Core Ultra ${coreUltraMatch[1]}-${coreUltraMatch[2]}`;
+  }
+  
+  // Fallback to simpler Ultra pattern (without model numbers)
+  const coreUltraSimpleMatch = normalizedText.match(intelCorePatterns.coreUltraSimple);
+  if (coreUltraSimpleMatch) {
+    return `Intel Core Ultra ${coreUltraSimpleMatch[1]}`;
   }
   
   // Check for generation prefix (e.g. "12th Gen Intel Core i7")
