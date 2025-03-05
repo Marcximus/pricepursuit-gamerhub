@@ -48,6 +48,9 @@ export const RecommendationResults: React.FC<RecommendationResultsProps> = ({
           battery_life: recProduct.battery_life || 'Not specified',
           asin: recProduct.asin,
           image_url: recProduct.product_photo,
+          product_url: recProduct.product_url || `https://amazon.com/dp/${recProduct.asin}?tag=with-laptop-discount-20`,
+          last_checked: new Date().toISOString(),
+          created_at: new Date().toISOString()
         };
       };
       
