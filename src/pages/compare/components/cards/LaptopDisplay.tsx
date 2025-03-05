@@ -23,7 +23,7 @@ const LaptopDisplay: React.FC<LaptopDisplayProps> = ({
         <AspectRatio ratio={16 / 9} className="bg-slate-100 rounded-md overflow-hidden">
           <LaptopImage 
             src={laptop.image_url || ''} 
-            title={laptop.title || 'Laptop image'} 
+            alt={laptop.title || 'Laptop image'} 
             className="object-contain w-full h-full" 
           />
         </AspectRatio>
