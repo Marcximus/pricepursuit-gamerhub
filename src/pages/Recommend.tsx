@@ -14,9 +14,9 @@ const Recommend = () => {
     <div className="min-h-screen bg-slate-50">
       <Navigation />
       
-      <main className="pt-24 pb-16">
+      <main className="pt-20 pb-16">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center mb-6">
+          <div className="flex items-center mb-4">
             <Button 
               variant="outline"
               onClick={() => navigate('/')}
