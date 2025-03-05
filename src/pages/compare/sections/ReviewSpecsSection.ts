@@ -8,42 +8,26 @@ export const getReviewSpecs = (
   laptopLeft: Product | null, 
   laptopRight: Product | null
 ): ComparisonSection[] => {
-  // Format Wilson Score as a percentage
+  // Format Wilson Score in standard format
   const formatWilsonScore = (score: number | null | undefined): string => {
     if (score === null || score === undefined || isNaN(score)) return 'N/A';
     
-    // Convert Wilson score (-1 to 1) to a percentage (0-100%)
-    const percentage = Math.min(100, Math.max(0, (score + 1) * 50));
-    
-    // Format to include confidence level indication
-    if (percentage >= 90) {
-      return `${percentage.toFixed(0)}% (Very High)`;
-    } else if (percentage >= 75) {
-      return `${percentage.toFixed(0)}% (High)`;
-    } else if (percentage >= 60) {
-      return `${percentage.toFixed(0)}% (Moderate)`;
-    } else if (percentage >= 40) {
-      return `${percentage.toFixed(0)}% (Fair)`;
-    } else {
-      return `${percentage.toFixed(0)}% (Low)`;
-    }
+    // Format Wilson score in its standard format (-1 to 1 scale)
+    return score.toFixed(2);
   };
 
-  // Compare Wilson scores - update regex to match new format
+  // Compare Wilson scores in standard format
   const compareWilsonScores = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
-    const aMatch = a.match(/(\d+)%/);
-    const bMatch = b.match(/(\d+)%/);
+    if (a === 'N/A' || b === 'N/A') return 'unknown';
     
-    if (aMatch && bMatch) {
-      const aScore = parseInt(aMatch[1], 10);
-      const bScore = parseInt(bMatch[1], 10);
-      
-      if (aScore > bScore) return 'better';
-      if (aScore < bScore) return 'worse';
-      return 'equal';
-    }
+    const aScore = parseFloat(a);
+    const bScore = parseFloat(b);
     
-    return 'unknown';
+    if (isNaN(aScore) || isNaN(bScore)) return 'unknown';
+    
+    if (aScore > bScore) return 'better';
+    if (aScore < bScore) return 'worse';
+    return 'equal';
   };
 
   return [
