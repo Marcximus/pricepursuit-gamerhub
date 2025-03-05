@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,19 +20,24 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
   // Format price for display
   const formatPrice = (price: string | number | null | undefined): string => {
     if (price === null || price === undefined || price === 0 || price === '0') {
-      return `$${result.recommendation.priceRange.min} - $${result.recommendation.priceRange.max}`;
+      return `$${result.recommendation.priceRange.min.toLocaleString()} - $${result.recommendation.priceRange.max.toLocaleString()}`;
     }
     
     if (typeof price === 'number') {
-      return `$${price.toFixed(2)}`;
+      return `$ ${Math.round(price).toLocaleString()}`;
     }
     
     if (typeof price === 'string') {
-      if (price.startsWith('$')) return price;
-      return `$${price}`;
+      // Extract numeric value and format
+      const numericValue = parseFloat(price.replace(/[^0-9.]/g, ''));
+      if (!isNaN(numericValue)) {
+        return `$ ${Math.round(numericValue).toLocaleString()}`;
+      }
+      if (price.startsWith('$')) return `$ ${price.substring(1).trim()}`;
+      return `$ ${price}`;
     }
     
-    return `$${result.recommendation.priceRange.min} - $${result.recommendation.priceRange.max}`;
+    return `$${result.recommendation.priceRange.min.toLocaleString()} - $${result.recommendation.priceRange.max.toLocaleString()}`;
   };
 
   return (
@@ -86,7 +90,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
         
         <div className="mb-4">
           <div className="text-2xl font-bold text-blue-700">
-            {result.product ? formatPrice(result.product.product_price) : `$${result.recommendation.priceRange.min} - $${result.recommendation.priceRange.max}`}
+            {result.product ? formatPrice(result.product.product_price) : `$${result.recommendation.priceRange.min.toLocaleString()} - $${result.recommendation.priceRange.max.toLocaleString()}`}
           </div>
           
           {result.product && result.product.product_original_price && (
