@@ -10,6 +10,11 @@ import LaptopParticles from '../components/recommendation/LaptopParticles';
 
 const Recommend = () => {
   const navigate = useNavigate();
+  const [showingResults, setShowingResults] = React.useState(false);
+
+  const handleResultsDisplayChange = (isShowingResults: boolean) => {
+    setShowingResults(isShowingResults);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -32,14 +37,22 @@ const Recommend = () => {
             <div className="relative">
               <LaptopParticles />
               <div className="relative pt-6 z-10 bg-gradient-to-b from-transparent via-white to-white">
-                <h1 className="text-3xl font-bold text-center mb-2">Find Your Perfect Laptop</h1>
-                <p className="text-center text-gray-600 mb-6">
-                  Answer a few questions and we'll recommend the best laptops for your needs
-                </p>
+                {!showingResults ? (
+                  <>
+                    <h1 className="text-3xl font-bold text-center mb-2">Find Your Perfect Laptop</h1>
+                    <p className="text-center text-gray-600 mb-6">
+                      Answer a few questions and we'll recommend the best laptops for your needs
+                    </p>
+                  </>
+                ) : (
+                  <div className="pb-6">
+                    {/* Empty div to maintain spacing - the ResultsHeader component in RecommendationResults will display the title */}
+                  </div>
+                )}
               </div>
             </div>
             <CardContent className="pt-0">
-              <RecommendationQuiz />
+              <RecommendationQuiz onResultsDisplayChange={handleResultsDisplayChange} />
             </CardContent>
           </Card>
         </div>

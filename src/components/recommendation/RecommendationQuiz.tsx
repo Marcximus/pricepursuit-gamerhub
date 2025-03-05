@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';
 import { QuizQuestion } from './QuizQuestion';
@@ -10,7 +10,11 @@ import { useQuizState } from './hooks/useQuizState';
 import { quizQuestions } from './config/quizConfig';
 import { LoadingIndicator } from './LoadingIndicator';
 
-const RecommendationQuiz = () => {
+interface RecommendationQuizProps {
+  onResultsDisplayChange?: (isShowingResults: boolean) => void;
+}
+
+const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({ onResultsDisplayChange }) => {
   const {
     currentQuestion,
     answers,
@@ -27,6 +31,13 @@ const RecommendationQuiz = () => {
     handleSubmit,
     handleReset
   } = useQuizState();
+
+  useEffect(() => {
+    // Notify parent component when results are being shown
+    if (onResultsDisplayChange) {
+      onResultsDisplayChange(completed);
+    }
+  }, [completed, onResultsDisplayChange]);
 
   // If completed, show results
   if (completed) {
