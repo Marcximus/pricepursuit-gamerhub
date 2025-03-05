@@ -24,7 +24,7 @@ export const ProductPrice: React.FC<ProductPriceProps> = ({
         rel="noopener noreferrer"
         className="block hover:opacity-80 transition-opacity"
       >
-        <div className="text-2xl font-bold text-blue-700">
+        <div className="text-2xl font-bold text-blue-700 hover:text-blue-800 transition-colors">
           {currentPrice}
         </div>
         
@@ -32,7 +32,7 @@ export const ProductPrice: React.FC<ProductPriceProps> = ({
           <div className="text-sm text-gray-500">
             <span className="line-through">{originalPrice}</span>
             {' '}
-            <span className="text-green-600 font-medium">
+            <span className="text-green-600 font-medium animate-pulse">
               {discountPercentage}% off
             </span>
           </div>

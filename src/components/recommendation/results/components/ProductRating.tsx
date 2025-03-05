@@ -20,10 +20,10 @@ export const ProductRating: React.FC<ProductRatingProps> = ({
       href={url}
       target="_blank" 
       rel="noopener noreferrer"
-      className="block mb-4"
+      className="block mb-4 hover:bg-gray-50 p-1 rounded-md transition-colors"
     >
       <div className="flex items-center">
-        <div className="flex items-center text-amber-500">
+        <div className="flex items-center text-amber-500 hover:text-amber-600 transition-colors">
           <Star className="fill-current w-4 h-4" />
           <span className="ml-1 font-medium">{rating}</span>
         </div>
@@ -33,7 +33,7 @@ export const ProductRating: React.FC<ProductRatingProps> = ({
         {isPrime && (
           <>
             <span className="mx-2 text-gray-400">|</span>
-            <span className="text-blue-600 text-sm font-medium">Prime</span>
+            <span className="text-blue-600 text-sm font-medium hover:text-blue-700 transition-colors">Prime</span>
           </>
         )}
       </div>

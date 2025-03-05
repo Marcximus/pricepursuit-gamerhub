@@ -25,7 +25,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
   const productData = formatProductData(result, index);
 
   return (
-    <Card className="overflow-hidden border-0 shadow-lg">
+    <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
       <ProductHeader 
         title={productData.title}
         productUrl={productData.productUrl}
