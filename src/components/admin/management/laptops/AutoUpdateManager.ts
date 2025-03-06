@@ -1,7 +1,7 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { toast } from "@/components/ui/use-toast";
-import { clearIntervalSafely, scheduleNextUpdateTime, calculateSecondsUntilNextUpdate } from './utils/updateTimer';
+import { clearIntervalSafely, scheduleNextUpdateTime, calculateSecondsUntilNextUpdate, formatTimeUntilNextUpdate } from './utils/updateTimer';
 
 interface AutoUpdateManagerProps {
   isUpdating: boolean;
@@ -15,39 +15,58 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
   const [nextUpdateTime, setNextUpdateTime] = useState<Date | null>(null);
   const [timeUntilNextUpdate, setTimeUntilNextUpdate] = useState<number>(300); // 5 minutes in seconds
   const [countdownInterval, setCountdownInterval] = useState<NodeJS.Timeout | null>(null);
+  
+  // Use ref to track if countdown is active to prevent multiple intervals
+  const isCountdownActive = useRef(false);
 
   // Separate effect for countdown timer
   useEffect(() => {
     // Clear any existing countdown interval
     if (countdownInterval) {
       clearIntervalSafely(countdownInterval);
+      isCountdownActive.current = false;
     }
 
     // Only start countdown if auto-update is enabled and we have a next update time
     if (autoUpdateEnabled && nextUpdateTime) {
+      if (isCountdownActive.current) {
+        return; // Don't create a new interval if one is already active
+      }
+      
       console.log('Starting countdown timer for auto-update');
+      console.log('Next update time:', nextUpdateTime.toLocaleTimeString());
       
       // Initial calculation
       const initialSeconds = calculateSecondsUntilNextUpdate(nextUpdateTime);
       setTimeUntilNextUpdate(initialSeconds);
+      console.log('Initial seconds until update:', initialSeconds);
       
       // Set up countdown interval (every second)
       const interval = setInterval(() => {
-        const secondsUntilNext = calculateSecondsUntilNextUpdate(nextUpdateTime);
-        console.log('Countdown update: seconds until next update:', secondsUntilNext);
-        setTimeUntilNextUpdate(secondsUntilNext);
-        
-        // If time is up, trigger update
-        if (secondsUntilNext <= 0 && !isUpdating) {
-          console.log('Auto-update timer reached zero, triggering update...');
-          onUpdate();
-        }
+        setTimeUntilNextUpdate(prevTime => {
+          const newTime = prevTime > 0 ? prevTime - 1 : 0;
+          
+          // Debug output every 10 seconds to avoid flooding console
+          if (newTime % 10 === 0 || newTime < 10) {
+            console.log('Countdown update: seconds until next update:', newTime);
+          }
+          
+          // If time is up, trigger update
+          if (newTime <= 0 && !isUpdating) {
+            console.log('Auto-update timer reached zero, triggering update...');
+            onUpdate();
+          }
+          
+          return newTime;
+        });
       }, 1000);
       
       setCountdownInterval(interval);
+      isCountdownActive.current = true;
       
       return () => {
         clearIntervalSafely(interval);
+        isCountdownActive.current = false;
       };
     }
     
@@ -89,6 +108,7 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
         clearIntervalSafely(interval);
         if (countdownInterval) {
           clearIntervalSafely(countdownInterval);
+          isCountdownActive.current = false;
         }
       };
     } else if (!autoUpdateEnabled) {
@@ -102,6 +122,7 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
         if (countdownInterval) {
           clearIntervalSafely(countdownInterval);
           setCountdownInterval(null);
+          isCountdownActive.current = false;
         }
         
         toast({
@@ -119,6 +140,7 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
     return () => {
       clearIntervalSafely(autoUpdateInterval);
       clearIntervalSafely(countdownInterval);
+      isCountdownActive.current = false;
     };
   }, [autoUpdateInterval, countdownInterval]);
 
