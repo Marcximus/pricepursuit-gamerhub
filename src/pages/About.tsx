@@ -13,6 +13,7 @@ import {
   CommunitySection,
   DifferenceSection,
   FunFactsSection,
+  FAQSection,
   CtaSection,
   Footer
 } from '@/components/about';
@@ -34,6 +35,7 @@ const About = () => {
         <CommunitySection />
         <DifferenceSection />
         <FunFactsSection />
+        <FAQSection />
         <CtaSection />
       </div>
       
