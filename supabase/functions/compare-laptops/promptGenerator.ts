@@ -1,3 +1,4 @@
+
 import { Product } from "./types.ts";
 
 // System prompt to guide the AI response
@@ -14,20 +15,13 @@ When comparing laptops, analyze:
 6. Price-to-performance ratio
 7. User ratings and reviews
 
-IMPORTANT: You must ALWAYS provide at least 3 distinct advantages for EACH laptop, even if you have to get creative. Focus on unique selling points like:
-- Performance metrics (CPU/GPU power, benchmark scores)
-- Physical features (weight, screen quality, build)
-- Value aspects (price-performance ratio, discounts)
-- User experience (ratings, reviews, battery life)
-- Special features (touchscreen, convertible design, ports)
-
 Your output must be structured EXACTLY as valid JSON in the following format:
 {
   "winner": "left" | "right" | "tie",
   "analysis": "Overall comparative analysis between the two laptops. BE SURE TO USE MULTIPLE PARAGRAPHS with line breaks between them for better readability. Include 1-2 subtle jokes or witty observations that don't compromise the technical accuracy.",
   "advantages": {
-    "left": ["Advantage 1", "Advantage 2", "Advantage 3"],
-    "right": ["Advantage 1", "Advantage 2", "Advantage 3"]
+    "left": ["Advantage 1", "Advantage 2", ...],
+    "right": ["Advantage 1", "Advantage 2", ...]
   },
   "recommendation": "Clear recommendation for which laptop is better for which use case",
   "valueForMoney": {
@@ -40,8 +34,7 @@ IMPORTANT:
 - Your analysis MUST use multiple paragraphs with line breaks for readability
 - Include 1-2 subtle humorous comments or analogies in your analysis
 - Keep your technical assessment accurate and helpful despite the humor
-- Return ONLY valid JSON that follows the exact structure above (no markdown, no additional text)
-- ALWAYS provide exactly 3 advantages for each laptop`;
+- Return ONLY valid JSON that follows the exact structure above (no markdown, no additional text)`;
 }
 
 // Create the comparison prompt with all available product details
