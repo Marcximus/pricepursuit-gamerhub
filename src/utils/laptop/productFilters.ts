@@ -54,15 +54,14 @@ export function containsForbiddenKeywords(title: string): boolean {
   
   const lowerTitle = title.toLowerCase();
   
-  // Apply a more lenient check that only looks at the title
+  // Enhanced check: look for exact word matches or phrase matches
   return FORBIDDEN_KEYWORDS.some(keyword => {
-    // For multi-word keywords, check if the title includes the phrase
+    // For multi-word keywords, check if the title includes the exact phrase
     if (keyword.includes(' ')) {
       return lowerTitle.includes(keyword.toLowerCase());
     }
     
-    // For single-word keywords, try to match with word boundaries
-    // This is more lenient than an exact match
+    // For single-word keywords, use word boundary check to ensure we're matching whole words
     const regex = new RegExp(`\\b${keyword.toLowerCase()}\\b`);
     return regex.test(lowerTitle);
   });
@@ -74,6 +73,9 @@ export function containsForbiddenKeywords(title: string): boolean {
  * @returns Filtered array of products without forbidden keywords in titles
  */
 export function applyAllProductFilters(products: any[]): any[] {
-  // Filter out products with forbidden keywords in their titles
-  return products.filter(product => !containsForbiddenKeywords(product.title || ''));
+  // Apply the forbidden keyword filter strictly on the title field only
+  return products.filter(product => {
+    if (!product.title) return true; // If no title, pass the filter
+    return !containsForbiddenKeywords(product.title);
+  });
 }

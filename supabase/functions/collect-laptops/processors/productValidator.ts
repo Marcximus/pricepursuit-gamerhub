@@ -32,12 +32,14 @@ export function validateAndFilterProducts(products: any[], brand: string, detail
       'laptop accessory', 'laptop power adapter', 'laptop cart', 'laptop table', 'laptop riser'
     ];
     
+    // Strictly check the title for forbidden keywords
+    const hasForbiddenKeywords = containsForbiddenKeywords(product.title || '');
+    
     // Check if the title contains any laptop keywords but none of the non-laptop keywords
-    // Only check the title for forbidden keywords, not other fields
     const isLaptop = 
       laptopKeywords.some(keyword => title.includes(keyword)) && 
       !nonLaptopKeywords.some(keyword => title.includes(keyword)) &&
-      !containsForbiddenKeywords(product.title || '');
+      !hasForbiddenKeywords;
     
     if (detailedLogging && !isLaptop) {
       console.log(`Filtering out non-laptop: "${title}"`);
