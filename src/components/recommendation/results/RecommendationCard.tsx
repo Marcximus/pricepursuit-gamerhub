@@ -60,7 +60,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
           )}
         </div>
         
-        <div className="mb-2">
+        <div className="mb-4">
           <ProductPrice 
             currentPrice={productData.currentPrice}
             originalPrice={productData.originalPrice}
