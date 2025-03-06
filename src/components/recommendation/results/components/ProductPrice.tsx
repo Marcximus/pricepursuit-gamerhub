@@ -28,22 +28,22 @@ export const ProductPrice: React.FC<ProductPriceProps> = ({
           {currentPrice}
         </div>
         
-        <div className="h-5">
-          {originalPrice && discountPercentage && (
-            <div className="text-sm text-gray-500">
-              <span className="line-through">{originalPrice}</span>
-              {' '}
-              <span className="text-green-600 font-medium animate-pulse">
-                {discountPercentage}% off
-              </span>
-            </div>
-          )}
-        </div>
+        {originalPrice && discountPercentage ? (
+          <div className="text-sm text-gray-500">
+            <span className="line-through">{originalPrice}</span>
+            {' '}
+            <span className="text-green-600 font-medium animate-pulse">
+              {discountPercentage}% off
+            </span>
+          </div>
+        ) : null}
       </a>
       
-      <div className="h-5 text-sm text-gray-600 mt-1">
-        {deliveryInfo}
-      </div>
+      {deliveryInfo && (
+        <div className="text-sm text-gray-600 mt-1">
+          {deliveryInfo}
+        </div>
+      )}
     </div>
   );
 };
