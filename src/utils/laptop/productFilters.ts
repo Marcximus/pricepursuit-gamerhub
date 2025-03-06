@@ -39,7 +39,8 @@ const FORBIDDEN_KEYWORDS = [
   'laptop table', 'lap desk', 'laptop pillow',
   'laptop accessories bundle', 'laptop kit', 'laptop fan',
   'laptop memory', 'laptop ram only', 'ram stick',
-  'memory module'
+  'memory module',
+  'New Laptop Battery'
   // Removed: 'compatible with', 'fits for', 'made for', 'replacement for'
   // Removed by user request: 'keyboard', 'touchpad', 'speaker', 'decal'
 ];
