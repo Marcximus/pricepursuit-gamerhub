@@ -16,7 +16,7 @@ const DifferenceSection = () => {
             We hunt down the best deals so you don't have to. Our automated systems check prices across major retailers every 5 minutes!
           </p>
         </div>
-        <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center">
+        <div className="p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center bg-green-50">
           <div className="flex justify-center mb-4">
             <Laptop className="w-8 h-8 text-gaming-600" />
           </div>
