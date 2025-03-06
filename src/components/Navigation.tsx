@@ -31,7 +31,7 @@ const Navigation = () => {
         <div className="flex justify-between h-16 items-center">
           <Link to="/" className="flex items-center space-x-2">
             <Gamepad className="w-6 h-6 text-gaming-600" />
-            <span className="text-xl font-bold text-gaming-800">PricePursuit</span>
+            <span className="text-xl font-bold text-gaming-800">Laptop Hunter</span>
           </Link>
           
           <div className="flex items-center space-x-4">
