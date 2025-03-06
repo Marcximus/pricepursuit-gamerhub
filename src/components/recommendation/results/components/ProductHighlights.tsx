@@ -42,12 +42,12 @@ export const ProductHighlights: React.FC<ProductHighlightsProps> = ({ highlights
           highlight.text ? (
             <li 
               key={index} 
-              className="flex items-center text-sm p-2 rounded-md bg-green-50 border border-green-100 shadow-sm hover:shadow transition-all"
+              className="flex items-center text-sm p-2 rounded-md bg-gradient-to-r from-blue-50 to-green-50 border border-blue-100 shadow-sm hover:shadow transition-all"
             >
-              <span className="text-green-600 mr-2 flex-shrink-0">
+              <span className="text-primary mr-2 flex-shrink-0">
                 {highlight.icon || defaultIcons[index % defaultIcons.length]}
               </span>
-              <span className="text-green-700 font-medium line-clamp-2">{highlight.text}</span>
+              <span className="text-blue-700 font-medium line-clamp-2">{highlight.text}</span>
             </li>
           ) : (
             <li key={index} className="h-[42px]"></li> // Empty placeholder with same height
