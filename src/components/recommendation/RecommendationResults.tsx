@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useComparison } from '@/contexts/ComparisonContext';
 import { RecommendationResult } from './types/quizTypes';
 import { EmptyResults } from './results/EmptyResults';
 import { ResultsHeader } from './results/ResultsHeader';
 import { ResultsActionButtons } from './results/ResultsActionButtons';
 import { RecommendationCard } from './results/RecommendationCard';
+import { ConfettiEffect } from './results/components/ConfettiEffect';
 import type { Product as GlobalProduct } from '@/types/product'; // Import the global Product type
 
 interface RecommendationResultsProps {
@@ -76,6 +77,9 @@ export const RecommendationResults: React.FC<RecommendationResultsProps> = ({
 
   return (
     <div className="max-w-5xl mx-auto">
+      {/* Add ConfettiEffect when results are displayed */}
+      <ConfettiEffect />
+      
       <ResultsHeader />
       <ResultsActionButtons 
         results={results} 
