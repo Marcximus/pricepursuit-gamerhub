@@ -50,6 +50,19 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
     }
   }, [isProcessing, onProcessingChange]);
 
+  // Auto-advance handler for options
+  const handleOptionSelectAndAdvance = (question: keyof typeof answers, value: string) => {
+    handleOptionSelect(question, value);
+    
+    // Don't auto-advance on the last question
+    if (currentQuestion < totalQuestions - 1) {
+      // Small delay to show the selection before advancing
+      setTimeout(() => {
+        handleNext();
+      }, 300);
+    }
+  };
+
   // If completed, show results
   if (completed) {
     return <RecommendationResults results={results} onReset={handleReset} />;
@@ -67,7 +80,7 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
                 question={quizQuestions[0].question}
                 options={quizQuestions[0].options}
                 selected={answers.usage}
-                onSelect={(value) => handleOptionSelect('usage', value)}
+                onSelect={(value) => handleOptionSelectAndAdvance('usage', value)}
                 emojis={quizQuestions[0].emojis}
               />
             )}
@@ -77,15 +90,17 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
                 selectedOption={answers.priceRange}
                 customMinPrice={answers.customMinPrice || 500}
                 customMaxPrice={answers.customMaxPrice || 1500}
-                onSelect={(value) => handleOptionSelect('priceRange', value)}
+                onSelect={(value) => handleOptionSelectAndAdvance('priceRange', value)}
                 onRangeChange={handlePriceRangeChange}
+                autoAdvance={true}
+                onAdvance={handleNext}
               />
             )}
 
             {currentQuestion === 2 && (
               <BrandSelection 
                 selectedBrand={answers.brand}
-                onSelect={(value) => handleOptionSelect('brand', value)}
+                onSelect={(value) => handleOptionSelectAndAdvance('brand', value)}
               />
             )}
 
@@ -94,7 +109,7 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
                 question={quizQuestions[3].question}
                 options={quizQuestions[3].options}
                 selected={answers.screenSize}
-                onSelect={(value) => handleOptionSelect('screenSize', value)}
+                onSelect={(value) => handleOptionSelectAndAdvance('screenSize', value)}
                 emojis={quizQuestions[3].emojis}
                 stacked={true} // Stack options for screen size question
               />
@@ -105,7 +120,7 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
                 question={quizQuestions[4].question}
                 options={quizQuestions[4].options}
                 selected={answers.graphics}
-                onSelect={(value) => handleOptionSelect('graphics', value)}
+                onSelect={(value) => handleOptionSelectAndAdvance('graphics', value)}
                 emojis={quizQuestions[4].emojis}
                 stacked={true} // Stack options for graphics question
               />

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { PriceRangeSlider } from './PriceRangeSlider';
 import { priceRangeOptions, priceRangeEmojis } from './config/quizConfig';
@@ -11,6 +11,8 @@ interface PriceRangeQuestionProps {
   customMaxPrice: number;
   onSelect: (value: string) => void;
   onRangeChange: (min: number, max: number) => void;
+  autoAdvance?: boolean;
+  onAdvance?: () => void;
 }
 
 export const PriceRangeQuestion: React.FC<PriceRangeQuestionProps> = ({
@@ -18,12 +20,32 @@ export const PriceRangeQuestion: React.FC<PriceRangeQuestionProps> = ({
   customMinPrice,
   customMaxPrice,
   onSelect,
-  onRangeChange
+  onRangeChange,
+  autoAdvance = false,
+  onAdvance
 }) => {
   // Convert selectedOption to string for comparison if it's an array
   const selectedOptionStr = Array.isArray(selectedOption) 
     ? `Custom: USD ${selectedOption[0]} - ${selectedOption[1]}` 
     : selectedOption;
+
+  // Add effect to advance when custom range is set
+  useEffect(() => {
+    if (autoAdvance && 
+        onAdvance && 
+        selectedOptionStr === 'Custom Range' && 
+        customMinPrice && 
+        customMaxPrice) {
+      const timer = setTimeout(() => {
+        // Auto-advance after the slider has been used
+        if (customMinPrice !== 500 || customMaxPrice !== 1500) {
+          onAdvance();
+        }
+      }, 1000); // Give user 1 second after changing range
+      
+      return () => clearTimeout(timer);
+    }
+  }, [customMinPrice, customMaxPrice, selectedOptionStr, autoAdvance, onAdvance]);
 
   return (
     <>
