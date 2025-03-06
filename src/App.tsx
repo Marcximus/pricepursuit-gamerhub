@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import ComparePriceLaptops from "./pages/Laptops";
 import ComparePage from "./pages/Compare";
 import Recommend from "./pages/Recommend";
+import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import { ComparisonProvider } from "./contexts/ComparisonContext";
 
@@ -38,6 +39,7 @@ function App() {
                   <Route path="/" element={<ComparePriceLaptops />} />
                   <Route path="/compare" element={<ComparePage />} />
                   <Route path="/recommend" element={<Recommend />} />
+                  <Route path="/about" element={<About />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
