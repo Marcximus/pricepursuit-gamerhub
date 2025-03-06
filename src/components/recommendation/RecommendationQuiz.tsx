@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { QuizQuestion } from './QuizQuestion';
 import { PriceRangeQuestion } from './PriceRangeQuestion';
+import { BrandSelection } from './BrandSelection';
 import { QuizNavigation } from './QuizNavigation';
 import { RecommendationResults } from './RecommendationResults';
 import { useQuizState } from './hooks/useQuizState';
@@ -45,8 +46,6 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({ onResultsDispla
 
   return (
     <div className="max-w-2xl mx-auto">
-      {/* Progress bar section removed */}
-
       <Card className="p-6 mb-6 bg-white/90 shadow-sm border-2 border-blue-200 rounded-2xl">
         {isProcessing ? (
           <LoadingIndicator isLoading={isProcessing} />
@@ -73,12 +72,9 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({ onResultsDispla
             )}
 
             {currentQuestion === 2 && (
-              <QuizQuestion 
-                question={quizQuestions[2].question}
-                options={quizQuestions[2].options}
-                selected={answers.brand}
+              <BrandSelection 
+                selectedBrand={answers.brand}
                 onSelect={(value) => handleOptionSelect('brand', value)}
-                emojis={quizQuestions[2].emojis}
               />
             )}
 
