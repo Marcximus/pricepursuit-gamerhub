@@ -20,17 +20,17 @@ export const formatPrice = (
   }
   
   if (typeof price === 'number') {
-    return `$ ${Math.round(price).toLocaleString()}`;
+    return `$${Math.round(price).toLocaleString()}`;
   }
   
   if (typeof price === 'string') {
     // Extract numeric value and format
     const numericValue = parseFloat(price.replace(/[^0-9.]/g, ''));
     if (!isNaN(numericValue)) {
-      return `$ ${Math.round(numericValue).toLocaleString()}`;
+      return `$${Math.round(numericValue).toLocaleString()}`;
     }
-    if (price.startsWith('$')) return `$ ${price.substring(1).trim()}`;
-    return `$ ${price}`;
+    if (price.startsWith('$')) return price;
+    return `$${price}`;
   }
   
   return `$${fallbackMin.toLocaleString()} - $${fallbackMax.toLocaleString()}`;
