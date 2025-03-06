@@ -75,7 +75,7 @@ export const RecommendationResults: React.FC<RecommendationResultsProps> = ({
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <ResultsHeader />
       <ResultsActionButtons 
         results={results} 
@@ -83,7 +83,7 @@ export const RecommendationResults: React.FC<RecommendationResultsProps> = ({
         onCompare={handleCompare} 
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+      <div className="grid grid-cols-1 gap-10 mb-10 max-w-3xl mx-auto">
         {results.map((result, index) => (
           <RecommendationCard 
             key={index} 
