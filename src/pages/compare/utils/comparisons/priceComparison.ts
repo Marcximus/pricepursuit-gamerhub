@@ -1,7 +1,7 @@
 
 // Format prices consistently
 export const formatPrice = (price: number | null | undefined): string => {
-  if (!price) return 'Availability Unknown';
+  if (price === null || price === undefined || price === 0) return 'Availability Unknown';
   return `$ ${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 };
 

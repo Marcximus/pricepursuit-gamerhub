@@ -11,13 +11,13 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
     originalPrice,
     hasCurrentPrice: currentPrice !== null && currentPrice !== undefined,
     currentPriceType: typeof currentPrice,
-    processedPrice: currentPrice ? `$${Math.round(currentPrice).toLocaleString()}` : 'N/A'
+    processedPrice: currentPrice ? `$${Math.round(currentPrice).toLocaleString()}` : 'Availability Unknown'
   });
 
   const formatPrice = (price: number | null) => {
     if (price === null || price === undefined || (typeof price === 'number' && isNaN(price)) || price === 0) {
       console.log('Invalid price value:', price);
-      return 'Price not available';
+      return 'Availability Unknown';
     }
     return `$${Math.round(price).toLocaleString()}`;
   };

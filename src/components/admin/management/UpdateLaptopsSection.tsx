@@ -37,6 +37,11 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
     refreshStats: refreshFunction
   });
 
+  const handleToggleAutoUpdate = () => {
+    console.log('UpdateLaptopsSection: Auto-update toggle clicked, current state:', autoUpdateEnabled);
+    toggleAutoUpdate();
+  };
+
   return (
     <ManagementCard
       title="Update Laptops"
@@ -50,7 +55,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
         <div className="flex items-center gap-2">
           <Switch
             checked={autoUpdateEnabled}
-            onCheckedChange={toggleAutoUpdate}
+            onCheckedChange={handleToggleAutoUpdate}
             disabled={isUpdating}
             id="auto-update-switch"
           />

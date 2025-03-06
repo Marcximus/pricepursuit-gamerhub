@@ -16,9 +16,10 @@ export const ProductPrice: React.FC<ProductPriceProps> = ({
   deliveryInfo,
   url
 }) => {
-  // Handle "unavailable" cases
+  // Handle unavailable cases
   const isUnavailable = currentPrice.includes('not available') || 
                         currentPrice === 'N/A' || 
+                        currentPrice === 'Availability Unknown' ||
                         currentPrice === 'Click for current price';
 
   return (

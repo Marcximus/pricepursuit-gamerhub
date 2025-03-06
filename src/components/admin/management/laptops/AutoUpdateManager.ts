@@ -25,7 +25,8 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
         setTimeUntilNextUpdate(secondsUntilNext);
         
         // If time is up, trigger update
-        if (secondsUntilNext === 0 && !isUpdating) {
+        if (secondsUntilNext <= 0 && !isUpdating) {
+          console.log('Auto-update timer reached zero, triggering update...');
           onUpdate();
         }
       }, 1000);
@@ -44,15 +45,17 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
       setNextUpdateTime(nextUpdate);
       
       console.log('Auto-update enabled, scheduling next update in 5 minutes');
+      console.log('Next update scheduled for:', nextUpdate.toLocaleTimeString());
       
       const interval = setInterval(() => {
         if (!isUpdating) {
-          console.log('Auto-update triggered');
+          console.log('Auto-update interval triggered');
           onUpdate();
           
           // Reset next update time after triggering
           const newNextUpdate = scheduleNextUpdateTime();
           setNextUpdateTime(newNextUpdate);
+          console.log('Next update scheduled for:', newNextUpdate.toLocaleTimeString());
         } else {
           console.log('Skipping auto-update: update already in progress');
         }
@@ -92,7 +95,8 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
 
   // Toggle auto-update function
   const toggleAutoUpdate = () => {
-    setAutoUpdateEnabled(!autoUpdateEnabled);
+    console.log('Toggle auto-update called, current state:', autoUpdateEnabled);
+    setAutoUpdateEnabled(prevState => !prevState);
   };
 
   return {
