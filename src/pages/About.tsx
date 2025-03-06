@@ -2,7 +2,7 @@
 import React from 'react';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Laptop, Sparkles, Heart, Trophy, Users, Clock, Target, Coffee } from 'lucide-react';
+import { ArrowRight, Laptop, Sparkles, Heart, Trophy, Users, Clock, Target, Coffee, GitCompare, Zap, Brain } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const About = () => {
@@ -50,6 +50,53 @@ const About = () => {
           </div>
         </div>
 
+        {/* Find the best laptop Section */}
+        <div className="mb-16 bg-gaming-50 rounded-xl p-8">
+          <div className="flex items-center justify-center mb-6">
+            <GitCompare className="w-8 h-8 text-gaming-600 mr-2" />
+            <h2 className="text-3xl font-bold text-gray-900">Find the Best Laptop 🔍</h2>
+          </div>
+          <div className="text-lg text-gray-600 max-w-3xl mx-auto text-center">
+            <p className="mb-6">
+              Not sure which laptop is right for you? Let our powerful comparison tool do the hard work!
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mb-8">
+              <div className="flex flex-col items-center">
+                <div className="bg-white rounded-full p-4 mb-3 w-16 h-16 flex items-center justify-center">
+                  <GitCompare className="w-8 h-8 text-gaming-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Compare Head-to-Head</h3>
+                <p className="text-gray-600 text-center">
+                  Put any two laptops side by side for a detailed spec comparison.
+                </p>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="bg-white rounded-full p-4 mb-3 w-16 h-16 flex items-center justify-center">
+                  <Zap className="w-8 h-8 text-gaming-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Analyze Performance</h3>
+                <p className="text-gray-600 text-center">
+                  See which laptop performs better for your specific needs.
+                </p>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="bg-white rounded-full p-4 mb-3 w-16 h-16 flex items-center justify-center">
+                  <Brain className="w-8 h-8 text-gaming-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">AI Recommendation</h3>
+                <p className="text-gray-600 text-center">
+                  Our AI analyzes the specs and gives you a clear winner.
+                </p>
+              </div>
+            </div>
+            <Link to="/compare">
+              <Button className="bg-gaming-600 hover:bg-gaming-700">
+                Compare Laptops Now <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+
         {/* What Makes Us Different */}
         <div className="mb-16">
           <div className="flex items-center justify-center mb-6">
@@ -57,49 +104,34 @@ const About = () => {
             <h2 className="text-3xl font-bold text-gray-900">Why We're Different ✨</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <Trophy className="w-8 h-8 text-gaming-600 mb-4" />
-              <h3 className="text-xl font-bold mb-2">Real-Time Price Tracking 📊</h3>
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center">
+              <div className="flex justify-center mb-4">
+                <Trophy className="w-8 h-8 text-gaming-600" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Real-Time Price Tracking 📊</h3>
               <p className="text-gray-600">
                 We hunt down the best deals so you don't have to. Our automated systems check prices across major retailers every 5 minutes!
               </p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <Laptop className="w-8 h-8 text-gaming-600 mb-4" />
-              <h3 className="text-xl font-bold mb-2">Apples-to-Apples Comparisons 🍎</h3>
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center">
+              <div className="flex justify-center mb-4">
+                <Laptop className="w-8 h-8 text-gaming-600" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Apples-to-Apples Comparisons 🍎</h3>
               <p className="text-gray-600">
                 We normalize tech specs across brands and models so you can compare laptops without the marketing jargon confusion.
               </p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <Users className="w-8 h-8 text-gaming-600 mb-4" />
-              <h3 className="text-xl font-bold mb-2">Human-Friendly Tech Talk 🗣️</h3>
+            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center">
+              <div className="flex justify-center mb-4">
+                <Users className="w-8 h-8 text-gaming-600" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Human-Friendly Tech Talk 🗣️</h3>
               <p className="text-gray-600">
                 We translate complex specifications into human language. No more wondering what "integrated UHD graphics" actually means!
               </p>
             </div>
           </div>
-        </div>
-
-        {/* Team Section */}
-        <div className="mb-16">
-          <div className="flex items-center justify-center mb-6">
-            <Heart className="w-8 h-8 text-gaming-600 mr-2" />
-            <h2 className="text-3xl font-bold text-gray-900">Meet Our Team ❤️</h2>
-          </div>
-          <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-8">
-            We're a small but mighty team of tech enthusiasts, deal hunters, and people who've been burned by bad laptop purchases in the past. We're united by our passion for helping people make smart tech decisions without the headache!
-          </p>
-          <div className="flex justify-center">
-            <img 
-              src="/placeholder.svg" 
-              alt="The Laptop Hunter Team" 
-              className="rounded-lg shadow-lg max-w-md mx-auto" 
-            />
-          </div>
-          <p className="text-sm text-gray-400 text-center mt-2">
-            *Okay, we're not actually this blurry in real life. Our photographer was just really excited about laptops. 📸
-          </p>
         </div>
 
         {/* Fun Facts Section */}
