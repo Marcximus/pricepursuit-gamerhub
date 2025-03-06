@@ -12,9 +12,13 @@ import { LoadingIndicator } from './LoadingIndicator';
 
 interface RecommendationQuizProps {
   onResultsDisplayChange?: (isShowingResults: boolean) => void;
+  onProcessingChange?: (isProcessing: boolean) => void;
 }
 
-const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({ onResultsDisplayChange }) => {
+const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({ 
+  onResultsDisplayChange,
+  onProcessingChange
+}) => {
   const {
     currentQuestion,
     answers,
@@ -38,6 +42,13 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({ onResultsDispla
       onResultsDisplayChange(completed);
     }
   }, [completed, onResultsDisplayChange]);
+  
+  useEffect(() => {
+    // Notify parent component when processing state changes
+    if (onProcessingChange) {
+      onProcessingChange(isProcessing);
+    }
+  }, [isProcessing, onProcessingChange]);
 
   // If completed, show results
   if (completed) {

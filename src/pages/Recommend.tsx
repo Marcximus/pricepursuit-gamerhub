@@ -11,9 +11,14 @@ import LaptopParticles from '../components/recommendation/LaptopParticles';
 const Recommend = () => {
   const navigate = useNavigate();
   const [showingResults, setShowingResults] = React.useState(false);
+  const [isProcessing, setIsProcessing] = React.useState(false);
   
   const handleResultsDisplayChange = (isShowingResults: boolean) => {
     setShowingResults(isShowingResults);
+  };
+  
+  const handleProcessingChange = (isProcessing: boolean) => {
+    setIsProcessing(isProcessing);
   };
   
   return <div className="min-h-screen bg-slate-50">
@@ -32,7 +37,7 @@ const Recommend = () => {
                   </Button>
                 </div>
                 
-                {!showingResults ? <>
+                {!showingResults && !isProcessing ? <>
                     <div className="flex justify-center mb-1">
                       <div className="bg-blue-100 p-3 rounded-full">
                         <Laptop className="w-8 h-8 text-blue-600" />
@@ -46,7 +51,10 @@ const Recommend = () => {
               </div>
             </div>
             <CardContent className="pt-0 px-4 md:px-8 pb-10">
-              <RecommendationQuiz onResultsDisplayChange={handleResultsDisplayChange} />
+              <RecommendationQuiz 
+                onResultsDisplayChange={handleResultsDisplayChange} 
+                onProcessingChange={handleProcessingChange}
+              />
             </CardContent>
           </Card>
         </div>
