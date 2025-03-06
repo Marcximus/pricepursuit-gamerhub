@@ -35,65 +35,39 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
       clearComparison();
       
       // Convert recommendation products to global Product type and add to comparison
-      let successfullyAdded = 0;
-      
       for (let i = 0; i < 2; i++) {
         const recProduct = results[i].product;
         if (!recProduct) continue;
         
-        // Extract screen size and resolution if available
-        let screenSize = recProduct.screen_size || 'Not specified';
-        let screenResolution = recProduct.screen_resolution || 'Not specified';
-        
-        // Extract product title components for better data
-        const title = recProduct.product_title || '';
-        
-        // Create the global product with more complete information
         const globalProduct = {
           id: recProduct.asin,
-          title: recProduct.product_title || 'Unknown Product',
+          title: recProduct.product_title,
           brand: recProduct.processor?.split(' ')[0] || 'Unknown',
           model: recProduct.product_title?.split(' ').slice(1, 3).join(' ') || 'Unknown Model',
           current_price: recProduct.product_price,
-          original_price: recProduct.product_original_price || recProduct.product_price,
-          rating: recProduct.product_star_rating || 0,
+          original_price: recProduct.product_original_price,
+          rating: recProduct.product_star_rating,
           rating_count: recProduct.product_num_ratings || 0,
-          // Enhanced data mapping for specifications
           processor: recProduct.processor || 'Not specified',
           ram: recProduct.ram || 'Not specified',
           storage: recProduct.storage || 'Not specified',
           graphics: recProduct.graphics || 'Not specified',
-          screen_size: screenSize,
-          screen_resolution: screenResolution,
+          screen_size: recProduct.screen_size || 'Not specified',
+          screen_resolution: recProduct.screen_resolution || 'Not specified',
           weight: recProduct.weight || 'Not specified',
           battery_life: recProduct.battery_life || 'Not specified',
-          // Required fields for Product type
           asin: recProduct.asin,
-          image_url: recProduct.product_photo || '',
+          image_url: recProduct.product_photo,
           product_url: recProduct.product_url || `https://amazon.com/dp/${recProduct.asin}?tag=with-laptop-discount-20`,
           last_checked: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          // Populate benchmark data if available
-          benchmark_score: 0, // Will be calculated on the comparison page
-          total_reviews: recProduct.product_num_ratings || 0,
-          average_rating: recProduct.product_star_rating || 0,
-          wilson_score: 0 // Will be calculated if needed
+          created_at: new Date().toISOString()
         };
         
         addToComparison(globalProduct);
-        successfullyAdded++;
       }
       
-      if (successfullyAdded === 2) {
-        // Navigate to compare page using React Router
-        navigate('/compare');
-      } else {
-        toast({
-          title: "Error",
-          description: "Could not add both products to comparison",
-          variant: "destructive"
-        });
-      }
+      // Navigate to compare page using React Router instead of directly changing location
+      navigate('/compare');
       
     } catch (error) {
       console.error("Error setting up comparison:", error);

@@ -21,7 +21,6 @@ export const formatRecommendationReason = (reason: string): string[] => {
   // For longer text, split into paragraphs
   const paragraphs = splitIntoParagraphs(enhancedReason);
   
-  // Add emojis to each paragraph, but with LIMITED usage (false parameter)
-  // This will use fewer emojis compared to the previous implementation
-  return paragraphs.map(paragraph => addEmojisToText(paragraph, false));
+  // Add emojis to each paragraph, but with balanced usage
+  return paragraphs.map(paragraph => addEmojisToText(paragraph, true));
 };
