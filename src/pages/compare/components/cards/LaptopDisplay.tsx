@@ -15,6 +15,9 @@ const LaptopDisplay: React.FC<LaptopDisplayProps> = ({
   affiliateUrl,
   formatPrice 
 }) => {
+  const priceText = formatPrice(laptop.current_price);
+  const isUnavailable = priceText === 'Availability Unknown';
+  
   return (
     <>
       <div className="text-center mb-6 mt-8 min-h-[10rem] flex items-center justify-center group">
@@ -54,11 +57,11 @@ const LaptopDisplay: React.FC<LaptopDisplayProps> = ({
             className="flex-1"
           >
             <div className="bg-slate-900 p-3 rounded-lg shadow-md border border-slate-800 transition-transform hover:scale-[1.02] h-full flex flex-col justify-center">
-              <p className="text-xl font-bold text-white flex items-center justify-between">
-                {formatPrice(laptop.current_price)}
-                <Zap className="w-4 h-4 text-blue-400" />
+              <p className={`${isUnavailable ? 'text-sm' : 'text-xl font-bold'} text-white flex items-center justify-between`}>
+                {priceText}
+                {!isUnavailable && <Zap className="w-4 h-4 text-blue-400" />}
               </p>
-              {laptop.original_price && laptop.original_price > laptop.current_price && (
+              {!isUnavailable && laptop.original_price && laptop.original_price > laptop.current_price && (
                 <p className="text-xs text-slate-400 line-through">{formatPrice(laptop.original_price)}</p>
               )}
             </div>

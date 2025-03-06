@@ -32,7 +32,7 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
         className="block text-center"
       >
         <div className="text-sm text-blue-600 hover:text-blue-800">
-          Click for current price
+          Availability Unknown
         </div>
       </a>
     );
@@ -56,4 +56,3 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
     </a>
   );
 }
-

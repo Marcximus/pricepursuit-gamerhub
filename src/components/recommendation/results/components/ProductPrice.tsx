@@ -16,6 +16,11 @@ export const ProductPrice: React.FC<ProductPriceProps> = ({
   deliveryInfo,
   url
 }) => {
+  // Handle "unavailable" cases
+  const isUnavailable = currentPrice.includes('not available') || 
+                        currentPrice === 'N/A' || 
+                        currentPrice === 'Click for current price';
+
   return (
     <div>
       <a 
@@ -24,11 +29,17 @@ export const ProductPrice: React.FC<ProductPriceProps> = ({
         rel="noopener noreferrer"
         className="block hover:opacity-80 transition-opacity"
       >
-        <div className="text-2xl font-bold text-blue-700 hover:text-blue-800 transition-colors">
-          {currentPrice}
-        </div>
+        {isUnavailable ? (
+          <div className="text-sm text-blue-600 hover:text-blue-800">
+            Availability Unknown
+          </div>
+        ) : (
+          <div className="text-2xl font-bold text-blue-700 hover:text-blue-800 transition-colors">
+            {currentPrice}
+          </div>
+        )}
         
-        {originalPrice && discountPercentage ? (
+        {originalPrice && discountPercentage && !isUnavailable ? (
           <div className="text-sm text-gray-500">
             <span className="line-through">{originalPrice}</span>
             {' '}

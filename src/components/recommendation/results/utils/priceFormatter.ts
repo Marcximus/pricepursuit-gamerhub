@@ -16,7 +16,7 @@ export const formatPrice = (
   fallbackMax: number
 ): string => {
   if (price === null || price === undefined || price === 0 || price === '0') {
-    return `$${fallbackMin.toLocaleString()} - $${fallbackMax.toLocaleString()}`;
+    return `Availability Unknown`;
   }
   
   if (typeof price === 'number') {
@@ -24,6 +24,13 @@ export const formatPrice = (
   }
   
   if (typeof price === 'string') {
+    // Check for unavailable indicators in string
+    if (price.toLowerCase().includes('not available') || 
+        price.toLowerCase().includes('n/a') ||
+        price.toLowerCase().includes('click for')) {
+      return 'Availability Unknown';
+    }
+    
     // Extract numeric value and format
     const numericValue = parseFloat(price.replace(/[^0-9.]/g, ''));
     if (!isNaN(numericValue)) {
@@ -33,7 +40,7 @@ export const formatPrice = (
     return `$${price}`;
   }
   
-  return `$${fallbackMin.toLocaleString()} - $${fallbackMax.toLocaleString()}`;
+  return `Availability Unknown`;
 };
 
 /**
