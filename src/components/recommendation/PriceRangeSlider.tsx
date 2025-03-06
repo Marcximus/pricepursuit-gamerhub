@@ -68,7 +68,7 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
             <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></div>
             <div className="text-sm font-medium text-indigo-200">Selected Range</div>
           </div>
-          <div className="text-sm font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+          <div className="text-sm font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-white">
             ${minPrice} - ${maxPrice}
           </div>
         </div>
