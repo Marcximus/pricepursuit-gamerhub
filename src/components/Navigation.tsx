@@ -1,6 +1,6 @@
 
 import { Link, useNavigate } from "react-router-dom";
-import { Monitor, Laptop, Computer, Gamepad, Keyboard, Mouse, Headphones, Settings, LogOut, GitCompare, Sparkles, FileText, User } from "lucide-react";
+import { Monitor, Laptop, Computer, Crosshair, Keyboard, Mouse, Headphones, Settings, LogOut, GitCompare, Sparkles, FileText, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -30,7 +30,10 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           <Link to="/" className="flex items-center space-x-2">
-            <Laptop className="w-6 h-6 text-gaming-600" />
+            <div className="flex items-center">
+              <Laptop className="w-6 h-6 text-gaming-600" />
+              <Crosshair className="w-5 h-5 text-gaming-600 -ml-1" />
+            </div>
             <span className="text-xl font-bold text-gaming-800">Laptop Hunter</span>
           </Link>
           
