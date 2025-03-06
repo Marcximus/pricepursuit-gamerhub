@@ -2,11 +2,7 @@
 import React from 'react';
 import { ShineBorder } from '@/components/ui/shine-border';
 import { Check, Sparkle, Star } from 'lucide-react';
-
-interface HighlightItem {
-  text: string;
-  icon: React.ReactNode;
-}
+import { HighlightItem } from '../../types/quizTypes';
 
 interface ProductHighlightsProps {
   highlights: HighlightItem[];
@@ -36,18 +32,18 @@ export const ProductHighlights: React.FC<ProductHighlightsProps> = ({ highlights
   
   return (
     <div>
-      <h3 className="font-semibold text-gray-800 mb-2">Highlights</h3>
+      <h3 className="font-semibold text-gray-800 mb-2">Key Advantages</h3>
       <ul className="grid grid-cols-1 gap-2">
         {paddedHighlights.map((highlight, index) => (
           highlight.text ? (
             <li 
               key={index} 
-              className="flex items-center text-sm p-2 rounded-md bg-green-50 border border-green-100 shadow-sm hover:shadow transition-all"
+              className="flex items-start text-sm p-3 rounded-md bg-green-50 border border-green-100 shadow-sm hover:shadow transition-all"
             >
-              <span className="text-green-600 mr-2 flex-shrink-0">
+              <span className="text-green-600 mr-2 flex-shrink-0 mt-0.5">
                 {highlight.icon || defaultIcons[index % defaultIcons.length]}
               </span>
-              <span className="text-green-700 font-medium line-clamp-2">{highlight.text}</span>
+              <span className="text-green-700 font-medium">{highlight.text}</span>
             </li>
           ) : (
             <li key={index} className="h-[42px]"></li> // Empty placeholder with same height
