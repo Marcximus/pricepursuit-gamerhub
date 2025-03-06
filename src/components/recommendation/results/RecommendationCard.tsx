@@ -1,90 +1,100 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { RecommendationResult } from '../types/quizTypes';
-import { formatProductData } from './utils/productFormatter';
-import { ProductImage } from './components/ProductImage';
 import { ProductHeader } from './components/ProductHeader';
-import { ProductTitle } from './components/ProductTitle';
-import { ProductRating } from './components/ProductRating';
+import { ProductImage } from './components/ProductImage';
 import { ProductPrice } from './components/ProductPrice';
+import { ProductRating } from './components/ProductRating';
 import { ProductReason } from './components/ProductReason';
-import { ProductActions } from './components/ProductActions';
 import { ProductHighlights } from './components/ProductHighlights';
+import { ProductActions } from './components/ProductActions';
+import { formatProductData, extractSpecsFromRecommendation } from './utils/productFormatter';
+import { LaptopSpecs } from '@/components/laptops/components/LaptopSpecs';
 
 interface RecommendationCardProps {
   result: RecommendationResult;
   index: number;
 }
 
-export const RecommendationCard: React.FC<RecommendationCardProps> = ({ 
-  result,
-  index
-}) => {
-  // Format all product data using the dedicated formatter
+export const RecommendationCard: React.FC<RecommendationCardProps> = ({ result, index }) => {
   const productData = formatProductData(result, index);
-
+  
+  // Extract specs from the recommendation
+  const specs = extractSpecsFromRecommendation(result);
+  
+  // Enhance the product with extracted specs if they don't exist
+  if (result.product) {
+    result.product.processor = result.product.processor || specs.processor;
+    result.product.ram = result.product.ram || specs.ram;
+    result.product.storage = result.product.storage || specs.storage;
+    result.product.graphics = result.product.graphics || specs.graphics;
+    result.product.screen_size = result.product.screen_size || specs.screen_size;
+    result.product.screen_resolution = result.product.screen_resolution || specs.screen_resolution;
+    result.product.weight = result.product.weight || specs.weight;
+    result.product.battery_life = result.product.battery_life || specs.battery_life;
+  }
+  
   return (
-    <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-      <div className="relative">
-        <ProductHeader 
+    <Card className="overflow-hidden animate-fade-in">
+      <div className="p-6 space-y-6">
+        <ProductHeader
           title={productData.title}
           productUrl={productData.productUrl}
           index={index}
         />
         
-        <ProductImage 
-          imageUrl={productData.imageUrl}
-          altText={productData.title}
-          fallbackText={result.recommendation.model}
-          url={productData.productUrl}
-        />
-      </div>
-      
-      <CardContent className="p-6 flex flex-col flex-grow">
-        <div className="h-16">
-          <ProductTitle 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ProductImage
+            imageUrl={productData.imageUrl}
             title={productData.title}
-            url={productData.productUrl}
+            productUrl={productData.productUrl}
           />
-        </div>
-        
-        <div className="h-10">
-          {result.product && (
-            <ProductRating 
+          
+          <div className="flex flex-col gap-4">
+            <ProductPrice
+              currentPrice={productData.currentPrice}
+              originalPrice={productData.originalPrice}
+              discount={productData.discountPercentage}
+            />
+            
+            <ProductRating
               rating={productData.rating}
               ratingCount={productData.ratingCount}
               isPrime={productData.isPrime}
-              url={productData.productUrl}
+              deliveryInfo={productData.deliveryInfo}
             />
-          )}
+            
+            <LaptopSpecs
+              title={productData.title}
+              productUrl={productData.productUrl}
+              specs={{
+                processor: specs.processor,
+                ram: specs.ram,
+                storage: specs.storage,
+                graphics: specs.graphics,
+                screenSize: specs.screen_size,
+                screenResolution: specs.screen_resolution,
+                weight: specs.weight
+              }}
+              brand={result.product?.processor?.split(' ')[0] || 'Unknown'}
+              model={result.product?.product_title?.split(' ').slice(1, 3).join(' ') || 'Unknown Model'}
+            />
+          </div>
         </div>
         
-        <div className="mb-4">
-          <ProductPrice 
-            currentPrice={productData.currentPrice}
-            originalPrice={productData.originalPrice}
-            discountPercentage={productData.discountPercentage}
-            deliveryInfo={productData.deliveryInfo}
-            url={productData.productUrl}
-          />
-        </div>
-        
-        <div className="min-h-32 mb-4">
-          <ProductHighlights highlights={productData.highlights} />
-        </div>
-        
-        <div className="min-h-36 mb-6">
+        <div className="space-y-4">
           <ProductReason reason={productData.reason} />
-        </div>
-        
-        <div className="mt-auto">
-          <ProductActions 
-            productUrl={result.product?.product_url}
+          
+          <ProductHighlights highlights={productData.highlights} />
+          
+          <ProductActions
             searchQuery={productData.searchQuery}
+            productUrl={productData.productUrl}
+            title={productData.title}
           />
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 };
