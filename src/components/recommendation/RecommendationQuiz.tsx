@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { QuizQuestion } from './QuizQuestion';
@@ -57,8 +56,8 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
     // Don't auto-advance on the last question
     if (currentQuestion < totalQuestions - 1) {
       // Special case: For price range, don't auto-advance if selecting "Custom Range"
-      if (question === 'priceRange' && value === 'Custom Range') {
-        return; // Don't auto-advance
+      if (question === 'priceRange' && (value === 'Custom Range' || value.startsWith('Custom:'))) {
+        return; // Don't auto-advance for custom options
       }
       
       // Small delay to show the selection before advancing
@@ -95,9 +94,9 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
                 selectedOption={answers.priceRange}
                 customMinPrice={answers.customMinPrice || 500}
                 customMaxPrice={answers.customMaxPrice || 1500}
-                onSelect={(value) => handleOptionSelectAndAdvance('priceRange', value)}
+                onSelect={(value) => handleOptionSelect('priceRange', value)}
                 onRangeChange={handlePriceRangeChange}
-                autoAdvance={true}
+                autoAdvance={false} // Disabled auto-advance for price range to ensure proper navigation
                 onAdvance={handleNext}
               />
             )}

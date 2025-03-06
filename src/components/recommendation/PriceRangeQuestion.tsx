@@ -29,12 +29,20 @@ export const PriceRangeQuestion: React.FC<PriceRangeQuestionProps> = ({
     ? `Custom: USD ${selectedOption[0]} - ${selectedOption[1]}` 
     : selectedOption;
 
-  // Add effect to advance for normal options, but NOT for Custom Range
+  // Add effect to advance for normal options, but NOT for Custom Range or custom values
   useEffect(() => {
+    // Only auto-advance when:
+    // 1. autoAdvance is true
+    // 2. onAdvance is defined
+    // 3. The selectedOption isn't Custom Range
+    // 4. The selectedOption doesn't start with 'Custom:'
+    // 5. The selectedOption isn't empty (first load/reset)
     if (autoAdvance && 
         onAdvance && 
         selectedOptionStr !== 'Custom Range' && 
-        !selectedOptionStr.startsWith('Custom:')) {
+        !selectedOptionStr.startsWith('Custom:') &&
+        selectedOptionStr !== '') {
+      
       // Only auto-advance for preset price ranges, not for custom range
       const timer = setTimeout(() => {
         onAdvance();
