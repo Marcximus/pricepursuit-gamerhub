@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Battery, Check, Cpu, Gauge, Sparkle, Star, ThumbsUp, Zap } from 'lucide-react';
+import { Battery, Check, Cpu, Gauge, Sparkle, Star, ThumbsUp, Zap, Weight } from 'lucide-react';
 
 interface HighlightItem {
   text: string;
