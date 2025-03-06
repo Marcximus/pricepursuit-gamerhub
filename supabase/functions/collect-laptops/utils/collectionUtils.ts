@@ -22,7 +22,7 @@ export function createBrandBatches(brands: string[], batchSize: number) {
  * @returns True if the product should be collected, false if it should be skipped
  */
 export function shouldCollectProduct(title: string): boolean {
-  // Skip products with forbidden keywords in the title
+  // Only check title against forbidden keywords, not descriptions or other fields
   return !containsForbiddenKeywords(title);
 }
 

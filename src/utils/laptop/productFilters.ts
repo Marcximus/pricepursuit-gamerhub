@@ -53,10 +53,18 @@ export function containsForbiddenKeywords(title: string): boolean {
   
   const lowerTitle = title.toLowerCase();
   
-  // Check if title contains any forbidden keywords
-  return FORBIDDEN_KEYWORDS.some(keyword => 
-    lowerTitle.includes(keyword.toLowerCase())
-  );
+  // Apply a more lenient check that only looks at the title
+  return FORBIDDEN_KEYWORDS.some(keyword => {
+    // For multi-word keywords, check if the title includes the phrase
+    if (keyword.includes(' ')) {
+      return lowerTitle.includes(keyword.toLowerCase());
+    }
+    
+    // For single-word keywords, try to match with word boundaries
+    // This is more lenient than an exact match
+    const regex = new RegExp(`\\b${keyword.toLowerCase()}\\b`);
+    return regex.test(lowerTitle);
+  });
 }
 
 /**
