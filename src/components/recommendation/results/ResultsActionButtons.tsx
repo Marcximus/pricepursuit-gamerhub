@@ -5,6 +5,7 @@ import { RefreshCw, Share2 } from 'lucide-react';
 import { RecommendationResult } from '../types/quizTypes';
 import { useComparison } from '@/contexts/ComparisonContext';
 import { toast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface ResultsActionButtonsProps {
   results: RecommendationResult[];
@@ -16,6 +17,7 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
   onReset
 }) => {
   const { addToComparison, clearComparison } = useComparison();
+  const navigate = useNavigate();
   const canCompare = results.length >= 2 && results[0].product && results[1].product;
   
   const handleCompare = () => {
@@ -64,8 +66,9 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
         addToComparison(globalProduct);
       }
       
-      // Open the compare page in the same tab
-      window.location.href = '/compare';
+      // Navigate to compare page using React Router instead of directly changing location
+      navigate('/compare');
+      
     } catch (error) {
       console.error("Error setting up comparison:", error);
       toast({
