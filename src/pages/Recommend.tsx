@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import RecommendationQuiz from '../components/recommendation/RecommendationQuiz';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Laptop } from 'lucide-react';
+import { ArrowLeft, Laptop, Sparkles } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import LaptopParticles from '../components/recommendation/LaptopParticles';
@@ -39,8 +39,11 @@ const Recommend = () => {
                 
                 {!showingResults && !isProcessing ? <>
                     <div className="flex justify-center mb-1">
-                      <div className="bg-blue-100 p-3 rounded-full">
-                        <Laptop className="w-8 h-8 text-blue-600" />
+                      <div className="laptop-icon-container">
+                        <div className="bg-blue-100 p-3 rounded-full relative">
+                          <Laptop className="w-8 h-8 text-blue-600 laptop-icon" />
+                          <Sparkles className="w-4 h-4 text-yellow-400 absolute top-1 right-1 sparkle-icon" />
+                        </div>
                       </div>
                     </div>
                     <h1 className="text-3xl font-bold text-center mb-2 text-gray-800">Find Your Perfect Laptop</h1>
