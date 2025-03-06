@@ -16,7 +16,7 @@ Isn't that great??</p>
           variant="default" 
           className="hover:bg-gaming-700 px-6 py-2 text-lg font-semibold rounded-lg bg-sky-500 hover:bg-sky-400 text-zinc-50"
           options={{
-            particleCount: 250,
+            particleCount: 200,
             spread: 100,
             ticks: 400,
             gravity: 0.8,
