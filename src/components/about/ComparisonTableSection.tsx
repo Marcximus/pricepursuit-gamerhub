@@ -1,10 +1,7 @@
-
 import React from 'react';
 import { Award } from 'lucide-react';
-
 const ComparisonTableSection = () => {
-  return (
-    <div className="mb-16 bg-gaming-50 rounded-xl p-8">
+  return <div className="mb-16 bg-gaming-50 rounded-xl p-8 bg-amber-50">
       <div className="flex items-center justify-center mb-6">
         <Award className="w-8 h-8 text-gaming-600 mr-2" />
         <h2 className="text-3xl font-bold text-gray-900">How We Compare to Other Laptop Sites 🏆</h2>
@@ -47,8 +44,6 @@ const ComparisonTableSection = () => {
           </tbody>
         </table>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default ComparisonTableSection;
