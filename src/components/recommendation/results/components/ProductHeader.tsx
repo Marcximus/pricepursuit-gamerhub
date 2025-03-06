@@ -13,8 +13,10 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({
   index
 }) => {
   return (
-    <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-4 text-white relative z-10">
-      <h3 className="text-lg font-semibold">
+    <div className="px-5 py-4 relative z-10 shadow-sm border-b border-gray-100">
+      <h3 className={`text-lg font-semibold animate-pulse text-green-500 ${
+        index === 1 ? 'text-right' : 'text-left'
+      }`}>
         Recommendation {index + 1}
       </h3>
     </div>
