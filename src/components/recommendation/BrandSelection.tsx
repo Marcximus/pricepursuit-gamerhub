@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import Image from '@/components/ui/image';
-import { brandOptions } from './config/quizConfig';
+import { brandOptions, brandEmojis } from './config/quizConfig';
 
 interface BrandSelectionProps {
   selectedBrand: string;
