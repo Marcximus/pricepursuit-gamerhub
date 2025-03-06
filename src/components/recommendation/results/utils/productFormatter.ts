@@ -5,8 +5,8 @@
 import { RecommendationResult } from '../../types/quizTypes';
 import { formatPrice, calculateDiscount } from './priceFormatter';
 import { getProductUrl } from './urlFormatter';
-import { generateHighlights } from './highlightGenerator';
 import React from 'react';
+import { Check, Sparkle, Star } from 'lucide-react';
 
 /**
  * Extract formatted product information from a recommendation result
@@ -60,8 +60,29 @@ export const formatProductData = (
     ? calculateDiscount(product.product_price, product.product_original_price)
     : undefined;
 
-  // Generate highlights based on product information
-  const highlights = generateHighlights(result);
+  // Map DeepSeek highlights to the format expected by the component
+  // Assign appropriate icons based on content
+  const defaultIcons = [
+    <Star className="h-4 w-4" key="star" />,
+    <Check className="h-4 w-4" key="check" />,
+    <Sparkle className="h-4 w-4" key="sparkle" />
+  ];
+  
+  const formattedHighlights = (recommendation.highlights || []).map((text, index) => {
+    let icon = defaultIcons[index % defaultIcons.length];
+    
+    // Assign more appropriate icons based on highlight content
+    if (text.toLowerCase().includes('rating') || text.toLowerCase().includes('★') || text.toLowerCase().includes('star')) {
+      icon = <Star className="h-4 w-4" />;
+    } else if (text.toLowerCase().includes('processor') || text.toLowerCase().includes('cpu') || text.toLowerCase().includes('performance')) {
+      icon = <Sparkle className="h-4 w-4" />;
+    }
+    
+    return {
+      text,
+      icon
+    };
+  });
 
   return {
     title: product?.product_title || recommendation.model,
@@ -77,6 +98,6 @@ export const formatProductData = (
     reason: recommendation.reason,
     index,
     searchQuery: recommendation.searchQuery,
-    highlights
+    highlights: formattedHighlights
   };
 };
