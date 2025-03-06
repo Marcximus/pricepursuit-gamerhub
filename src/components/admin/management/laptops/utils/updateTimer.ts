@@ -40,5 +40,7 @@ export const scheduleNextUpdateTime = (): Date => {
  */
 export const calculateSecondsUntilNextUpdate = (nextUpdateTime: Date): number => {
   const currentTime = new Date();
-  return Math.max(0, Math.floor((nextUpdateTime.getTime() - currentTime.getTime()) / 1000));
+  const millisUntilUpdate = nextUpdateTime.getTime() - currentTime.getTime();
+  // Don't allow negative values, but return 0 instead
+  return Math.max(0, Math.floor(millisUntilUpdate / 1000));
 };

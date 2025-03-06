@@ -14,14 +14,27 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
   const [autoUpdateInterval, setAutoUpdateInterval] = useState<NodeJS.Timeout | null>(null);
   const [nextUpdateTime, setNextUpdateTime] = useState<Date | null>(null);
   const [timeUntilNextUpdate, setTimeUntilNextUpdate] = useState<number>(300); // 5 minutes in seconds
+  const [countdownInterval, setCountdownInterval] = useState<NodeJS.Timeout | null>(null);
 
-  // Update time until next auto-update
+  // Separate effect for countdown timer
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
-    
-    if (autoUpdateEnabled && nextUpdateTime && !isUpdating) {
-      timer = setInterval(() => {
+    // Clear any existing countdown interval
+    if (countdownInterval) {
+      clearIntervalSafely(countdownInterval);
+    }
+
+    // Only start countdown if auto-update is enabled and we have a next update time
+    if (autoUpdateEnabled && nextUpdateTime) {
+      console.log('Starting countdown timer for auto-update');
+      
+      // Initial calculation
+      const initialSeconds = calculateSecondsUntilNextUpdate(nextUpdateTime);
+      setTimeUntilNextUpdate(initialSeconds);
+      
+      // Set up countdown interval (every second)
+      const interval = setInterval(() => {
         const secondsUntilNext = calculateSecondsUntilNextUpdate(nextUpdateTime);
+        console.log('Countdown update: seconds until next update:', secondsUntilNext);
         setTimeUntilNextUpdate(secondsUntilNext);
         
         // If time is up, trigger update
@@ -30,14 +43,18 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
           onUpdate();
         }
       }, 1000);
+      
+      setCountdownInterval(interval);
+      
+      return () => {
+        clearIntervalSafely(interval);
+      };
     }
     
-    return () => {
-      clearIntervalSafely(timer);
-    };
+    return () => {};
   }, [autoUpdateEnabled, nextUpdateTime, isUpdating, onUpdate]);
 
-  // Auto-update effect
+  // Auto-update effect (separate from countdown)
   useEffect(() => {
     if (autoUpdateEnabled && !isUpdating) {
       // Set next update time
@@ -70,6 +87,9 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
       
       return () => {
         clearIntervalSafely(interval);
+        if (countdownInterval) {
+          clearIntervalSafely(countdownInterval);
+        }
       };
     } else if (!autoUpdateEnabled) {
       if (autoUpdateInterval) {
@@ -78,20 +98,29 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
         setNextUpdateTime(null);
         console.log('Auto-update disabled');
         
+        // Also clear countdown interval
+        if (countdownInterval) {
+          clearIntervalSafely(countdownInterval);
+          setCountdownInterval(null);
+        }
+        
         toast({
           title: "Auto-Update Disabled",
           description: "Automatic updates have been turned off",
         });
       }
     }
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoUpdateEnabled, isUpdating, onUpdate]);
 
   // Clean up intervals on unmount
   useEffect(() => {
     return () => {
       clearIntervalSafely(autoUpdateInterval);
+      clearIntervalSafely(countdownInterval);
     };
-  }, [autoUpdateInterval]);
+  }, [autoUpdateInterval, countdownInterval]);
 
   // Toggle auto-update function
   const toggleAutoUpdate = () => {
