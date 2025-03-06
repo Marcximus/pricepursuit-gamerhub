@@ -19,9 +19,27 @@ export const BrandSelection: React.FC<BrandSelectionProps> = ({
     <>
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Do you have a preferred brand?</h2>
       
-      {/* Top row with balanced brand options and No preference */}
+      {/* Top row with No preference and first brand */}
       <div className="grid grid-cols-2 gap-3 mb-3">
-        {/* First brand in top left */}
+        {/* No preference in top left */}
+        <Button
+          variant={selectedBrand === "No preference" ? "default" : "outline"}
+          className={`justify-start text-left h-auto py-2 px-4 transition-all duration-200 hover:shadow-md ${
+            selectedBrand === "No preference" 
+              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+              : 'bg-white/80 hover:bg-blue-50 text-gray-700 hover:text-blue-600 border-gray-200'
+          } rounded-xl`}
+          onClick={() => onSelect("No preference")}
+        >
+          <div className="flex items-center">
+            <div className="w-6 h-6 mr-2 flex-shrink-0 flex items-center justify-center">
+              <span role="img" aria-label="Globe" className="text-lg">🌎</span>
+            </div>
+            <span className="font-medium">No preference</span>
+          </div>
+        </Button>
+        
+        {/* First brand in top right */}
         <Button
           key={regularBrandOptions[0]}
           variant={selectedBrand === regularBrandOptions[0] ? "default" : "outline"}
@@ -43,26 +61,6 @@ export const BrandSelection: React.FC<BrandSelectionProps> = ({
               />
             </div>
             <span className="font-medium">{regularBrandOptions[0]}</span>
-          </div>
-        </Button>
-        
-        {/* No preference in top right */}
-        <Button
-          variant={selectedBrand === "No preference" ? "default" : "outline"}
-          className={`justify-start text-left h-auto py-2 px-4 transition-all duration-200 hover:shadow-md ${
-            selectedBrand === "No preference" 
-              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-              : 'bg-white/80 hover:bg-blue-50 text-gray-700 hover:text-blue-600 border-gray-200'
-          } rounded-xl`}
-          onClick={() => onSelect("No preference")}
-        >
-          <div className="flex items-center">
-            <div className="w-6 h-6 mr-2 flex-shrink-0 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </div>
-            <span className="font-medium">No preference</span>
           </div>
         </Button>
       </div>
