@@ -18,15 +18,9 @@ export const formatRecommendationReason = (reason: string): string[] => {
   // Enhance the reason text to focus on the laptop's strengths
   const enhancedReason = enhanceReasonText(reason);
   
-  // If it's a short reason, just add emojis without splitting
-  if (!enhancedReason.includes('.') || enhancedReason.split('.').length <= 1) {
-    const emojiReason = addEmojisToText(enhancedReason);
-    return [emojiReason];
-  }
-  
   // For longer text, split into paragraphs
   const paragraphs = splitIntoParagraphs(enhancedReason);
   
-  // Add emojis to each paragraph
-  return paragraphs.map(paragraph => addEmojisToText(paragraph));
+  // Add emojis to each paragraph, but with balanced usage
+  return paragraphs.map(paragraph => addEmojisToText(paragraph, true));
 };

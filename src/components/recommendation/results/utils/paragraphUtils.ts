@@ -8,10 +8,16 @@
  * @returns Array of paragraphs
  */
 export const splitIntoParagraphs = (text: string): string[] => {
+  // If text is very short, don't split it
+  if (text.length < 120) {
+    return [text];
+  }
+  
   // Split text on periods followed by spaces
   const sentences = text.split(/\.\s+/);
   
-  if (sentences.length <= 1) {
+  // If there are very few sentences, don't split it up further
+  if (sentences.length <= 2) {
     return [text];
   }
   
@@ -24,8 +30,8 @@ export const splitIntoParagraphs = (text: string): string[] => {
     
     if (currentParagraph.length === 0) {
       currentParagraph = formattedSentence;
-    } else if (currentParagraph.split(" ").length + formattedSentence.split(" ").length < 20) {
-      // If combined would be less than ~20 words, keep in same paragraph
+    } else if (currentParagraph.split(" ").length + formattedSentence.split(" ").length < 25) {
+      // If combined would be less than ~25 words, keep in same paragraph
       currentParagraph += " " + formattedSentence;
     } else {
       // Otherwise start a new paragraph
@@ -37,6 +43,11 @@ export const splitIntoParagraphs = (text: string): string[] => {
   // Add the last paragraph if not empty
   if (currentParagraph.length > 0) {
     paragraphs.push(currentParagraph);
+  }
+  
+  // If we end up with no paragraphs, return the original text
+  if (paragraphs.length === 0) {
+    return [text];
   }
   
   return paragraphs;

@@ -27,31 +27,47 @@ const GENERAL_EMOJIS = ['👍', '⭐', '🔥', '👌', '😎'];
 /**
  * Add relevant emojis to text based on its content
  * @param text The text to add emojis to
+ * @param conservative If true, uses fewer emojis for a more professional look
  * @returns Text with emojis inserted in appropriate locations
  */
-export const addEmojisToText = (text: string): string => {
+export const addEmojisToText = (text: string, conservative = false): string => {
   let emojiText = text;
   let emojisAdded = 0;
   
-  // Only add up to 2 emojis per paragraph
+  // Conservative mode limits to 1 emoji per paragraph
+  const maxEmojis = conservative ? 1 : 2;
+  
+  // Only add up to maximum emojis per paragraph
   KEYWORDS_TO_EMOJIS.forEach(({ terms, emoji }) => {
-    if (emojisAdded >= 2) return;
+    if (emojisAdded >= maxEmojis) return;
     
     const lowerText = emojiText.toLowerCase();
     if (terms.some(term => lowerText.includes(term.toLowerCase()))) {
-      // Add emoji at start or end with a preference for end placement for more natural feel
-      if (Math.random() < 0.3 && !emojiText.startsWith(emoji)) {
-        emojiText = `${emoji} ${emojiText}`;
-        emojisAdded++;
-      } else if (!emojiText.endsWith(emoji)) {
-        emojiText = `${emojiText} ${emoji}`;
-        emojisAdded++;
+      // In conservative mode, only add emoji at the end
+      if (conservative) {
+        if (!emojiText.endsWith(emoji)) {
+          emojiText = `${emojiText} ${emoji}`;
+          emojisAdded++;
+        }
+      } else {
+        // Add emoji at start or end with a preference for end placement for more natural feel
+        if (Math.random() < 0.3 && !emojiText.startsWith(emoji)) {
+          emojiText = `${emoji} ${emojiText}`;
+          emojisAdded++;
+        } else if (!emojiText.endsWith(emoji)) {
+          emojiText = `${emojiText} ${emoji}`;
+          emojisAdded++;
+        }
       }
     }
   });
   
-  // If no emojis were added, add a general positive one
-  if (emojisAdded === 0) {
+  // If no emojis were added and we're not in conservative mode, add a general positive one
+  if (emojisAdded === 0 && !conservative) {
+    const randomEmoji = GENERAL_EMOJIS[Math.floor(Math.random() * GENERAL_EMOJIS.length)];
+    emojiText = `${emojiText} ${randomEmoji}`;
+  } else if (emojisAdded === 0 && conservative && text.length > 50) {
+    // For conservative mode, only add an emoji to longer paragraphs
     const randomEmoji = GENERAL_EMOJIS[Math.floor(Math.random() * GENERAL_EMOJIS.length)];
     emojiText = `${emojiText} ${randomEmoji}`;
   }

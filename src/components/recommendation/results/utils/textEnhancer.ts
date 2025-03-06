@@ -11,7 +11,12 @@
 export const enhanceReasonText = (reason: string): string => {
   if (!reason) return "";
   
-  // Remove phrases like "based on your requirements", "as you requested", etc.
+  // Make sure there's enough detail by ensuring we don't overly truncate
+  if (reason.length < 150) {
+    return reason; // Keep short reasons as is to preserve information
+  }
+  
+  // For longer text, enhance it by removing formulaic phrases and expanding details
   return reason
     .replace(/based on your requirements/gi, "with exceptional features")
     .replace(/as you requested/gi, "impressively")
