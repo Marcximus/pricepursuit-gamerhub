@@ -3,6 +3,7 @@ import React from "react";
 import type { Product } from "@/types/product";
 import { ArrowUpRight, MessageSquare, Zap } from "lucide-react";
 import { formatLaptopDisplayTitle } from "../../utils/titleFormatter";
+import { ShineBorder } from "@/components/ui/shine-border";
 
 interface LaptopDisplayProps {
   laptop: Product;
@@ -18,19 +19,27 @@ const LaptopDisplay: React.FC<LaptopDisplayProps> = ({
   return (
     <>
       <div className="text-center mb-6 mt-8 min-h-[10rem] flex items-center justify-center group">
-        <a 
-          href={affiliateUrl} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="relative overflow-hidden transition-all duration-300 hover:scale-105"
+        <ShineBorder
+          borderRadius={12}
+          borderWidth={2}
+          duration={8}
+          color={["#4f46e5", "#7c3aed", "#2563eb"]}
+          className="bg-transparent dark:bg-transparent p-0 min-h-0 w-auto min-w-0 overflow-hidden hover:scale-105 transition-transform duration-300"
         >
-          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-50/0 via-indigo-50/0 to-indigo-100/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <img 
-            src={laptop.image_url || '/placeholder.svg'} 
-            alt={laptop.title || 'Laptop'} 
-            className="h-40 object-contain mx-auto drop-shadow-md"
-          />
-        </a>
+          <a 
+            href={affiliateUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="relative overflow-hidden transition-all duration-300"
+          >
+            <div className="absolute inset-0 bg-gradient-to-tr from-indigo-50/0 via-indigo-50/0 to-indigo-100/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <img 
+              src={laptop.image_url || '/placeholder.svg'} 
+              alt={laptop.title || 'Laptop'} 
+              className="h-40 object-contain mx-auto drop-shadow-md"
+            />
+          </a>
+        </ShineBorder>
       </div>
       
       <div className="space-y-3">
