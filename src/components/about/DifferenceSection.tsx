@@ -1,8 +1,6 @@
-
 import React from 'react';
 import { Sparkles, Trophy, Laptop, Users } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-
 const DifferenceSection = () => {
   return <div className="mb-16">
       <div className="flex items-center justify-center mb-6">
@@ -36,9 +34,7 @@ const DifferenceSection = () => {
           <p className="text-gray-600">
             We translate complex specifications into human language. No more wondering what <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="underline decoration-dotted cursor-help font-medium">
-                  "integrated UHD graphics"
-                </TooltipTrigger>
+                <TooltipTrigger className="underline decoration-dotted cursor-help font-medium">integrated UHD graphics</TooltipTrigger>
                 <TooltipContent className="max-w-xs bg-blue-100 text-gray-800 p-3 rounded-lg border border-blue-200">
                   <p>It's like having a mediocre artist living inside your CPU instead of hiring a professional one. Good enough for Netflix and spreadsheets, but will cry if you ask it to run modern games! 🎮😢</p>
                 </TooltipContent>
