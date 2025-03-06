@@ -14,6 +14,7 @@ import {
   DifferenceSection,
   FunFactsSection,
   FAQSection,
+  LegalSection,
   CtaSection,
   Footer
 } from '@/components/about';
@@ -36,6 +37,7 @@ const About = () => {
         <DifferenceSection />
         <FunFactsSection />
         <FAQSection />
+        <LegalSection />
         <CtaSection />
       </div>
       
