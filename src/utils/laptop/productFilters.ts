@@ -40,7 +40,9 @@ const FORBIDDEN_KEYWORDS = [
   'laptop accessories bundle', 'laptop kit', 'laptop fan',
   'laptop memory', 'laptop ram only', 'ram stick',
   'memory module',
-  'New Laptop Battery'
+  'New Laptop Battery',
+  // iPad specific filter
+  'iPad (10th Generation)'
   // Removed: 'compatible with', 'fits for', 'made for', 'replacement for'
   // Removed by user request: 'keyboard', 'touchpad', 'speaker', 'decal'
 ];
