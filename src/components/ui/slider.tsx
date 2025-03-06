@@ -23,8 +23,13 @@ const Slider = React.forwardRef<
     const count = tickLabels ? tickLabels.length : tickCount;
     
     for (let i = 0; i < count; i++) {
-      const position = tickLabels ? (i / (count - 1) * 100) : (i / (count - 1) * 100);
-      const label = tickLabels ? tickLabels[i] : Math.round(min + (i / (count - 1)) * (max - min)).toString();
+      // Calculate position as percentage
+      const value = tickLabels 
+        ? min + ((i / (count - 1)) * (max - min))
+        : min + ((i / (count - 1)) * (max - min));
+      
+      const position = ((value - min) / (max - min)) * 100;
+      const label = tickLabels ? tickLabels[i] : Math.round(value).toString();
       
       ticks.push(
         <div 
@@ -33,7 +38,7 @@ const Slider = React.forwardRef<
           style={{ left: `${position}%` }}
         >
           <div className="w-0.5 h-1.5 bg-slate-400 mb-1.5" />
-          <span className="text-xs text-slate-500">{label}</span>
+          <span className="text-xs text-slate-500 whitespace-nowrap">{label}</span>
         </div>
       );
     }

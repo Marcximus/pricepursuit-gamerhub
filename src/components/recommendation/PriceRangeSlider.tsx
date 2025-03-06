@@ -19,23 +19,19 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
     }
   };
 
-  // Calculate the tick marks based on the min and max values
+  // Define specific tick values from 100 to 6000
   const tickValues = useMemo(() => {
-    // Create 5 evenly spaced tick values between min and max allowed prices
-    const MIN_PRICE = 100;
-    const MAX_PRICE = 6000;
-    
     return [
-      MIN_PRICE,
-      MIN_PRICE + (MAX_PRICE - MIN_PRICE) * 0.25, 
-      MIN_PRICE + (MAX_PRICE - MIN_PRICE) * 0.5,
-      MIN_PRICE + (MAX_PRICE - MIN_PRICE) * 0.75,
-      MAX_PRICE
-    ].map(val => Math.round(val));
+      100, 500, 1000, 1500, 2000, 2500, 
+      3000, 3500, 4000, 4500, 5000, 5500, 6000
+    ];
   }, []);
 
   // Format price for display
   const formatPrice = (price: number) => {
+    if (price === 6000) {
+      return `$${price}+`;
+    }
     return `$${price}`;
   };
 
