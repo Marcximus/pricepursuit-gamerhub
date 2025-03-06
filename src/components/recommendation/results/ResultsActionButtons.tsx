@@ -39,11 +39,24 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
         const recProduct = results[i].product;
         if (!recProduct) continue;
         
+        // Enhanced title extraction for better comparison display
+        const productTitle = recProduct.product_title || '';
+        const extractModel = () => {
+          // If we have a clear model in the title, use it
+          const modelMatch = productTitle.match(/([A-Za-z0-9]+[\s-][A-Za-z0-9]+)/);
+          return modelMatch ? modelMatch[0] : productTitle.split(' ').slice(1, 3).join(' ');
+        };
+        
+        const brandPart = recProduct.processor?.split(' ')[0] || 
+                          productTitle.split(' ')[0] || 'Unknown';
+        
+        const modelPart = extractModel() || 'Unknown Model';
+        
         const globalProduct = {
           id: recProduct.asin,
           title: recProduct.product_title,
-          brand: recProduct.processor?.split(' ')[0] || 'Unknown',
-          model: recProduct.product_title?.split(' ').slice(1, 3).join(' ') || 'Unknown Model',
+          brand: brandPart,
+          model: modelPart,
           current_price: recProduct.product_price,
           original_price: recProduct.product_original_price,
           rating: recProduct.product_star_rating,
@@ -66,7 +79,7 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
         addToComparison(globalProduct);
       }
       
-      // Navigate to compare page using React Router instead of directly changing location
+      // Navigate to compare page using React Router
       navigate('/compare');
       
     } catch (error) {

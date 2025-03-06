@@ -48,10 +48,13 @@ const ComparisonDataProvider: React.FC<ComparisonDataProviderProps> = ({ childre
   }, [selectedLaptops]);
   
   useEffect(() => {
-    // Don't redirect, just don't fetch comparison if we don't have 2 laptops
+    // Don't fetch comparison if we don't have 2 laptops
     if (selectedLaptops.length !== 2) {
+      console.log("Not enough laptops for comparison:", selectedLaptops.length);
       return;
     }
+    
+    console.log("Starting comparison with laptops:", selectedLaptops);
     
     const fetchComparison = async () => {
       setIsLoading(true);
@@ -74,8 +77,6 @@ const ComparisonDataProvider: React.FC<ComparisonDataProviderProps> = ({ childre
               graphics: laptopLeft?.graphics || '',
               screen_size: laptopLeft?.screen_size || '',
               screen_resolution: laptopLeft?.screen_resolution || '',
-              // Fix here: operating_system property doesn't exist in the Product type
-              // operating_system: laptopLeft.operating_system || '',
               weight: laptopLeft?.weight || '',
               battery_life: laptopLeft?.battery_life || '',
               price: laptopLeft?.current_price || 0,
@@ -97,8 +98,6 @@ const ComparisonDataProvider: React.FC<ComparisonDataProviderProps> = ({ childre
               graphics: laptopRight?.graphics || '',
               screen_size: laptopRight?.screen_size || '',
               screen_resolution: laptopRight?.screen_resolution || '',
-              // Fix here: operating_system property doesn't exist in the Product type
-              // operating_system: laptopRight.operating_system || '',
               weight: laptopRight?.weight || '',
               battery_life: laptopRight?.battery_life || '',
               price: laptopRight?.current_price || 0,
@@ -124,7 +123,7 @@ const ComparisonDataProvider: React.FC<ComparisonDataProviderProps> = ({ childre
     };
     
     fetchComparison();
-  }, [selectedLaptops, navigate, laptopLeft, laptopRight]);
+  }, [selectedLaptops, laptopLeft, laptopRight]);
   
   return (
     <>
