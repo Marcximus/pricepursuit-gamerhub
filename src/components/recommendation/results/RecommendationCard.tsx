@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { RecommendationResult } from '../types/quizTypes';
@@ -47,22 +46,25 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ result, 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ProductImage
             imageUrl={productData.imageUrl}
-            title={productData.title}
-            productUrl={productData.productUrl}
+            altText={productData.title}
+            fallbackText="No image available for this laptop"
+            url={productData.productUrl}
           />
           
           <div className="flex flex-col gap-4">
             <ProductPrice
               currentPrice={productData.currentPrice}
               originalPrice={productData.originalPrice}
-              discount={productData.discountPercentage}
+              discountPercentage={productData.discountPercentage}
+              deliveryInfo={productData.deliveryInfo}
+              url={productData.productUrl}
             />
             
             <ProductRating
               rating={productData.rating}
               ratingCount={productData.ratingCount}
               isPrime={productData.isPrime}
-              deliveryInfo={productData.deliveryInfo}
+              url={productData.productUrl}
             />
             
             <LaptopSpecs
@@ -89,9 +91,8 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ result, 
           <ProductHighlights highlights={productData.highlights} />
           
           <ProductActions
-            searchQuery={productData.searchQuery}
             productUrl={productData.productUrl}
-            title={productData.title}
+            searchQuery={productData.searchQuery}
           />
         </div>
       </div>
