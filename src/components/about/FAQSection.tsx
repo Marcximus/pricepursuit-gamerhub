@@ -2,8 +2,8 @@ import React from 'react';
 import { HelpCircle, Laptop, Search, GitCompare, List } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+
 const FAQSection = () => {
-  // Organize FAQs by category for better user experience and SEO
   const faqCategories = [{
     icon: <Search className="w-5 h-5 text-blue-500" />,
     name: "Using Our Site",
@@ -108,7 +108,7 @@ const FAQSection = () => {
                   <AccordionTrigger className="text-lg font-medium text-slate-50">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-gray-600">
+                  <AccordionContent className="text-slate-50">
                     <div dangerouslySetInnerHTML={{
                 __html: faq.answer.replace(/<a href='([^']+)'>(.*?)<\/a>/g, (match, url, text) => `<Link to="${url}" className="text-gaming-600 hover:underline">${text}</Link>`)
               }} />
@@ -119,4 +119,5 @@ const FAQSection = () => {
       </div>
     </div>;
 };
+
 export default FAQSection;
