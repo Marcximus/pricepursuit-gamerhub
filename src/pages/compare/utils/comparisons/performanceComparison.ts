@@ -1,9 +1,12 @@
-
 // Define comparison functions for different laptop performance specs
 export const compareProcessors = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
+  // Normalize the processor strings for comparison
+  const procA = a.toLowerCase();
+  const procB = b.toLowerCase();
+  
   // First check for Intel Core Ultra processors - they are newer and better than regular Core i-series
-  const ultraAMatch = a.match(/ultra\s+([579])/i);
-  const ultraBMatch = b.match(/ultra\s+([579])/i);
+  const ultraAMatch = procA.match(/ultra\s+([579])/i);
+  const ultraBMatch = procB.match(/ultra\s+([579])/i);
   
   // If both are Ultra processors, compare their numbers
   if (ultraAMatch && ultraBMatch) {
@@ -19,17 +22,40 @@ export const compareProcessors = (a: string, b: string): 'better' | 'worse' | 'e
   if (ultraAMatch && !ultraBMatch) return 'better';
   if (!ultraAMatch && ultraBMatch) return 'worse';
   
-  // Simple keyword-based comparison for regular processors
-  const keywords = ['i9', 'i7', 'i5', 'i3', 'Ryzen 9', 'Ryzen 7', 'Ryzen 5', 'Ryzen 3', 'M3', 'M2', 'M1'];
+  // Compare processor tiers with proper hierarchy
+  // Define processor tiers (higher index = better performance)
+  const tiers = [
+    { name: 'celeron', value: 1 },
+    { name: 'pentium', value: 2 },
+    { name: 'i3', value: 3 },
+    { name: 'ryzen 3', value: 4 },
+    { name: 'm1', value: 5 },
+    { name: 'i5', value: 6 },
+    { name: 'ryzen 5', value: 7 },
+    { name: 'm2', value: 8 },
+    { name: 'i7', value: 9 },
+    { name: 'ryzen 7', value: 10 },
+    { name: 'i9', value: 11 },
+    { name: 'ryzen 9', value: 12 },
+    { name: 'm3', value: 13 },
+  ];
   
-  for (const keyword of keywords) {
-    const aHas = a.includes(keyword);
-    const bHas = b.includes(keyword);
-    
-    if (aHas && !bHas) return 'better';
-    if (!aHas && bHas) return 'worse';
-    if (aHas && bHas) return 'equal';
+  // Find the highest tier match for each processor
+  let tierA = 0;
+  let tierB = 0;
+  
+  for (const tier of tiers) {
+    if (procA.includes(tier.name)) {
+      tierA = Math.max(tierA, tier.value);
+    }
+    if (procB.includes(tier.name)) {
+      tierB = Math.max(tierB, tier.value);
+    }
   }
+  
+  if (tierA > tierB) return 'better';
+  if (tierA < tierB) return 'worse';
+  if (tierA > 0 && tierA === tierB) return 'equal';
   
   return 'unknown';
 };
