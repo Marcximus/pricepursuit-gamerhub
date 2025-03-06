@@ -19,10 +19,25 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
     }
   };
 
-  // Calculate the tick marks based on predefined price ranges 
+  // Calculate the tick marks based on the min and max values
   const tickValues = useMemo(() => {
-    return [100, 300, 600, 900, 1200, 1500, 2000, 2500, 3000, 4000, 6000];
+    // Create 5 evenly spaced tick values between min and max allowed prices
+    const MIN_PRICE = 100;
+    const MAX_PRICE = 6000;
+    
+    return [
+      MIN_PRICE,
+      MIN_PRICE + (MAX_PRICE - MIN_PRICE) * 0.25, 
+      MIN_PRICE + (MAX_PRICE - MIN_PRICE) * 0.5,
+      MIN_PRICE + (MAX_PRICE - MIN_PRICE) * 0.75,
+      MAX_PRICE
+    ].map(val => Math.round(val));
   }, []);
+
+  // Format price for display
+  const formatPrice = (price: number) => {
+    return `$${price}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -44,7 +59,7 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
             onValueChange={handleRangeChange}
             className="my-4"
             showTicks={true}
-            tickLabels={tickValues.map(v => `$${v}`)}
+            tickLabels={tickValues.map(formatPrice)}
           />
           
           <div className="flex justify-between items-center">

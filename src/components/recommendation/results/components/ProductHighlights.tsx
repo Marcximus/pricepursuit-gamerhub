@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { ShineBorder } from '@/components/ui/shine-border';
+import { Check, Sparkle, Star } from 'lucide-react';
 
 interface HighlightItem {
   text: string;
@@ -19,8 +21,18 @@ export const ProductHighlights: React.FC<ProductHighlightsProps> = ({ highlights
   // If we have fewer than 3 highlights, pad with empty ones to maintain layout
   const paddedHighlights = [...displayHighlights];
   while (paddedHighlights.length < 3) {
-    paddedHighlights.push({ text: "", icon: null });
+    paddedHighlights.push({ 
+      text: "", 
+      icon: null 
+    });
   }
+  
+  // Default icons if needed
+  const defaultIcons = [
+    <Star className="h-4 w-4" key="star" />,
+    <Check className="h-4 w-4" key="check" />,
+    <Sparkle className="h-4 w-4" key="sparkle" />
+  ];
   
   return (
     <div>
@@ -32,7 +44,9 @@ export const ProductHighlights: React.FC<ProductHighlightsProps> = ({ highlights
               key={index} 
               className="flex items-center text-sm p-2 rounded-md bg-gradient-to-r from-blue-50 to-green-50 border border-blue-100 shadow-sm hover:shadow transition-all"
             >
-              <span className="text-primary mr-2 flex-shrink-0">{highlight.icon}</span>
+              <span className="text-primary mr-2 flex-shrink-0">
+                {highlight.icon || defaultIcons[index % defaultIcons.length]}
+              </span>
               <span className="text-blue-700 font-medium line-clamp-2">{highlight.text}</span>
             </li>
           ) : (

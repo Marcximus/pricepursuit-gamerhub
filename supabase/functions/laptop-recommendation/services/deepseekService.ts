@@ -99,24 +99,34 @@ export function extractRecommendations(deepseekData: any): any[] {
     // Process recommendations to ensure they have all required fields
     const processedRecommendations = parsedData.recommendations.map((rec: any) => {
       // Ensure each recommendation has a highlights array with exactly 3 items
-      if (!rec.highlights || !Array.isArray(rec.highlights) || rec.highlights.length < 3) {
-        // Create default highlights if missing or insufficient
-        rec.highlights = rec.highlights || [];
+      if (!rec.highlights || !Array.isArray(rec.highlights) || rec.highlights.length !== 3) {
+        console.log("⚠️ Fixing highlights for recommendation:", rec.model);
         
-        // Add generic highlights if fewer than 3
+        // Create default highlights if missing or insufficient
         const defaultHighlights = [
           `Great for ${rec.usage || 'daily use'}`,
-          `Excellent performance`,
-          `Good value for money`
+          `Perfect match for your needs`,
+          `Excellent value for money`
         ];
         
-        while (rec.highlights.length < 3) {
-          rec.highlights.push(defaultHighlights[rec.highlights.length]);
+        // Use existing highlights if available, or default ones
+        const highlights = Array.isArray(rec.highlights) ? [...rec.highlights] : [];
+        
+        // Ensure we have exactly 3 highlights
+        while (highlights.length < 3) {
+          // Add a default highlight that's not already included
+          const defaultHighlight = defaultHighlights.find(h => !highlights.includes(h));
+          if (defaultHighlight) {
+            highlights.push(defaultHighlight);
+          } else {
+            // If we've used all defaults, create a numbered one
+            highlights.push(`Key feature #${highlights.length + 1}`);
+          }
         }
+        
+        // Limit to exactly 3 highlights
+        rec.highlights = highlights.slice(0, 3);
       }
-      
-      // Limit to exactly 3 highlights
-      rec.highlights = rec.highlights.slice(0, 3);
       
       return rec;
     });

@@ -49,9 +49,10 @@ Important guidelines:
 5. Include a brief "usage" field that summarizes what the laptop is best suited for (e.g., "Gaming", "Productivity", "Creative work")
 6. The two recommendations should be different from each other to provide alternatives
 7. Ensure the recommendations match the user's budget
-8. ALWAYS include EXACTLY 3 highlights for each laptop recommendation
-   - Each highlight should be a short phrase (max 10 words)
-   - Highlights should focus on key selling points (e.g., "Powerful RTX 4070 GPU", "16GB DDR5 RAM", "All-day battery life")`;
+8. You MUST include EXACTLY 3 highlights for each laptop recommendation. NO EXCEPTIONS.
+   - Each highlight must be a short phrase (maximum 10 words)
+   - Highlights should focus on key selling points (e.g., "Powerful RTX 4070 GPU", "16GB DDR5 RAM", "All-day battery life")
+   - Each highlight should be distinct and highlight different aspects of the laptop`;
 }
 
 /**
@@ -68,5 +69,6 @@ export function generateUserPrompt(answers: UserAnswers): string {
 - Storage needs: ${answers.storage}
 
 Please recommend two specific laptop models that would best meet these requirements.
-Remember to include EXACTLY 3 short highlights (max 10 words each) for each laptop recommendation.`;
+Remember to include EXACTLY 3 short highlights (max 10 words each) for each laptop recommendation.
+Each highlight must focus on a different aspect of the laptop.`;
 }
