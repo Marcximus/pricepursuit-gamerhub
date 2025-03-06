@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import Image from '@/components/ui/image';
 import { brandOptions } from './config/quizConfig';
+import { BRAND_CORRECTIONS } from '@/utils/laptop/normalizers/brandNormalizer';
 
 interface BrandSelectionProps {
   selectedBrand: string;
@@ -13,6 +14,17 @@ export const BrandSelection: React.FC<BrandSelectionProps> = ({
   selectedBrand,
   onSelect
 }) => {
+  // Function to get a normalized file name for the brand logo
+  const getBrandLogoFilename = (brand: string): string => {
+    const normalizedBrand = brand.toLowerCase().replace(/ /g, '_');
+    
+    // Check if we have a brand correction for this brand
+    const correctedBrand = Object.entries(BRAND_CORRECTIONS)
+      .find(([key]) => key.toLowerCase() === normalizedBrand)?.[1]?.toLowerCase().replace(/ /g, '_');
+    
+    return correctedBrand || normalizedBrand;
+  };
+
   return (
     <>
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Do you have a preferred brand?</h2>
@@ -20,6 +32,8 @@ export const BrandSelection: React.FC<BrandSelectionProps> = ({
         {brandOptions.map((brand) => {
           // Skip "No preference" as it will be handled separately
           if (brand === "No preference") return null;
+          
+          const logoFilename = getBrandLogoFilename(brand);
           
           return (
             <Button
@@ -33,11 +47,11 @@ export const BrandSelection: React.FC<BrandSelectionProps> = ({
               onClick={() => onSelect(brand)}
             >
               <div className="flex items-center">
-                <div className="w-7 h-7 mr-3 flex-shrink-0 overflow-hidden">
+                <div className="w-7 h-7 mr-3 flex-shrink-0 overflow-hidden bg-white/70 rounded-full flex items-center justify-center">
                   <Image 
-                    src={`https://kkebyebrhdpcwqnxhjcx.supabase.co/storage/v1/object/public/brand_logos/${brand.toLowerCase().replace(/ /g, '_')}.png`} 
+                    src={`https://kkebyebrhdpcwqnxhjcx.supabase.co/storage/v1/object/public/brand_logos/${logoFilename}.png`} 
                     alt={brand}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain p-0.5"
                     width={28}
                     height={28}
                   />
