@@ -20,7 +20,7 @@ const CommunitySection = () => {
               Found the perfect laptop deal? Share it with friends and family directly from our site, or save your comparisons for later.
             </p>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="p-6 rounded-lg shadow-md bg-rose-50">
             <div className="flex justify-center mb-4">
               <MessageSquare className="w-8 h-8 text-gaming-600" />
             </div>
