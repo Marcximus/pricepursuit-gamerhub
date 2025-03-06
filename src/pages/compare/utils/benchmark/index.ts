@@ -7,6 +7,11 @@ import { calculateRamScoreComponent } from "./ramScore";
 import { calculateStorageScoreComponent } from "./storageScore";
 import { calculateDisplayScoreComponent } from "./displayScore";
 
+// Import processor scoring modules
+import { calculateIntelScore } from "./processors/intelProcessorScore";
+import { calculateAppleScore } from "./processors/appleProcessorScore";
+import { calculateAMDScore } from "./processors/amdProcessorScore";
+
 /**
  * Calculate a benchmark score for a laptop
  * This is used to determine the winner in the comparison
@@ -38,189 +43,36 @@ export function calculateBenchmarkScore(laptop: Product): number {
 
 /**
  * Calculate a processor score based on common naming patterns
- * Used as part of the benchmark score
  */
 export function calculateProcessorScore(processor: string): number {
   if (!processor) return 40;
   
-  let score = 0;
   const proc = processor.toLowerCase();
+  let score = 0;
   
-  // Intel Core Ultra (newest series)
-  if (proc.includes('core ultra') || proc.includes('intel ultra')) {
-    if (proc.includes('9')) score = 95;
-    else if (proc.includes('7')) score = 93;
-    else if (proc.includes('5')) score = 91;
-    else score = 90; // Generic Ultra
+  // Try each processor type calculator
+  if (proc.includes('intel') || proc.includes('i3') || proc.includes('i5') || 
+      proc.includes('i7') || proc.includes('i9') || proc.includes('pentium') || 
+      proc.includes('celeron')) {
+    score = calculateIntelScore(processor);
   }
-  
-  // Apple processors
-  else if (proc.includes('m3') || proc.includes('m 3')) {
-    if (proc.includes('ultra')) score = 95;
-    else if (proc.includes('max')) score = 90;
-    else if (proc.includes('pro')) score = 85;
-    else score = 80;
+  else if (proc.includes('m1') || proc.includes('m2') || proc.includes('m3')) {
+    score = calculateAppleScore(processor);
   }
-  else if (proc.includes('m2') || proc.includes('m 2')) {
-    if (proc.includes('max')) score = 85;
-    else if (proc.includes('pro')) score = 80;
-    else score = 75;
-  }
-  else if (proc.includes('m1') || proc.includes('m 1')) {
-    if (proc.includes('max')) score = 75;
-    else if (proc.includes('pro')) score = 70;
-    else score = 65;
-  }
-  
-  // Intel Core generations
-  else if (proc.includes('i9')) {
-    // 14th/15th gen
-    if (proc.includes('14') || proc.includes('15') || proc.includes('14th') || proc.includes('15th')) score = 88;
-    // 13th gen
-    else if (proc.includes('13') || proc.includes('13th')) score = 85;
-    // 12th gen
-    else if (proc.includes('12') || proc.includes('12th')) score = 82;
-    // 11th gen
-    else if (proc.includes('11') || proc.includes('11th')) score = 78;
-    // 10th gen
-    else if (proc.includes('10') || proc.includes('10th')) score = 75;
-    // Older gens
-    else if (proc.includes('9th') || proc.includes('9') || proc.includes('8th') || proc.includes('8')) score = 70;
-    else score = 65;
-  }
-  else if (proc.includes('i7')) {
-    // 14th/15th gen
-    if (proc.includes('14') || proc.includes('15') || proc.includes('14th') || proc.includes('15th')) score = 85;
-    // 13th gen
-    else if (proc.includes('13') || proc.includes('13th')) score = 82;
-    // 12th gen
-    else if (proc.includes('12') || proc.includes('12th')) score = 78;
-    // 11th gen
-    else if (proc.includes('11') || proc.includes('11th')) score = 75;
-    // 10th gen
-    else if (proc.includes('10') || proc.includes('10th')) score = 72;
-    // Older gens
-    else if (proc.includes('9th') || proc.includes('9') || proc.includes('8th') || proc.includes('8')) score = 68;
-    else score = 65;
-  }
-  else if (proc.includes('i5')) {
-    // 14th/15th gen
-    if (proc.includes('14') || proc.includes('15') || proc.includes('14th') || proc.includes('15th')) score = 80;
-    // 13th gen
-    else if (proc.includes('13') || proc.includes('13th')) score = 78;
-    // 12th gen
-    else if (proc.includes('12') || proc.includes('12th')) score = 75;
-    // 11th gen
-    else if (proc.includes('11') || proc.includes('11th')) score = 72;
-    // 10th gen
-    else if (proc.includes('10') || proc.includes('10th')) score = 68;
-    // Older gens
-    else if (proc.includes('9th') || proc.includes('9') || proc.includes('8th') || proc.includes('8')) score = 65;
-    else score = 60;
-  }
-  else if (proc.includes('i3')) {
-    // 14th/15th gen
-    if (proc.includes('14') || proc.includes('15') || proc.includes('14th') || proc.includes('15th')) score = 70;
-    // 13th gen
-    else if (proc.includes('13') || proc.includes('13th')) score = 68;
-    // 12th gen
-    else if (proc.includes('12') || proc.includes('12th')) score = 65;
-    // 11th gen
-    else if (proc.includes('11') || proc.includes('11th')) score = 62;
-    // 10th gen
-    else if (proc.includes('10') || proc.includes('10th')) score = 58;
-    // Older gens
-    else if (proc.includes('9th') || proc.includes('9') || proc.includes('8th') || proc.includes('8')) score = 55;
-    else score = 50;
-  }
-  
-  // AMD Ryzen
-  else if (proc.includes('ryzen 9')) {
-    // 8000 series
-    if (proc.includes('8') || proc.includes('8000')) score = 88;
-    // 7000 series
-    else if (proc.includes('7') || proc.includes('7000')) score = 85;
-    // 6000 series
-    else if (proc.includes('6') || proc.includes('6000')) score = 82;
-    // 5000 series
-    else if (proc.includes('5') || proc.includes('5000')) score = 80;
-    // 4000 series
-    else if (proc.includes('4') || proc.includes('4000')) score = 75;
-    // 3000 series
-    else if (proc.includes('3') || proc.includes('3000')) score = 70;
-    else score = 65;
-  }
-  else if (proc.includes('ryzen 7')) {
-    // 8000 series
-    if (proc.includes('8') || proc.includes('8000')) score = 85;
-    // 7000 series
-    else if (proc.includes('7') || proc.includes('7000')) score = 82;
-    // 6000 series
-    else if (proc.includes('6') || proc.includes('6000')) score = 78;
-    // 5000 series
-    else if (proc.includes('5') || proc.includes('5000')) score = 75;
-    // 4000 series
-    else if (proc.includes('4') || proc.includes('4000')) score = 70;
-    // 3000 series
-    else if (proc.includes('3') || proc.includes('3000')) score = 65;
-    else score = 60;
-  }
-  else if (proc.includes('ryzen 5')) {
-    // 8000 series
-    if (proc.includes('8') || proc.includes('8000')) score = 80;
-    // 7000 series
-    else if (proc.includes('7') || proc.includes('7000')) score = 78;
-    // 6000 series
-    else if (proc.includes('6') || proc.includes('6000')) score = 75;
-    // 5000 series
-    else if (proc.includes('5') || proc.includes('5000')) score = 72;
-    // 4000 series
-    else if (proc.includes('4') || proc.includes('4000')) score = 68;
-    // 3000 series
-    else if (proc.includes('3') || proc.includes('3000')) score = 65;
-    else score = 60;
-  }
-  else if (proc.includes('ryzen 3')) {
-    // 8000 series
-    if (proc.includes('8') || proc.includes('8000')) score = 70;
-    // 7000 series
-    else if (proc.includes('7') || proc.includes('7000')) score = 68;
-    // 6000 series
-    else if (proc.includes('6') || proc.includes('6000')) score = 65;
-    // 5000 series
-    else if (proc.includes('5') || proc.includes('5000')) score = 62;
-    // 4000 series
-    else if (proc.includes('4') || proc.includes('4000')) score = 58;
-    // 3000 series
-    else if (proc.includes('3') || proc.includes('3000')) score = 55;
-    else score = 50;
-  }
-  
-  // Budget processors
-  else if (proc.includes('pentium')) {
-    // Newer vs older Pentium
-    if (proc.includes('gold')) score = 45;
-    else if (proc.includes('silver')) score = 40;
-    else score = 35;
-  }
-  else if (proc.includes('celeron')) {
-    // Newer vs older Celeron
-    if (proc.includes('n5') || proc.includes('n6')) score = 35;
-    else if (proc.includes('n4')) score = 30;
-    else score = 25;
+  else if (proc.includes('ryzen') || proc.includes('amd')) {
+    score = calculateAMDScore(processor);
   }
   
   // HX models (high performance) get a boost
   if (proc.includes('hx')) {
     score += 5;
   }
-  
   // H models (high performance) get a small boost
   else if (proc.includes(' h') || proc.includes('-h')) {
     score += 3;
   }
   
-  // Generic fallbacks
+  // Generic fallbacks if no score was calculated
   if (score === 0) {
     if (proc.includes('amd')) {
       score = 50;
