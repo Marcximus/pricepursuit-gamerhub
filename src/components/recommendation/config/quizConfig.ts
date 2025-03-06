@@ -1,4 +1,3 @@
-
 // iOS-style emojis for different option types
 export const usageEmojis = [
   '🎓', // School/Education
@@ -63,16 +62,16 @@ export const storageEmojis = [
 
 // Question options
 export const usageOptions = [
-  'School/Education', 
-  'Business/Office Work', 
+  'School & Education', 
+  'Business & Office Work', 
   'Video Editing',
   'Photo Editing', 
-  'AI/Machine Learning', 
+  'AI & Machine Learning', 
   'Gaming', 
-  'Programming/Coding',
-  'Web Browsing/Everyday Use',
+  'Programming & Coding',
+  'Web Browsing & Everyday Use',
   'Content Creation',
-  '3D Modeling/CAD'
+  '3D Modeling & CAD'
 ];
 
 export const priceRangeOptions = [
