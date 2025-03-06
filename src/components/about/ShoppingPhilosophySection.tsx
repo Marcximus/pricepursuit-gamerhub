@@ -1,10 +1,7 @@
-
 import React from 'react';
 import { BookOpen, CheckCircle, ShieldCheck, HelpCircle } from 'lucide-react';
-
 const ShoppingPhilosophySection = () => {
-  return (
-    <div className="mb-16 bg-gray-50 rounded-xl p-8">
+  return <div className="mb-16 rounded-xl p-8 bg-rose-50">
       <div className="flex items-center justify-center mb-6">
         <BookOpen className="w-8 h-8 text-gaming-600 mr-2" />
         <h2 className="text-3xl font-bold text-gray-900">Our Laptop Shopping Philosophy 📘</h2>
@@ -43,8 +40,6 @@ const ShoppingPhilosophySection = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default ShoppingPhilosophySection;
