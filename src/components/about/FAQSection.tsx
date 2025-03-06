@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { HelpCircle, Laptop, Search, Compare, List } from 'lucide-react';
+import { HelpCircle, Laptop, Search, GitCompare, List } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   Accordion,
@@ -35,7 +34,7 @@ const FAQSection = () => {
       ]
     },
     {
-      icon: <Compare className="w-5 h-5 text-purple-500" />,
+      icon: <GitCompare className="w-5 h-5 text-purple-500" />,
       name: "Comparing Laptops",
       faqs: [
         {
