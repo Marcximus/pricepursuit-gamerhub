@@ -30,7 +30,7 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           <Link to="/" className="flex items-center space-x-2">
-            <Gamepad className="w-6 h-6 text-gaming-600" />
+            <Laptop className="w-6 h-6 text-gaming-600" />
             <span className="text-xl font-bold text-gaming-800">Laptop Hunter</span>
           </Link>
           
