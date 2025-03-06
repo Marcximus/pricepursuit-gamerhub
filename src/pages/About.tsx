@@ -1,8 +1,7 @@
-
 import React from 'react';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Laptop, Sparkles, Heart, Trophy, Users, Clock, Target, Coffee, GitCompare, Zap, Brain, User, WandSparkles } from 'lucide-react';
+import { ArrowRight, Laptop, Sparkles, Heart, Trophy, Users, Clock, Target, Coffee, GitCompare, Zap, Brain, User, WandSparkles, Award, CheckCircle, ShieldCheck, HelpCircle, MessageSquare, Share2, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const About = () => {
@@ -50,7 +49,7 @@ const About = () => {
           </div>
         </div>
 
-        {/* Personal Recommendation Section - NEW */}
+        {/* Personal Recommendation Section */}
         <div className="mb-16 bg-blue-50 rounded-xl p-8">
           <div className="flex items-center justify-center mb-6">
             <WandSparkles className="w-8 h-8 text-gaming-600 mr-2" />
@@ -141,6 +140,161 @@ const About = () => {
                 Compare Laptops Now <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </Link>
+          </div>
+        </div>
+
+        {/* Our Laptop Shopping Philosophy */}
+        <div className="mb-16 bg-gray-50 rounded-xl p-8">
+          <div className="flex items-center justify-center mb-6">
+            <BookOpen className="w-8 h-8 text-gaming-600 mr-2" />
+            <h2 className="text-3xl font-bold text-gray-900">Our Laptop Shopping Philosophy 📘</h2>
+          </div>
+          <div className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="mb-4">
+              At Laptop Hunter, we believe that the perfect laptop is out there for everyone—it's just a matter of finding it. Our philosophy is built on three key pillars:
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex justify-center mb-4">
+                  <CheckCircle className="w-8 h-8 text-gaming-600" />
+                </div>
+                <h3 className="text-xl font-bold text-center mb-3">Honest Information</h3>
+                <p className="text-gray-600 text-center">
+                  We prioritize transparency and accuracy above all. No paid promotions or hidden agendas—just clear, factual information.
+                </p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex justify-center mb-4">
+                  <ShieldCheck className="w-8 h-8 text-gaming-600" />
+                </div>
+                <h3 className="text-xl font-bold text-center mb-3">Buyer Protection</h3>
+                <p className="text-gray-600 text-center">
+                  We track prices to ensure you never overpay, and we only link to reputable retailers with solid return policies.
+                </p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex justify-center mb-4">
+                  <HelpCircle className="w-8 h-8 text-gaming-600" />
+                </div>
+                <h3 className="text-xl font-bold text-center mb-3">Simplified Tech</h3>
+                <p className="text-gray-600 text-center">
+                  We translate complex specifications into simple terms so you can make informed decisions without the tech jargon.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Who Our Service Is For */}
+        <div className="mb-16">
+          <div className="flex items-center justify-center mb-6">
+            <Users className="w-8 h-8 text-gaming-600 mr-2" />
+            <h2 className="text-3xl font-bold text-gray-900">Who Our Service Is For 👥</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center">
+              <h3 className="text-xl font-bold mb-3">Students 🎓</h3>
+              <p className="text-gray-600">
+                Find affordable, reliable laptops that'll survive four years of classes, research, and the occasional coffee spill.
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center">
+              <h3 className="text-xl font-bold mb-3">Professionals 💼</h3>
+              <p className="text-gray-600">
+                Discover high-performance machines that can handle your workload without breaking the bank.
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center">
+              <h3 className="text-xl font-bold mb-3">Gamers 🎮</h3>
+              <p className="text-gray-600">
+                Level up with laptops that deliver frame rates and graphics worthy of your gaming skills.
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center">
+              <h3 className="text-xl font-bold mb-3">Creatives 🎨</h3>
+              <p className="text-gray-600">
+                Edit, design, and create on laptops with the color accuracy and processing power your projects deserve.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* How We're Different From Other Laptop Sites */}
+        <div className="mb-16 bg-gaming-50 rounded-xl p-8">
+          <div className="flex items-center justify-center mb-6">
+            <Award className="w-8 h-8 text-gaming-600 mr-2" />
+            <h2 className="text-3xl font-bold text-gray-900">How We Compare to Other Laptop Sites 🏆</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full max-w-4xl mx-auto text-left border-collapse">
+              <thead>
+                <tr className="bg-gaming-100">
+                  <th className="p-4 border-b-2 border-gaming-200">Feature</th>
+                  <th className="p-4 border-b-2 border-gaming-200">Laptop Hunter</th>
+                  <th className="p-4 border-b-2 border-gaming-200">Other Laptop Sites</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="bg-white">
+                  <td className="p-4 border-b border-gaming-100 font-medium">Price Tracking</td>
+                  <td className="p-4 border-b border-gaming-100 text-gaming-600">✓ Real-time across multiple retailers</td>
+                  <td className="p-4 border-b border-gaming-100">Limited or single-source tracking</td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="p-4 border-b border-gaming-100 font-medium">Comparison Tool</td>
+                  <td className="p-4 border-b border-gaming-100 text-gaming-600">✓ Side-by-side with AI analysis</td>
+                  <td className="p-4 border-b border-gaming-100">Basic spec comparison only</td>
+                </tr>
+                <tr className="bg-white">
+                  <td className="p-4 border-b border-gaming-100 font-medium">AI Recommendation</td>
+                  <td className="p-4 border-b border-gaming-100 text-gaming-600">✓ Personalized to your specific needs</td>
+                  <td className="p-4 border-b border-gaming-100">Generic recommendations</td>
+                </tr>
+                <tr className="bg-gray-50">
+                  <td className="p-4 border-b border-gaming-100 font-medium">Spec Translation</td>
+                  <td className="p-4 border-b border-gaming-100 text-gaming-600">✓ Plain language explanations</td>
+                  <td className="p-4 border-b border-gaming-100">Technical jargon</td>
+                </tr>
+                <tr className="bg-white">
+                  <td className="p-4 font-medium">Affiliate Bias</td>
+                  <td className="p-4 text-gaming-600">✓ Transparent about partnerships</td>
+                  <td className="p-4">Often prioritize sponsored products</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Community and Support */}
+        <div className="mb-16">
+          <div className="flex items-center justify-center mb-6">
+            <MessageSquare className="w-8 h-8 text-gaming-600 mr-2" />
+            <h2 className="text-3xl font-bold text-gray-900">Community & Support 🤝</h2>
+          </div>
+          <div className="text-lg text-gray-600 max-w-3xl mx-auto text-center">
+            <p className="mb-6">
+              Laptop Hunter is more than just a tool—it's a community of tech enthusiasts, savvy shoppers, and helpful experts.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex justify-center mb-4">
+                  <Share2 className="w-8 h-8 text-gaming-600" />
+                </div>
+                <h3 className="text-xl font-bold mb-3 text-center">Share Your Findings</h3>
+                <p className="text-gray-600">
+                  Found the perfect laptop deal? Share it with friends and family directly from our site, or save your comparisons for later.
+                </p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex justify-center mb-4">
+                  <MessageSquare className="w-8 h-8 text-gaming-600" />
+                </div>
+                <h3 className="text-xl font-bold mb-3 text-center">Get Expert Advice</h3>
+                <p className="text-gray-600">
+                  Still have questions? Our AI assistant can help, or you can contact our team of laptop enthusiasts for personalized recommendations.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
