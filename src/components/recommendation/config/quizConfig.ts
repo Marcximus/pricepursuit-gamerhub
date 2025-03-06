@@ -33,12 +33,12 @@ export const brandEmojis = [
   '🔴', // Lenovo
   '🍎', // Apple
   '🔷', // ASUS
-  '🟢', // Acer
+  '🟢', // LG (swapped with Acer)
   '🐉', // MSI
   '🪟', // Microsoft Surface
   '📱', // Samsung
   '🐍', // Razer
-  '🌈', // LG
+  '🌈', // Acer (swapped with LG)
   '⚡', // Gigabyte
   '🔶', // Toshiba
 ];
@@ -95,12 +95,12 @@ export const brandOptions = [
   'Lenovo',
   'Apple',
   'ASUS',
-  'Acer',
+  'LG', // Swapped with Acer
   'MSI',
   'Microsoft Surface',
   'Samsung',
   'Razer',
-  'LG',
+  'Acer', // Swapped with LG
   'Gigabyte',
   'Toshiba'
 ];
