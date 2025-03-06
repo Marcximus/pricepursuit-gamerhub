@@ -25,7 +25,7 @@ const DifferenceSection = () => {
             We normalize tech specs across brands and models so you can compare laptops without the marketing jargon confusion.
           </p>
         </div>
-        <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center">
+        <div className="p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center bg-blue-50">
           <div className="flex justify-center mb-4">
             <Users className="w-8 h-8 text-gaming-600" />
           </div>
