@@ -28,11 +28,6 @@ export const normalizeProcessor = (processor: string): string => {
     .replace(/\s+/g, ' ')
     .trim();
     
-  // Fix duplicate processor names (prevent "Intel Core Intel Core")
-  normalized = normalized
-    .replace(/(intel\s+core\s+)(intel\s+core\s+)+/i, '$1')
-    .replace(/(amd\s+ryzen\s+)(amd\s+ryzen\s+)+/i, '$1');
-    
   // Standardize Intel Ultra naming
   normalized = normalized
     .replace(/intel\s+(?:core\s+)?ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i, 'Intel Core Ultra $1-$2')
@@ -75,11 +70,6 @@ export const normalizeProcessor = (processor: string): string => {
     .replace(/(\d+(?:\.\d+)?\s*GHz).*?(Pentium)/i, 'Intel Pentium $1')
     .replace(/(Celeron).*?(\d+(?:\.\d+)?\s*GHz)/i, 'Intel Celeron $2')
     .replace(/(Pentium).*?(\d+(?:\.\d+)?\s*GHz)/i, 'Intel Pentium $2');
-    
-  // Remove duplicate prefixes that might have been added by the replacements
-  normalized = normalized
-    .replace(/(Intel Core\s+)(Intel Core\s+)+/i, '$1')
-    .replace(/(AMD Ryzen\s+)(AMD Ryzen\s+)+/i, '$1');
     
   // Make sure spaces are normalized
   normalized = normalized.replace(/\s+/g, ' ').trim();
