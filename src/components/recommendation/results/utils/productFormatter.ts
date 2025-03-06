@@ -63,9 +63,9 @@ export const formatProductData = (
   // Map DeepSeek highlights to the format expected by the component
   // Assign appropriate icons based on content
   const defaultIcons = [
-    <Star className="h-4 w-4" key="star" />,
-    <Check className="h-4 w-4" key="check" />,
-    <Sparkle className="h-4 w-4" key="sparkle" />
+    React.createElement(Star, { className: "h-4 w-4", key: "star" }),
+    React.createElement(Check, { className: "h-4 w-4", key: "check" }),
+    React.createElement(Sparkle, { className: "h-4 w-4", key: "sparkle" })
   ];
   
   const formattedHighlights = (recommendation.highlights || []).map((text, index) => {
@@ -73,9 +73,9 @@ export const formatProductData = (
     
     // Assign more appropriate icons based on highlight content
     if (text.toLowerCase().includes('rating') || text.toLowerCase().includes('★') || text.toLowerCase().includes('star')) {
-      icon = <Star className="h-4 w-4" />;
+      icon = React.createElement(Star, { className: "h-4 w-4" });
     } else if (text.toLowerCase().includes('processor') || text.toLowerCase().includes('cpu') || text.toLowerCase().includes('performance')) {
-      icon = <Sparkle className="h-4 w-4" />;
+      icon = React.createElement(Sparkle, { className: "h-4 w-4" });
     }
     
     return {
