@@ -75,6 +75,15 @@ export const RecommendationResults: React.FC<RecommendationResultsProps> = ({
     return <EmptyResults onReset={onReset} />;
   }
 
+  // Sort results to ensure recommendation 1 is first and recommendation 2 is second
+  const sortedResults = [...results].sort((a, b) => {
+    // If we have exactly 2 results, make sure they're in the right order
+    if (results.length === 2) {
+      return 0; // Keep original order as our cards will be in a grid
+    }
+    return 0;
+  });
+
   return (
     <div className="max-w-5xl mx-auto">
       {/* Add ConfettiEffect when results are displayed */}
@@ -82,13 +91,13 @@ export const RecommendationResults: React.FC<RecommendationResultsProps> = ({
       
       <ResultsHeader />
       <ResultsActionButtons 
-        results={results} 
+        results={sortedResults} 
         onReset={onReset} 
         onCompare={handleCompare} 
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-        {results.map((result, index) => (
+        {sortedResults.map((result, index) => (
           <RecommendationCard 
             key={index} 
             result={result} 

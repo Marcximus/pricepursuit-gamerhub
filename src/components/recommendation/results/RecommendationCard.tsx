@@ -26,18 +26,20 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
 
   return (
     <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-      <ProductHeader 
-        title={productData.title}
-        productUrl={productData.productUrl}
-        index={productData.index}
-      />
-      
-      <ProductImage 
-        imageUrl={productData.imageUrl}
-        altText={productData.title}
-        fallbackText={result.recommendation.model}
-        url={productData.productUrl}
-      />
+      <div className="relative">
+        <ProductHeader 
+          title={productData.title}
+          productUrl={productData.productUrl}
+          index={index}
+        />
+        
+        <ProductImage 
+          imageUrl={productData.imageUrl}
+          altText={productData.title}
+          fallbackText={result.recommendation.model}
+          url={productData.productUrl}
+        />
+      </div>
       
       <CardContent className="p-6 flex flex-col flex-grow">
         <div className="h-16">

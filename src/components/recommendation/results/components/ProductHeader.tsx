@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Cpu, Zap } from 'lucide-react';
 
 interface ProductHeaderProps {
   title: string;
@@ -8,15 +7,16 @@ interface ProductHeaderProps {
   index: number;
 }
 
-export const ProductHeader: React.FC<ProductHeaderProps> = ({ title, productUrl, index }) => {
+export const ProductHeader: React.FC<ProductHeaderProps> = ({ 
+  title, 
+  productUrl,
+  index
+}) => {
   return (
-    <div className="relative mb-2">
-      <div className="absolute -top-3 left-4">
-        <div className="bg-green-100 text-green-700 px-3 py-1 rounded-b-md z-10 flex items-center gap-1.5 shadow-sm animate-pulse">
-          {index === 0 ? <Cpu className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
-          <span className="font-medium text-sm">Recommendation {index + 1}</span>
-        </div>
-      </div>
+    <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-4 text-white relative z-10">
+      <h3 className="text-lg font-semibold">
+        Recommendation {index + 1}
+      </h3>
     </div>
   );
 };
