@@ -25,7 +25,7 @@ const ServiceAudienceSection = () => {
             Level up with laptops that deliver frame rates and graphics worthy of your gaming skills.
           </p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center">
+        <div className="p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center bg-yellow-50">
           <h3 className="text-xl font-bold mb-3">Creatives 🎨</h3>
           <p className="text-gray-600">
             Edit, design, and create on laptops with the color accuracy and processing power your projects deserve.
