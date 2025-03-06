@@ -1,6 +1,10 @@
 
-import { calculateProcessorScore } from "./index";
 import type { Product } from "@/types/product";
+
+// Import processor scoring modules
+import { calculateIntelScore } from "./processors/intelProcessorScore";
+import { calculateAppleScore } from "./processors/appleProcessorScore";
+import { calculateAMDScore } from "./processors/amdProcessorScore";
 
 /**
  * Calculate processor score component of the benchmark
@@ -12,26 +16,58 @@ export function calculateProcessorScoreComponent(laptop: Product): number {
   if (laptop.processor_score) {
     score = laptop.processor_score * 0.35;
   } else if (laptop.processor) {
-    // Prioritize Ultra processors for higher scoring
-    const processor = laptop.processor.toLowerCase();
-    
-    if (processor.includes('ultra')) {
-      // Special case for Intel Core Ultra processors
-      if (processor.includes('ultra 9')) {
-        score = 95 * 0.35;
-      } else if (processor.includes('ultra 7')) {
-        score = 93 * 0.35; 
-      } else if (processor.includes('ultra 5')) {
-        score = 91 * 0.35;
-      } else {
-        score = 90 * 0.35; // Generic Ultra
-      }
-    } else {
-      // Calculate processor score for non-Ultra processors
-      const processorScore = calculateProcessorScore(laptop.processor);
-      score = processorScore * 0.35;
-    }
+    // Calculate processor score for the processor
+    const processorScore = calculateProcessorScore(laptop.processor);
+    score = processorScore * 0.35;
   }
   
   return score;
+}
+
+/**
+ * Calculate a processor score based on common naming patterns
+ */
+export function calculateProcessorScore(processor: string): number {
+  if (!processor) return 40;
+  
+  const proc = processor.toLowerCase();
+  let score = 0;
+  
+  // Try each processor type calculator
+  if (proc.includes('intel') || proc.includes('i3') || proc.includes('i5') || 
+      proc.includes('i7') || proc.includes('i9') || proc.includes('pentium') || 
+      proc.includes('celeron') || proc.includes('ultra')) {
+    score = calculateIntelScore(processor);
+  }
+  else if (proc.includes('m1') || proc.includes('m2') || proc.includes('m3')) {
+    score = calculateAppleScore(processor);
+  }
+  else if (proc.includes('ryzen') || proc.includes('amd')) {
+    score = calculateAMDScore(processor);
+  }
+  
+  // HX models (high performance) get a boost
+  if (proc.includes('hx')) {
+    score += 5;
+  }
+  // H models (high performance) get a small boost
+  else if (proc.includes(' h') || proc.includes('-h')) {
+    score += 3;
+  }
+  
+  // Generic fallbacks if no score was calculated
+  if (score === 0) {
+    if (proc.includes('amd')) {
+      score = 50;
+    }
+    else if (proc.includes('intel')) {
+      score = 50;
+    }
+    else {
+      score = 40; // Unknown processor
+    }
+  }
+  
+  // Cap at 100
+  return Math.min(100, score);
 }

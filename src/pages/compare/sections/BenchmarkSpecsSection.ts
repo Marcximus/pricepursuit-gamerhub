@@ -1,6 +1,7 @@
 import type { Product } from "@/types/product";
 import type { ComparisonSection } from "../types";
 import { calculateBenchmarkScore } from "../utils/benchmarkCalculator";
+import { calculateProcessorScore } from "../utils/benchmark/processorScore";
 
 export const getBenchmarkSpecs = (
   laptopLeft: Product | null, 
@@ -63,10 +64,10 @@ export const getBenchmarkSpecs = (
     {
       title: "Processor Score",
       leftValue: laptopLeft && laptopLeft.processor 
-                ? formatProcessorScore(laptopLeft.processor_score || calculateBenchmarkScore.calculateProcessorScore(laptopLeft.processor))
+                ? formatProcessorScore(laptopLeft.processor_score || calculateProcessorScore(laptopLeft.processor))
                 : 'N/A',
       rightValue: laptopRight && laptopRight.processor 
-                ? formatProcessorScore(laptopRight.processor_score || calculateBenchmarkScore.calculateProcessorScore(laptopRight.processor))
+                ? formatProcessorScore(laptopRight.processor_score || calculateProcessorScore(laptopRight.processor))
                 : 'N/A',
       compare: compareScores
     }
