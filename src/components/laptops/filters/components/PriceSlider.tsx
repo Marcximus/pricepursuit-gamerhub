@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Slider } from "@/components/ui/slider";
 
@@ -49,7 +48,7 @@ export function PriceSlider({
   };
 
   return (
-    <div className="pt-2">
+    <div className="pt-0">
       <Slider
         defaultValue={[localMin, localMax]}
         value={[localMin, Math.min(localMax, currentMaxPrice)]}
@@ -60,7 +59,7 @@ export function PriceSlider({
         onValueCommit={onSliderCommit}
         showTicks={true}
         tickLabels={generateTickLabels()}
-        className="my-5"
+        className="my-3"
       />
     </div>
   );
