@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { useAutoRefreshManager } from './AutoRefreshManager';
 import { useAutoUpdateManager } from './AutoUpdateManager';
-import { formatElapsedTime, formatTimeUntilNextUpdate } from './utils/updateTimer';
 
 interface UpdateProcessManagerProps {
   updateLaptops: () => Promise<any>;
@@ -128,6 +127,18 @@ export const useUpdateProcessManager = ({
 
   // Get descriptive status text
   const getDescription = (elapsedTime: number, timeUntilNextUpdate: number) => {
+    const formatElapsedTime = (seconds: number) => {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    };
+    
+    const formatTimeUntilNextUpdate = (seconds: number) => {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    };
+    
     if (isUpdating && updateCount > 0) {
       return `Currently updating ${updateCount} laptops in batches of 20. Process has been running for ${formatElapsedTime(elapsedTime)}. Updates prioritize oldest check date, missing prices and images.`;
     }
