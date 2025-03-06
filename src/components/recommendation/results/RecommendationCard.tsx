@@ -25,7 +25,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
   const productData = formatProductData(result, index);
 
   return (
-    <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+    <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
       <ProductHeader 
         title={productData.title}
         productUrl={productData.productUrl}
@@ -39,37 +39,49 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
         url={productData.productUrl}
       />
       
-      <CardContent className="p-6">
-        <ProductTitle 
-          title={productData.title}
-          url={productData.productUrl}
-        />
-        
-        {result.product && (
-          <ProductRating 
-            rating={productData.rating}
-            ratingCount={productData.ratingCount}
-            isPrime={productData.isPrime}
+      <CardContent className="p-6 flex flex-col flex-grow">
+        <div className="h-16">
+          <ProductTitle 
+            title={productData.title}
             url={productData.productUrl}
           />
-        )}
+        </div>
         
-        <ProductPrice 
-          currentPrice={productData.currentPrice}
-          originalPrice={productData.originalPrice}
-          discountPercentage={productData.discountPercentage}
-          deliveryInfo={productData.deliveryInfo}
-          url={productData.productUrl}
-        />
+        <div className="h-10">
+          {result.product && (
+            <ProductRating 
+              rating={productData.rating}
+              ratingCount={productData.ratingCount}
+              isPrime={productData.isPrime}
+              url={productData.productUrl}
+            />
+          )}
+        </div>
         
-        <ProductHighlights highlights={productData.highlights} />
+        <div className="h-20">
+          <ProductPrice 
+            currentPrice={productData.currentPrice}
+            originalPrice={productData.originalPrice}
+            discountPercentage={productData.discountPercentage}
+            deliveryInfo={productData.deliveryInfo}
+            url={productData.productUrl}
+          />
+        </div>
         
-        <ProductReason reason={productData.reason} />
+        <div className="min-h-32 mb-4">
+          <ProductHighlights highlights={productData.highlights} />
+        </div>
         
-        <ProductActions 
-          productUrl={result.product?.product_url}
-          searchQuery={productData.searchQuery}
-        />
+        <div className="min-h-36 mb-6">
+          <ProductReason reason={productData.reason} />
+        </div>
+        
+        <div className="mt-auto">
+          <ProductActions 
+            productUrl={result.product?.product_url}
+            searchQuery={productData.searchQuery}
+          />
+        </div>
       </CardContent>
     </Card>
   );
