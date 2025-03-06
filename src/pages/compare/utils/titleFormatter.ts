@@ -28,7 +28,7 @@ export const formatLaptopDisplayTitle = (laptop: Product | null): string => {
   const specs: string[] = [];
   
   // Add processor if available
-  if (laptop.processor && laptop.processor !== 'Not specified') {
+  if (laptop.processor) {
     // Simplify processor name by extracting key parts
     const processorMatch = laptop.processor.match(/(i[3579]-\d{4,5}[A-Z]*|Ryzen\s+[3579]\s+\d{4}[A-Z]*|M[123]\s+(Pro|Max|Ultra)?)/i);
     if (processorMatch) {
@@ -42,12 +42,12 @@ export const formatLaptopDisplayTitle = (laptop: Product | null): string => {
   }
   
   // Add RAM if available
-  if (laptop.ram && laptop.ram !== 'Not specified') {
+  if (laptop.ram) {
     specs.push(laptop.ram);
   }
   
   // Add screen size if available
-  if (laptop.screen_size && laptop.screen_size !== 'Not specified') {
+  if (laptop.screen_size) {
     specs.push(laptop.screen_size);
   }
   
@@ -55,7 +55,7 @@ export const formatLaptopDisplayTitle = (laptop: Product | null): string => {
   let displayTitle = brand;
   
   // If model is available and not the same as brand or not just a single character
-  if (model && model !== brand && model.length > 1 && model !== 'Unknown Model') {
+  if (model && model !== brand && model.length > 1) {
     // If model is very long (like LG models), try to shorten it
     if (model.length > 12 && !model.includes(' ')) {
       // For long model numbers like "LG17Z90NRAAC8U1", display first 8 chars
@@ -73,20 +73,9 @@ export const formatLaptopDisplayTitle = (laptop: Product | null): string => {
     }
   }
   
-  // If we still don't have a good title and have the full title, use a portion of it
-  if ((displayTitle === brand || displayTitle === 'Unknown') && laptop.title) {
-    // Use the first 30 characters of the title followed by ellipsis
-    const shortTitle = laptop.title.substring(0, 40) + (laptop.title.length > 40 ? '...' : '');
-    displayTitle = shortTitle;
-  }
-  
   // Add key specs if available and the title isn't too long yet
-  if (specs.length > 0 && specs.some(spec => spec !== 'Not specified')) {
-    // Filter out any "Not specified" values
-    const validSpecs = specs.filter(spec => spec !== 'Not specified');
-    if (validSpecs.length > 0) {
-      displayTitle += ` (${validSpecs.join(', ')})`;
-    }
+  if (specs.length > 0) {
+    displayTitle += ` (${specs.join(', ')})`;
   }
   
   return displayTitle;

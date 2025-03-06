@@ -48,34 +48,12 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
         // Extract product title components for better data
         const title = recProduct.product_title || '';
         
-        // Determine the brand from the processor or title
-        let brand = recProduct.processor?.split(' ')[0] || '';
-        if (!brand && title) {
-          // Try to extract brand from title
-          const commonBrands = ['Apple', 'Dell', 'HP', 'Lenovo', 'Asus', 'Acer', 'Microsoft', 'Samsung', 'LG', 'MSI', 'Razer'];
-          for (const possibleBrand of commonBrands) {
-            if (title.includes(possibleBrand)) {
-              brand = possibleBrand;
-              break;
-            }
-          }
-        }
-        
-        // Extract model from title if available
-        let model = '';
-        if (title && brand) {
-          // Remove brand from title to get model
-          model = title.replace(brand, '').trim();
-          // Take just first few words as model
-          model = model.split(' ').slice(0, 3).join(' ');
-        }
-        
         // Create the global product with more complete information
         const globalProduct = {
           id: recProduct.asin,
           title: recProduct.product_title || 'Unknown Product',
-          brand: brand || 'Unknown',
-          model: model || 'Unknown Model',
+          brand: recProduct.processor?.split(' ')[0] || 'Unknown',
+          model: recProduct.product_title?.split(' ').slice(1, 3).join(' ') || 'Unknown Model',
           current_price: recProduct.product_price,
           original_price: recProduct.product_original_price || recProduct.product_price,
           rating: recProduct.product_star_rating || 0,
