@@ -13,7 +13,7 @@ const ServiceAudienceSection = () => {
             Find affordable, reliable laptops that'll survive four years of classes, research, and the occasional coffee spill.
           </p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center">
+        <div className="p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center bg-emerald-50">
           <h3 className="text-xl font-bold mb-3">Professionals 💼</h3>
           <p className="text-gray-600">
             Discover high-performance machines that can handle your workload without breaking the bank.
