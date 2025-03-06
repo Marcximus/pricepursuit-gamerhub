@@ -79,6 +79,11 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Add gaming color palette
+        gaming: {
+          600: "#4F46E5", // Indigo-600 as a placeholder, adjust as needed
+          800: "#3730A3", // Indigo-800 as a placeholder, adjust as needed
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
