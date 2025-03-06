@@ -20,7 +20,7 @@ const MissionSection = () => {
           options={{
             particleCount: 100,
             spread: 70,
-            colors: ['#4B5563', '#1F2937', '#60A5FA', '#34D399', '#FBBF24']
+            colors: ['#8B5CF6', '#D946EF', '#F97316', '#0EA5E9', '#1EAEDB', '#33C3F0']
           }}
         >
           <Sparkles className="h-4 w-4" /> Celebrate Our Mission! <Sparkles className="h-4 w-4" />
