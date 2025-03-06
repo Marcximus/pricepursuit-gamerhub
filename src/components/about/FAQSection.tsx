@@ -94,7 +94,7 @@ const FAQSection = () => {
   return <div className="rounded-xl p-8 mb-16 mt-16 bg-slate-600">
       <div className="flex items-center justify-center mb-8">
         <HelpCircle className="w-8 h-8 text-gaming-600 mr-2" />
-        <h2 className="text-3xl font-bold text-gray-900">Frequently Asked Questions 🤔</h2>
+        <h2 className="text-3xl font-bold text-slate-50">Frequently Asked Questions 🤔</h2>
       </div>
       
       <div className="max-w-3xl mx-auto">
