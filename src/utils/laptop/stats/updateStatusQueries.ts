@@ -70,7 +70,7 @@ export async function getInProgressUpdateLaptopsCount(): Promise<StatsCountResul
     .from('products')
     .select('*', { count: 'exact', head: true })
     .eq('is_laptop', true)
-    .eq('update_status', 'pending_update');
+    .in('update_status', ['pending_update', 'in_progress']);
   
   if (error) {
     console.error('Error fetching in-progress update count:', error);
@@ -88,7 +88,7 @@ export async function getCompletedUpdateLaptopsCount(): Promise<StatsCountResult
     .from('products')
     .select('*', { count: 'exact', head: true })
     .eq('is_laptop', true)
-    .eq('update_status', 'complete');
+    .eq('update_status', 'completed');
   
   if (error) {
     console.error('Error fetching completed update count:', error);
@@ -106,7 +106,7 @@ export async function getErrorUpdateLaptopsCount(): Promise<StatsCountResult> {
     .from('products')
     .select('*', { count: 'exact', head: true })
     .eq('is_laptop', true)
-    .eq('update_status', 'error');
+    .in('update_status', ['error', 'timeout']);
   
   if (error) {
     console.error('Error fetching error update count:', error);
@@ -163,25 +163,63 @@ export async function getUpdatedLast7DaysCount(): Promise<StatsCountResult> {
  */
 export async function resetStalePendingUpdates(): Promise<void> {
   try {
-    // Consider updates stuck if they've been in pending_update status for more than 30 minutes
+    console.log('Starting to reset stale update statuses...');
+    
+    // Consider updates stuck if they've been in intermediate status for more than 30 minutes
     const thirtyMinutesAgo = new Date();
     thirtyMinutesAgo.setMinutes(thirtyMinutesAgo.getMinutes() - 30);
     
-    const { error } = await supabase
+    // First, check how many are stuck
+    const { count, error: countError } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_laptop', true)
+      .in('update_status', ['pending_update', 'in_progress'])
+      .lt('last_checked', thirtyMinutesAgo.toISOString());
+      
+    if (countError) {
+      console.error('Error counting stale updates:', countError);
+      return;
+    }
+    
+    console.log(`Found ${count || 0} laptops stuck in intermediate update states for more than 30 minutes`);
+    
+    // Reset pending_update and in_progress statuses that have been stuck
+    const { error: pendingUpdateError } = await supabase
       .from('products')
       .update({ 
         update_status: 'pending',
         last_checked: new Date().toISOString()
       })
       .eq('is_laptop', true)
-      .eq('update_status', 'pending_update')
+      .in('update_status', ['pending_update', 'in_progress'])
       .lt('last_checked', thirtyMinutesAgo.toISOString());
     
-    if (error) {
-      console.error('Error resetting stale pending updates:', error);
-    } else {
-      console.log('Successfully reset stale pending updates');
+    if (pendingUpdateError) {
+      console.error('Error resetting stale pending updates:', pendingUpdateError);
+      return;
     }
+
+    // Also reset any stuck error or timeout laptops that haven't been retried in over 12 hours
+    const twelveHoursAgo = new Date();
+    twelveHoursAgo.setHours(twelveHoursAgo.getHours() - 12);
+    
+    const { error: errorResetError } = await supabase
+      .from('products')
+      .update({ 
+        update_status: 'pending',
+        last_checked: new Date().toISOString()
+      })
+      .eq('is_laptop', true)
+      .in('update_status', ['error', 'timeout'])
+      .lt('last_checked', twelveHoursAgo.toISOString());
+      
+    if (errorResetError) {
+      console.error('Error resetting stale error statuses:', errorResetError);
+      return;
+    }
+    
+    console.log('Successfully reset all stale update statuses');
   } catch (err) {
     console.error('Exception during stale updates reset:', err);
   }

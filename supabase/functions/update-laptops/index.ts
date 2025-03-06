@@ -28,6 +28,14 @@ serve(async (req) => {
     console.log(`Received request to update ${laptops.length} laptops`);
     console.log(`First 5 laptops: ${laptops.slice(0, 5).map(l => l.asin).join(', ')}`);
     console.log(`Last 5 laptops: ${laptops.slice(-5).map(l => l.asin).join(', ')}`);
+    
+    // Log status distribution
+    const statusCounts = laptops.reduce((acc, laptop) => {
+      const status = laptop.update_status || 'null';
+      acc[status] = (acc[status] || 0) + 1;
+      return acc;
+    }, {});
+    console.log("Status distribution of incoming laptops:", statusCounts);
 
     // Increase parallelism based on laptop count
     // For large batches, process fewer in parallel to avoid timeouts

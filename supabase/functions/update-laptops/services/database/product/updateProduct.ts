@@ -89,10 +89,18 @@ export async function updateProductInDatabase(
     // Apply updates to database
     const updateSuccess = await applyProductUpdates(supabase, laptop.id, updates);
     
-    // If no changes, just update status
-    if (!updateSuccess && Object.keys(updates).length <= 2) {
+    // Set status to completed if update succeeded
+    if (updateSuccess) {
       await updateProductStatus(supabase, laptop.id, 'completed');
-      console.log(`No updates needed for product ${laptop.asin}`);
+      console.log(`Product ${laptop.asin} successfully updated and marked as completed`);
+    } else if (Object.keys(updates).length <= 2) {
+      // If no changes but process completed successfully, still mark as completed
+      await updateProductStatus(supabase, laptop.id, 'completed');
+      console.log(`No updates needed for product ${laptop.asin}, marked as completed`);
+    } else {
+      // Mark as error if updates failed
+      await updateProductStatus(supabase, laptop.id, 'error');
+      console.log(`Failed to update product ${laptop.asin}, marked as error`);
     }
     
     return { 

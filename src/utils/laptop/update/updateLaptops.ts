@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { processChunksSequentially } from "./chunkProcessor";
 import { applyAllProductFilters } from "../productFilters";
@@ -6,14 +7,15 @@ export const updateLaptops = async () => {
   try {
     console.log('Starting update for ALL laptops...');
     
-    // Get ALL laptops with priority for those that haven't been updated in the longest time
-    // or missing important data like price or image_url
+    // Modified query: Include laptops with ANY status except "completed"
+    // This ensures we retry laptops stuck in pending_update, error, timeout states
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
       .select('id, asin, current_price, title, last_checked, image_url, update_status')
       .eq('is_laptop', true)
+      .not('update_status', 'eq', 'completed') // Only exclude completed laptops
       .order('last_checked', { nullsFirst: true }) // Prioritize laptops that have never been checked
-      .limit(500); // Increased limit to process more laptops (from 300 to 500)
+      .limit(500); // Maintained limit of 500
 
     if (fetchError) {
       console.error('Error fetching laptops:', fetchError);
@@ -26,6 +28,10 @@ export const updateLaptops = async () => {
     }
 
     console.log(`Fetched ${laptops.length} laptops to update`);
+    console.log('Status distribution:', laptops.reduce((acc, laptop) => {
+      acc[laptop.update_status || 'null'] = (acc[laptop.update_status || 'null'] || 0) + 1;
+      return acc;
+    }, {}));
 
     // Filter out any obviously non-laptop products using filters
     const filteredLaptops = applyAllProductFilters(laptops);
@@ -39,6 +45,13 @@ export const updateLaptops = async () => {
 
     // Prioritize laptops with missing prices or images, but still keep all laptops in the queue
     const prioritizedLaptops = [...filteredLaptops].sort((a, b) => {
+      // Priority 0: Error or stuck states get highest priority
+      const errorStates = ['error', 'timeout', 'pending_update'];
+      const aIsError = errorStates.includes(a.update_status || '');
+      const bIsError = errorStates.includes(b.update_status || '');
+      if (aIsError && !bIsError) return -1;
+      if (!aIsError && bIsError) return 1;
+      
       // Priority 1: Missing price (null price)
       if (a.current_price === null && b.current_price !== null) return -1;
       if (a.current_price !== null && b.current_price === null) return 1;
@@ -107,8 +120,12 @@ function logPriorityDistribution(formattedLaptops) {
   ).slice(0, 10);
   const nullPriceLaptops = formattedLaptops.filter(l => l.current_price === null);
   const noImageLaptops = formattedLaptops.filter(l => !l.image_url);
+  const errorStatusLaptops = formattedLaptops.filter(l => ['error', 'timeout'].includes(l.update_status || ''));
+  const pendingUpdateLaptops = formattedLaptops.filter(l => l.update_status === 'pending_update');
   
   console.log('Laptop update priority distribution:');
+  console.log(`- Error/timeout status: ${errorStatusLaptops.length} laptops`);
+  console.log(`- Stuck in pending_update: ${pendingUpdateLaptops.length} laptops`);
   console.log(`- Never checked: ${neverCheckedLaptops.length} laptops`);
   console.log(`- Missing prices: ${nullPriceLaptops.length} laptops`);
   console.log(`- Missing images: ${noImageLaptops.length} laptops`);

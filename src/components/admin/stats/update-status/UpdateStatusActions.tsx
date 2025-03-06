@@ -16,10 +16,8 @@ export function UpdateStatusActions({ stats, refreshStats }: UpdateStatusActions
   const [isResetting, setIsResetting] = useState<boolean>(false);
   const { toast } = useToast();
 
-  // Check for stuck updates
-  const hasStuckUpdates = stats.updateStatus.inProgress.count > 0 && 
-                          stats.updateStatus.completed.count === 0 && 
-                          stats.updateStatus.updatedLast24h.count === 0;
+  // Check for stuck updates - now consider ANY in-progress items for more visibility
+  const hasStuckUpdates = stats.updateStatus.inProgress.count > 0;
 
   // Handle manual refresh click
   const handleRefresh = async () => {
@@ -54,7 +52,7 @@ export function UpdateStatusActions({ stats, refreshStats }: UpdateStatusActions
         await resetStalePendingUpdates();
         toast({
           title: "Reset Completed",
-          description: "Stuck updates have been reset",
+          description: "Stuck updates have been reset and will be retried in the next update cycle",
         });
         
         // Refresh stats after reset
@@ -76,18 +74,18 @@ export function UpdateStatusActions({ stats, refreshStats }: UpdateStatusActions
 
   return (
     <div className="flex space-x-2">
-      {hasStuckUpdates && (
-        <Button 
-          variant="destructive" 
-          size="sm" 
-          onClick={handleResetStuckUpdates} 
-          disabled={isResetting}
-          className="text-xs"
-        >
-          <AlertCircle className={`h-3 w-3 mr-1 ${isResetting ? 'animate-spin' : ''}`} />
-          {isResetting ? 'Resetting...' : 'Reset Stuck Updates'}
-        </Button>
-      )}
+      {/* Always show the reset button */}
+      <Button 
+        variant={hasStuckUpdates ? "destructive" : "outline"} 
+        size="sm" 
+        onClick={handleResetStuckUpdates} 
+        disabled={isResetting}
+        className="text-xs"
+      >
+        <AlertCircle className={`h-3 w-3 mr-1 ${isResetting ? 'animate-spin' : ''}`} />
+        {isResetting ? 'Resetting...' : hasStuckUpdates ? 'Reset Stuck Updates' : 'Reset Any Stuck Updates'}
+      </Button>
+      
       <Button 
         variant="outline" 
         size="sm" 
