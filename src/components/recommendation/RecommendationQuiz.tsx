@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { QuizQuestion } from './QuizQuestion';
@@ -96,7 +97,7 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
                 customMaxPrice={answers.customMaxPrice || 1500}
                 onSelect={(value) => handleOptionSelect('priceRange', value)}
                 onRangeChange={handlePriceRangeChange}
-                autoAdvance={false} // Disabled auto-advance for price range to ensure proper navigation
+                autoAdvance={true} // Enable auto-advance for price range
                 onAdvance={handleNext}
               />
             )}
@@ -164,6 +165,6 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
       />
     </div>
   );
-};
+}
 
 export default RecommendationQuiz;
