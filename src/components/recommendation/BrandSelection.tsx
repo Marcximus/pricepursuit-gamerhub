@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import Image from '@/components/ui/image';
@@ -33,7 +34,7 @@ export const BrandSelection: React.FC<BrandSelectionProps> = ({
         >
           <div className="flex items-center">
             <div className="w-6 h-6 mr-2 flex-shrink-0 flex items-center justify-center">
-              <span role="img" aria-label="Globe" className="text-lg">🌎</span>
+              <span role="img" aria-label="Globe" className="text-lg">🌐</span>
             </div>
             <span className="font-medium">No preference</span>
           </div>
