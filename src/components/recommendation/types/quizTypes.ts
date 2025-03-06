@@ -24,6 +24,7 @@ export interface Recommendation {
   };
   reason: string;
   usage?: string;
+  highlights?: string[];
 }
 
 export interface Product {
