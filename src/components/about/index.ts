@@ -10,6 +10,7 @@ export { default as ComparisonTableSection } from './ComparisonTableSection';
 export { default as CommunitySection } from './CommunitySection';
 export { default as DifferenceSection } from './DifferenceSection';
 export { default as FunFactsSection } from './FunFactsSection';
+export { default as ContactSection } from './ContactSection';
 export { default as FAQSection } from './FAQSection';
 export { default as LegalSection } from './LegalSection';
 export { default as CtaSection } from './CtaSection';

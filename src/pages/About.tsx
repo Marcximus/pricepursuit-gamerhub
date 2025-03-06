@@ -13,6 +13,7 @@ import {
   CommunitySection,
   DifferenceSection,
   FunFactsSection,
+  ContactSection,
   FAQSection,
   LegalSection,
   CtaSection,
@@ -36,6 +37,7 @@ const About = () => {
         <CommunitySection />
         <DifferenceSection />
         <FunFactsSection />
+        <ContactSection />
         <FAQSection />
         <LegalSection />
         <CtaSection />
