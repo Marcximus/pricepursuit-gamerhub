@@ -37,8 +37,10 @@ export const PriceRangeQuestion: React.FC<PriceRangeQuestionProps> = ({
         customMinPrice && 
         customMaxPrice) {
       const timer = setTimeout(() => {
-        // Auto-advance after the slider has been used
-        if (customMinPrice !== 500 || customMaxPrice !== 1500) {
+        // Auto-advance after the slider has been used AND values have been changed
+        // This prevents auto-advancing immediately after selecting "Custom Range"
+        if ((customMinPrice !== 500 || customMaxPrice !== 1500) && 
+            selectedOptionStr === 'Custom Range') {
           onAdvance();
         }
       }, 1000); // Give user 1 second after changing range
