@@ -32,7 +32,7 @@ const Navigation = () => {
           <Link to="/" className="flex items-center space-x-2">
             <div className="flex items-center">
               <Laptop className="w-6 h-6 text-gaming-600" />
-              <Crosshair className="w-5 h-5 text-gaming-600 -ml-1" />
+              <Crosshair className="w-6 h-6 text-red-600 -ml-3" />
             </div>
             <span className="text-xl font-bold text-gaming-800">Laptop Hunter</span>
           </Link>
