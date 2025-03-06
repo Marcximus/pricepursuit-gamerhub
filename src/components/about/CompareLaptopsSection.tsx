@@ -1,12 +1,9 @@
-
 import React from 'react';
 import { GitCompare, Zap, Brain, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-
 const CompareLaptopsSection = () => {
-  return (
-    <div className="mb-16 bg-gaming-50 rounded-xl p-8">
+  return <div className="mb-16 bg-gaming-50 rounded-xl p-8 bg-green-50">
       <div className="flex items-center justify-center mb-6">
         <GitCompare className="w-8 h-8 text-gaming-600 mr-2" />
         <h2 className="text-3xl font-bold text-gray-900">Find the Best Laptop 🔍</h2>
@@ -50,8 +47,6 @@ const CompareLaptopsSection = () => {
           </Button>
         </Link>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default CompareLaptopsSection;
