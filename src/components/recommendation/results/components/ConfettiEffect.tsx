@@ -5,7 +5,7 @@ import confetti from 'canvas-confetti';
 export const ConfettiEffect: React.FC = () => {
   useEffect(() => {
     const fireSideConfetti = () => {
-      const end = Date.now() + 3 * 1000; // 3 seconds
+      const end = Date.now() + 7 * 1000; // Changed from 3 to 7 seconds (4 seconds longer)
       const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
 
       const frame = () => {
