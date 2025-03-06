@@ -18,7 +18,7 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
   const canCompare = results.length >= 2 && results[0].product && results[1].product;
   
   return (
-    <div className="flex justify-center mb-6 space-x-4">
+    <div className="flex justify-center mb-10 mt-6 space-x-4">
       <Button 
         variant="outline" 
         onClick={onReset}
