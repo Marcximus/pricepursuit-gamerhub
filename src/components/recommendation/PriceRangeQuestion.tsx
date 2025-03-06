@@ -29,25 +29,20 @@ export const PriceRangeQuestion: React.FC<PriceRangeQuestionProps> = ({
     ? `Custom: USD ${selectedOption[0]} - ${selectedOption[1]}` 
     : selectedOption;
 
-  // Add effect to advance when custom range is set
+  // Add effect to advance for normal options, but NOT for Custom Range
   useEffect(() => {
     if (autoAdvance && 
         onAdvance && 
-        selectedOptionStr === 'Custom Range' && 
-        customMinPrice && 
-        customMaxPrice) {
+        selectedOptionStr !== 'Custom Range' && 
+        !selectedOptionStr.startsWith('Custom:')) {
+      // Only auto-advance for preset price ranges, not for custom range
       const timer = setTimeout(() => {
-        // Auto-advance after the slider has been used AND values have been changed
-        // This prevents auto-advancing immediately after selecting "Custom Range"
-        if ((customMinPrice !== 500 || customMaxPrice !== 1500) && 
-            selectedOptionStr === 'Custom Range') {
-          onAdvance();
-        }
-      }, 1000); // Give user 1 second after changing range
+        onAdvance();
+      }, 300);
       
       return () => clearTimeout(timer);
     }
-  }, [customMinPrice, customMaxPrice, selectedOptionStr, autoAdvance, onAdvance]);
+  }, [selectedOptionStr, autoAdvance, onAdvance]);
 
   return (
     <>

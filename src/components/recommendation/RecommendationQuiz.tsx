@@ -56,6 +56,11 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
     
     // Don't auto-advance on the last question
     if (currentQuestion < totalQuestions - 1) {
+      // Special case: For price range, don't auto-advance if selecting "Custom Range"
+      if (question === 'priceRange' && value === 'Custom Range') {
+        return; // Don't auto-advance
+      }
+      
       // Small delay to show the selection before advancing
       setTimeout(() => {
         handleNext();
