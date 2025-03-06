@@ -101,7 +101,7 @@ const FAQSection = () => {
         {faqCategories.map((category, categoryIndex) => <div key={categoryIndex} className="mb-8">
             <div className="flex items-center mb-4">
               {category.icon}
-              <h3 className="text-xl font-semibold ml-2 text-gray-800">{category.name}</h3>
+              <h3 className="text-xl font-semibold ml-2 text-slate-50">{category.name}</h3>
             </div>
             <Accordion type="single" collapsible className="w-full">
               {category.faqs.map((faq, faqIndex) => <AccordionItem key={faqIndex} value={`${categoryIndex}-item-${faqIndex}`}>
