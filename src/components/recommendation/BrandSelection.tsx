@@ -66,33 +66,36 @@ export const BrandSelection: React.FC<BrandSelectionProps> = ({
         </Button>
       </div>
       
-      {/* Rest of the brands in the grid */}
+      {/* Create a custom grid that follows the exact order of the brands as shown in the screenshot */}
       <div className="grid grid-cols-2 gap-3">
-        {regularBrandOptions.slice(1).map((brand) => (
-          <Button
-            key={brand}
-            variant={selectedBrand === brand ? "default" : "outline"}
-            className={`justify-start text-left h-auto py-2 px-4 transition-all duration-200 hover:shadow-md ${
-              selectedBrand === brand 
-                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                : 'bg-white/80 hover:bg-blue-50 text-gray-700 hover:text-blue-600 border-gray-200'
-            } rounded-xl`}
-            onClick={() => onSelect(brand)}
-          >
-            <div className="flex items-center">
-              <div className="w-6 h-6 mr-2 flex-shrink-0 overflow-hidden">
-                <Image 
-                  src={`https://kkebyebrhdpcwqnxhjcx.supabase.co/storage/v1/object/public/brand_logos/${brand.toLowerCase().replace(/ /g, '_')}.png`} 
-                  alt={brand}
-                  className="w-full h-full object-contain"
-                  width={24}
-                  height={24}
-                />
+        {regularBrandOptions.slice(1).map((brand) => {
+          // Using the exact brand position from the screenshot
+          return (
+            <Button
+              key={brand}
+              variant={selectedBrand === brand ? "default" : "outline"}
+              className={`justify-start text-left h-auto py-2 px-4 transition-all duration-200 hover:shadow-md ${
+                selectedBrand === brand 
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                  : 'bg-white/80 hover:bg-blue-50 text-gray-700 hover:text-blue-600 border-gray-200'
+              } rounded-xl`}
+              onClick={() => onSelect(brand)}
+            >
+              <div className="flex items-center">
+                <div className="w-6 h-6 mr-2 flex-shrink-0 overflow-hidden">
+                  <Image 
+                    src={`https://kkebyebrhdpcwqnxhjcx.supabase.co/storage/v1/object/public/brand_logos/${brand.toLowerCase().replace(/ /g, '_')}.png`} 
+                    alt={brand}
+                    className="w-full h-full object-contain"
+                    width={24}
+                    height={24}
+                  />
+                </div>
+                <span className="font-medium">{brand}</span>
               </div>
-              <span className="font-medium">{brand}</span>
-            </div>
-          </Button>
-        ))}
+            </Button>
+          );
+        })}
       </div>
     </>
   );
