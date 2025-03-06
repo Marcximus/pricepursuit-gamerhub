@@ -35,6 +35,8 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
       clearComparison();
       
       // Convert recommendation products to global Product type and add to comparison
+      let successfullyAdded = 0;
+      
       for (let i = 0; i < 2; i++) {
         const recProduct = results[i].product;
         if (!recProduct) continue;
@@ -64,10 +66,19 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
         };
         
         addToComparison(globalProduct);
+        successfullyAdded++;
       }
       
-      // Navigate to compare page using React Router instead of directly changing location
-      navigate('/compare');
+      if (successfullyAdded === 2) {
+        // Navigate to compare page using React Router
+        navigate('/compare');
+      } else {
+        toast({
+          title: "Error",
+          description: "Could not add both products to comparison",
+          variant: "destructive"
+        });
+      }
       
     } catch (error) {
       console.error("Error setting up comparison:", error);
