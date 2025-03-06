@@ -1,4 +1,3 @@
-
 import type { Product } from "@/types/product";
 
 // Import individual score components
@@ -47,8 +46,16 @@ export function calculateProcessorScore(processor: string): number {
   let score = 0;
   const proc = processor.toLowerCase();
   
+  // Intel Core Ultra (newest series)
+  if (proc.includes('core ultra') || proc.includes('intel ultra')) {
+    if (proc.includes('9')) score = 95;
+    else if (proc.includes('7')) score = 93;
+    else if (proc.includes('5')) score = 91;
+    else score = 90; // Generic Ultra
+  }
+  
   // Apple processors
-  if (proc.includes('m3') || proc.includes('m 3')) {
+  else if (proc.includes('m3') || proc.includes('m 3')) {
     if (proc.includes('ultra')) score = 95;
     else if (proc.includes('max')) score = 90;
     else if (proc.includes('pro')) score = 85;
@@ -63,13 +70,6 @@ export function calculateProcessorScore(processor: string): number {
     if (proc.includes('max')) score = 75;
     else if (proc.includes('pro')) score = 70;
     else score = 65;
-  }
-  
-  // Intel Core Ultra
-  else if (proc.includes('core ultra')) {
-    if (proc.includes('9')) score = 90;
-    else if (proc.includes('7')) score = 85;
-    else if (proc.includes('5')) score = 80;
   }
   
   // Intel Core generations
