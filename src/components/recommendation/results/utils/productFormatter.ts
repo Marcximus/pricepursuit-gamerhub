@@ -1,4 +1,3 @@
-
 /**
  * Utilities for formatting product data from recommendation results
  */
@@ -29,84 +28,88 @@ export interface FormattedProductData {
 }
 
 /**
- * Format a technical spec into a user-friendly highlight
+ * Format a technical spec into a user-friendly highlight - max 8 words
  */
 const enrichHighlight = (highlight: string): string => {
   // Screen size highlight enhancements
   if (highlight.toLowerCase().includes('inch') || highlight.toLowerCase().includes('display')) {
     if (highlight.includes('WQXGA') || highlight.includes('2560')) {
-      return `Crisp, high-resolution ${highlight} - perfect for detailed work`;
+      return `Crisp high-resolution display for detailed work`;
     }
     if (highlight.includes('4K') || highlight.includes('UHD')) {
-      return `Ultra-sharp ${highlight} - incredible for creative professionals`;
+      return `Ultra-sharp 4K display for professionals`;
     }
     if (highlight.includes('FHD') || highlight.includes('1080p')) {
-      return `Clear, vibrant ${highlight} - great for everyday tasks`;
+      return `Clear vibrant display for everyday tasks`;
     }
-    return `Spacious ${highlight} - excellent for multitasking`;
+    return `Spacious display for multitasking`;
   }
   
   // Graphics card highlight enhancements
   if (highlight.toLowerCase().includes('gpu') || highlight.toLowerCase().includes('graphics') || 
       highlight.toLowerCase().includes('rtx') || highlight.toLowerCase().includes('gtx')) {
     if (highlight.includes('RTX')) {
-      return `Powerful ${highlight} - excellent for gaming and AI workloads`;
+      return `Powerful RTX graphics for gaming/AI`;
     }
     if (highlight.includes('GTX')) {
-      return `Capable ${highlight} - great for gaming and creative apps`;
+      return `Strong GTX graphics for gaming`;
     }
     if (highlight.includes('Iris') || highlight.includes('integrated')) {
-      return `${highlight} - good for everyday tasks and light creative work`;
+      return `Integrated graphics for everyday tasks`;
     }
-    return `${highlight} - enhances performance for graphics-intensive tasks`;
+    return `Enhanced graphics for intensive tasks`;
   }
   
   // Storage highlight enhancements
   if (highlight.toLowerCase().includes('ssd') || highlight.toLowerCase().includes('storage')) {
     if (highlight.includes('TB') || highlight.includes('1000')) {
-      return `Generous ${highlight} - plenty of space for large files and projects`;
+      return `Spacious storage for large projects`;
     }
     if (highlight.includes('NVMe') || highlight.includes('PCIe')) {
-      return `Ultra-fast ${highlight} - lightning-quick app loading and file transfers`;
+      return `Ultra-fast SSD for quick transfers`;
     }
-    return `${highlight} - quick access to your files and programs`;
+    return `Quick SSD for fast performance`;
   }
   
   // RAM highlight enhancements
   if (highlight.toLowerCase().includes('ram') || highlight.toLowerCase().includes('memory')) {
     if (highlight.includes('32')) {
-      return `${highlight} - exceptional for heavy multitasking and complex projects`;
+      return `Exceptional RAM for complex tasks`;
     }
     if (highlight.includes('16')) {
-      return `${highlight} - great for running multiple apps simultaneously`;
+      return `Ample RAM for multitasking`;
     }
-    return `${highlight} - smooth performance for everyday computing`;
+    return `Smooth RAM for reliable computing`;
   }
   
   // Processor highlight enhancements
   if (highlight.toLowerCase().includes('processor') || highlight.toLowerCase().includes('cpu') || 
       highlight.toLowerCase().includes('core') || highlight.toLowerCase().includes('ryzen')) {
     if (highlight.includes('i9') || highlight.includes('Ryzen 9')) {
-      return `Blazing-fast ${highlight} - top-tier performance for demanding tasks`;
+      return `Top-tier processor for demanding workloads`;
     }
     if (highlight.includes('i7') || highlight.includes('Ryzen 7')) {
-      return `Powerful ${highlight} - excellent for professional workloads`;
+      return `Powerful CPU for professional use`;
     }
-    return `${highlight} - reliable performance for your computing needs`;
+    return `Reliable processor for daily needs`;
   }
   
   // Battery highlight enhancements
   if (highlight.toLowerCase().includes('battery') || highlight.toLowerCase().includes('hour')) {
-    return `${highlight} - freedom to work unplugged all day`;
+    return `All-day battery life`;
   }
   
   // Weight highlight enhancements
   if (highlight.toLowerCase().includes('weight') || highlight.toLowerCase().includes('light') || 
       highlight.toLowerCase().includes('thin')) {
-    return `${highlight} - easy to carry wherever you go`;
+    return `Lightweight design for portability`;
   }
   
-  // For any other type of highlight, just return as is
+  // For any other type of highlight, just return a condensed version (max 8 words)
+  const words = highlight.split(' ');
+  if (words.length > 8) {
+    return words.slice(0, 8).join(' ');
+  }
   return highlight;
 };
 
