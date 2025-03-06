@@ -8,7 +8,7 @@
 const FORBIDDEN_KEYWORDS = [
   'case', 'sleeve', 'bag', 'backpack', 'skin', 'protector', 'cover',
   'charger', 'adapter', 'cable', 'cord', 'power supply',
-  'keyboard', 'mouse', 'touchpad', 'mousepad',
+  'mouse', 'mousepad',
   'stand', 'dock', 'docking station', 'hub', 'port',
   'screen protector', 'privacy filter',
   'ram upgrade', 'memory upgrade', 'ssd upgrade',
@@ -30,10 +30,10 @@ const FORBIDDEN_KEYWORDS = [
   'hard drive enclosure', 'external cd', 'usb hub',
   // Additional keywords to catch more non-laptop items
   'power bank', 'external battery', 'wireless earbuds', 'headset', 'headphones',
-  'speaker', 'office chair', 'desk lamp', 'desk pad', 'desk mat',
+  'office chair', 'desk lamp', 'desk pad', 'desk mat',
   'monitor stand', 'monitor arm', 'laptop cooler', 'cooling tray',
   'dust cover', 'waterproof cover', 'protection film',
-  'laptop skin', 'decal', 'sticker set', 'laptop sticker',
+  'laptop skin', 'sticker set', 'laptop sticker',
   'screen wipe', 'cleaning kit', 'keyboard protector',
   'port replicator', 'kvm switch', 'thunderbolt dock',
   'laptop table', 'lap desk', 'laptop pillow',
@@ -41,6 +41,7 @@ const FORBIDDEN_KEYWORDS = [
   'laptop memory', 'laptop ram only', 'ram stick',
   'memory module'
   // Removed: 'compatible with', 'fits for', 'made for', 'replacement for'
+  // Removed by user request: 'keyboard', 'touchpad', 'speaker', 'decal'
 ];
 
 /**
