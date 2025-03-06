@@ -16,12 +16,12 @@ export const generateHighlights = (result: RecommendationResult): {text: string,
   // Add rating-based highlight if ratings are good
   if (product?.product_star_rating && product.product_star_rating >= 4.5) {
     highlightsList.push({
-      text: `Outstanding ${product.product_star_rating}★ rating from ${product?.product_num_ratings?.toLocaleString() || 'many'} users`,
+      text: `${product.product_star_rating}★ from ${product?.product_num_ratings?.toLocaleString() || 'many'} users`,
       icon: React.createElement(Star, { size: 16 })
     });
   } else if (product?.product_star_rating && product.product_star_rating >= 4) {
     highlightsList.push({
-      text: `Excellent ${product.product_star_rating}★ rating from ${product?.product_num_ratings?.toLocaleString() || 'users'}`,
+      text: `${product.product_star_rating}★ from ${product?.product_num_ratings?.toLocaleString() || 'users'}`,
       icon: React.createElement(Star, { size: 16 })
     });
   }
@@ -34,22 +34,22 @@ export const generateHighlights = (result: RecommendationResult): {text: string,
     
     if (isHighEndNvidia) {
       highlightsList.push({
-        text: `Powerful ${product.graphics} for exceptional gaming performance`,
+        text: `Powerful ${product.graphics}`,
         icon: React.createElement(Sparkle, { size: 16 })
       });
     } else if (isAmdHighEnd) {
       highlightsList.push({
-        text: `High-end ${product.graphics} delivers impressive gaming visuals`,
+        text: `High-end ${product.graphics}`,
         icon: React.createElement(Sparkle, { size: 16 })
       });
     } else if (isAppleSilicon) {
       highlightsList.push({
-        text: `Fast ${product.graphics} GPU for smooth creative workflows`,
+        text: `Fast ${product.graphics} GPU`,
         icon: React.createElement(Sparkle, { size: 16 })
       });
     } else if (product.graphics.match(/RTX|GTX|Radeon/i)) {
       highlightsList.push({
-        text: `Dedicated ${product.graphics} for gaming and creative work`,
+        text: `Dedicated ${product.graphics}`,
         icon: React.createElement(Sparkle, { size: 16 })
       });
     }
@@ -63,17 +63,17 @@ export const generateHighlights = (result: RecommendationResult): {text: string,
     
     if (isIntelHighEnd) {
       highlightsList.push({
-        text: `High-performance ${product.processor} processor for demanding tasks`,
+        text: `High-performance ${product.processor}`,
         icon: React.createElement(Cpu, { size: 16 })
       });
     } else if (isAmdHighEnd) {
       highlightsList.push({
-        text: `Powerful ${product.processor} CPU with excellent multi-core performance`,
+        text: `Powerful ${product.processor} CPU`,
         icon: React.createElement(Cpu, { size: 16 })
       });
     } else if (isAppleM) {
       highlightsList.push({
-        text: `Cutting-edge ${product.processor} chip with incredible efficiency`,
+        text: `Cutting-edge ${product.processor}`,
         icon: React.createElement(Cpu, { size: 16 })
       });
     }
@@ -85,12 +85,12 @@ export const generateHighlights = (result: RecommendationResult): {text: string,
     
     if (ramSize >= 32) {
       highlightsList.push({
-        text: `Massive ${product.ram} memory for extreme multitasking`,
+        text: `Massive ${product.ram} memory`,
         icon: React.createElement(Zap, { size: 16 })
       });
     } else if (ramSize >= 16) {
       highlightsList.push({
-        text: `Generous ${product.ram} RAM for smooth multitasking`,
+        text: `Generous ${product.ram} RAM`,
         icon: React.createElement(Zap, { size: 16 })
       });
     }
@@ -104,12 +104,12 @@ export const generateHighlights = (result: RecommendationResult): {text: string,
     
     if (storageSize >= 1000) {
       highlightsList.push({
-        text: `Spacious ${product.storage} for all your files and games`,
+        text: `Spacious ${product.storage}`,
         icon: React.createElement(Trophy, { size: 16 })
       });
     } else if (storageSize >= 500) {
       highlightsList.push({
-        text: `Fast ${product.storage} loads programs in seconds`,
+        text: `Fast ${product.storage}`,
         icon: React.createElement(Trophy, { size: 16 })
       });
     }
@@ -121,12 +121,12 @@ export const generateHighlights = (result: RecommendationResult): {text: string,
     
     if (weightValue < 1.5) {
       highlightsList.push({
-        text: `Ultra-lightweight at just ${product.weight} - perfect for travel`,
+        text: `Ultra-lightweight ${product.weight}`,
         icon: React.createElement(Weight, { size: 16 })
       });
     } else if (weightValue < 2) {
       highlightsList.push({
-        text: `Highly portable ${product.weight} design for on-the-go use`,
+        text: `Highly portable ${product.weight}`,
         icon: React.createElement(Weight, { size: 16 })
       });
     }
@@ -138,12 +138,12 @@ export const generateHighlights = (result: RecommendationResult): {text: string,
     
     if (batteryHours >= 12) {
       highlightsList.push({
-        text: `Exceptional ${product.battery_life} battery life for all-day use`,
+        text: `${product.battery_life} battery life`,
         icon: React.createElement(Battery, { size: 16 })
       });
     } else if (batteryHours >= 8) {
       highlightsList.push({
-        text: `Long-lasting ${product.battery_life} battery keeps you productive`,
+        text: `Long ${product.battery_life} battery`,
         icon: React.createElement(Battery, { size: 16 })
       });
     }
@@ -154,32 +154,42 @@ export const generateHighlights = (result: RecommendationResult): {text: string,
     const discount = calculateDiscount(product.product_price, product.product_original_price);
     if (discount >= 20) {
       highlightsList.push({
-        text: `Exceptional value with a massive ${discount}% discount`,
+        text: `Massive ${discount}% discount`,
         icon: React.createElement(Sparkle, { size: 16 })
       });
     } else if (discount >= 10) {
       highlightsList.push({
-        text: `Great deal with current ${discount}% savings`,
+        text: `${discount}% savings`,
         icon: React.createElement(Sparkle, { size: 16 })
       });
     }
   }
   
-  // Return the top 3 most impressive highlights, or fallback to generic ones if needed
-  if (highlightsList.length === 0) {
-    // Only add generic highlights if we couldn't generate specific ones
-    highlightsList.push({
-      text: `Ideal choice for ${recommendation.usage?.toLowerCase() || 'your specific needs'}`,
+  // If we have fewer than 3 highlights, add generic ones
+  const useCaseHighlights = [
+    {
+      text: `Ideal for ${recommendation.usage?.toLowerCase() || 'your needs'}`,
       icon: React.createElement(ThumbsUp, { size: 16 })
-    });
-    
-    highlightsList.push({
-      text: `Optimized performance for ${recommendation.usage?.toLowerCase() || 'everyday tasks'}`,
+    },
+    {
+      text: `Optimized for ${recommendation.usage?.toLowerCase() || 'daily tasks'}`,
       icon: React.createElement(Gauge, { size: 16 })
-    });
+    },
+    {
+      text: `Perfect for ${recommendation.usage?.toLowerCase() || 'everyday use'}`,
+      icon: React.createElement(Star, { size: 16 })
+    }
+  ];
+  
+  // Add generic highlights if needed to reach 3
+  let index = 0;
+  while (highlightsList.length < 3 && index < useCaseHighlights.length) {
+    highlightsList.push(useCaseHighlights[index]);
+    index++;
   }
   
-  return highlightsList.slice(0, 3); // Limit to 3 highlights
+  // If we have more than 3 highlights, take the first 3
+  return highlightsList.slice(0, 3);
 };
 
 // Import the calculateDiscount function as it's used in this file

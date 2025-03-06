@@ -96,7 +96,32 @@ export function extractRecommendations(deepseekData: any): any[] {
       throw new Error("Invalid recommendations format from DeepSeek");
     }
     
-    return parsedData.recommendations;
+    // Process recommendations to ensure they have all required fields
+    const processedRecommendations = parsedData.recommendations.map((rec: any) => {
+      // Ensure each recommendation has a highlights array with exactly 3 items
+      if (!rec.highlights || !Array.isArray(rec.highlights) || rec.highlights.length < 3) {
+        // Create default highlights if missing or insufficient
+        rec.highlights = rec.highlights || [];
+        
+        // Add generic highlights if fewer than 3
+        const defaultHighlights = [
+          `Great for ${rec.usage || 'daily use'}`,
+          `Excellent performance`,
+          `Good value for money`
+        ];
+        
+        while (rec.highlights.length < 3) {
+          rec.highlights.push(defaultHighlights[rec.highlights.length]);
+        }
+      }
+      
+      // Limit to exactly 3 highlights
+      rec.highlights = rec.highlights.slice(0, 3);
+      
+      return rec;
+    });
+    
+    return processedRecommendations;
   } catch (error) {
     console.error("❌ Error parsing DeepSeek response:", error);
     throw new Error("Failed to parse laptop recommendations: " + error.message);
