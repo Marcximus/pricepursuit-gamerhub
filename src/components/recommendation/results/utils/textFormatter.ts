@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for formatting text with emojis and paragraphs
  */
@@ -108,14 +109,26 @@ export const splitIntoParagraphs = (text: string): string[] => {
 export const formatRecommendationReason = (reason: string): string[] => {
   if (!reason) return ["No details available 🤔"];
   
+  // Enhance the reason text to focus on the laptop's strengths
+  // Remove phrases like "based on your requirements", "as you requested", etc.
+  let enhancedReason = reason
+    .replace(/based on your requirements/gi, "with exceptional features")
+    .replace(/as you requested/gi, "impressively")
+    .replace(/according to your needs/gi, "with outstanding capabilities")
+    .replace(/you mentioned/gi, "you'll appreciate")
+    .replace(/you asked for/gi, "you'll love")
+    .replace(/you specified/gi, "you'll benefit from")
+    .replace(/aligns with your preferences/gi, "stands out from competitors")
+    .replace(/meets your criteria/gi, "excels in performance");
+  
   // If it's a short reason, just add emojis without splitting
-  if (!reason.includes('.') || reason.split('.').length <= 1) {
-    const emojiReason = addEmojisToText(reason);
+  if (!enhancedReason.includes('.') || enhancedReason.split('.').length <= 1) {
+    const emojiReason = addEmojisToText(enhancedReason);
     return [emojiReason];
   }
   
   // For longer text, split into paragraphs
-  const paragraphs = splitIntoParagraphs(reason);
+  const paragraphs = splitIntoParagraphs(enhancedReason);
   
   // Add emojis to each paragraph
   return paragraphs.map(paragraph => addEmojisToText(paragraph));
