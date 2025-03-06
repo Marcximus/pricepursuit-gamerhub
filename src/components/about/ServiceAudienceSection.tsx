@@ -19,7 +19,7 @@ const ServiceAudienceSection = () => {
             Discover high-performance machines that can handle your workload without breaking the bank.
           </p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center">
+        <div className="p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center bg-blue-50">
           <h3 className="text-xl font-bold mb-3">Gamers 🎮</h3>
           <p className="text-gray-600">
             Level up with laptops that deliver frame rates and graphics worthy of your gaming skills.
