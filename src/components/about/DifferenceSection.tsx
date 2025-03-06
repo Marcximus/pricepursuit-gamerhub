@@ -1,7 +1,10 @@
+
 import React from 'react';
 import { Sparkles, Trophy, Laptop, Users } from 'lucide-react';
+
 const DifferenceSection = () => {
-  return <div className="mb-16 bg-amber-50">
+  return (
+    <div className="mb-16">
       <div className="flex items-center justify-center mb-6">
         <Sparkles className="w-8 h-8 text-gaming-600 mr-2" />
         <h2 className="text-3xl font-bold text-gray-900">Why We're Different ✨</h2>
@@ -35,6 +38,8 @@ const DifferenceSection = () => {
           </p>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default DifferenceSection;
