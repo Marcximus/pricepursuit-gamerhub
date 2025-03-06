@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Battery, Check, Cpu, Gauge, Sparkle, Star, ThumbsUp, Zap, Weight } from 'lucide-react';
 
 interface HighlightItem {
   text: string;
@@ -15,13 +14,13 @@ export const ProductHighlights: React.FC<ProductHighlightsProps> = ({ highlights
   if (!highlights || highlights.length === 0) return <div className="mb-4 h-full"></div>;
   
   return (
-    <div className="h-full">
-      <h3 className="font-semibold text-gray-800 mb-2">Key Features</h3>
+    <div>
+      <h3 className="font-semibold text-gray-800 mb-2">Highlights</h3>
       <ul className="grid grid-cols-1 gap-2">
         {highlights.map((highlight, index) => (
-          <li key={index} className="flex items-center text-sm p-1 rounded-md transition-colors hover:bg-gray-50">
-            <span className="text-emerald-500 mr-2 flex-shrink-0">{highlight.icon}</span>
-            <span className="text-emerald-600 font-medium line-clamp-2">{highlight.text}</span>
+          <li key={index} className="flex items-center text-sm text-gray-700 p-1 rounded-md transition-colors hover:bg-gray-50">
+            <span className="text-primary mr-2 flex-shrink-0">{highlight.icon}</span>
+            <span className="line-clamp-2">{highlight.text}</span>
           </li>
         ))}
       </ul>

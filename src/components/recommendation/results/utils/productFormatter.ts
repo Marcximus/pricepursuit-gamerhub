@@ -5,7 +5,7 @@
 import { RecommendationResult } from '../../types/quizTypes';
 import { formatPrice, calculateDiscount } from './priceFormatter';
 import { getProductUrl } from './urlFormatter';
-import { Battery, Check, Cpu, Gauge, Sparkle, Star, ThumbsUp, Weight, Zap } from 'lucide-react';
+import { Battery, Check, Sparkle, Star, ThumbsUp, Weight, Zap } from 'lucide-react';
 import React from 'react';
 
 /**
@@ -38,23 +38,23 @@ const generateHighlights = (result: RecommendationResult): {text: string, icon: 
   // Add processor highlight if available
   if (product?.processor) {
     highlights.push({
-      text: `Blazing-fast ${product.processor} performance`,
-      icon: React.createElement(Cpu, { size: 16 })
+      text: `Powerful ${product.processor}`,
+      icon: React.createElement(Zap, { size: 16 })
     });
   }
   
   // Add RAM highlight if available
   if (product?.ram) {
     highlights.push({
-      text: `Seamless multitasking with ${product.ram}`,
-      icon: React.createElement(Gauge, { size: 16 })
+      text: `${product.ram} for smooth multitasking`,
+      icon: React.createElement(Check, { size: 16 })
     });
   }
   
   // Add storage highlight if available
   if (product?.storage) {
     highlights.push({
-      text: `Generous ${product.storage} for all your files`,
+      text: `Ample ${product.storage} storage`,
       icon: React.createElement(Sparkle, { size: 16 })
     });
   }
@@ -62,7 +62,7 @@ const generateHighlights = (result: RecommendationResult): {text: string, icon: 
   // Add graphics highlight if available
   if (product?.graphics) {
     highlights.push({
-      text: `Stunning visuals with ${product.graphics}`,
+      text: `Great visuals with ${product.graphics}`,
       icon: React.createElement(Star, { size: 16 })
     });
   }
@@ -70,7 +70,7 @@ const generateHighlights = (result: RecommendationResult): {text: string, icon: 
   // Add battery life highlight if available
   if (product?.battery_life) {
     highlights.push({
-      text: `Impressive ${product.battery_life} battery life`,
+      text: `Long battery life: ${product.battery_life}`,
       icon: React.createElement(Battery, { size: 16 })
     });
   }
@@ -78,14 +78,14 @@ const generateHighlights = (result: RecommendationResult): {text: string, icon: 
   // Add weight highlight if available
   if (product?.weight) {
     highlights.push({
-      text: `Ultra-portable at just ${product.weight}`,
+      text: `Lightweight at ${product.weight}`,
       icon: React.createElement(Weight, { size: 16 })
     });
   }
   
   // General recommendation highlight
   highlights.push({
-    text: `Perfect for ${recommendation.usage || 'your specific needs'}`,
+    text: `Recommended for ${recommendation.usage || 'your needs'}`,
     icon: React.createElement(ThumbsUp, { size: 16 })
   });
   

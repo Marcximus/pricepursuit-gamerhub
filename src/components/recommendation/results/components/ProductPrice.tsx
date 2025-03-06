@@ -17,7 +17,7 @@ export const ProductPrice: React.FC<ProductPriceProps> = ({
   url
 }) => {
   return (
-    <div className="h-full">
+    <div>
       <a 
         href={url}
         target="_blank" 
