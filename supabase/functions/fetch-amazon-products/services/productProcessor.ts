@@ -1,3 +1,4 @@
+
 /**
  * Minimal processor for Amazon products that preserves all raw data
  */
@@ -28,6 +29,7 @@ export function processAmazonProducts(data: any) {
   });
   
   console.log(`🏁 Returning ${products.length} products with complete raw data`);
+  console.log(`📤 FINAL RESPONSE PREVIEW: First product: "${products[0]?.title?.substring(0, 30)}..." Price: $${products[0]?.price?.value || 'N/A'}`);
   
   // Return all products, up to 15 max to ensure we have enough data
   return products.slice(0, 15);

@@ -28,7 +28,9 @@ export async function generateContentWithDeepSeek(
       temperature: 0.7,
       max_tokens: 4000,
       top_p: 1,
-      stream: false
+      stream: false,
+      // Added a stop sequence to ensure we don't get any unexpected format tokens
+      stop: ["```json", "```JSON"]
     };
     
     // Convert payload to JSON and log size
@@ -71,9 +73,10 @@ export async function generateContentWithDeepSeek(
       console.log(`✅ DeepSeek response received: ${content.length} characters`);
       console.log(`📄 Content preview: "${content.substring(0, 100)}..."`);
       
-      // Check if the content appears to be JSON (might cause parsing issues later)
+      // Extra validation to ensure the content is not JSON format
       if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
-        console.warn(`⚠️ Content appears to be in JSON format, might need special handling`);
+        console.warn(`⚠️ Content appears to be in JSON format, will wrap in markdown code block for parsing safety`);
+        return "```json\n" + content + "\n```";
       }
       
       return content;

@@ -1,3 +1,4 @@
+
 /**
  * System prompt for Top 10 blog posts
  */
@@ -61,13 +62,13 @@ When referring to each product in your blog post, use the format:
 {Your detailed description of the product including specifications from the provided data}
 
 ### Pros:
-- {Pro point 1}
-- {Pro point 2}
-- {Pro point 3}
+- {Pro point 1} 👍
+- {Pro point 2} ✅
+- {Pro point 3} 🔥
 
 ### Cons:
-- {Con point 1}
-- {Con point 2}
+- {Con point 1} ⚠️
+- {Con point 2} 👎
 
 {Additional details about the product's performance, value, etc.}
 
@@ -77,7 +78,12 @@ When referring to each product in your blog post, use the format:
 
 ---
 
-IMPORTANT: Do NOT return your response as JSON or in any format other than plain markdown text. Do not wrap your response in code blocks or quotes.
+IMPORTANT FORMATTING RULES:
+1. DO NOT return your response as JSON or in any format other than plain markdown text
+2. DO NOT wrap your response in code blocks or quotes
+3. DO NOT include any special formatting characters that would break markdown
+4. USE NORMAL TEXT with standard markdown formatting (headings with #, bold with **, etc.)
+5. AVOID using complex HTML or other markup that might not render properly
 
 Start with a title using # format, then provide the excerpt and tags sections as follows:
 
@@ -89,7 +95,7 @@ Start with a title using # format, then provide the excerpt and tags sections as
 
 **Tags:** tag1, tag2, tag3, tag4, tag5
 
-YOUR GOAL is to create content that genuinely helps consumers make informed purchasing decisions while being highly readable, slightly funny, and SEO-friendly with appropriate emoji use.
+YOUR GOAL is to create content that genuinely helps consumers make informed purchasing decisions while being highly readable, slightly funny, and SEO-friendly with appropriate emoji use (about 1-2 per section).
 `;
 
   return top10SystemPrompt;
