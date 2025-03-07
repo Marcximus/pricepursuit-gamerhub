@@ -1,3 +1,4 @@
+
 /**
  * This file handles parsing AI-generated content into structured blog post data
  */
@@ -75,6 +76,10 @@ export function parseGeneratedContent(content: string, category: string) {
       console.log(`🔢 Formatting Top10 content with product placeholders`);
       // Special handling for Top10 posts to include product data placeholders
       processedContent = formatTop10Content(content);
+      
+      // Remove excerpt and tags from the content itself since they'll be stored separately
+      processedContent = processedContent.replace(/\*\*Excerpt:\*\*([\s\S]*?)(?=\n\n)/, '');
+      processedContent = processedContent.replace(/\*\*Tags:\*\*([\s\S]*?)$/, '');
     } else {
       processedContent = cleanupContent(content);
     }
@@ -116,6 +121,10 @@ function cleanupContent(content: string): string {
   cleaned = cleaned.replace(/^Excerpt:\s*([\s\S]*?)(?=\n\n)/im, '');
   cleaned = cleaned.replace(/^Tags:\s*(.*?)$/im, '');
   
+  // Remove Markdown-formatted excerpt and tags
+  cleaned = cleaned.replace(/\*\*Excerpt:\*\*([\s\S]*?)(?=\n\n)/, '');
+  cleaned = cleaned.replace(/\*\*Tags:\*\*([\s\S]*?)$/, '');
+  
   // Standardize headers
   cleaned = cleaned.replace(/^Title:/gim, '##');
   cleaned = cleaned.replace(/^Subtitle:/gim, '###');
@@ -133,7 +142,7 @@ function cleanupContent(content: string): string {
 function formatTop10Content(content: string): string {
   console.log(`🔢 Formatting Top10 content...`);
   
-  // Clean the content first
+  // Clean the content first but preserve product sections
   let cleaned = cleanupContent(content);
   
   // Look for numbered sections that likely represent product entries

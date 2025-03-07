@@ -68,37 +68,47 @@ export async function processTop10Content(content: string, prompt: string): Prom
       console.log(`🔍 First product: "${products[0].title?.substring(0, 30) || 'Unknown'}..."`);
     }
     
+    // First, remove the excerpt and tags from the content
+    let processedContent = content;
+    
+    // Remove the excerpt
+    processedContent = processedContent.replace(/\*\*Excerpt:\*\*.*?---/s, '');
+    
+    // Remove the tags
+    processedContent = processedContent.replace(/\*\*Tags:\*\*.*$/s, '');
+    
     // Replace the product data placeholders with actual data
     console.log('🔄 Replacing product data placeholders in content...');
     
-    let processedContent = content;
     let replacementsCount = 0;
     
     // Process both standard div placeholders and raw product data mentions
     for (let i = 0; i < Math.min(products.length, 10); i++) {
       const product = products[i];
       const productNum = i + 1;
-      const divPlaceholder = `<div class="product-data" data-product-id="${productNum}">[PRODUCT_DATA_${productNum}]</div>`;
-      const rawPlaceholder = `[PRODUCT_DATA_${productNum}]`;
       
-      console.log(`🔍 Looking for placeholder: "${divPlaceholder}" or "${rawPlaceholder}"`);
+      // Look for the product card HTML that appears as text in the content
+      const productCardRegex = new RegExp(`\\s*<div class="product-card"[^>]*>([\\s\\S]*?)<\\/div>\\s*`, 'g');
       
       if (product && product.htmlContent) {
-        // First, handle the div placeholder (exact string match, no regex)
-        const divMatches = processedContent.split(divPlaceholder).length - 1;
-        if (divMatches > 0) {
-          console.log(`🎯 Found ${divMatches} div placeholder(s) for product #${productNum}`);
-          // Use a simple string replace instead of regex
-          processedContent = processedContent.split(divPlaceholder).join(product.htmlContent || '');
-          replacementsCount += divMatches;
+        // Replace the product card HTML that's showing as text
+        if (productCardRegex.test(processedContent)) {
+          processedContent = processedContent.replace(productCardRegex, '\n' + product.htmlContent + '\n');
+          replacementsCount += 1;
         }
         
-        // Then handle the standalone raw placeholder
-        const rawMatches = processedContent.split(rawPlaceholder).length - 1;
-        if (rawMatches > 0) {
-          console.log(`🎯 Found ${rawMatches} standalone raw placeholder(s) for product #${productNum}`);
+        // Also replace any remaining placeholders
+        const divPlaceholder = `<div class="product-data" data-product-id="${productNum}">[PRODUCT_DATA_${productNum}]</div>`;
+        const rawPlaceholder = `[PRODUCT_DATA_${productNum}]`;
+        
+        if (processedContent.includes(divPlaceholder)) {
+          processedContent = processedContent.split(divPlaceholder).join(product.htmlContent || '');
+          replacementsCount += 1;
+        }
+        
+        if (processedContent.includes(rawPlaceholder)) {
           processedContent = processedContent.split(rawPlaceholder).join(product.htmlContent || '');
-          replacementsCount += rawMatches;
+          replacementsCount += 1;
         }
       } else {
         console.warn(`⚠️ No HTML content found for product #${productNum}`);
@@ -107,9 +117,26 @@ export async function processTop10Content(content: string, prompt: string): Prom
           
           // If htmlContent is missing but we have product data, generate it on the fly
           const fallbackHtml = generateFallbackHtml(product, productNum);
-          processedContent = processedContent.split(divPlaceholder).join(fallbackHtml);
-          processedContent = processedContent.split(rawPlaceholder).join(fallbackHtml);
-          replacementsCount += 1;
+          
+          // Replace the product card HTML that's showing as text
+          if (productCardRegex.test(processedContent)) {
+            processedContent = processedContent.replace(productCardRegex, '\n' + fallbackHtml + '\n');
+            replacementsCount += 1;
+          }
+          
+          // Also replace any remaining placeholders
+          const divPlaceholder = `<div class="product-data" data-product-id="${productNum}">[PRODUCT_DATA_${productNum}]</div>`;
+          const rawPlaceholder = `[PRODUCT_DATA_${productNum}]`;
+          
+          if (processedContent.includes(divPlaceholder)) {
+            processedContent = processedContent.split(divPlaceholder).join(fallbackHtml);
+            replacementsCount += 1;
+          }
+          
+          if (processedContent.includes(rawPlaceholder)) {
+            processedContent = processedContent.split(rawPlaceholder).join(fallbackHtml);
+            replacementsCount += 1;
+          }
         }
       }
     }
