@@ -12,7 +12,7 @@ export async function getComparison(laptopLeft: Product, laptopRight: Product, a
       'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: 'deepseek-r1-text',
+      model: 'deepseek-chat',
       messages: [
         {
           role: 'system',
@@ -23,7 +23,7 @@ export async function getComparison(laptopLeft: Product, laptopRight: Product, a
           content: generateUserPrompt(laptopLeft, laptopRight)
         }
       ],
-      temperature: 1.0
+      temperature: 1.0  // Changed from 0.1 to 1.0 for more creative responses
     })
   });
 

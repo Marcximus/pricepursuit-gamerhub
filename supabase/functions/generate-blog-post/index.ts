@@ -35,7 +35,7 @@ serve(async (req) => {
     // Create system prompt based on category
     const systemPrompt = getSystemPrompt(category);
     
-    // Generate content using DeepSeek-R1 API
+    // Generate content using DeepSeek API
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -43,7 +43,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'deepseek-r1-text',  // Using DeepSeek-R1 model
+        model: 'deepseek-chat',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }

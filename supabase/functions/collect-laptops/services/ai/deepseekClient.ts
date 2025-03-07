@@ -6,7 +6,7 @@ export async function callDeepseekAPI(systemPrompt: string, userPrompt: string):
   console.log("[DeepSeek] Sending request with prompts:", {
     systemPromptLength: systemPrompt.length,
     userPromptLength: userPrompt.length,
-    model: 'deepseek-r1-text'
+    model: 'deepseek-chat'
   });
 
   const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -16,7 +16,7 @@ export async function callDeepseekAPI(systemPrompt: string, userPrompt: string):
       'Authorization': `Bearer ${Deno.env.get('DEEPSEEK_API_KEY')}`
     },
     body: JSON.stringify({
-      model: 'deepseek-r1-text',
+      model: 'deepseek-chat',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
