@@ -19,7 +19,7 @@ serve(async (req) => {
     }
 
     // Extract the request data
-    const { prompt, category, asin } = await req.json();
+    const { prompt, category, asin, asin2 } = await req.json();
 
     if (!prompt || !category) {
       return new Response(
@@ -28,38 +28,53 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Generating ${category} blog post with prompt: ${prompt}${asin ? `, ASIN: ${asin}` : ''}`);
+    console.log(`Generating ${category} blog post with prompt: ${prompt}${asin ? `, ASIN1: ${asin}` : ''}${asin2 ? `, ASIN2: ${asin2}` : ''}`);
 
-    // If this is a review and has an ASIN, fetch product data
-    let productData = null;
-    if (category === 'Review' && asin) {
+    // Variables to store product data
+    let firstProductData = null;
+    let secondProductData = null;
+
+    // Function to fetch product data
+    const fetchProductData = async (productAsin: string) => {
       try {
-        // Fetch product data from our edge function
         const productResponse = await fetch(`${req.url.split('/generate-blog-post')[0]}/fetch-product-data`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': req.headers.get('Authorization') || '',
           },
-          body: JSON.stringify({ asin }),
+          body: JSON.stringify({ asin: productAsin }),
         });
 
         if (!productResponse.ok) {
           console.error(`Error fetching product data: ${productResponse.status}`);
           const errorText = await productResponse.text();
           console.error(`Response: ${errorText}`);
-        } else {
-          productData = await productResponse.json();
-          console.log('Successfully fetched product data:', productData.title);
+          return null;
         }
+        
+        const data = await productResponse.json();
+        console.log(`Successfully fetched product data: ${data.title}`);
+        return data;
       } catch (error) {
         console.error('Error fetching product data:', error);
-        // Continue with generation even if product fetch fails
+        return null;
       }
+    };
+
+    // If this is a review and has an ASIN, fetch product data
+    if (category === 'Review' && asin) {
+      firstProductData = await fetchProductData(asin);
+    }
+    
+    // If this is a comparison and has two ASINs, fetch both product data
+    if (category === 'Comparison' && asin && asin2) {
+      firstProductData = await fetchProductData(asin);
+      secondProductData = await fetchProductData(asin2);
     }
     
     // Create system prompt based on category and product data if available
-    const systemPrompt = getSystemPrompt(category, productData);
+    const systemPrompt = getSystemPrompt(category, firstProductData, secondProductData);
     
     // Generate content using DeepSeek API
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -90,17 +105,43 @@ serve(async (req) => {
     // Parse the generated content
     const parsedContent = parseGeneratedContent(generatedContent, category);
     
-    // If we have product data, augment the parsed content
-    if (productData && category === 'Review') {
+    // If we have product data for a review, augment the parsed content
+    if (firstProductData && category === 'Review') {
       parsedContent.productData = {
         asin,
-        title: productData.title,
-        brand: productData.brand,
-        price: productData.price?.current,
-        rating: productData.rating?.rating,
-        reviewCount: productData.rating?.rating_count,
-        imageUrl: productData.images?.[0],
-        productUrl: productData.url
+        title: firstProductData.title,
+        brand: firstProductData.brand,
+        price: firstProductData.price?.current,
+        rating: firstProductData.rating?.rating,
+        reviewCount: firstProductData.rating?.rating_count,
+        imageUrl: firstProductData.images?.[0],
+        productUrl: firstProductData.url
+      };
+    }
+    
+    // If we have product data for a comparison, augment the parsed content
+    if (firstProductData && secondProductData && category === 'Comparison') {
+      parsedContent.comparisonData = {
+        product1: {
+          asin,
+          title: firstProductData.title,
+          brand: firstProductData.brand,
+          price: firstProductData.price?.current,
+          rating: firstProductData.rating?.rating,
+          reviewCount: firstProductData.rating?.rating_count,
+          imageUrl: firstProductData.images?.[0],
+          productUrl: firstProductData.url
+        },
+        product2: {
+          asin: asin2,
+          title: secondProductData.title,
+          brand: secondProductData.brand,
+          price: secondProductData.price?.current,
+          rating: secondProductData.rating?.rating,
+          reviewCount: secondProductData.rating?.rating_count,
+          imageUrl: secondProductData.images?.[0],
+          productUrl: secondProductData.url
+        }
       };
     }
     

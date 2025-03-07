@@ -18,6 +18,28 @@ interface GeneratedBlogContent {
     imageUrl: string;
     productUrl: string;
   };
+  comparisonData?: {
+    product1: {
+      asin: string;
+      title: string;
+      brand: string;
+      price: number;
+      rating: number;
+      reviewCount: number;
+      imageUrl: string;
+      productUrl: string;
+    };
+    product2: {
+      asin: string;
+      title: string;
+      brand: string;
+      price: number;
+      rating: number;
+      reviewCount: number;
+      imageUrl: string;
+      productUrl: string;
+    };
+  };
 }
 
 interface SearchParam {
@@ -33,14 +55,16 @@ interface SearchParam {
 export async function generateBlogPost(
   prompt: string,
   category: string,
-  asin?: string
+  asin?: string,
+  asin2?: string
 ): Promise<GeneratedBlogContent | null> {
   try {
     const { data, error } = await supabase.functions.invoke('generate-blog-post', {
       body: {
         prompt,
         category,
-        asin
+        asin,
+        asin2
       },
     });
 

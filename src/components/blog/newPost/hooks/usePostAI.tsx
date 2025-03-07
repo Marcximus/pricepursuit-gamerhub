@@ -17,15 +17,19 @@ export const usePostAI = (
     setIsAIPromptOpen(true);
   };
   
-  const handleGenerateContent = async (prompt: string, selectedCategory: string, asin?: string) => {
+  const handleGenerateContent = async (prompt: string, selectedCategory: string, asin?: string, asin2?: string) => {
     setIsGenerating(true);
     try {
       const { generateBlogPost } = await import('@/services/blogService');
       
-      // Log the generation attempt with category and ASIN if available
-      console.log(`Generating ${selectedCategory} blog post with prompt: ${prompt}${asin ? `, ASIN: ${asin}` : ''}`);
+      // Log the generation attempt with category and ASINs if available
+      console.log(
+        `Generating ${selectedCategory} blog post with prompt: ${prompt}` +
+        `${asin ? `, ASIN1: ${asin}` : ''}` +
+        `${asin2 ? `, ASIN2: ${asin2}` : ''}`
+      );
       
-      const generatedContent = await generateBlogPost(prompt, selectedCategory, asin);
+      const generatedContent = await generateBlogPost(prompt, selectedCategory, asin, asin2);
       
       if (generatedContent) {
         setTitle(generatedContent.title);
@@ -42,6 +46,12 @@ export const usePostAI = (
         if (selectedCategory === 'Review' && generatedContent.productData) {
           localStorage.setItem('currentReviewProductData', JSON.stringify(generatedContent.productData));
           console.log('Stored product data for review:', generatedContent.productData);
+        }
+        
+        // For Comparison posts, store both product data items in localStorage
+        if (selectedCategory === 'Comparison' && generatedContent.comparisonData) {
+          localStorage.setItem('currentComparisonData', JSON.stringify(generatedContent.comparisonData));
+          console.log('Stored comparison data:', generatedContent.comparisonData);
         }
         
         toast({
