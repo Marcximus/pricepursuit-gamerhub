@@ -29,11 +29,16 @@ const BlogAdmin = () => {
   
   useEffect(() => {
     document.title = "Blog Admin | Laptop Hunter";
-    // Only fetch posts on initial load, not on every render
     fetchPosts();
-    // Intentionally NOT including refreshPosts or fetchPosts in the dependency array
-    // to prevent continuous refreshing
-  }, []);
+  }, [fetchPosts]);
+
+  // Add effect to refresh posts after successful deletion
+  useEffect(() => {
+    if (deleteSuccess) {
+      console.log('BlogAdmin: Post deleted successfully, refreshing posts list');
+      fetchPosts();
+    }
+  }, [deleteSuccess, fetchPosts]);
 
   return (
     <div className="min-h-screen bg-gray-50">

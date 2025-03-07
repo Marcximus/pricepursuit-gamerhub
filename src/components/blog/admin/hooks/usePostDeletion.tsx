@@ -12,6 +12,8 @@ export const usePostDeletion = () => {
   const confirmDelete = (postId: string) => {
     setPostToDelete(postId);
     setDeleteDialogOpen(true);
+    // Reset delete success state when opening a new delete dialog
+    setDeleteSuccess(false);
   };
 
   const handleDeletePost = async () => {
@@ -28,9 +30,11 @@ export const usePostDeletion = () => {
         setDeleteSuccess(true);
       } else {
         console.error('BlogAdmin: Failed to delete post');
+        setDeleteSuccess(false);
       }
     } catch (error) {
       console.error('BlogAdmin: Error during deletion:', error);
+      setDeleteSuccess(false);
     } finally {
       setIsDeleting(false);
       setDeleteDialogOpen(false);
