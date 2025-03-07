@@ -34,6 +34,8 @@ export const useNewBlogPost = () => {
     published,
     tags,
     tagsInput,
+    setTags,
+    setTagsInput,
     handleTagsInputChange,
     handleMetadataChange
   } = usePostMetadata(title, editId, existingPost);
@@ -53,9 +55,14 @@ export const useNewBlogPost = () => {
     setIsAIPromptOpen,
     handleOpenAIPrompt,
     handleGenerateContent
-  } = usePostAI(setTitle, setContent, setExcerpt, 
-               (value) => handleMetadataChange('category', value), 
-               setTags, setTagsInput);
+  } = usePostAI(
+    setTitle, 
+    setContent, 
+    setExcerpt, 
+    (value) => handleMetadataChange('category', value), 
+    setTags, 
+    setTagsInput
+  );
   
   // Prepare blog post preview data
   const previewPost = {

@@ -80,6 +80,8 @@ export const usePostMetadata = (
     published,
     tags,
     tagsInput,
+    setTags,
+    setTagsInput,
     handleTagsInputChange,
     handleMetadataChange
   };
