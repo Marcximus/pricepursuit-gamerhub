@@ -23,6 +23,7 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shine: "shine var(--duration) infinite linear",
+        "crosshair-pulse": "crosshair-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
       keyframes: {
         "accordion-down": {
@@ -42,6 +43,16 @@ export default {
           },
           to: {
             "background-position": "0% 0%",
+          },
+        },
+        "crosshair-pulse": {
+          "0%, 100%": {
+            opacity: 1,
+            transform: "translate(-56%, -50%) scale(1)",
+          },
+          "50%": {
+            opacity: 0.7,
+            transform: "translate(-56%, -50%) scale(1.1)",
           },
         },
       },
