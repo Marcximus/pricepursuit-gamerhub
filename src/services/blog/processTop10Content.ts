@@ -52,7 +52,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
       toast({
         title: 'No products found',
         description: 'We couldn\'t find any products matching your criteria for the Top 10 post',
-        variant: 'warning',
+        variant: 'default', // Changed from 'warning' to 'default' as only 'default' and 'destructive' are valid variants
       });
       return content;
     }
