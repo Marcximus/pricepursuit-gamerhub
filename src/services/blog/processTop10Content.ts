@@ -22,6 +22,11 @@ export async function processTop10Content(content: string, prompt: string): Prom
       console.log('📦 Found pre-fetched products in localStorage');
       try {
         products = JSON.parse(storedProducts);
+        console.log(`Found ${products.length} products in localStorage`);
+        if (products.length > 0) {
+          console.log(`First product title: ${products[0].title}`);
+          console.log(`First product has HTML content: ${!!products[0].htmlContent}`);
+        }
         // Clear the storage to avoid using these products for another post
         localStorage.removeItem('currentTop10Products');
       } catch (parseError) {
@@ -70,7 +75,6 @@ export async function processTop10Content(content: string, prompt: string): Prom
     let replacementsCount = 0;
     
     // Process both standard div placeholders and raw product data mentions
-    // We'll use a more careful approach to avoid regex issues
     for (let i = 0; i < Math.min(products.length, 10); i++) {
       const product = products[i];
       const productNum = i + 1;
@@ -89,25 +93,24 @@ export async function processTop10Content(content: string, prompt: string): Prom
           replacementsCount += divMatches;
         }
         
-        // Then handle the standalone raw placeholder (only if not part of another already-processed placeholder)
-        // We'll count occurrences first to avoid unnecessary work
+        // Then handle the standalone raw placeholder
         const rawMatches = processedContent.split(rawPlaceholder).length - 1;
         if (rawMatches > 0) {
-          // Check if this is a reasonable number of matches (sanity check)
-          if (rawMatches > 100) {
-            console.warn(`⚠️ Too many raw placeholder matches (${rawMatches}) for product #${productNum}, limiting replacement`);
-            // We'll skip this to avoid performance issues
-            continue;
-          }
-          
           console.log(`🎯 Found ${rawMatches} standalone raw placeholder(s) for product #${productNum}`);
-          
-          // Use a simple string replace instead of regex
           processedContent = processedContent.split(rawPlaceholder).join(product.htmlContent || '');
           replacementsCount += rawMatches;
         }
       } else {
-        console.warn(`⚠️ No html content found for product #${productNum}`);
+        console.warn(`⚠️ No HTML content found for product #${productNum}`);
+        if (product) {
+          console.log(`Product data exists but htmlContent is missing. Title: ${product.title}`);
+          
+          // If htmlContent is missing but we have product data, generate it on the fly
+          const fallbackHtml = generateFallbackHtml(product, productNum);
+          processedContent = processedContent.split(divPlaceholder).join(fallbackHtml);
+          processedContent = processedContent.split(rawPlaceholder).join(fallbackHtml);
+          replacementsCount += 1;
+        }
       }
     }
     
@@ -155,4 +158,40 @@ export async function processTop10Content(content: string, prompt: string): Prom
     });
     return content;
   }
+}
+
+// Generate fallback HTML if the product doesn't have htmlContent
+function generateFallbackHtml(product: any, rank: number): string {
+  const title = product.title || 'Unknown Product';
+  const price = typeof product.price === 'number' 
+    ? `$${product.price.toFixed(2)}` 
+    : (product.price?.value ? `$${parseFloat(product.price.value).toFixed(2)}` : 'Price not available');
+  const rating = product.rating ? `${product.rating}/5` : 'No ratings';
+  const reviews = product.ratingCount ? `(${product.ratingCount} reviews)` : '';
+  const image = product.imageUrl || '';
+  const asin = product.asin || '';
+  const url = product.productUrl || '#';
+  
+  return `
+    <div class="product-card" data-asin="${asin}" data-rank="${rank}">
+      <div class="product-rank">#${rank}</div>
+      <div class="product-image">
+        <a href="${url}" target="_blank" rel="nofollow noopener">
+          <img src="${image}" alt="${title}" loading="lazy" />
+        </a>
+      </div>
+      <div class="product-details">
+        <h4 class="product-title">
+          <a href="${url}" target="_blank" rel="nofollow noopener">${title}</a>
+        </h4>
+        <div class="product-meta">
+          <span class="product-price">${price}</span>
+          <span class="product-rating">${rating} ${reviews}</span>
+        </div>
+        <div class="product-cta">
+          <a href="${url}" class="check-price-btn" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
+        </div>
+      </div>
+    </div>
+  `;
 }

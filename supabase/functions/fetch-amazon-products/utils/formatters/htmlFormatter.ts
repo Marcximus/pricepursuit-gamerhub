@@ -12,8 +12,11 @@
 export function generateHtmlContent(product: any, rank: number): string {
   if (!product) return '';
   
+  // Ensure we have data for all fields or use defaults
   const title = product.title || 'Unknown Product';
-  const price = product.price?.value ? `$${product.price.value}` : 'Price not available';
+  const price = product.price?.value 
+    ? `$${parseFloat(product.price.value).toFixed(2)}` 
+    : 'Price not available';
   const rating = product.rating ? `${product.rating}/5` : 'No ratings';
   const reviews = product.ratings_total ? `(${product.ratings_total} reviews)` : '';
   const image = product.image || '';
@@ -26,7 +29,7 @@ export function generateHtmlContent(product: any, rank: number): string {
     const features = product.feature_bullets.slice(0, 5);
     if (features.length > 0) {
       featuresList = '<ul class="product-features">' + 
-        features.map(feature => `<li>${feature}</li>`).join('') + 
+        features.map((feature: string) => `<li>${feature}</li>`).join('') + 
         '</ul>';
     }
   }

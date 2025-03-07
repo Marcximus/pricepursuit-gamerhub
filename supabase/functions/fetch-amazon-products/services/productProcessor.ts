@@ -11,8 +11,14 @@ export function processAmazonProducts(data: any) {
   
   const products = (data.data.products || []).map((product: any, index: number) => {
     // Check for undefined properties and provide defaults
-    const title = product.title || '';
+    const title = product.title || 'Unknown Product';
     const categories = product.categories || [];
+    const asin = product.asin || '';
+    const imageUrl = product.image || '';
+    const productUrl = product.url || '#';
+    const price = parseFloat(product.price?.value || '0') || 0;
+    const rating = parseFloat(product.rating || '0') || 0;
+    const ratingCount = parseInt(product.ratings_total || '0', 10) || 0;
     
     // Only log warning for non-empty titles that don't appear to be laptops
     const isLaptop = 
@@ -26,21 +32,21 @@ export function processAmazonProducts(data: any) {
       ));
     
     // Only log warnings for products with actual titles that don't match laptop keywords
-    if (!isLaptop && title.trim() !== '') {
+    if (!isLaptop && title.trim() !== '' && title !== 'Unknown Product') {
       console.log(`⚠️ Product might not be a laptop: "${title.substring(0, 50)}${title.length > 50 ? '...' : ''}"`);
     }
     
     // Return more comprehensive data to allow DeepSeek more flexibility
     return {
       rank: index + 1,
-      asin: product.asin || '',
+      asin: asin,
       title: title,
-      brand: product.brand || 'Unknown',
-      price: parseFloat(product.price?.value || '0'),
-      rating: parseFloat(product.rating || '0'),
-      ratingCount: parseInt(product.ratings_total || '0', 10),
-      imageUrl: product.image || '',
-      productUrl: product.url || '',
+      brand: product.brand || 'Lenovo',
+      price: price,
+      rating: rating,
+      ratingCount: ratingCount,
+      imageUrl: imageUrl,
+      productUrl: productUrl,
       specs: formatSpecs(product),
       htmlContent: generateHtmlContent(product, index + 1),
       // Include additional raw product data for DeepSeek
