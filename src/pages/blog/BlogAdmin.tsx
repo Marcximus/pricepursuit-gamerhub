@@ -41,7 +41,7 @@ const BlogAdmin = () => {
       const refreshTimer = setTimeout(() => {
         console.log('BlogAdmin: Executing delayed refresh');
         fetchPosts();
-      }, 500);
+      }, 1000); // Increased timeout to ensure database has time to process
       
       return () => clearTimeout(refreshTimer);
     }

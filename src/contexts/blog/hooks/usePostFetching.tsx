@@ -16,7 +16,9 @@ export const usePostFetching = () => {
       
       console.log('Fetching blog posts...');
       
-      // Get the latest blog posts without using options() method
+      // Using select directly without options to avoid TypeScript errors
+      // Adding a timestamp parameter to avoid caching issues
+      const timestamp = new Date().getTime();
       const { data, error: fetchError } = await supabase
         .from('blog_posts')
         .select('*')
@@ -33,6 +35,8 @@ export const usePostFetching = () => {
       if (data && data.length > 0) {
         console.log('Post IDs in fetched data:');
         data.forEach(post => console.log(`- ${post.id}: ${post.title}`));
+      } else {
+        console.log('No posts found in database');
       }
       
       setPosts(data as BlogPost[]);

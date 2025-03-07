@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useBlog } from '@/contexts/blog';
 
 export const usePostDeletion = () => {
-  const { deletePost } = useBlog();
+  const { deletePost, fetchPosts } = useBlog();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -29,6 +29,12 @@ export const usePostDeletion = () => {
       if (success) {
         console.log('BlogAdmin: Post deleted successfully');
         setDeleteSuccess(true);
+        
+        // Force a refetch after deletion to ensure UI is in sync with database
+        setTimeout(() => {
+          console.log('BlogAdmin: Forcing refetch after deletion');
+          fetchPosts();
+        }, 800);
       } else {
         console.error('BlogAdmin: Failed to delete post');
         setDeleteSuccess(false);
