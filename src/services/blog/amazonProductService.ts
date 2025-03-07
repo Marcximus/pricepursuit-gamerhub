@@ -97,23 +97,36 @@ export async function fetchAmazonProducts(params: SearchParam | ExtractedParams)
   console.log('🔍 Fetching Amazon products with parameters:', searchParams);
   
   try {
-    const { data, error } = await fetch('/api/fetch-amazon-products', {
+    const response = await fetch('/api/fetch-amazon-products', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(searchParams),
-    }).then(res => res.json());
+    });
     
-    if (error) {
-      console.error('Error fetching Amazon products:', error);
-      throw new Error(error.message || 'Failed to fetch products');
+    if (!response.ok) {
+      console.error(`Error fetching Amazon products: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
+      throw new Error(`Failed to fetch products: ${response.statusText}`);
     }
     
-    console.log(`✅ Successfully fetched ${data?.length || 0} products`);
-    return data || [];
+    const data = await response.json();
+    
+    if (!data || !Array.isArray(data.products)) {
+      console.error('Invalid response format from Amazon API:', data);
+      return [];
+    }
+    
+    console.log(`✅ Successfully fetched ${data.products.length || 0} products`);
+    return data.products || [];
   } catch (error) {
     console.error('Exception during Amazon products fetch:', error);
-    throw error;
+    console.error('Error details:', error instanceof Error ? error.message : String(error));
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack available');
+    
+    // Return empty array instead of rethrowing to prevent blocking the entire blog post generation
+    return [];
   }
 }

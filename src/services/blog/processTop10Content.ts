@@ -20,9 +20,14 @@ export async function processTop10Content(content: string, prompt: string): Prom
     
     if (storedProducts) {
       console.log('📦 Found pre-fetched products in localStorage');
-      products = JSON.parse(storedProducts);
-      // Clear the storage to avoid using these products for another post
-      localStorage.removeItem('currentTop10Products');
+      try {
+        products = JSON.parse(storedProducts);
+        // Clear the storage to avoid using these products for another post
+        localStorage.removeItem('currentTop10Products');
+      } catch (parseError) {
+        console.error('Error parsing stored products:', parseError);
+        products = [];
+      }
     }
     
     // If no stored products, fetch them now as a fallback
@@ -30,28 +35,21 @@ export async function processTop10Content(content: string, prompt: string): Prom
       console.log(`🚀 No pre-fetched products found. Fetching Amazon products with query: "${extractedParams.searchParams.query}"`);
       console.log(`📤 Search parameters being sent to API: ${JSON.stringify(extractedParams.searchParams)}`);
       
-      const startTime = performance.now();
-      
       try {
         products = await fetchAmazonProducts(extractedParams);
-        
-        const endTime = performance.now();
-        console.log(`⏱️ Amazon products fetch took ${(endTime - startTime).toFixed(2)}ms`);
       } catch (callError) {
         console.error('💥 Exception during Amazon products fetch:', callError);
-        console.error('💥 Error details:', callError instanceof Error ? callError.message : String(callError));
-        console.error('💥 Error stack:', callError instanceof Error ? callError.stack : 'No stack available');
         toast({
           title: 'Error calling product service',
           description: 'Technical error while fetching products. Please try again.',
           variant: 'destructive',
         });
-        return content;
       }
     }
     
+    // If we still don't have products, continue with the content as is
     if (!products || products.length === 0) {
-      console.warn('⚠️ No Amazon products found');
+      console.warn('⚠️ No Amazon products found, proceeding with original content');
       toast({
         title: 'No products found',
         description: 'We couldn\'t find any products matching your criteria for the Top 10 post',
@@ -62,13 +60,11 @@ export async function processTop10Content(content: string, prompt: string): Prom
     
     console.log(`✅ Successfully fetched ${products.length} products from Amazon`);
     if (products.length > 0) {
-      console.log(`🔍 First product: "${products[0].title.substring(0, 30)}..."`);
-      console.log(`📥 Sample product data: ${JSON.stringify(products[0]).substring(0, 300)}...`);
+      console.log(`🔍 First product: "${products[0].title?.substring(0, 30) || 'Unknown'}..."`);
     }
     
     // Replace the product data placeholders with actual data
     console.log('🔄 Replacing product data placeholders in content...');
-    console.log('📃 Content sample before replacement:', content.substring(0, 200) + '...');
     
     let processedContent = content;
     let replacementsCount = 0;
@@ -81,12 +77,12 @@ export async function processTop10Content(content: string, prompt: string): Prom
       const placeholderRegex = new RegExp(placeholderPattern, 'g');
       const matchCount = (processedContent.match(placeholderRegex) || []).length;
       
-      if (matchCount > 0) {
+      if (matchCount > 0 && product && product.htmlContent) {
         console.log(`🎯 Found ${matchCount} placeholder(s) for product #${i+1}`);
         processedContent = processedContent.replace(placeholderRegex, product.htmlContent || '');
         replacementsCount++;
       } else {
-        console.warn(`⚠️ No placeholder found for product #${i+1}`);
+        console.warn(`⚠️ No placeholder found for product #${i+1} or missing html content`);
       }
     }
     
@@ -110,18 +106,16 @@ export async function processTop10Content(content: string, prompt: string): Prom
     
     console.log(`✅ Replaced ${replacementsCount} product placeholders in content`);
     console.log(`📏 Content length after processing: ${processedContent.length} characters`);
-    console.log(`📤 Final content sample: ${processedContent.substring(0, 300)}...`);
     
     if (replacementsCount === 0) {
       console.warn('⚠️ No product placeholders were replaced in the content');
-      console.log('📄 Content sample for debugging:', content.substring(0, 500));
-      console.log('🔍 Looking for any placeholder pattern in content...');
+      
+      // If no placeholders were found, we'll check the content for any mentions of product data
       const anyPlaceholderMatch = content.match(/\[PRODUCT_DATA_\d+\]/g);
       if (anyPlaceholderMatch) {
         console.log('🔍 Found placeholder patterns:', anyPlaceholderMatch);
       } else {
         console.warn('⚠️ No placeholder patterns found in content at all');
-        console.log('📄 Complete content for debugging:', content);
       }
     }
     

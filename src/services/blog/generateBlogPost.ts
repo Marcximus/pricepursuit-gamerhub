@@ -13,6 +13,7 @@ export async function generateBlogPost(
 ): Promise<GeneratedBlogContent | null> {
   try {
     // For Top10 category, we need to fetch Amazon products first
+    let products = [];
     if (category === 'Top10') {
       console.log('Detected Top10 post, extracting search parameters...');
       const extractedParams = extractSearchParamsFromPrompt(prompt);
@@ -21,11 +22,20 @@ export async function generateBlogPost(
       // Pre-process the content to fetch Amazon products
       console.log('Fetching Amazon products before generating content...');
       try {
-        const products = await fetchAmazonProducts(extractedParams);
+        products = await fetchAmazonProducts(extractedParams);
         console.log(`Fetched ${products.length} products from Amazon API`);
         
         // Store products in local storage for use after content generation
-        localStorage.setItem('currentTop10Products', JSON.stringify(products));
+        if (products.length > 0) {
+          localStorage.setItem('currentTop10Products', JSON.stringify(products));
+        } else {
+          console.warn('No products fetched from Amazon API');
+          toast({
+            title: 'Product Fetching Warning',
+            description: 'No products were found. The blog post will be generated without real product data.',
+            variant: 'warning',
+          });
+        }
       } catch (error) {
         console.error('Error fetching Amazon products:', error);
         toast({
@@ -36,12 +46,14 @@ export async function generateBlogPost(
       }
     }
 
+    // Now call the Supabase function to generate the blog post
     const { data, error } = await supabase.functions.invoke('generate-blog-post', {
       body: {
         prompt,
         category,
         asin,
-        asin2
+        asin2,
+        products: category === 'Top10' ? products : undefined // Pass the products to the edge function
       },
     });
 

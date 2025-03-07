@@ -26,18 +26,39 @@ serve(async (req) => {
     const requestText = await req.text();
     console.log(`📥 REQUEST DATA: ${requestText}`);
     
-    const { query, brand, maxPrice, category } = JSON.parse(requestText);
+    let requestData;
+    try {
+      requestData = JSON.parse(requestText);
+    } catch (error) {
+      console.error("🔴 Error parsing request JSON:", error);
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body" }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    
+    const { query, brand, maxPrice, category, sortBy = "RELEVANCE" } = requestData;
+    
+    if (!query) {
+      console.error("🔴 Missing query parameter");
+      return new Response(
+        JSON.stringify({ error: "Query parameter is required" }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    
     console.log(`📝 Search query: "${query}"`);
     console.log(`🏷️ Brand filter: ${brand || 'None'}`);
     console.log(`💰 Max price: ${maxPrice || 'None'}`);
     console.log(`🔍 Category: ${category || 'None'}`);
+    console.log(`🔍 Sort by: ${sortBy || 'RELEVANCE'}`);
 
     // Build the query parameters
     const queryParams: Record<string, string> = {
       query: query,
       page: '1',
       country: 'US',
-      sort_by: brand ? 'RELEVANCE' : 'BEST_SELLERS',
+      sort_by: sortBy,
       product_condition: 'ALL',
       is_prime: 'false',
       deals_and_discounts: 'NONE'
@@ -76,14 +97,31 @@ serve(async (req) => {
       throw new Error(`RapidAPI returned status ${response.status}: ${errorText}`);
     }
 
-    const data = await response.json();
-    console.log(`📥 RAPIDAPI RESPONSE RECEIVED - Status: ${response.status}`);
-    console.log(`📥 RAPIDAPI RESPONSE PREVIEW: ${JSON.stringify(data).substring(0, 500)}...`);
+    let data;
+    try {
+      data = await response.json();
+      console.log(`📥 RAPIDAPI RESPONSE RECEIVED - Status: ${response.status}`);
+      console.log(`📥 RAPIDAPI RESPONSE PREVIEW: ${JSON.stringify(data).substring(0, 500)}...`);
+    } catch (error) {
+      console.error("🔴 Error parsing RapidAPI response JSON:", error);
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in RapidAPI response" }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
     
     // Extract and format the product data
     console.log(`✅ Received ${data.data?.products?.length || 0} products from RapidAPI`);
     
-    const products = (data.data?.products || []).map((product: any, index: number) => {
+    if (!data.data?.products || !Array.isArray(data.data.products)) {
+      console.warn("⚠️ No products found in RapidAPI response or invalid format");
+      return new Response(
+        JSON.stringify({ products: [] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const products = (data.data.products || []).map((product: any, index: number) => {
       // Determine if this product is a laptop
       const isLaptop = 
         product.title.toLowerCase().includes('laptop') || 
@@ -133,7 +171,7 @@ serve(async (req) => {
     console.error(`⚠️ Error stack: ${error.stack || 'No stack trace available'}`);
     
     return new Response(
-      JSON.stringify({ error: error.message || 'An unexpected error occurred' }),
+      JSON.stringify({ error: error.message || 'An unexpected error occurred', products: [] }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
