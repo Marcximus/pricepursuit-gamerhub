@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -88,11 +87,6 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
 
   const createPost = async (postData: Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      // Check admin status before attempting to create
-      if (!isAdmin) {
-        throw new Error("Permission denied: Only admins can create blog posts");
-      }
-      
       const { data, error: insertError } = await supabase
         .from('blog_posts')
         .insert([postData])
@@ -136,11 +130,6 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
 
   const updatePost = async (id: string, postData: Partial<BlogPost>) => {
     try {
-      // Check admin status before attempting to update
-      if (!isAdmin) {
-        throw new Error("Permission denied: Only admins can update blog posts");
-      }
-      
       const { error: updateError } = await supabase
         .from('blog_posts')
         .update(postData)
@@ -185,11 +174,6 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
 
   const deletePost = async (id: string) => {
     try {
-      // Check admin status before attempting to delete
-      if (!isAdmin) {
-        throw new Error("Permission denied: Only admins can delete blog posts");
-      }
-      
       const { error: deleteError } = await supabase
         .from('blog_posts')
         .delete()

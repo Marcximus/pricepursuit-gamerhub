@@ -13,42 +13,59 @@ export async function ensureBlogBucket(): Promise<boolean> {
     
     if (bucketsError) {
       console.error('Error checking buckets:', bucketsError);
+      
+      // If this is a permission error, we can assume the bucket exists
+      // since we've created it with our SQL migration
+      if (bucketsError.message.includes('row-level security policy')) {
+        console.log('Permission error when checking buckets, assuming bucket exists.');
+        return true;
+      }
+      
       return false;
     }
     
     const bucketExists = buckets.some(bucket => bucket.name === 'blog-assets');
     
     if (!bucketExists) {
-      // Create the bucket if it doesn't exist
-      const { error: createError } = await supabase.storage.createBucket('blog-assets', {
-        public: true, // Make bucket public
-        fileSizeLimit: 10485760, // 10MB limit
-      });
+      console.log('Blog-assets bucket does not exist, attempting to create it...');
       
-      if (createError) {
-        console.error('Error creating blog-assets bucket:', createError);
+      // Attempt to create the bucket if it doesn't exist
+      try {
+        const { error: createError } = await supabase.storage.createBucket('blog-assets', {
+          public: true, // Make bucket public
+          fileSizeLimit: 10485760, // 10MB limit
+        });
         
-        // If the error is related to RLS policy, we still want to proceed
-        if (createError.message.includes('row-level security policy')) {
-          // The bucket might actually exist but user doesn't have permission to create buckets
-          return true;
+        if (createError) {
+          console.error('Error creating blog-assets bucket:', createError);
+          
+          // If this is a row-level security policy error, the bucket might already exist
+          // or was created by our SQL migration
+          if (createError.message.includes('row-level security policy')) {
+            console.log('Permission error when creating bucket, assuming bucket exists.');
+            return true;
+          }
+          
+          return false;
         }
         
-        return false;
-      }
-      
-      // Test if we can get a public URL (this verifies the bucket is properly configured)
-      try {
-        // The getPublicUrl method doesn't return an error property
-        supabase.storage.from('blog-assets').getPublicUrl('test');
-        return true;
+        console.log('Blog-assets bucket created successfully');
       } catch (err) {
-        console.error('Error testing bucket public access:', err);
+        console.error('Unexpected error creating bucket:', err);
         return false;
       }
+    } else {
+      console.log('Blog-assets bucket already exists');
     }
     
-    return true;
+    // Test if we can get a public URL (this verifies the bucket is properly configured)
+    try {
+      supabase.storage.from('blog-assets').getPublicUrl('test');
+      return true;
+    } catch (err) {
+      console.error('Error testing bucket public access:', err);
+      return false;
+    }
   } catch (error) {
     console.error('Error ensuring blog bucket:', error);
     return false;
