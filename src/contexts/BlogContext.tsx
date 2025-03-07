@@ -1,6 +1,8 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { useAuth } from './AuthContext';
 
 export type BlogPost = {
   id: string;
@@ -37,6 +39,7 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { isAdmin } = useAuth();
 
   const fetchPosts = async () => {
     try {
@@ -85,13 +88,21 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
 
   const createPost = async (postData: Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      // Check admin status before attempting to create
+      if (!isAdmin) {
+        throw new Error("Permission denied: Only admins can create blog posts");
+      }
+      
       const { data, error: insertError } = await supabase
         .from('blog_posts')
         .insert([postData])
         .select()
         .single();
       
-      if (insertError) throw new Error(insertError.message);
+      if (insertError) {
+        console.error('Supabase error:', insertError);
+        throw new Error(insertError.message);
+      }
       
       setPosts(prevPosts => [data as BlogPost, ...prevPosts]);
       toast({
@@ -102,17 +113,34 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
       return data as BlogPost;
     } catch (err) {
       console.error('Error creating blog post:', err);
-      toast({
-        title: "Error creating blog post",
-        description: err instanceof Error ? err.message : 'An unknown error occurred',
-        variant: "destructive",
-      });
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'An unknown error occurred';
+      
+      if (errorMessage.includes('row-level security')) {
+        toast({
+          title: "Permission Error",
+          description: "You don't have permission to create blog posts. Only admins can perform this action.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error creating blog post",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
       return null;
     }
   };
 
   const updatePost = async (id: string, postData: Partial<BlogPost>) => {
     try {
+      // Check admin status before attempting to update
+      if (!isAdmin) {
+        throw new Error("Permission denied: Only admins can update blog posts");
+      }
+      
       const { error: updateError } = await supabase
         .from('blog_posts')
         .update(postData)
@@ -132,17 +160,36 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
       return true;
     } catch (err) {
       console.error('Error updating blog post:', err);
-      toast({
-        title: "Error updating blog post",
-        description: err instanceof Error ? err.message : 'An unknown error occurred',
-        variant: "destructive",
-      });
+      
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'An unknown error occurred';
+      
+      if (errorMessage.includes('row-level security')) {
+        toast({
+          title: "Permission Error",
+          description: "You don't have permission to update blog posts. Only admins can perform this action.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error updating blog post",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+      
       return false;
     }
   };
 
   const deletePost = async (id: string) => {
     try {
+      // Check admin status before attempting to delete
+      if (!isAdmin) {
+        throw new Error("Permission denied: Only admins can delete blog posts");
+      }
+      
       const { error: deleteError } = await supabase
         .from('blog_posts')
         .delete()
@@ -160,11 +207,25 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
       return true;
     } catch (err) {
       console.error('Error deleting blog post:', err);
-      toast({
-        title: "Error deleting blog post",
-        description: err instanceof Error ? err.message : 'An unknown error occurred',
-        variant: "destructive",
-      });
+      
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'An unknown error occurred';
+      
+      if (errorMessage.includes('row-level security')) {
+        toast({
+          title: "Permission Error",
+          description: "You don't have permission to delete blog posts. Only admins can perform this action.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error deleting blog post",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+      
       return false;
     }
   };
