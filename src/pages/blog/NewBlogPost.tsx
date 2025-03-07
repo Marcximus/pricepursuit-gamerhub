@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useBlog } from '@/contexts/BlogContext';
@@ -12,9 +11,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { BlogAIPromptDialog } from '@/components/blog/BlogAIPromptDialog';
 import { uploadBlogImage, generateBlogPost } from '@/services/blogService';
-import { Sparkles, Image, Eye, Save } from 'lucide-react';
+import { Sparkles, Image, Eye, Save, HelpCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/components/ui/use-toast';
+import { BlogSEOPreview } from '@/components/blog/BlogSEOPreview';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const NewBlogPost = () => {
   const navigate = useNavigate();
@@ -25,11 +26,9 @@ const NewBlogPost = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
-  // Get edit ID from query params if available
   const searchParams = new URLSearchParams(location.search);
   const editId = searchParams.get('edit');
   
-  // Form state
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [content, setContent] = useState('');
@@ -41,7 +40,21 @@ const NewBlogPost = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [tagsInput, setTagsInput] = useState('');
   
-  // Load post data if in edit mode
+  const previewPost = {
+    title,
+    slug,
+    content,
+    excerpt,
+    category,
+    image_url: imageUrl,
+    author,
+    published,
+    tags,
+    created_at: new Date().toISOString(),
+  };
+  
+  const currentUrl = window.location.origin + `/blog/${category}/post/${slug}`;
+  
   useEffect(() => {
     if (editId) {
       const postToEdit = posts.find(post => post.id === editId);
@@ -64,7 +77,6 @@ const NewBlogPost = () => {
     }
   }, [editId, posts]);
   
-  // Generate a slug from the title
   useEffect(() => {
     if (title && !editId) {
       const generatedSlug = title
@@ -75,13 +87,11 @@ const NewBlogPost = () => {
     }
   }, [title, editId]);
   
-  // Handle tag input changes
   const handleTagsInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTagsInput(e.target.value);
     setTags(e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag));
   };
   
-  // Handle image upload
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -108,7 +118,6 @@ const NewBlogPost = () => {
     }
   };
   
-  // Handle AI content generation
   const handleGenerateContent = async (prompt: string, selectedCategory: string) => {
     setIsGenerating(true);
     try {
@@ -143,7 +152,6 @@ const NewBlogPost = () => {
     }
   };
   
-  // Save the blog post
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -156,7 +164,6 @@ const NewBlogPost = () => {
       return;
     }
     
-    // Check if the slug already exists (and is not the current post)
     const existingPost = getPostBySlug(slug, category);
     if (existingPost && existingPost.id !== editId) {
       toast({
@@ -243,7 +250,6 @@ const NewBlogPost = () => {
         
         <form onSubmit={handleSave} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Main Content */}
             <div className="md:col-span-2 space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="title">Title*</Label>
@@ -298,7 +304,6 @@ const NewBlogPost = () => {
               </div>
             </div>
             
-            {/* Sidebar */}
             <div className="space-y-6">
               <Card>
                 <CardContent className="pt-6 space-y-6">
@@ -405,6 +410,25 @@ const NewBlogPost = () => {
                   </div>
                 </CardContent>
               </Card>
+              
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <h3 className="text-sm font-medium">Search Engine Optimization</h3>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-5 w-5 ml-1">
+                          <HelpCircle className="h-3 w-3" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm">
+                        <p>This preview shows how your post might appear in search results and social media shares.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <BlogSEOPreview post={previewPost} url={currentUrl} />
+              </div>
               
               <div className="flex justify-end space-x-2">
                 <Button 
