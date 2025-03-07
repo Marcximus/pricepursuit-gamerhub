@@ -32,6 +32,12 @@ export async function uploadBlogImage(
 
     if (uploadError) {
       console.error('Upload error details:', uploadError);
+      
+      // Check for specific errors
+      if (uploadError.message.includes('row-level security policy')) {
+        throw new Error('Permission denied: Please make sure you are logged in with appropriate rights');
+      }
+      
       throw new Error(uploadError.message);
     }
 
@@ -47,11 +53,7 @@ export async function uploadBlogImage(
     // Provide more specific error messages
     let errorMessage = 'Failed to upload image';
     if (error instanceof Error) {
-      if (error.message.includes('row-level security policy')) {
-        errorMessage = 'Permission denied: Please make sure you are logged in with appropriate rights';
-      } else {
-        errorMessage = error.message;
-      }
+      errorMessage = error.message;
     }
     
     toast({
