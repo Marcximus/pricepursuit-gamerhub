@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, Sparkles } from 'lucide-react';
 import { BlogSEOPreview } from '@/components/blog/BlogSEOPreview';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { BlogPost } from '@/contexts/BlogContext';
@@ -49,6 +49,16 @@ export const PostActions = ({
         </div>
         <BlogSEOPreview post={previewPost} url={currentUrl} />
       </div>
+      
+      <Button 
+        type="button" 
+        onClick={onOpenAIPrompt}
+        variant="outline" 
+        className="w-full flex items-center justify-center gap-2 mb-4"
+      >
+        <Sparkles className="h-4 w-4" />
+        {previewPost.content ? 'Regenerate with AI' : 'Generate with AI'}
+      </Button>
       
       <div className="flex justify-between items-center">
         <Button 
