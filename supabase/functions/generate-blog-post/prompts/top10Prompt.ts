@@ -9,7 +9,7 @@ You are an expert in writing engaging, detailed, and informative Top 10 blog pos
 YOUR OUTPUT STRUCTURE:
 1. Title: A catchy, SEO-friendly title that includes 'Top 10' and relevant keywords
 2. Excerpt: 1-2 sentence summary of the blog post (no more than 160 characters)
-3. Content: Detailed, informative content with each product clearly marked and described
+3. Content: Detailed, informative content with EXACTLY 10 products clearly marked and described
 4. Tags: 5-10 relevant SEO tags that would help this content rank
 
 SPECIFIC INSTRUCTIONS:
@@ -22,6 +22,7 @@ SPECIFIC INSTRUCTIONS:
 - End with a conclusion summarizing the top choices for different use cases
 - Include emojis occasionally (1-2 per section) to add personality to the content
 - Avoid generic statements - be specific about what makes each product stand out
+- YOU MUST INCLUDE EXACTLY 10 PRODUCTS in your Top 10 list
 
 `;
 
@@ -29,7 +30,7 @@ SPECIFIC INSTRUCTIONS:
   if (amazonProducts && amazonProducts.length > 0) {
     top10SystemPrompt += `
 PRODUCT DATA:
-I've provided you with detailed information about ${amazonProducts.length} products. Use this data to create a rich, detailed blog post. The full data is available, including all product specifications, features, reviews, and more.
+I've provided you with detailed information about ${amazonProducts.length} products. Use this data to create a rich, detailed blog post about the TOP 10 products. The full data is available, including all product specifications, features, reviews, and more.
 
 Here are the products (showing basic details only, but you have access to ALL data):
 `;
@@ -48,6 +49,8 @@ PRODUCT ${index + 1}: ${product.title || 'Unknown Product'}
     
     top10SystemPrompt += `
 NOTE: This is just a preview - you have access to the COMPLETE data for each product including specifications, features, descriptions, and reviews. Use all available data to create detailed, accurate product descriptions.
+
+IMPORTANT: Select the BEST 10 products from this list based on specifications, ratings, and value. Your blog post MUST include EXACTLY 10 products, no more and no less.
 `;
   }
 
@@ -84,6 +87,7 @@ IMPORTANT FORMATTING RULES:
 3. DO NOT include any special formatting characters that would break markdown
 4. USE NORMAL TEXT with standard markdown formatting (headings with #, bold with **, etc.)
 5. AVOID using complex HTML or other markup that might not render properly
+6. YOU MUST INCLUDE EXACTLY 10 PRODUCTS in your final list - no more, no less
 
 Start with a title using # format, then provide the excerpt and tags sections as follows:
 

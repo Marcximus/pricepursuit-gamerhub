@@ -23,8 +23,15 @@ export function replaceProductPlaceholders(content: string, products: any[]): {
   let processedContent = content;
   let replacementsCount = 0;
   
+  // Log number of products vs product placeholders
+  console.log(`🔄 Processing ${products.length} products for Top10 content`);
+  
+  // Limit to exactly 10 products for Top10 lists
+  const productLimit = Math.min(products.length, 10);
+  console.log(`🔢 Will use exactly ${productLimit} products for the Top10 list`);
+  
   // Process both standard div placeholders and raw product data mentions
-  for (let i = 0; i < Math.min(products.length, 10); i++) {
+  for (let i = 0; i < productLimit; i++) {
     const product = products[i];
     const productNum = i + 1;
     

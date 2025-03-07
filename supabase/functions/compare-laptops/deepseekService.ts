@@ -23,7 +23,9 @@ export async function getComparison(laptopLeft: Product, laptopRight: Product, a
           content: generateUserPrompt(laptopLeft, laptopRight)
         }
       ],
-      temperature: 1.0  // Changed from 0.1 to 1.0 for more creative responses
+      temperature: 1.0,  // Creative responses
+      // Removed max_tokens limit to allow complete responses
+      top_p: 1
     })
   });
 

@@ -26,7 +26,7 @@ export async function generateContentWithDeepSeek(
         }
       ],
       temperature: 0.7,
-      max_tokens: 4000,
+      // Removing max_tokens limit to allow for full response
       top_p: 1,
       stream: false,
       // Added a stop sequence to ensure we don't get any unexpected format tokens
