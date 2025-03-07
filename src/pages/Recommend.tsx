@@ -39,8 +39,8 @@ const Recommend = () => {
                 
                 {!showingResults && !isProcessing ? <>
                     <div className="flex justify-center mb-1">
-                      <div className="bg-blue-100 p-3 rounded-full">
-                        <Laptop className="w-8 h-8 text-blue-600" />
+                      <div className="bg-green-100 p-3 rounded-full">
+                        <Laptop className="w-8 h-8 text-green-600" />
                       </div>
                     </div>
                     <h1 className="text-3xl font-bold text-center mb-2 text-gray-800">Find Your Perfect Laptop</h1>

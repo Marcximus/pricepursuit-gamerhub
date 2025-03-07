@@ -50,7 +50,7 @@ export const QuizNavigation: React.FC<QuizNavigationProps> = ({
         <Button
           onClick={onNext}
           disabled={isNextDisabled()}
-          className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 transition-all duration-200"
+          className="px-5 py-2 rounded-xl bg-green-600 hover:bg-green-700 transition-all duration-200"
         >
           Next
           <ArrowRight className="w-4 h-4 ml-2" />
@@ -59,7 +59,7 @@ export const QuizNavigation: React.FC<QuizNavigationProps> = ({
         <Button 
           onClick={onSubmit} 
           disabled={!answers.storage || isProcessing}
-          className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 transition-all duration-200"
+          className="px-5 py-2 rounded-xl bg-green-600 hover:bg-green-700 transition-all duration-200"
         >
           {isProcessing ? (
             <>
