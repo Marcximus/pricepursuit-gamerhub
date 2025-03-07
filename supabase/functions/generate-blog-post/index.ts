@@ -47,6 +47,7 @@ serve(async (req) => {
     // Variables to store product data
     let firstProductData = null;
     let secondProductData = null;
+    let amazonProducts = null; // For Top10 posts
 
     // Function to fetch product data
     const fetchProductData = async (productAsin: string) => {
@@ -83,6 +84,23 @@ serve(async (req) => {
       }
     };
 
+    // For Top10 posts, check if products were pre-fetched and stored in the request
+    if (category === 'Top10') {
+      console.log(`🔍 Checking for pre-fetched Top10 products in request...`);
+      try {
+        // The frontend might have included pre-fetched products in the request
+        const productsData = JSON.parse(requestText).products;
+        if (productsData && Array.isArray(productsData) && productsData.length > 0) {
+          amazonProducts = productsData;
+          console.log(`✅ Found ${amazonProducts.length} pre-fetched products for Top10 post`);
+        } else {
+          console.log(`⚠️ No pre-fetched products found in request for Top10 post`);
+        }
+      } catch (error) {
+        console.error('💥 Error parsing pre-fetched products:', error);
+      }
+    }
+
     // If this is a review and has an ASIN, fetch product data
     if (category === 'Review' && asin) {
       console.log(`📦 Review post with ASIN ${asin}, fetching product data...`);
@@ -101,7 +119,7 @@ serve(async (req) => {
     
     // Create system prompt based on category and product data if available
     console.log(`📝 Generating system prompt for ${category}...`);
-    const systemPrompt = getSystemPrompt(category, firstProductData, secondProductData);
+    const systemPrompt = getSystemPrompt(category, firstProductData, secondProductData, amazonProducts);
     console.log(`📋 System prompt created (${systemPrompt.length} characters)`);
     console.log(`📤 SYSTEM PROMPT: ${systemPrompt.substring(0, 500)}...`);
     
@@ -204,6 +222,37 @@ serve(async (req) => {
         }
       };
       console.log(`✅ Added comparison data for both products`);
+    }
+    
+    // If this is a Top10 post, ensure we have placeholders for product data
+    if (category === 'Top10') {
+      console.log(`🔄 Ensuring product data placeholders in Top10 content`);
+      if (!parsedContent.content.includes('[PRODUCT_DATA_')) {
+        console.log(`⚠️ No product data placeholders found in content, adding them`);
+        
+        // Simple placeholder insertion if none exist
+        let contentWithPlaceholders = parsedContent.content;
+        for (let i = 1; i <= 10; i++) {
+          const placeholderTag = `<div class="product-data" data-product-id="${i}">[PRODUCT_DATA_${i}]</div>`;
+          
+          // Find a suitable location to insert placeholders - after each h3 heading
+          const headingPattern = new RegExp(`<h3[^>]*>.*?${i}\\s*\\..*?</h3>`, 'i');
+          const headingMatch = contentWithPlaceholders.match(headingPattern);
+          
+          if (headingMatch && headingMatch.index) {
+            const insertPosition = headingMatch.index + headingMatch[0].length;
+            contentWithPlaceholders = 
+              contentWithPlaceholders.substring(0, insertPosition) + 
+              '\n\n' + placeholderTag + '\n\n' + 
+              contentWithPlaceholders.substring(insertPosition);
+          }
+        }
+        
+        parsedContent.content = contentWithPlaceholders;
+        console.log(`✅ Added product data placeholders to content`);
+      } else {
+        console.log(`✅ Content already contains product data placeholders`);
+      }
     }
     
     console.log('🎉 Successfully generated blog content!');

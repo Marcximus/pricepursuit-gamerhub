@@ -19,7 +19,7 @@ export function extractSearchParamsFromPrompt(prompt: string): ExtractedParams {
   const titleMatch = prompt.match(/(?:write about|create|make|generate|do)?\s*(?:a post about|an article about|a blog about|about)?\s*(top\s*10.*?)(?:\.|\?|$)/i);
   let title = titleMatch ? titleMatch[1].trim() : '';
   
-  // Capitalize first letter of each word and add year if not present
+  // Capitalize first letter of each word
   title = title
     .split(' ')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -89,7 +89,7 @@ export function extractSearchParamsFromPrompt(prompt: string): ExtractedParams {
   };
 }
 
-// Add the missing fetchAmazonProducts function
+// Implement the fetchAmazonProducts function
 export async function fetchAmazonProducts(params: SearchParam | ExtractedParams): Promise<any[]> {
   // Normalize the parameters to ensure we're working with SearchParam type
   const searchParams = 'searchParams' in params ? params.searchParams : params;

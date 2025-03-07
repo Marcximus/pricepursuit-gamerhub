@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { GeneratedBlogContent, SearchParam } from './types';
 import { processTop10Content } from './processTop10Content';
+import { extractSearchParamsFromPrompt, fetchAmazonProducts } from './amazonProductService';
 
 export async function generateBlogPost(
   prompt: string,
@@ -11,6 +12,30 @@ export async function generateBlogPost(
   asin2?: string
 ): Promise<GeneratedBlogContent | null> {
   try {
+    // For Top10 category, we need to fetch Amazon products first
+    if (category === 'Top10') {
+      console.log('Detected Top10 post, extracting search parameters...');
+      const extractedParams = extractSearchParamsFromPrompt(prompt);
+      console.log('Extracted parameters:', extractedParams);
+      
+      // Pre-process the content to fetch Amazon products
+      console.log('Fetching Amazon products before generating content...');
+      try {
+        const products = await fetchAmazonProducts(extractedParams);
+        console.log(`Fetched ${products.length} products from Amazon API`);
+        
+        // Store products in local storage for use after content generation
+        localStorage.setItem('currentTop10Products', JSON.stringify(products));
+      } catch (error) {
+        console.error('Error fetching Amazon products:', error);
+        toast({
+          title: 'Product Fetching Error',
+          description: 'Could not fetch product data. The blog post will be generated without real product data.',
+          variant: 'destructive',
+        });
+      }
+    }
+
     const { data, error } = await supabase.functions.invoke('generate-blog-post', {
       body: {
         prompt,

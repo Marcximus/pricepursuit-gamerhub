@@ -15,12 +15,17 @@ export type { BlogCategory } from './prompts/types.ts';
 /**
  * Get the system prompt for the AI based on blog post category
  */
-export function getSystemPrompt(category: string, productData?: any, secondProductData?: any): string {
+export function getSystemPrompt(
+  category: string, 
+  productData?: any, 
+  secondProductData?: any, 
+  amazonProducts?: any[]
+): string {
   switch (category) {
     case 'Review':
       return getReviewPrompt(productData);
     case 'Top10':
-      return getTop10Prompt();
+      return getTop10Prompt(amazonProducts);
     case 'Comparison':
       return getComparisonPrompt(productData, secondProductData);
     case 'How-To':
