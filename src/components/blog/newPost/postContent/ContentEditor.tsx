@@ -49,7 +49,7 @@ export const ContentEditor = ({
     } as React.ChangeEvent<HTMLTextAreaElement>);
   };
 
-  // Function to sanitize content for preview
+  // Improved function to sanitize and format content for preview
   const prepareContentForPreview = (content: string) => {
     // Handle JSON-formatted content by extracting only the content value
     if (content.trim().startsWith('{') && content.includes('"content":')) {
@@ -61,7 +61,18 @@ export const ContentEditor = ({
         console.error('Error parsing JSON content:', e);
       }
     }
-    return content;
+    
+    // Add CSS styling for product placeholders to make them more visible in the preview
+    const styledContent = content.replace(
+      /(<div class="product-data"[^>]*>\[PRODUCT_DATA_\d+\]<\/div>)|(\[PRODUCT_DATA_\d+\])/g, 
+      (match) => {
+        // Style the product data placeholders to make them stand out
+        return `<div class="p-4 my-4 border-2 border-dashed border-amber-500 bg-amber-50 rounded-md">${match}</div>`;
+      }
+    );
+    
+    // Format the preview to preserve line breaks
+    return styledContent;
   };
 
   return (
@@ -96,7 +107,7 @@ export const ContentEditor = ({
           )}
         </TabsContent>
         <TabsContent value="preview">
-          <div className="border rounded-md p-4 min-h-[400px] prose max-w-none overflow-auto">
+          <div className="border rounded-md p-4 min-h-[400px] prose max-w-none overflow-auto whitespace-pre-wrap">
             {content ? (
               <div 
                 dangerouslySetInnerHTML={{ 
