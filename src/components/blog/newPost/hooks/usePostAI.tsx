@@ -10,14 +10,28 @@ export const usePostAI = (
   setTags: (value: string[]) => void,
   setTagsInput: (value: string) => void
 ) => {
-  const [isAIPromptOpen, setIsAIPromptOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  
-  const handleOpenAIPrompt = () => {
-    setIsAIPromptOpen(true);
+  const [prompt, setPrompt] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('Review');
+  const [asin, setAsin] = useState('');
+  const [asin2, setAsin2] = useState('');
+
+  const resetPromptFields = () => {
+    setPrompt('');
+    setAsin('');
+    setAsin2('');
   };
   
-  const handleGenerateContent = async (prompt: string, selectedCategory: string, asin?: string, asin2?: string) => {
+  const handleGenerateContent = async () => {
+    if (!prompt.trim()) {
+      toast({
+        title: "Prompt required",
+        description: "Please enter a prompt to generate content.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsGenerating(true);
     try {
       const { generateBlogPost } = await import('@/services/blog');
@@ -29,7 +43,12 @@ export const usePostAI = (
         `${asin2 ? `, ASIN2: ${asin2}` : ''}`
       );
       
-      const generatedContent = await generateBlogPost(prompt, selectedCategory, asin, asin2);
+      const generatedContent = await generateBlogPost(
+        prompt, 
+        selectedCategory, 
+        asin || undefined, 
+        asin2 || undefined
+      );
       
       if (generatedContent) {
         setTitle(generatedContent.title);
@@ -58,9 +77,9 @@ export const usePostAI = (
           title: "Content generated",
           description: `AI-generated ${selectedCategory} content is ready for your review.`,
         });
+        
+        resetPromptFields();
       }
-      
-      setIsAIPromptOpen(false);
     } catch (error) {
       console.error('Error generating content:', error);
       toast({
@@ -74,10 +93,15 @@ export const usePostAI = (
   };
   
   return {
-    isAIPromptOpen,
     isGenerating,
-    setIsAIPromptOpen,
-    handleOpenAIPrompt,
+    prompt,
+    setPrompt,
+    selectedCategory,
+    setSelectedCategory,
+    asin,
+    setAsin,
+    asin2,
+    setAsin2,
     handleGenerateContent
   };
 };

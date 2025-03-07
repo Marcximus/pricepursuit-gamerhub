@@ -4,7 +4,6 @@ import Navigation from '@/components/Navigation';
 import { PostContent } from '@/components/blog/newPost/PostContent';
 import { PostMetadata } from '@/components/blog/newPost/PostMetadata';
 import { PostActions, PostHeaderActions } from '@/components/blog/newPost/PostActions';
-import { BlogAIPromptDialog } from '@/components/blog/BlogAIPromptDialog';
 
 const NewBlogPost = () => {
   const {
@@ -12,7 +11,6 @@ const NewBlogPost = () => {
     content,
     excerpt,
     tagsInput,
-    isAIPromptOpen,
     isGenerating,
     isSaving,
     editId,
@@ -21,19 +19,40 @@ const NewBlogPost = () => {
     isValid,
     category,
     
+    // AI generation state
+    prompt,
+    setPrompt,
+    selectedCategory,
+    setSelectedCategory,
+    asin,
+    setAsin,
+    asin2,
+    setAsin2,
+    
     setTitle,
     setContent,
     setExcerpt,
-    setIsAIPromptOpen,
     
     handleTagsInputChange,
     handleMetadataChange,
-    handleOpenAIPrompt,
     handlePreview,
     handleCancel,
     handleGenerateContent,
     handleSave
   } = useNewBlogPost();
+  
+  const aiGeneration = {
+    isGenerating,
+    prompt,
+    setPrompt,
+    selectedCategory,
+    setSelectedCategory,
+    asin,
+    setAsin,
+    asin2,
+    setAsin2,
+    handleGenerateContent
+  };
   
   return (
     <div className="min-h-screen pb-16">
@@ -45,7 +64,6 @@ const NewBlogPost = () => {
             {editId ? 'Edit Blog Post' : 'Create New Blog Post'}
           </h1>
           <PostHeaderActions 
-            onOpenAIPrompt={handleOpenAIPrompt}
             onPreview={handlePreview}
             isValid={isValid}
           />
@@ -62,6 +80,7 @@ const NewBlogPost = () => {
                 onContentChange={(e) => setContent(e.target.value)}
                 onExcerptChange={(e) => setExcerpt(e.target.value)}
                 category={category}
+                aiGeneration={aiGeneration}
               />
             </div>
             
@@ -78,7 +97,7 @@ const NewBlogPost = () => {
                 previewPost={previewPost}
                 currentUrl={currentUrl}
                 onSave={handleSave}
-                onOpenAIPrompt={handleOpenAIPrompt}
+                onOpenAIPrompt={() => {}} // We don't need this anymore, but keeping for type compatibility
                 onPreview={handlePreview}
                 onCancel={handleCancel}
                 isEdit={!!editId}
@@ -88,13 +107,6 @@ const NewBlogPost = () => {
           </div>
         </form>
       </div>
-      
-      <BlogAIPromptDialog 
-        isOpen={isAIPromptOpen}
-        onClose={() => setIsAIPromptOpen(false)}
-        onGenerate={handleGenerateContent}
-        isLoading={isGenerating}
-      />
     </div>
   );
 };

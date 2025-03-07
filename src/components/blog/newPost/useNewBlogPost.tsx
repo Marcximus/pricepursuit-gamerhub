@@ -50,10 +50,15 @@ export const useNewBlogPost = () => {
   
   // Initialize AI features
   const {
-    isAIPromptOpen,
     isGenerating,
-    setIsAIPromptOpen,
-    handleOpenAIPrompt,
+    prompt,
+    setPrompt,
+    selectedCategory,
+    setSelectedCategory,
+    asin,
+    setAsin,
+    asin2,
+    setAsin2,
     handleGenerateContent
   } = usePostAI(
     setTitle, 
@@ -123,7 +128,6 @@ export const useNewBlogPost = () => {
     published,
     tags,
     tagsInput,
-    isAIPromptOpen,
     isGenerating,
     isSaving,
     editId,
@@ -131,16 +135,24 @@ export const useNewBlogPost = () => {
     currentUrl,
     isValid,
     
+    // AI generation state
+    prompt,
+    setPrompt,
+    selectedCategory,
+    setSelectedCategory,
+    asin,
+    setAsin,
+    asin2,
+    setAsin2,
+    
     // Setters
     setTitle,
     setContent,
     setExcerpt,
-    setIsAIPromptOpen,
     
     // Handlers
     handleTagsInputChange,
     handleMetadataChange,
-    handleOpenAIPrompt,
     handlePreview,
     handleCancel,
     handleGenerateContent,
