@@ -1,4 +1,3 @@
-
 /**
  * Minimal processor for Amazon products that preserves all raw data
  */
@@ -12,6 +11,10 @@ export function processAmazonProducts(data: any) {
   
   // Simply pass through the complete raw products with minimal enhancements
   const products = data.data.products.map((product: any, index: number) => {
+    // Generate HTML content for each product
+    const htmlContent = generateProductHTML(product, index + 1);
+    console.log(`✅ Generated HTML content for product #${index + 1}: ${htmlContent.substring(0, 50)}...`);
+    
     return {
       ...product,
       rank: index + 1, // Keep rank property for display order
@@ -20,8 +23,8 @@ export function processAmazonProducts(data: any) {
       imageUrl: product.imageUrl || product.image || '',
       productUrl: product.productUrl || product.url || '#',
       
-      // Generate HTML content for each product
-      htmlContent: generateProductHTML(product, index + 1),
+      // Always include the HTML content
+      htmlContent: htmlContent,
       
       // Keep original data structure intact
       _rawData: true // Flag to indicate this has raw data
@@ -30,6 +33,7 @@ export function processAmazonProducts(data: any) {
   
   console.log(`🏁 Returning ${products.length} products with complete raw data`);
   console.log(`📤 FINAL RESPONSE PREVIEW: First product: "${products[0]?.title?.substring(0, 30)}..." Price: $${products[0]?.price?.value || 'N/A'}`);
+  console.log(`📤 First product has HTML content: ${!!products[0]?.htmlContent}`);
   
   // Return all products, up to 15 max to ensure we have enough data
   return products.slice(0, 15);

@@ -24,8 +24,20 @@ export async function processTop10Content(content: string, prompt: string): Prom
         products = JSON.parse(storedProducts);
         console.log(`Found ${products.length} products in localStorage`);
         if (products.length > 0) {
-          console.log(`First product title: ${products[0].title}`);
-          console.log(`First product has HTML content: ${!!products[0].htmlContent}`);
+          console.log(`First product title: ${products[0]?.title || 'Unknown'}`);
+          console.log(`First product has HTML content: ${!!products[0]?.htmlContent}`);
+          
+          // If htmlContent is missing, generate it now
+          if (!products[0]?.htmlContent) {
+            console.log('🔄 Generating missing HTML content for products...');
+            products = products.map((product, index) => {
+              if (!product.htmlContent) {
+                product.htmlContent = generateFallbackHtml(product, index + 1);
+                console.log(`✅ Generated HTML content for product #${index + 1}`);
+              }
+              return product;
+            });
+          }
         }
         // Clear the storage to avoid using these products for another post
         localStorage.removeItem('currentTop10Products');
@@ -44,6 +56,18 @@ export async function processTop10Content(content: string, prompt: string): Prom
       try {
         products = await fetchAmazonProducts(extractedParams);
         console.log(`✅ fetchAmazonProducts returned ${products?.length || 0} products`);
+        
+        // Check if htmlContent is missing and generate it if needed
+        if (products.length > 0 && !products[0]?.htmlContent) {
+          console.log('🔄 Generating missing HTML content for newly fetched products...');
+          products = products.map((product, index) => {
+            if (!product.htmlContent) {
+              product.htmlContent = generateFallbackHtml(product, index + 1);
+              console.log(`✅ Generated HTML content for product #${index + 1}`);
+            }
+            return product;
+          });
+        }
       } catch (callError) {
         console.error('💥 Exception during Amazon products fetch:', callError);
         toast({
@@ -67,7 +91,8 @@ export async function processTop10Content(content: string, prompt: string): Prom
     
     console.log(`✅ Successfully fetched ${products.length} products from Amazon`);
     if (products.length > 0) {
-      console.log(`🔍 First product: "${products[0].title?.substring(0, 30) || 'Unknown'}..."`);
+      console.log(`🔍 First product: "${products[0]?.title?.substring(0, 30) || 'Unknown'}..."`);
+      console.log(`First product has HTML content: ${!!products[0]?.htmlContent}`);
     }
     
     // First, remove the excerpt and tags from the content
@@ -115,7 +140,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
       } else {
         console.warn(`⚠️ No HTML content found for product #${productNum}`);
         if (product) {
-          console.log(`Product data exists but htmlContent is missing. Title: ${product.title}`);
+          console.log(`Product data exists but htmlContent is missing. Title: ${product.title || 'Unknown'}`);
           
           // If htmlContent is missing but we have product data, generate it on the fly
           const fallbackHtml = generateFallbackHtml(product, productNum);
@@ -196,31 +221,55 @@ function generateFallbackHtml(product: any, rank: number): string {
     ? `$${product.price.toFixed(2)}` 
     : (product.price?.value ? `$${parseFloat(product.price.value).toFixed(2)}` : 'Price not available');
   const rating = product.rating ? `${product.rating}/5` : 'No ratings';
-  const reviews = product.ratingCount ? `(${product.ratingCount} reviews)` : '';
-  const image = product.imageUrl || '';
+  const reviews = product.ratings_total ? `(${product.ratings_total} reviews)` : '';
+  const image = product.imageUrl || product.image || '';
   const asin = product.asin || '';
-  const url = product.productUrl || '#';
+  const url = product.productUrl || product.url || '#';
+  
+  // Extract features or highlights
+  const features = product.feature_bullets || product.features || [];
+  const featuresList = features.length > 0 
+    ? `<div class="product-features">
+        <ul>
+          ${features.slice(0, 3).map((feature: string) => 
+            `<li>${escapeHtml(feature)}</li>`).join('')}
+        </ul>
+      </div>` 
+    : '';
   
   return `
-    <div class="product-card" data-asin="${asin}" data-rank="${rank}">
+    <div class="product-card" data-asin="${escapeHtml(asin)}" data-rank="${rank}">
       <div class="product-rank">#${rank}</div>
       <div class="product-image">
-        <a href="${url}" target="_blank" rel="nofollow noopener">
-          <img src="${image}" alt="${title}" loading="lazy" />
+        <a href="${escapeHtml(url)}" target="_blank" rel="nofollow noopener">
+          <img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" loading="lazy" />
         </a>
       </div>
       <div class="product-details">
         <h4 class="product-title">
-          <a href="${url}" target="_blank" rel="nofollow noopener">${title}</a>
+          <a href="${escapeHtml(url)}" target="_blank" rel="nofollow noopener">${escapeHtml(title)}</a>
         </h4>
         <div class="product-meta">
-          <span class="product-price">${price}</span>
-          <span class="product-rating">${rating} ${reviews}</span>
+          <span class="product-price">${escapeHtml(price)}</span>
+          <span class="product-rating">${escapeHtml(rating)} ${escapeHtml(reviews)}</span>
         </div>
+        ${featuresList}
         <div class="product-cta">
-          <a href="${url}" class="check-price-btn" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
+          <a href="${escapeHtml(url)}" class="check-price-btn" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
         </div>
       </div>
     </div>
   `;
+}
+
+// Simple HTML escape function to prevent XSS in product data
+function escapeHtml(unsafe: string | number | undefined): string {
+  if (unsafe === undefined || unsafe === null) return '';
+  const str = String(unsafe);
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
