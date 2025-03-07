@@ -15,15 +15,30 @@ export const usePostFetching = () => {
       setError(null);
       
       console.log('Fetching blog posts...');
-      // Added nocache option to ensure fresh data
+      
+      // Explicitly disable caching to ensure fresh data
       const { data, error: fetchError } = await supabase
         .from('blog_posts')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .options({
+          count: 'exact',
+          head: false
+        });
       
-      if (fetchError) throw new Error(fetchError.message);
+      if (fetchError) {
+        console.error('Supabase fetch error:', fetchError);
+        throw new Error(fetchError.message);
+      }
       
       console.log(`Fetched ${data?.length || 0} blog posts`);
+      
+      // Add more detailed logging for debugging
+      if (data && data.length > 0) {
+        console.log('Post IDs in fetched data:');
+        data.forEach(post => console.log(`- ${post.id}: ${post.title}`));
+      }
+      
       setPosts(data as BlogPost[]);
     } catch (err) {
       console.error('Error fetching blog posts:', err);

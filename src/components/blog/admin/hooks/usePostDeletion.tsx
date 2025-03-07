@@ -20,6 +20,7 @@ export const usePostDeletion = () => {
     if (!postToDelete) return;
     
     setIsDeleting(true);
+    setDeleteSuccess(false);
     
     try {
       console.log(`BlogAdmin: Deleting post with ID: ${postToDelete}`);

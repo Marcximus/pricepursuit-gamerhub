@@ -29,6 +29,7 @@ const BlogAdmin = () => {
   
   useEffect(() => {
     document.title = "Blog Admin | Laptop Hunter";
+    console.log('BlogAdmin: Initial posts fetch');
     fetchPosts();
   }, [fetchPosts]);
 
@@ -36,7 +37,13 @@ const BlogAdmin = () => {
   useEffect(() => {
     if (deleteSuccess) {
       console.log('BlogAdmin: Post deleted successfully, refreshing posts list');
-      fetchPosts();
+      // Add a small delay to ensure the database has time to process the deletion
+      const refreshTimer = setTimeout(() => {
+        console.log('BlogAdmin: Executing delayed refresh');
+        fetchPosts();
+      }, 500);
+      
+      return () => clearTimeout(refreshTimer);
     }
   }, [deleteSuccess, fetchPosts]);
 

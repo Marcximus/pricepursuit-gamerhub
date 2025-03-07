@@ -116,8 +116,11 @@ export const usePostManagement = (
         throw new Error(`Post with ID ${id} not found`);
       }
       
-      // Enhanced deletion logic with explicit await
-      const { error: deleteError } = await supabase
+      // Add debug log to track the delete operation
+      console.log(`Sending delete request to Supabase for post ID: ${id}`);
+      
+      // Execute the delete operation with explicit await
+      const { error: deleteError, count } = await supabase
         .from('blog_posts')
         .delete()
         .eq('id', id);
@@ -127,7 +130,25 @@ export const usePostManagement = (
         throw new Error(deleteError.message);
       }
       
-      console.log(`Successfully deleted blog post with ID: ${id} from database`);
+      // Verify deletion was successful
+      console.log(`Delete operation completed, affected ${count} rows`);
+      
+      // Double-check that the post is really gone
+      const { data: checkDeleted, error: verifyError } = await supabase
+        .from('blog_posts')
+        .select('id')
+        .eq('id', id);
+        
+      if (verifyError) {
+        console.error('Error verifying deletion:', verifyError);
+      } else {
+        console.log(`Verification check: found ${checkDeleted?.length || 0} posts with ID ${id}`);
+        if (checkDeleted && checkDeleted.length > 0) {
+          console.error('Post still exists in database after deletion!');
+        } else {
+          console.log(`Successfully deleted blog post with ID: ${id} from database`);
+        }
+      }
       
       // Ensure we're updating the state atomically and correctly
       setPosts(prevPosts => {
