@@ -1,4 +1,3 @@
-
 /**
  * Minimal processor for Amazon products that preserves all raw data
  */
@@ -10,22 +9,23 @@ export function processAmazonProducts(data: any) {
   
   console.log(`✅ Received ${data.data?.products?.length || 0} products from RapidAPI`);
   
-  // Simply pass through the products with minimal formatting and ranking
-  const products = (data.data.products || []).map((product: any, index: number) => {
+  // Simply pass through the complete raw products with minimal enhancements
+  const products = data.data.products.map((product: any, index: number) => {
     return {
-      rank: index + 1,
       ...product,
-      // Include any calculated fields the frontend might expect
-      price: parseFloat(product.price?.value || '0') || 0,
-      imageUrl: product.image || '',
-      productUrl: product.url || '#'
+      rank: index + 1, // Keep rank property for display order
+      
+      // Add these properties only if they don't already exist - don't override existing values
+      imageUrl: product.imageUrl || product.image || '',
+      productUrl: product.productUrl || product.url || '#',
+      
+      // Keep original data structure intact
+      _rawData: true // Flag to indicate this has raw data
     };
   });
   
-  // Take the top 10 products or all if less than 10
-  const top10Products = products.slice(0, 10);
+  console.log(`🏁 Returning ${products.length} products with complete raw data`);
   
-  console.log(`🏁 Returning ${top10Products.length} products with complete raw data`);
-  
-  return top10Products;
+  // Return all products, up to 15 max to ensure we have enough data
+  return products.slice(0, 15);
 }

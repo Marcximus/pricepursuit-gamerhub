@@ -77,6 +77,16 @@ export function extractSearchParamsFromPrompt(prompt: string): ExtractedParams {
     query += ' gaming';
   }
   
+  // Log extraction results for debugging
+  console.log('📊 Extracted search parameters:', {
+    query: query.trim(),
+    brand,
+    maxPrice,
+    category,
+    sortBy,
+    title
+  });
+  
   return {
     searchParams: {
       query: query.trim(),
@@ -100,27 +110,38 @@ export async function fetchAmazonProducts(params: SearchParam | ExtractedParams)
     // Update to use the Supabase edge function directly
     const { supabase } = await import('@/integrations/supabase/client');
     
+    console.log('📡 Calling fetch-amazon-products edge function...');
     const response = await supabase.functions.invoke('fetch-amazon-products', {
       method: 'POST',
       body: searchParams,
     });
     
     if (response.error) {
-      console.error('Error fetching Amazon products:', response.error);
-      return [];
+      console.error('❌ Error fetching Amazon products:', response.error);
+      throw new Error(`Error from edge function: ${response.error.message || 'Unknown error'}`);
     }
     
     const data = response.data;
+    console.log('📦 Raw response from fetch-amazon-products:', data);
     
     if (!data || !Array.isArray(data.products)) {
-      console.error('Invalid response format from Amazon API:', data);
-      return [];
+      console.error('❌ Invalid response format from Amazon API:', data);
+      throw new Error('Invalid response format from Amazon API');
     }
     
     console.log(`✅ Successfully fetched ${data.products.length || 0} products`);
+    
+    // Log a sample of the first product to verify data structure
+    if (data.products.length > 0) {
+      console.log('📝 First product sample (title, asin):', {
+        title: data.products[0].title,
+        asin: data.products[0].asin
+      });
+    }
+    
     return data.products || [];
   } catch (error) {
-    console.error('Exception during Amazon products fetch:', error);
+    console.error('💥 Exception during Amazon products fetch:', error);
     console.error('Error details:', error instanceof Error ? error.message : String(error));
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack available');
     
