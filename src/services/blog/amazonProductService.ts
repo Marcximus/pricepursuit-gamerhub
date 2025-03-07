@@ -59,9 +59,9 @@ export function extractSearchParamsFromPrompt(prompt: string): ExtractedParams {
     }
   }
   
-  // Determine sort strategy
+  // Determine sort strategy based on the presence of "best" in the title or prompt
   let sortBy = 'RELEVANCE';
-  if (promptLower.includes('best seller') || promptLower.includes('bestseller')) {
+  if (promptLower.includes('best') || title.toLowerCase().includes('best')) {
     sortBy = 'BEST_SELLERS';
   } else if (promptLower.includes('newest') || promptLower.includes('latest')) {
     sortBy = 'NEWEST_ARRIVALS';
