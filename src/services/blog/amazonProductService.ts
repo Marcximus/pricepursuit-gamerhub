@@ -92,3 +92,32 @@ export function extractSearchParamsFromPrompt(prompt: string): ExtractedParams {
     title
   };
 }
+
+// Add the missing fetchAmazonProducts function
+export async function fetchAmazonProducts(params: SearchParam | ExtractedParams): Promise<any[]> {
+  // Normalize the parameters to ensure we're working with SearchParam type
+  const searchParams = 'searchParams' in params ? params.searchParams : params;
+  
+  console.log('🔍 Fetching Amazon products with parameters:', searchParams);
+  
+  try {
+    const { data, error } = await fetch('/api/fetch-amazon-products', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(searchParams),
+    }).then(res => res.json());
+    
+    if (error) {
+      console.error('Error fetching Amazon products:', error);
+      throw new Error(error.message || 'Failed to fetch products');
+    }
+    
+    console.log(`✅ Successfully fetched ${data?.length || 0} products`);
+    return data || [];
+  } catch (error) {
+    console.error('Exception during Amazon products fetch:', error);
+    throw error;
+  }
+}

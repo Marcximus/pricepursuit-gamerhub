@@ -11,17 +11,17 @@ export async function processTop10Content(content: string, prompt: string): Prom
   try {
     // Extract search parameters from the prompt
     console.log('🔍 Extracting search parameters from prompt...');
-    const searchParams = extractSearchParamsFromPrompt(prompt);
-    console.log('🎯 Extracted search parameters:', JSON.stringify(searchParams, null, 2));
+    const extractedParams = extractSearchParamsFromPrompt(prompt);
+    console.log('🎯 Extracted search parameters:', JSON.stringify(extractedParams, null, 2));
     
     // Fetch products from Amazon using RapidAPI
-    console.log(`🚀 About to fetch Amazon products with query: "${searchParams.query}"`);
-    console.log(`📤 Search parameters being sent to API: ${JSON.stringify(searchParams)}`);
+    console.log(`🚀 About to fetch Amazon products with query: "${extractedParams.searchParams.query}"`);
+    console.log(`📤 Search parameters being sent to API: ${JSON.stringify(extractedParams.searchParams)}`);
     
     const startTime = performance.now();
     
     try {
-      const products = await fetchAmazonProducts(searchParams);
+      const products = await fetchAmazonProducts(extractedParams);
       
       const endTime = performance.now();
       console.log(`⏱️ Amazon products fetch took ${(endTime - startTime).toFixed(2)}ms`);
