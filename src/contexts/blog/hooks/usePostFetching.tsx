@@ -16,15 +16,11 @@ export const usePostFetching = () => {
       
       console.log('Fetching blog posts...');
       
-      // Explicitly disable caching to ensure fresh data
+      // Get the latest blog posts without using options() method
       const { data, error: fetchError } = await supabase
         .from('blog_posts')
         .select('*')
-        .order('created_at', { ascending: false })
-        .options({
-          count: 'exact',
-          head: false
-        });
+        .order('created_at', { ascending: false });
       
       if (fetchError) {
         console.error('Supabase fetch error:', fetchError);
