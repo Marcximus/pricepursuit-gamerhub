@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { uploadBlogImage } from '@/services/blog';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AdditionalImagesUploadProps {
   additionalImages: string[];
@@ -19,6 +20,14 @@ export const AdditionalImagesUpload = ({
   category
 }: AdditionalImagesUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [authChecking, setAuthChecking] = useState(false);
+
+  const checkAuth = async () => {
+    setAuthChecking(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    setAuthChecking(false);
+    return !!session;
+  };
 
   const handleAdditionalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,6 +43,17 @@ export const AdditionalImagesUpload = ({
     }
     
     try {
+      // Check authentication before attempting upload
+      const isAuthenticated = await checkAuth();
+      if (!isAuthenticated) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to upload images",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setIsUploading(true);
       const url = await uploadBlogImage(file);
       if (url) {
@@ -48,7 +68,7 @@ export const AdditionalImagesUpload = ({
       console.error('Error uploading image:', error);
       toast({
         title: "Upload failed",
-        description: "There was an error uploading your image.",
+        description: error instanceof Error ? error.message : "There was an error uploading your image.",
         variant: "destructive",
       });
     } finally {
@@ -72,7 +92,9 @@ export const AdditionalImagesUpload = ({
           <div className="flex flex-col items-center space-y-2">
             <ImagePlus className="h-8 w-8 text-gray-400" />
             <span className="text-sm text-gray-500">
-              {isUploading ? 'Uploading...' : 'Add additional image'}
+              {isUploading ? 'Uploading...' : 
+               authChecking ? 'Checking login...' : 
+               'Add additional image'}
             </span>
           </div>
         </label>
@@ -82,7 +104,7 @@ export const AdditionalImagesUpload = ({
           className="hidden" 
           accept="image/*" 
           onChange={handleAdditionalImageUpload}
-          disabled={isUploading || additionalImages.length >= maxImages}
+          disabled={isUploading || authChecking || additionalImages.length >= maxImages}
         />
       </div>
       

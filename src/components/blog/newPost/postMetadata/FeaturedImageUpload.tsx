@@ -3,6 +3,7 @@ import { Image } from 'lucide-react';
 import { useState } from 'react';
 import { uploadBlogImage } from '@/services/blog';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FeaturedImageUploadProps {
   imageUrl: string | undefined;
@@ -11,12 +12,31 @@ interface FeaturedImageUploadProps {
 
 export const FeaturedImageUpload = ({ imageUrl, onImageUpload }: FeaturedImageUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [authChecking, setAuthChecking] = useState(false);
+
+  const checkAuth = async () => {
+    setAuthChecking(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    setAuthChecking(false);
+    return !!session;
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
     try {
+      // Check authentication before attempting upload
+      const isAuthenticated = await checkAuth();
+      if (!isAuthenticated) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to upload images",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setIsUploading(true);
       const url = await uploadBlogImage(file);
       if (url) {
@@ -30,7 +50,7 @@ export const FeaturedImageUpload = ({ imageUrl, onImageUpload }: FeaturedImageUp
       console.error('Error uploading image:', error);
       toast({
         title: "Upload failed",
-        description: "There was an error uploading your image.",
+        description: error instanceof Error ? error.message : "There was an error uploading your image.",
         variant: "destructive",
       });
     } finally {
@@ -47,7 +67,9 @@ export const FeaturedImageUpload = ({ imageUrl, onImageUpload }: FeaturedImageUp
         <div className="flex flex-col items-center space-y-2">
           <Image className="h-8 w-8 text-gray-400" />
           <span className="text-sm text-gray-500">
-            {isUploading ? 'Uploading...' : imageUrl ? 'Change featured image' : 'Upload featured image'}
+            {isUploading ? 'Uploading...' : 
+             authChecking ? 'Checking login...' :
+             imageUrl ? 'Change featured image' : 'Upload featured image'}
           </span>
         </div>
       </label>
@@ -57,7 +79,7 @@ export const FeaturedImageUpload = ({ imageUrl, onImageUpload }: FeaturedImageUp
         className="hidden" 
         accept="image/*" 
         onChange={handleImageUpload}
-        disabled={isUploading}
+        disabled={isUploading || authChecking}
       />
       {imageUrl && (
         <div className="mt-2">
