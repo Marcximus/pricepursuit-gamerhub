@@ -57,7 +57,7 @@ export const PostActions = ({
         className="w-full flex items-center justify-center gap-2 mb-4"
       >
         <Sparkles className="h-4 w-4" />
-        {previewPost.content ? 'Regenerate with AI' : 'Generate with AI'}
+        Regenerate with AI
       </Button>
       
       <div className="flex justify-between items-center">
@@ -83,6 +83,7 @@ export const PostActions = ({
           
           <Button 
             type="submit" 
+            onClick={onSave}
             disabled={isSaving || !isValid}
             className="flex items-center"
           >

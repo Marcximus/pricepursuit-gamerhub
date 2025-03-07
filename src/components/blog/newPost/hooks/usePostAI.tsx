@@ -10,12 +10,7 @@ export const usePostAI = (
   setTags: (value: string[]) => void,
   setTagsInput: (value: string) => void
 ) => {
-  const [isAIPromptOpen, setIsAIPromptOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  
-  const handleOpenAIPrompt = () => {
-    setIsAIPromptOpen(true);
-  };
   
   const handleGenerateContent = async (prompt: string, selectedCategory: string, asin?: string, asin2?: string) => {
     setIsGenerating(true);
@@ -59,8 +54,6 @@ export const usePostAI = (
           description: `AI-generated ${selectedCategory} content is ready for your review.`,
         });
       }
-      
-      setIsAIPromptOpen(false);
     } catch (error) {
       console.error('Error generating content:', error);
       toast({
@@ -74,10 +67,7 @@ export const usePostAI = (
   };
   
   return {
-    isAIPromptOpen,
     isGenerating,
-    setIsAIPromptOpen,
-    handleOpenAIPrompt,
     handleGenerateContent
   };
 };

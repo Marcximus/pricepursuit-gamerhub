@@ -50,10 +50,7 @@ export const useNewBlogPost = () => {
   
   // Initialize AI features
   const {
-    isAIPromptOpen,
     isGenerating,
-    setIsAIPromptOpen,
-    handleOpenAIPrompt,
     handleGenerateContent
   } = usePostAI(
     setTitle, 
@@ -123,7 +120,6 @@ export const useNewBlogPost = () => {
     published,
     tags,
     tagsInput,
-    isAIPromptOpen,
     isGenerating,
     isSaving,
     editId,
@@ -135,15 +131,13 @@ export const useNewBlogPost = () => {
     setTitle,
     setContent,
     setExcerpt,
-    setIsAIPromptOpen,
     
     // Handlers
     handleTagsInputChange,
     handleMetadataChange,
-    handleOpenAIPrompt,
+    handleGenerateContent,
     handlePreview,
     handleCancel,
-    handleGenerateContent,
     handleSave
   };
 };
