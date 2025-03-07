@@ -38,7 +38,7 @@ const Navigation = () => {
           <Link to="/" className="flex items-center space-x-2">
             <div className="flex items-center relative">
               <Laptop className="w-6 h-6 text-gaming-600" />
-              <Crosshair className="w-10 h-10 text-green-600 absolute top-1/2 left-1/2 transform -translate-x-[50%] -translate-y-1/2 z-10 animate-crosshair-pulse" />
+              <Crosshair className="w-10 h-10 text-green-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 animate-crosshair-pulse" />
             </div>
             <span className="text-xl font-bold text-gaming-800">Laptop Hunter</span>
           </Link>

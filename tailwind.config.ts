@@ -1,4 +1,3 @@
-
 import { type Config } from "tailwindcss";
 
 export default {
@@ -48,11 +47,11 @@ export default {
         "crosshair-pulse": {
           "0%, 100%": {
             opacity: 1,
-            transform: "translate(-56%, -50%) scale(1)",
+            transform: "translate(-50%, -50%) scale(1)",
           },
           "50%": {
             opacity: 0.7,
-            transform: "translate(-56%, -50%) scale(1.1)",
+            transform: "translate(-50%, -50%) scale(1.1)",
           },
         },
       },
@@ -90,10 +89,9 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Update gaming color palette to darker gray/black colors instead of indigo/blue
         gaming: {
-          600: "#4B5563", // Gray-600 instead of Indigo
-          800: "#1F2937", // Gray-800 instead of Indigo
+          600: "#4B5563",
+          800: "#1F2937",
         },
       },
       borderRadius: {
