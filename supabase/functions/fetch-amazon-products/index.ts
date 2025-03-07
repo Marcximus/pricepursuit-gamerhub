@@ -23,7 +23,10 @@ serve(async (req) => {
 
     // Extract the request data
     console.log("📦 Extracting request data...");
-    const { query, brand, maxPrice, category } = await req.json();
+    const requestText = await req.text();
+    console.log(`📥 REQUEST DATA: ${requestText}`);
+    
+    const { query, brand, maxPrice, category } = JSON.parse(requestText);
     console.log(`📝 Search query: "${query}"`);
     console.log(`🏷️ Brand filter: ${brand || 'None'}`);
     console.log(`💰 Max price: ${maxPrice || 'None'}`);
@@ -56,6 +59,7 @@ serve(async (req) => {
     });
 
     console.log(`🔍 Making request to RapidAPI with URL: ${searchUrl.toString()}`);
+    console.log(`📤 RAPIDAPI REQUEST PARAMS: ${JSON.stringify(queryParams)}`);
     
     // Make the request to RapidAPI
     const response = await fetch(searchUrl, {
@@ -73,6 +77,8 @@ serve(async (req) => {
     }
 
     const data = await response.json();
+    console.log(`📥 RAPIDAPI RESPONSE RECEIVED - Status: ${response.status}`);
+    console.log(`📥 RAPIDAPI RESPONSE PREVIEW: ${JSON.stringify(data).substring(0, 500)}...`);
     
     // Extract and format the product data
     console.log(`✅ Received ${data.data?.products?.length || 0} products from RapidAPI`);
@@ -115,6 +121,7 @@ serve(async (req) => {
     const top10Products = finalProducts.slice(0, 10);
     
     console.log(`🏁 Returning ${top10Products.length} products`);
+    console.log(`📤 FINAL RESPONSE PREVIEW: ${JSON.stringify({ products: top10Products.slice(0, 2) }).substring(0, 500)}...`);
 
     return new Response(
       JSON.stringify({ products: top10Products }),

@@ -18,7 +18,10 @@ serve(async (req) => {
     }
 
     // Extract the request data
-    const { asin } = await req.json();
+    const requestText = await req.text();
+    console.log(`📥 REQUEST DATA: ${requestText}`);
+    
+    const { asin } = JSON.parse(requestText);
 
     if (!asin) {
       return new Response(
@@ -38,6 +41,8 @@ serve(async (req) => {
       parse: true
     };
 
+    console.log(`📤 OXYLABS REQUEST: ${JSON.stringify(payload)}`);
+
     // Make request to Oxylabs
     const response = await fetch('https://realtime.oxylabs.io/v1/queries', {
       method: 'POST',
@@ -49,10 +54,14 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ Oxylabs API error: ${response.status} - ${errorText}`);
       throw new Error(`Oxylabs API error: ${response.statusText}`);
     }
 
     const data = await response.json();
+    console.log(`📥 OXYLABS RESPONSE RECEIVED - Status: ${response.status}`);
+    console.log(`📥 OXYLABS RESPONSE PREVIEW: ${JSON.stringify(data).substring(0, 500)}...`);
     
     if (!data.results || !data.results[0] || !data.results[0].content) {
       throw new Error('Invalid response from Oxylabs');
@@ -74,12 +83,16 @@ serve(async (req) => {
       url: `https://www.amazon.com/dp/${asin}`
     };
 
+    console.log(`📤 FINAL RESPONSE PREVIEW: ${JSON.stringify(processedData).substring(0, 500)}...`);
+
     return new Response(
       JSON.stringify(processedData),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Error fetching product data:', error);
+    console.error(`⚠️ Error message: ${error.message || 'Unknown error'}`);
+    console.error(`⚠️ Error stack: ${error.stack || 'No stack trace available'}`);
     
     return new Response(
       JSON.stringify({ error: error.message || 'An unexpected error occurred' }),

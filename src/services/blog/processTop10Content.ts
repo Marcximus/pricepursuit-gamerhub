@@ -16,6 +16,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
     
     // Fetch products from Amazon using RapidAPI
     console.log(`🚀 About to fetch Amazon products with query: "${searchParams.query}"`);
+    console.log(`📤 Search parameters being sent to API: ${JSON.stringify(searchParams)}`);
     
     const startTime = performance.now();
     
@@ -37,6 +38,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
       
       console.log(`✅ Successfully fetched ${products.length} products from Amazon`);
       console.log(`🔍 First product: "${products[0].title.substring(0, 30)}..."`);
+      console.log(`📥 Sample product data: ${JSON.stringify(products[0]).substring(0, 300)}...`);
       
       // Replace the product data placeholders with actual data
       console.log('🔄 Replacing product data placeholders in content...');
@@ -82,6 +84,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
       
       console.log(`✅ Replaced ${replacementsCount} product placeholders in content`);
       console.log(`📏 Content length after processing: ${processedContent.length} characters`);
+      console.log(`📤 Final content sample: ${processedContent.substring(0, 300)}...`);
       
       if (replacementsCount === 0) {
         console.warn('⚠️ No product placeholders were replaced in the content');
@@ -92,6 +95,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
           console.log('🔍 Found placeholder patterns:', anyPlaceholderMatch);
         } else {
           console.warn('⚠️ No placeholder patterns found in content at all');
+          console.log('📄 Complete content for debugging:', content);
         }
       }
       

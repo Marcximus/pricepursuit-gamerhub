@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
@@ -32,7 +33,10 @@ serve(async (req) => {
     
     // Extract the request data
     console.log("📦 Extracting request data...");
-    const requestJson = await req.json();
+    const requestText = await req.text();
+    console.log(`📥 REQUEST DATA: ${requestText}`);
+    
+    const requestJson = JSON.parse(requestText);
     const { searchParams, count = 10 } = requestJson;
     
     console.log(`🔍 Request parameters: count=${count}, searchParams:`, JSON.stringify(searchParams).substring(0, 200));
@@ -105,6 +109,8 @@ serve(async (req) => {
 
       // Execute the query
       console.log(`🔍 Executing database query for parameter set #${index + 1}`);
+      console.log(`📤 QUERY: ${JSON.stringify(query)}`);
+      
       const { data, error } = await query;
       
       if (error) {
@@ -114,6 +120,7 @@ serve(async (req) => {
       
       if (data && data.length > 0) {
         console.log(`✅ Found ${data.length} products for parameter set #${index + 1}`);
+        console.log(`📥 QUERY RESULTS: ${JSON.stringify(data.slice(0, 2)).substring(0, 500)}...`);
         results.push(...data);
       } else {
         console.warn(`⚠️ No products found for parameter set #${index + 1}`);
@@ -202,10 +209,13 @@ serve(async (req) => {
     
     console.log(`✅ Successfully formatted ${formattedProducts.length} products`);
     console.log(`📏 HTML content sample length: ${formattedProducts[0]?.htmlContent.length || 0} characters`);
+    
+    const finalResponse = { products: formattedProducts };
+    console.log(`📤 FINAL RESPONSE PREVIEW: ${JSON.stringify(finalResponse).substring(0, 500)}...`);
     console.log(`🏁 fetch-top10-products function completed successfully`);
     
     return new Response(
-      JSON.stringify({ products: formattedProducts }),
+      JSON.stringify(finalResponse),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

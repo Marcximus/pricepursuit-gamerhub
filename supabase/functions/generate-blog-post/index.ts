@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { corsHeaders } from "../_shared/cors.ts";
@@ -24,7 +25,10 @@ serve(async (req) => {
 
     // Extract the request data
     console.log("📦 Extracting request data...");
-    const { prompt, category, asin, asin2 } = await req.json();
+    const requestText = await req.text();
+    console.log(`📥 REQUEST DATA: ${requestText}`);
+    
+    const { prompt, category, asin, asin2 } = JSON.parse(requestText);
     console.log(`📝 User prompt: "${prompt.substring(0, 50)}${prompt.length > 50 ? '...' : ''}"`);
     console.log(`🏷️ Selected category: ${category}`);
     console.log(`🔍 ASIN1: ${asin || 'None provided'}`);
@@ -71,6 +75,7 @@ serve(async (req) => {
         console.log(`✅ Successfully fetched product data: "${data.title.substring(0, 30)}..."`);
         console.log(`💰 Price: ${data.price?.current || 'N/A'}`);
         console.log(`⭐ Rating: ${data.rating?.rating || 'N/A'} (${data.rating?.rating_count || 0} reviews)`);
+        console.log(`📤 PRODUCT DATA RESPONSE: ${JSON.stringify(data).substring(0, 500)}...`);
         return data;
       } catch (error) {
         console.error('💥 Error fetching product data:', error);
@@ -98,10 +103,21 @@ serve(async (req) => {
     console.log(`📝 Generating system prompt for ${category}...`);
     const systemPrompt = getSystemPrompt(category, firstProductData, secondProductData);
     console.log(`📋 System prompt created (${systemPrompt.length} characters)`);
+    console.log(`📤 SYSTEM PROMPT: ${systemPrompt.substring(0, 500)}...`);
     
     // Generate content using DeepSeek API
     console.log(`🧠 Calling DeepSeek API...`);
     console.log(`🔧 Model: deepseek-chat, Temperature: 1.4`);
+    
+    const deepseekPayload = {
+      model: 'deepseek-chat',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 1.4,  // Set to 1.4 for more creative blog content
+    };
+    console.log(`📤 DEEPSEEK REQUEST: ${JSON.stringify(deepseekPayload).substring(0, 500)}...`);
     
     const startTime = Date.now();
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -110,14 +126,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
       },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 1.4,  // Set to 1.4 for more creative blog content
-      }),
+      body: JSON.stringify(deepseekPayload),
     });
     const endTime = Date.now();
     console.log(`⏱️ DeepSeek API call took ${(endTime - startTime) / 1000} seconds`);
@@ -131,6 +140,7 @@ serve(async (req) => {
 
     const data = await response.json();
     console.log(`✅ DeepSeek API response received`);
+    console.log(`📥 DEEPSEEK RESPONSE: ${JSON.stringify(data).substring(0, 1000)}...`);
     console.log(`📊 Tokens used: ${data.usage?.total_tokens || 'unknown'}`);
     
     const generatedContent = data.choices[0].message.content;
@@ -145,6 +155,12 @@ serve(async (req) => {
     console.log(`📌 Tags: ${parsedContent.tags?.join(', ') || 'None'}`);
     console.log(`📏 Content length: ${parsedContent.content.length} characters`);
     console.log(`📎 Excerpt length: ${parsedContent.excerpt.length} characters`);
+    console.log(`📥 PARSED CONTENT: ${JSON.stringify({
+      title: parsedContent.title,
+      tags: parsedContent.tags,
+      excerptLength: parsedContent.excerpt.length,
+      contentPreview: parsedContent.content.substring(0, 300) + '...'
+    })}`);
     
     // If we have product data for a review, augment the parsed content
     if (firstProductData && category === 'Review') {
@@ -192,8 +208,12 @@ serve(async (req) => {
     
     console.log('🎉 Successfully generated blog content!');
     
+    const finalResponse = JSON.stringify(parsedContent);
+    console.log(`📤 FINAL RESPONSE LENGTH: ${finalResponse.length} characters`);
+    console.log(`📤 FINAL RESPONSE PREVIEW: ${finalResponse.substring(0, 500)}...`);
+    
     return new Response(
-      JSON.stringify(parsedContent),
+      finalResponse,
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
