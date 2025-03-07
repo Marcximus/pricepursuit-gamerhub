@@ -14,7 +14,7 @@ export function processAmazonProducts(data: any) {
     const title = product.title || '';
     const categories = product.categories || [];
     
-    // Determine if this product is a laptop
+    // Only log warning for non-empty titles that don't appear to be laptops
     const isLaptop = 
       title.toLowerCase().includes('laptop') || 
       title.toLowerCase().includes('notebook') || 
@@ -25,8 +25,9 @@ export function processAmazonProducts(data: any) {
         )
       ));
     
-    if (!isLaptop) {
-      console.log(`⚠️ Product might not be a laptop: "${title}"`);
+    // Only log warnings for products with actual titles that don't match laptop keywords
+    if (!isLaptop && title.trim() !== '') {
+      console.log(`⚠️ Product might not be a laptop: "${title.substring(0, 50)}${title.length > 50 ? '...' : ''}"`);
     }
     
     return {
@@ -44,11 +45,27 @@ export function processAmazonProducts(data: any) {
     };
   });
   
-  // Filter out non-laptop products if we have enough products
-  const laptopProducts = products.filter((p: any) => 
-    p.title.toLowerCase().includes('laptop') || 
-    p.title.toLowerCase().includes('notebook'));
+  // Improve laptop filtering logic
+  const laptopProducts = products.filter((p: any) => {
+    const productTitle = p.title.toLowerCase();
+    
+    // Skip empty titles in filtering
+    if (!productTitle.trim()) {
+      return false; // Filter out products with empty titles
+    }
+    
+    // Check for laptop indicators in title
+    return productTitle.includes('laptop') || 
+           productTitle.includes('notebook') ||
+           productTitle.includes('chromebook') ||
+           // Additional keywords that might indicate laptops
+           (p.brand.toLowerCase() === 'lenovo' && 
+            (productTitle.includes('thinkpad') || 
+             productTitle.includes('ideapad') || 
+             productTitle.includes('yoga')));
+  });
   
+  // Take the best option between filtered and all products
   const finalProducts = laptopProducts.length >= 5 ? laptopProducts : products;
   
   // Take the top 10 products or all if less than 10
@@ -58,7 +75,8 @@ export function processAmazonProducts(data: any) {
   
   // Avoid logging large objects in production
   if (top10Products.length > 0) {
-    console.log(`📤 FINAL RESPONSE PREVIEW: First product: "${top10Products[0].title.substring(0, 50)}..."`);
+    const firstProductTitle = top10Products[0].title || 'Untitled product';
+    console.log(`📤 FINAL RESPONSE PREVIEW: First product: "${firstProductTitle.substring(0, 50)}..."`);
   } else {
     console.log(`📤 FINAL RESPONSE: No products to return`);
   }

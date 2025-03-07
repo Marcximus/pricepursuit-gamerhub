@@ -53,7 +53,7 @@ const FORBIDDEN_KEYWORDS = [
  * @returns True if the title contains any forbidden keywords
  */
 export function containsForbiddenKeywords(title: string): boolean {
-  if (!title) return false;
+  if (!title || title.trim() === '') return false;
   
   const lowerTitle = title.toLowerCase();
   
@@ -78,7 +78,9 @@ export function containsForbiddenKeywords(title: string): boolean {
 export function applyAllProductFilters(products: any[]): any[] {
   // Apply the forbidden keyword filter strictly on the title field only
   return products.filter(product => {
-    if (!product.title) return true; // If no title, pass the filter
+    // Skip products with empty titles
+    if (!product.title || product.title.trim() === '') return false;
+    
     return !containsForbiddenKeywords(product.title);
   });
 }

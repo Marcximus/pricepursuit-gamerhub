@@ -19,7 +19,15 @@ export function validateAndFilterProducts(products: any[], brand: string, detail
   
   // Filter out non-laptop products by checking titles
   const laptopProducts = products.filter(product => {
-    const title = (product.title || '').toLowerCase();
+    // Skip products with empty titles
+    if (!product.title || product.title.trim() === '') {
+      if (detailedLogging) {
+        console.log(`Filtering out product with empty title`);
+      }
+      return false;
+    }
+    
+    const title = product.title.toLowerCase();
     
     // Keywords that indicate the product is likely a laptop
     const laptopKeywords = ['laptop', 'notebook', 'ultrabook', 'chromebook', 'gaming laptop', 'macbook'];
