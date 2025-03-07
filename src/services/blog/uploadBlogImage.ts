@@ -24,6 +24,19 @@ export async function uploadBlogImage(
     const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
     const filePath = `blog-images/${fileName}`;
 
+    // Check if the bucket exists first
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === 'blog-assets');
+    
+    if (!bucketExists) {
+      toast({
+        title: "Storage not available",
+        description: "The image storage system is not properly configured. Please contact the administrator.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
     // Upload the file
     const { error: uploadError, data } = await supabase.storage
       .from('blog-assets')

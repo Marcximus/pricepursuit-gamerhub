@@ -4,8 +4,20 @@ import Navigation from '@/components/Navigation';
 import { PostContent } from '@/components/blog/newPost/PostContent';
 import { PostMetadata } from '@/components/blog/newPost/PostMetadata';
 import { PostActions, PostHeaderActions } from '@/components/blog/newPost/PostActions';
+import { useEffect } from 'react';
+import { useBlog } from '@/contexts/BlogContext';
 
 const NewBlogPost = () => {
+  // Check if we're in the BlogContext
+  const blogContext = useBlog();
+  
+  useEffect(() => {
+    // Safety check to ensure context is available
+    if (!blogContext) {
+      console.error('BlogContext is not available in NewBlogPost');
+    }
+  }, [blogContext]);
+
   const {
     title,
     content,

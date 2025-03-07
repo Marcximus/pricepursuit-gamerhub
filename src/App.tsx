@@ -16,6 +16,7 @@ import NewBlogPost from './pages/blog/NewBlogPost';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ensureBlogAssetsBucket } from './services/blog';
 import { BlogProvider } from './contexts/BlogContext';
+import { ComparisonProvider } from './contexts/ComparisonContext';
 
 function App() {
   useEffect(() => {
@@ -36,7 +37,11 @@ function App() {
       <Routes>
         <Route path="/" element={<Recommend />} />
         <Route path="/laptops" element={<Laptops />} />
-        <Route path="/compare" element={<Compare />} />
+        <Route path="/compare" element={
+          <ComparisonProvider>
+            <Compare />
+          </ComparisonProvider>
+        } />
         <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/blog" element={<Blog />} />
