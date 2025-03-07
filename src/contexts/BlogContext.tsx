@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -26,7 +27,7 @@ interface BlogContextType {
   getPostBySlug: (slug: string, category: string) => BlogPost | undefined;
   getPostsByCategory: (category: string) => BlogPost[];
   getRecentPosts: (limit?: number) => BlogPost[];
-  createPost: (post: Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>) => Promise<BlogPost | null>;
+  createPost: (post: Omit<BlogPost, 'id' | 'created_at' | 'updated_at' | 'author'>) => Promise<BlogPost | null>;
   updatePost: (id: string, post: Partial<BlogPost>) => Promise<boolean>;
   deletePost: (id: string) => Promise<boolean>;
 }
@@ -43,10 +44,17 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       setError(null);
       
-      const { data, error: fetchError } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Get the current session to determine what posts to fetch
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      let query = supabase.from('blog_posts').select('*');
+      
+      // If user is not authenticated, only fetch published posts
+      if (!session) {
+        query = query.eq('published', true);
+      }
+      
+      const { data, error: fetchError } = await query.order('created_at', { ascending: false });
       
       if (fetchError) throw new Error(fetchError.message);
       
@@ -66,6 +74,22 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     fetchPosts();
+    
+    // Set up subscription for real-time updates
+    const subscription = supabase
+      .channel('blog_changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'blog_posts' 
+      }, () => {
+        fetchPosts();
+      })
+      .subscribe();
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const getPostBySlug = (slug: string, category: string) => {
@@ -83,15 +107,33 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
       .slice(0, limit);
   };
 
-  const createPost = async (postData: Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>) => {
+  const createPost = async (postData: Omit<BlogPost, 'id' | 'created_at' | 'updated_at' | 'author'>) => {
     try {
+      // Get the current user to set as the author
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to create a blog post",
+          variant: "destructive",
+        });
+        return null;
+      }
+      
+      // Set the author to the user ID
+      const authorId = session.user.id;
+      
       const { data, error: insertError } = await supabase
         .from('blog_posts')
-        .insert([postData])
+        .insert([{ ...postData, author: authorId }])
         .select()
         .single();
       
-      if (insertError) throw new Error(insertError.message);
+      if (insertError) {
+        console.error('Insert error details:', insertError);
+        throw new Error(insertError.message);
+      }
       
       setPosts(prevPosts => [data as BlogPost, ...prevPosts]);
       toast({
@@ -113,12 +155,27 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
 
   const updatePost = async (id: string, postData: Partial<BlogPost>) => {
     try {
+      // Verify the current user is the author
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to update a blog post",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
       const { error: updateError } = await supabase
         .from('blog_posts')
         .update(postData)
         .eq('id', id);
       
-      if (updateError) throw new Error(updateError.message);
+      if (updateError) {
+        console.error('Update error details:', updateError);
+        throw new Error(updateError.message);
+      }
       
       setPosts(prevPosts => 
         prevPosts.map(post => post.id === id ? { ...post, ...postData } : post)
@@ -143,12 +200,27 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
 
   const deletePost = async (id: string) => {
     try {
+      // Verify the current user is the author
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to delete a blog post",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
       const { error: deleteError } = await supabase
         .from('blog_posts')
         .delete()
         .eq('id', id);
       
-      if (deleteError) throw new Error(deleteError.message);
+      if (deleteError) {
+        console.error('Delete error details:', deleteError);
+        throw new Error(deleteError.message);
+      }
       
       setPosts(prevPosts => prevPosts.filter(post => post.id !== id));
       

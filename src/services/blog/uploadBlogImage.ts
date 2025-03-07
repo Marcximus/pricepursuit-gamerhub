@@ -6,8 +6,10 @@ export async function uploadBlogImage(
   file: File
 ): Promise<string | null> {
   try {
-    // Check if user is authenticated
+    // Get the current session
     const { data: { session } } = await supabase.auth.getSession();
+    
+    // Check if user is authenticated
     if (!session) {
       toast({
         title: "Authentication required",

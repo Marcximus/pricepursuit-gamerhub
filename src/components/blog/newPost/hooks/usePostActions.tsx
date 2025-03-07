@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBlog } from '@/contexts/BlogContext';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const usePostActions = () => {
   const navigate = useNavigate();
@@ -27,7 +28,6 @@ export const usePostActions = () => {
       category: 'Top10' | 'Review' | 'Comparison' | 'How-To';
       image_url?: string;
       additional_images?: string[];
-      author: string;
       published: boolean;
       tags?: string[];
     },
@@ -35,6 +35,7 @@ export const usePostActions = () => {
   ) => {
     e.preventDefault();
     
+    // Validate required fields
     if (!postData.title || !postData.slug || !postData.content || !postData.excerpt || !postData.category) {
       toast({
         title: "Validation error",
@@ -44,6 +45,22 @@ export const usePostActions = () => {
       return;
     }
     
+    // Check for authentication
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({
+        title: "Authentication required",
+        description: "You must be logged in to save blog posts",
+        variant: "destructive",
+      });
+      
+      // Save current path to return after login
+      sessionStorage.setItem('returnPath', window.location.pathname + window.location.search);
+      navigate('/login');
+      return;
+    }
+    
+    // Check for slug uniqueness
     const existingPost = getPostBySlug(postData.slug, postData.category);
     if (existingPost && existingPost.id !== editId) {
       toast({
@@ -70,6 +87,7 @@ export const usePostActions = () => {
       if (editId) {
         success = await updatePost(editId, postData);
       } else {
+        // We don't need to pass author since it's handled by the createPost function
         const newPost = await createPost(postData);
         success = !!newPost;
       }
