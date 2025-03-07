@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VideoPlacementButton } from './VideoPlacementButton';
+import { ImagePlaceholderHandler } from './ImagePlaceholderHandler';
 
 interface ContentEditorProps {
   content: string;
@@ -10,6 +11,7 @@ interface ContentEditorProps {
   categoryPlaceholder: string;
   videoPlacement: boolean;
   setVideoPlacement: (value: boolean) => void;
+  category: string;
 }
 
 export const ContentEditor = ({ 
@@ -17,7 +19,8 @@ export const ContentEditor = ({
   onContentChange, 
   categoryPlaceholder, 
   videoPlacement, 
-  setVideoPlacement 
+  setVideoPlacement,
+  category
 }: ContentEditorProps) => {
   
   const handleAddVideoPlacement = () => {
@@ -38,6 +41,12 @@ export const ContentEditor = ({
     } else {
       setVideoPlacement(false);
     }
+  };
+
+  const handleImagePlaceholderContentChange = (newContent: string) => {
+    onContentChange({
+      target: { value: newContent }
+    } as React.ChangeEvent<HTMLTextAreaElement>);
   };
 
   return (
@@ -63,6 +72,13 @@ export const ContentEditor = ({
             className="min-h-[400px]" 
             required
           />
+          
+          {category === 'How-To' && (
+            <ImagePlaceholderHandler 
+              content={content} 
+              onContentChange={handleImagePlaceholderContentChange} 
+            />
+          )}
         </TabsContent>
         <TabsContent value="preview">
           <div className="border rounded-md p-4 min-h-[400px] prose max-w-none">

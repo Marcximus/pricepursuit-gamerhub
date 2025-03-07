@@ -13,6 +13,11 @@ export function parseGeneratedContent(content: string, category: string) {
         parsedJson.content = addHumixScriptToContent(parsedJson.content);
       }
       
+      // For How-To posts, process the content to add image placeholders
+      if (category === 'How-To' && parsedJson.content) {
+        parsedJson.content = processHowToContent(parsedJson.content);
+      }
+      
       return {
         ...parsedJson,
         category,
@@ -27,6 +32,11 @@ export function parseGeneratedContent(content: string, category: string) {
         // For Top 10 posts, replace the video placeholder with the Humix script
         if (category === 'Top10' && parsedJson.content) {
           parsedJson.content = addHumixScriptToContent(parsedJson.content);
+        }
+        
+        // For How-To posts, process the content to add image placeholders
+        if (category === 'How-To' && parsedJson.content) {
+          parsedJson.content = processHowToContent(parsedJson.content);
         }
         
         return {
@@ -49,6 +59,11 @@ export function parseGeneratedContent(content: string, category: string) {
       // For Top 10 posts, replace the video placeholder with the Humix script
       if (category === 'Top10' && extractedContent) {
         extractedContent = addHumixScriptToContent(extractedContent);
+      }
+      
+      // For How-To posts, process the content to add image placeholders
+      if (category === 'How-To' && extractedContent) {
+        extractedContent = processHowToContent(extractedContent);
       }
       
       // Extract tags
@@ -87,4 +102,28 @@ function addHumixScriptToContent(content: string): string {
     /<div class="video-placeholder"><\/div>/g,
     `<script data-ezscrex="false" data-cfasync="false">(window.humixPlayers = window.humixPlayers || []).push({target: document.currentScript});</script><script async data-ezscrex="false" data-cfasync="false" src="https://www.humix.com/video.js"></script>`
   );
+}
+
+/**
+ * Process How-To content to ensure image placeholders are properly formatted
+ */
+function processHowToContent(content: string): string {
+  // Add the Humix video script
+  let processedContent = addHumixScriptToContent(content);
+  
+  // Ensure image placeholders have proper formatting
+  const imageRegex = /<div class="image-placeholder" id="image-(\d+)"><p>Image \d+: ([^<]+)<\/p><\/div>/g;
+  
+  // Replace with proper image placeholder format
+  processedContent = processedContent.replace(imageRegex, (match, number, description) => {
+    return `<div class="image-placeholder" id="image-${number}" data-description="${description.trim()}">
+      <div class="placeholder-content">
+        <div class="upload-icon">📷</div>
+        <p>Image ${number}: ${description.trim()}</p>
+        <p class="upload-hint">Click to upload an image</p>
+      </div>
+    </div>`;
+  });
+  
+  return processedContent;
 }

@@ -59,7 +59,7 @@ export function BlogAIPromptDialog({
           ? "E.g., 'Compare these laptops focusing on value for money and performance'" 
           : "E.g., 'Compare the Dell XPS 13 and HP Spectre x360, highlighting the key differences for professional users'";
       case 'How-To':
-        return "E.g., 'Create a guide on how to optimize a laptop for gaming performance and thermal management'";
+        return "E.g., 'Create a guide on how to optimize a laptop for gaming performance with these questions: What settings should I change? How do I monitor temperatures? How can I improve battery life while gaming?'";
       default:
         return "Describe what you'd like the AI to write about...";
     }
@@ -138,6 +138,11 @@ export function BlogAIPromptDialog({
               onChange={(e) => setPrompt(e.target.value)}
               required
             />
+            {category === 'How-To' && (
+              <p className="text-xs text-gray-500 mt-1">
+                Include specific questions you want answered in your guide. This helps the AI create more targeted content.
+              </p>
+            )}
           </div>
           
           <DialogFooter>
@@ -152,4 +157,4 @@ export function BlogAIPromptDialog({
       </DialogContent>
     </Dialog>
   );
-}
+};
