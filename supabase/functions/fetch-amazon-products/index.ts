@@ -32,19 +32,19 @@ serve(async (req) => {
       );
     }
     
-    // Call RapidAPI to search for products with improved error handling
+    // Call RapidAPI to search for products 
     try {
       const data = await searchAmazonProducts(requestData);
+      console.log("✅ Successfully received data from RapidAPI");
       
-      // Process and format the products
-      const top10Products = processAmazonProducts(data);
+      // Apply minimal processing to preserve raw data
+      const products = processAmazonProducts(data);
 
       return new Response(
-        JSON.stringify({ products: top10Products }),
+        JSON.stringify({ products: products }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } catch (apiError) {
-      // Handle specific API errors
       console.error('💥 Error from RapidAPI service:', apiError);
       return new Response(
         JSON.stringify({ 
@@ -55,16 +55,13 @@ serve(async (req) => {
       );
     }
   } catch (error) {
-    // Handle unexpected errors
     console.error('💥 Error fetching Amazon products:', error);
     console.error(`⚠️ Error message: ${error.message || 'Unknown error'}`);
-    console.error(`⚠️ Error stack: ${error.stack || 'No stack trace available'}`);
     
     return new Response(
       JSON.stringify({ 
         error: error.message || 'An unexpected error occurred', 
-        products: [],
-        stack: error.stack || 'No stack trace available'
+        products: []
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );

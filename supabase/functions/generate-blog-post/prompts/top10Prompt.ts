@@ -1,4 +1,3 @@
-
 /**
  * System prompt for Top 10 blog posts
  */
@@ -28,60 +27,26 @@ SPECIFIC INSTRUCTIONS:
   if (amazonProducts && amazonProducts.length > 0) {
     top10SystemPrompt += `
 PRODUCT DATA:
-I've provided you with detailed information about ${amazonProducts.length} products. Use this data to create a rich, detailed blog post. For each product, I've included:
+I've provided you with detailed information about ${amazonProducts.length} products. Use this data to create a rich, detailed blog post. The full data is available, including all product specifications, features, reviews, and more.
 
-1. Basic information (title, brand, ASIN, price, rating, etc.)
-2. Specifications and features
-3. Reviews and user feedback
-4. Raw data with additional details about features, specifications, and more
-
-USE THE RAW DATA: Each product has a 'rawData' field containing additional information that isn't presented in the basic fields. Make use of this detailed information to create more specific, accurate descriptions of each product.
-
-Here's the product data to reference:
+Here are the products (showing basic details only, but you have access to ALL data):
 `;
 
-    // Add formatted product data in a readable way
+    // Add minimal product preview information to keep prompt manageable
     amazonProducts.forEach((product, index) => {
       top10SystemPrompt += `
-PRODUCT ${index + 1}: ${product.title}
+PRODUCT ${index + 1}: ${product.title || 'Unknown Product'}
 - Brand: ${product.brand || 'Unknown'}
-- Price: $${product.price?.toFixed(2) || 'N/A'}
-- Rating: ${product.rating || 'N/A'}/5 (${product.ratingCount || 0} reviews)
+- Price: $${parseFloat(product.price?.value || '0') || 'N/A'}
+- Rating: ${product.rating || 'N/A'} (${product.ratings_total || 0} reviews)
 - ASIN: ${product.asin || 'N/A'}
 
-SPECIFICATIONS:
-${product.specs || 'No specifications provided'}
-
 `;
-      
-      // Add raw data information if available
-      if (product.rawData) {
-        // Features
-        if (product.rawData.features && product.rawData.features.length > 0) {
-          top10SystemPrompt += `FEATURES:\n`;
-          product.rawData.features.forEach((feature: string) => {
-            top10SystemPrompt += `- ${feature}\n`;
-          });
-          top10SystemPrompt += `\n`;
-        }
-        
-        // Sample Reviews
-        if (product.rawData.reviews && product.rawData.reviews.length > 0) {
-          top10SystemPrompt += `SAMPLE REVIEWS:\n`;
-          product.rawData.reviews.forEach((review: any, idx: number) => {
-            if (idx < 2 && review.text) { // Limit to 2 reviews to save space
-              top10SystemPrompt += `- ${review.text.substring(0, 200)}${review.text.length > 200 ? '...' : ''}\n`;
-            }
-          });
-          top10SystemPrompt += `\n`;
-        }
-        
-        // Description excerpt
-        if (product.rawData.description) {
-          top10SystemPrompt += `DESCRIPTION EXCERPT:\n${product.rawData.description.substring(0, 300)}${product.rawData.description.length > 300 ? '...' : ''}\n\n`;
-        }
-      }
     });
+    
+    top10SystemPrompt += `
+NOTE: This is just a preview - you have access to the COMPLETE data for each product including specifications, features, descriptions, and reviews. Use all available data to create detailed, accurate product descriptions.
+`;
   } else {
     // No product data
     top10SystemPrompt += `
