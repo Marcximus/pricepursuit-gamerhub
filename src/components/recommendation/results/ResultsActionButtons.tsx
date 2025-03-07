@@ -85,9 +85,9 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
       
       if (successfullyAdded !== 2) {
         toast({
-          title: "Warning",
+          title: "Note",
           description: "Some products couldn't be added to comparison",
-          variant: "warning"
+          variant: "default" // Changed from "warning" to "default" to match the allowed variants
         });
       }
       
