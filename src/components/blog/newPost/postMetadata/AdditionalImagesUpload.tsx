@@ -1,10 +1,11 @@
 
-import { ImagePlus } from 'lucide-react';
+import { ImagePlus, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { uploadBlogImage } from '@/services/blog';
 import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AdditionalImagesUploadProps {
   additionalImages: string[];
@@ -20,14 +21,8 @@ export const AdditionalImagesUpload = ({
   category
 }: AdditionalImagesUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
-  const [authChecking, setAuthChecking] = useState(false);
-
-  const checkAuth = async () => {
-    setAuthChecking(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    setAuthChecking(false);
-    return !!session;
-  };
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleAdditionalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -43,9 +38,7 @@ export const AdditionalImagesUpload = ({
     }
     
     try {
-      // Check authentication before attempting upload
-      const isAuthenticated = await checkAuth();
-      if (!isAuthenticated) {
+      if (!user) {
         toast({
           title: "Authentication required",
           description: "You must be logged in to upload images",
@@ -82,31 +75,48 @@ export const AdditionalImagesUpload = ({
     onImagesUpdate(updatedImages);
   };
 
+  const handleLoginRedirect = () => {
+    // Save current path to return after login
+    sessionStorage.setItem('returnPath', window.location.pathname + window.location.search);
+    navigate('/login');
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-col space-y-2">
-        <label 
-          htmlFor="additional-image-upload" 
-          className="cursor-pointer flex items-center justify-center border-2 border-dashed border-gray-300 rounded-md p-4 hover:border-gray-400 transition-colors"
-        >
-          <div className="flex flex-col items-center space-y-2">
-            <ImagePlus className="h-8 w-8 text-gray-400" />
-            <span className="text-sm text-gray-500">
-              {isUploading ? 'Uploading...' : 
-               authChecking ? 'Checking login...' : 
-               'Add additional image'}
-            </span>
+      {user ? (
+        <div className="flex flex-col space-y-2">
+          <label 
+            htmlFor="additional-image-upload" 
+            className="cursor-pointer flex items-center justify-center border-2 border-dashed border-gray-300 rounded-md p-4 hover:border-gray-400 transition-colors"
+          >
+            <div className="flex flex-col items-center space-y-2">
+              <ImagePlus className="h-8 w-8 text-gray-400" />
+              <span className="text-sm text-gray-500">
+                {isUploading ? 'Uploading...' : 'Add additional image'}
+              </span>
+            </div>
+          </label>
+          <input 
+            id="additional-image-upload" 
+            type="file" 
+            className="hidden" 
+            accept="image/*" 
+            onChange={handleAdditionalImageUpload}
+            disabled={isUploading || additionalImages.length >= maxImages}
+          />
+        </div>
+      ) : (
+        <div className="flex flex-col items-center space-y-4 border-2 border-dashed border-gray-300 rounded-md p-6">
+          <div className="text-center">
+            <h3 className="text-sm font-medium text-gray-900">Authentication Required</h3>
+            <p className="mt-1 text-sm text-gray-500">You need to be logged in to upload images</p>
           </div>
-        </label>
-        <input 
-          id="additional-image-upload" 
-          type="file" 
-          className="hidden" 
-          accept="image/*" 
-          onChange={handleAdditionalImageUpload}
-          disabled={isUploading || authChecking || additionalImages.length >= maxImages}
-        />
-      </div>
+          <Button onClick={handleLoginRedirect} className="flex items-center space-x-2">
+            <LogIn className="h-4 w-4" />
+            <span>Log in to upload</span>
+          </Button>
+        </div>
+      )}
       
       {additionalImages.length > 0 && (
         <div className="grid grid-cols-2 gap-4">
