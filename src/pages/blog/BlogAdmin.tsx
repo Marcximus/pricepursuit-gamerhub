@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useBlog } from '@/contexts/BlogContext';
 import Navigation from '@/components/Navigation';
@@ -32,10 +32,20 @@ const BlogAdmin = () => {
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const navigate = useNavigate();
   
+  // Use useCallback to prevent function recreation on each render
+  const fetchPostsStable = useCallback(() => {
+    // Only fetch if not already loading
+    if (!loading) {
+      fetchPosts();
+    }
+  }, [fetchPosts, loading]);
+  
   useEffect(() => {
     document.title = "Blog Admin | Laptop Hunter";
-    fetchPosts();
-  }, [fetchPosts]);
+    // Fetch posts only once when the component mounts
+    fetchPostsStable();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDeletePost = async () => {
     if (postToDelete) {
@@ -61,7 +71,7 @@ const BlogAdmin = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <Navigation />
       
       <div className="pt-20 container mx-auto px-4 mt-10">
@@ -86,7 +96,7 @@ const BlogAdmin = () => {
             </Link>
           </div>
         ) : (
-          <div className="rounded-md border overflow-hidden">
+          <div className="rounded-md border overflow-hidden bg-white">
             <Table>
               <TableHeader>
                 <TableRow>
