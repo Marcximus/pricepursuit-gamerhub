@@ -30,13 +30,22 @@ serve(async (req) => {
     // Extract the request data
     console.log("📦 Extracting request data...");
     const requestText = await req.text();
-    console.log(`📥 REQUEST DATA: ${requestText}`);
+    console.log(`📥 REQUEST DATA LENGTH: ${requestText.length} bytes`);
     
-    const { prompt, category, asin, asin2 } = JSON.parse(requestText);
-    console.log(`📝 User prompt: "${prompt.substring(0, 50)}${prompt.length > 50 ? '...' : ''}"`);
-    console.log(`🏷️ Selected category: ${category}`);
-    console.log(`🔍 ASIN1: ${asin || 'None provided'}`);
-    console.log(`🔍 ASIN2: ${asin2 || 'None provided'}`);
+    let requestData;
+    try {
+      requestData = JSON.parse(requestText);
+      console.log(`📝 User prompt: "${requestData.prompt.substring(0, 50)}${requestData.prompt.length > 50 ? '...' : ''}"`);
+      console.log(`🏷️ Selected category: ${requestData.category}`);
+      console.log(`🔍 ASIN1: ${requestData.asin || 'None provided'}`);
+      console.log(`🔍 ASIN2: ${requestData.asin2 || 'None provided'}`);
+    } catch (parseError) {
+      console.error("❌ Failed to parse request data:", parseError);
+      console.error("📄 Raw request text:", requestText.substring(0, 200) + "...");
+      throw new Error("Invalid request format: " + parseError.message);
+    }
+
+    const { prompt, category, asin, asin2, products } = requestData;
 
     if (!prompt || !category) {
       console.error("❌ Missing required parameters", { prompt: !!prompt, category: !!category });
@@ -58,15 +67,23 @@ serve(async (req) => {
       console.log(`🔍 Checking for pre-fetched Top10 products in request...`);
       try {
         // The frontend might have included pre-fetched products in the request
-        const productsData = JSON.parse(requestText).products;
-        if (productsData && Array.isArray(productsData) && productsData.length > 0) {
-          amazonProducts = productsData;
+        if (products && Array.isArray(products) && products.length > 0) {
+          amazonProducts = products;
           console.log(`✅ Found ${amazonProducts.length} pre-fetched products for Top10 post`);
+          // Log first product to debug
+          if (amazonProducts[0]) {
+            console.log(`📦 First product sample:`, {
+              title: amazonProducts[0].title?.substring(0, 30) + "...",
+              asin: amazonProducts[0].asin,
+              brand: amazonProducts[0].brand,
+              price: amazonProducts[0].price
+            });
+          }
         } else {
           console.log(`⚠️ No pre-fetched products found in request for Top10 post`);
         }
       } catch (error) {
-        logError(error, 'Error parsing pre-fetched products');
+        logError(error, 'Error processing pre-fetched products');
       }
     }
 
@@ -92,45 +109,51 @@ serve(async (req) => {
     console.log(`📋 System prompt created (${systemPrompt.length} characters)`);
     
     // Generate content using DeepSeek API
-    const generatedContent = await generateContentWithDeepSeek(systemPrompt, prompt, DEEPSEEK_API_KEY);
-    
-    // Parse the generated content
-    console.log(`🔍 Parsing generated content...`);
-    const parsedContent = parseGeneratedContent(generatedContent, category);
-    console.log(`✅ Content parsed successfully`);
-    console.log(`📑 Title: "${parsedContent.title}"`);
-    console.log(`📌 Tags: ${parsedContent.tags?.join(', ') || 'None'}`);
-    console.log(`📏 Content length: ${parsedContent.content.length} characters`);
-    console.log(`📎 Excerpt length: ${parsedContent.excerpt.length} characters`);
-    
-    // Enhance the content with additional data based on category
-    let enhancedContent = parsedContent;
-    
-    // If we have product data for a review, augment the parsed content
-    if (firstProductData && category === 'Review') {
-      enhancedContent = enhanceReviewContent(parsedContent, firstProductData, asin);
+    try {
+      const generatedContent = await generateContentWithDeepSeek(systemPrompt, prompt, DEEPSEEK_API_KEY);
+      
+      // Parse the generated content
+      console.log(`🔍 Parsing generated content...`);
+      const parsedContent = parseGeneratedContent(generatedContent, category);
+      console.log(`✅ Content parsed successfully`);
+      console.log(`📑 Title: "${parsedContent.title}"`);
+      console.log(`📌 Tags: ${parsedContent.tags?.join(', ') || 'None'}`);
+      console.log(`📏 Content length: ${parsedContent.content.length} characters`);
+      console.log(`📎 Excerpt length: ${parsedContent.excerpt.length} characters`);
+      
+      // Enhance the content with additional data based on category
+      let enhancedContent = parsedContent;
+      
+      // If we have product data for a review, augment the parsed content
+      if (firstProductData && category === 'Review') {
+        enhancedContent = enhanceReviewContent(parsedContent, firstProductData, asin);
+      }
+      
+      // If we have product data for a comparison, augment the parsed content
+      if (firstProductData && secondProductData && category === 'Comparison') {
+        enhancedContent = enhanceComparisonContent(parsedContent, firstProductData, secondProductData, asin, asin2);
+      }
+      
+      // If this is a Top10 post, ensure we have placeholders for product data
+      if (category === 'Top10') {
+        enhancedContent = enhanceTop10Content(parsedContent);
+      }
+      
+      console.log('🎉 Successfully generated blog content!');
+      
+      const finalResponse = JSON.stringify(enhancedContent);
+      console.log(`📤 FINAL RESPONSE LENGTH: ${finalResponse.length} characters`);
+      console.log(`📤 FINAL RESPONSE PREVIEW: ${finalResponse.substring(0, 500)}...`);
+      
+      return new Response(
+        finalResponse,
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (deepseekError) {
+      console.error("❌ DeepSeek API error:", deepseekError);
+      console.error("📄 System prompt used:", systemPrompt.substring(0, 200) + "...");
+      throw new Error("Failed to generate content with DeepSeek: " + deepseekError.message);
     }
-    
-    // If we have product data for a comparison, augment the parsed content
-    if (firstProductData && secondProductData && category === 'Comparison') {
-      enhancedContent = enhanceComparisonContent(parsedContent, firstProductData, secondProductData, asin, asin2);
-    }
-    
-    // If this is a Top10 post, ensure we have placeholders for product data
-    if (category === 'Top10') {
-      enhancedContent = enhanceTop10Content(parsedContent);
-    }
-    
-    console.log('🎉 Successfully generated blog content!');
-    
-    const finalResponse = JSON.stringify(enhancedContent);
-    console.log(`📤 FINAL RESPONSE LENGTH: ${finalResponse.length} characters`);
-    console.log(`📤 FINAL RESPONSE PREVIEW: ${finalResponse.substring(0, 500)}...`);
-    
-    return new Response(
-      finalResponse,
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
   } catch (error) {
     return createErrorResponse(error);
   }
