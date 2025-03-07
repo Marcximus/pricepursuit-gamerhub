@@ -4,6 +4,20 @@ import { extractAppleProcessor } from "./ProcessorUtils";
 import { normalizeProcessor } from "@/utils/laptop/normalizers/processorNormalizer";
 import { processProcessor } from "@/utils/laptopUtils/processors/processorProcessor";
 
+// Function to remove redundant processor prefixes
+const removeRedundantPrefixes = (processor: string): string => {
+  if (!processor) return processor;
+  
+  // Handle repeated Intel Core prefixes
+  const intelCorePattern = /(intel\s+core\s+)+/gi;
+  const cleanedProcessor = processor.replace(intelCorePattern, 'Intel Core ');
+  
+  // Handle other common repeats
+  return cleanedProcessor
+    .replace(/(amd\s+ryzen\s+)+/gi, 'AMD Ryzen ')
+    .replace(/(apple\s+m[123]\s+)+/gi, 'Apple M$1 ');
+};
+
 type ProcessorSpecProps = {
   title: string;
   processor?: string;
@@ -25,7 +39,7 @@ export function ProcessorSpec({ title, processor }: ProcessorSpecProps) {
       displayProcessor = `Intel Core i${intelGenMatch[2]} ${intelGenMatch[1]}th Gen`;
     }
   }
-  // NEW: Check for "Intel Core 7-150U" format (without "i")
+  // Check for "Intel Core 7-150U" format (without "i")
   else if (title.match(/Intel\s+Core\s+([3579])(?:-|\s+)(\d{3}[A-Z]?)/i)) {
     const coreWithoutIMatch = title.match(/Intel\s+Core\s+([3579])(?:-|\s+)(\d{3}[A-Z]?)/i);
     if (coreWithoutIMatch) {
@@ -59,9 +73,9 @@ export function ProcessorSpec({ title, processor }: ProcessorSpecProps) {
     }
   }
 
-  // Normalize processor name for better display
+  // Normalize processor name for better display and remove redundancies
   if (displayProcessor) {
-    displayProcessor = normalizeProcessor(displayProcessor);
+    displayProcessor = removeRedundantPrefixes(normalizeProcessor(displayProcessor));
   }
   
   return (

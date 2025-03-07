@@ -5,6 +5,19 @@ import { getAffiliateUrl } from "../utils/affiliateLink";
 import { getComparisonStatus } from "../utils/comparisonHelpers";
 import type { ComparisonSection } from "../types";
 
+// Helper to remove redundant processor prefixes
+const cleanProcessorDisplay = (value: string): string => {
+  if (typeof value !== 'string') return value;
+  
+  // Fix for the Intel Core repetition issue
+  const cleanedValue = value
+    .replace(/(Intel\s+Core\s+)+/gi, 'Intel Core ')
+    .replace(/(AMD\s+Ryzen\s+)+/gi, 'AMD Ryzen ')
+    .replace(/(Apple\s+M[123]\s+)+/gi, 'Apple M$1 ');
+    
+  return cleanedValue;
+};
+
 interface SpecificationItemProps {
   section: ComparisonSection;
   laptopLeftId?: string;
@@ -27,6 +40,10 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
   const leftAffiliateUrl = getAffiliateUrl(laptopLeftId);
   const rightAffiliateUrl = getAffiliateUrl(laptopRightId);
   
+  // Clean up processor display if this is a processor section
+  const leftValue = section.title === "Processor" ? cleanProcessorDisplay(section.leftValue) : section.leftValue;
+  const rightValue = section.title === "Processor" ? cleanProcessorDisplay(section.rightValue) : section.rightValue;
+  
   return (
     <div className="grid grid-cols-7 px-4 py-3 hover:bg-slate-50 transition-colors">
       {/* Specification title */}
@@ -34,7 +51,7 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
       
       {/* Left laptop value */}
       <SpecificationValue 
-        value={section.leftValue} 
+        value={leftValue} 
         status={leftStatus} 
         affiliateUrl={leftAffiliateUrl}
         theme="left"
@@ -42,7 +59,7 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
       
       {/* Right laptop value */}
       <SpecificationValue 
-        value={section.rightValue} 
+        value={rightValue} 
         status={rightStatus} 
         affiliateUrl={rightAffiliateUrl}
         theme="right"

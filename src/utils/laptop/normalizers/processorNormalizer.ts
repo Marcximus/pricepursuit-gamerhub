@@ -19,6 +19,12 @@ export const normalizeProcessor = (processor: string): string => {
     return '';
   }
   
+  // Remove duplicate prefixes (Fix for "Intel Core Intel Core Intel Core i7-1335U" issue)
+  normalized = normalized
+    .replace(/(intel\s+core\s+)+/gi, 'Intel Core ')
+    .replace(/(amd\s+ryzen\s+)+/gi, 'AMD Ryzen ')
+    .replace(/(apple\s+m[123]\s+)+/gi, 'Apple M$1 ');
+  
   // Remove other component specs that got mixed in with the processor
   normalized = normalized
     .replace(/(\d+\s*GB\s*(RAM|Memory|DDR\d*))/i, '')
@@ -33,7 +39,7 @@ export const normalizeProcessor = (processor: string): string => {
     .replace(/intel\s+(?:core\s+)?ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i, 'Intel Core Ultra $1-$2')
     .replace(/intel\s+(?:core\s+)?ultra\s+([579])/i, 'Intel Core Ultra $1');
   
-  // NEW: Standardize Intel Core without 'i' (e.g., "Intel Core 7-150U")
+  // Standardize Intel Core without 'i' (e.g., "Intel Core 7-150U")
   normalized = normalized
     .replace(/intel\s+core\s+([3579])(?:-|\s+)(\d{3}[a-z]*)/i, 'Intel Core i$1-$2');
   
