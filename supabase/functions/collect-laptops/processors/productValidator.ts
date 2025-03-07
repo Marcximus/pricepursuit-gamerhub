@@ -19,7 +19,7 @@ export function validateAndFilterProducts(products: any[], brand: string, detail
   
   // Filter out non-laptop products by checking titles
   const laptopProducts = products.filter(product => {
-    // Skip products with empty titles
+    // Skip products with completely empty titles
     if (!product.title || product.title.trim() === '') {
       if (detailedLogging) {
         console.log(`Filtering out product with empty title`);
@@ -29,8 +29,12 @@ export function validateAndFilterProducts(products: any[], brand: string, detail
     
     const title = product.title.toLowerCase();
     
-    // Keywords that indicate the product is likely a laptop
-    const laptopKeywords = ['laptop', 'notebook', 'ultrabook', 'chromebook', 'gaming laptop', 'macbook'];
+    // Keywords that indicate the product is likely a laptop - expanded list
+    const laptopKeywords = [
+      'laptop', 'notebook', 'ultrabook', 'chromebook', 'gaming laptop', 'macbook',
+      'thinkpad', 'ideapad', 'yoga', 'envy', 'pavilion', 'spectre', 'xps', 
+      'inspiron', 'surface', 'vivobook', 'zenbook'
+    ];
     
     // Keywords that indicate the product is NOT a laptop
     const nonLaptopKeywords = [
@@ -43,7 +47,8 @@ export function validateAndFilterProducts(products: any[], brand: string, detail
     // Strictly check the title for forbidden keywords
     const hasForbiddenKeywords = containsForbiddenKeywords(product.title || '');
     
-    // Check if the title contains any laptop keywords but none of the non-laptop keywords
+    // More lenient check - product is considered a laptop if it has any laptop keywords
+    // and doesn't have non-laptop keywords or forbidden keywords
     const isLaptop = 
       laptopKeywords.some(keyword => title.includes(keyword)) && 
       !nonLaptopKeywords.some(keyword => title.includes(keyword)) &&

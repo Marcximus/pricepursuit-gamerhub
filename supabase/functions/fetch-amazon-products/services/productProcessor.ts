@@ -1,4 +1,3 @@
-
 import { formatSpecs, generateHtmlContent } from "../utils/formatters/index.ts";
 
 export function processAmazonProducts(data: any) {
@@ -45,28 +44,36 @@ export function processAmazonProducts(data: any) {
     };
   });
   
-  // Improve laptop filtering logic
+  // Less strict laptop filtering logic - keep empty titles but improve laptop detection
   const laptopProducts = products.filter((p: any) => {
     const productTitle = p.title.toLowerCase();
     
-    // Skip empty titles in filtering
+    // Skip products with completely empty titles (keep all titles that have at least something)
     if (!productTitle.trim()) {
-      return false; // Filter out products with empty titles
+      return false;
     }
     
-    // Check for laptop indicators in title
+    // More lenient laptop detection with additional keywords
     return productTitle.includes('laptop') || 
            productTitle.includes('notebook') ||
            productTitle.includes('chromebook') ||
-           // Additional keywords that might indicate laptops
-           (p.brand.toLowerCase() === 'lenovo' && 
-            (productTitle.includes('thinkpad') || 
-             productTitle.includes('ideapad') || 
-             productTitle.includes('yoga')));
+           productTitle.includes('macbook') ||
+           productTitle.includes('thinkpad') || 
+           productTitle.includes('ideapad') || 
+           productTitle.includes('yoga') ||
+           productTitle.includes('envy') ||
+           productTitle.includes('pavilion') ||
+           productTitle.includes('spectre') ||
+           productTitle.includes('xps') ||
+           productTitle.includes('inspiron') ||
+           productTitle.includes('surface') ||
+           productTitle.includes('vivobook') ||
+           productTitle.includes('zenbook');
   });
   
-  // Take the best option between filtered and all products
-  const finalProducts = laptopProducts.length >= 5 ? laptopProducts : products;
+  // Lower threshold for filtered products to ensure we don't miss good results
+  // Only use the strict filtered list if we have plenty (8+) of laptop products
+  const finalProducts = laptopProducts.length >= 8 ? laptopProducts : products;
   
   // Take the top 10 products or all if less than 10
   const top10Products = finalProducts.slice(0, 10);

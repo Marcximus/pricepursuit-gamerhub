@@ -48,7 +48,7 @@ const FORBIDDEN_KEYWORDS = [
  * @returns True if the title contains any forbidden keywords
  */
 export function containsForbiddenKeywords(title: string): boolean {
-  if (!title) return false;
+  if (!title || title.trim() === '') return false;
   
   const lowerTitle = title.toLowerCase();
   

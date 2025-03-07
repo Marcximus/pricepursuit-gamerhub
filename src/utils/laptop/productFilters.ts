@@ -76,7 +76,7 @@ export function containsForbiddenKeywords(title: string): boolean {
  * @returns Filtered array of products without forbidden keywords in titles
  */
 export function applyAllProductFilters(products: any[]): any[] {
-  // Apply the forbidden keyword filter strictly on the title field only
+  // Filter out products with forbidden keywords in their titles only
   return products.filter(product => {
     // Skip products with empty titles
     if (!product.title || product.title.trim() === '') return false;
