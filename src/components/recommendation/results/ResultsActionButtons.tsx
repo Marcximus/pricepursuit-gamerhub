@@ -34,6 +34,9 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
       // Clear any previous comparison
       clearComparison();
       
+      // Make sure we add both laptops to the comparison context BEFORE navigating
+      let successfullyAdded = 0;
+      
       // Convert recommendation products to global Product type and add to comparison
       for (let i = 0; i < 2; i++) {
         const recProduct = results[i].product;
@@ -77,9 +80,19 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
         };
         
         addToComparison(globalProduct);
+        successfullyAdded++;
       }
       
-      // Navigate to compare page using React Router
+      if (successfullyAdded !== 2) {
+        toast({
+          title: "Warning",
+          description: "Some products couldn't be added to comparison",
+          variant: "warning"
+        });
+      }
+      
+      // Now navigate to compare page
+      console.log("Navigating to compare page after adding laptops to comparison");
       navigate('/compare');
       
     } catch (error) {
