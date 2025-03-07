@@ -82,3 +82,33 @@ export function formatAmazonUrl(asin: string | undefined): string {
   if (!asin) return '#';
   return `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
 }
+
+// Generate HTML for stars display based on rating
+export function generateStarsHtml(rating: number | string | undefined, totalReviews?: number): string {
+  if (rating === undefined || rating === null) return '';
+  
+  const numericRating = typeof rating === 'string' ? parseFloat(rating) : rating;
+  if (isNaN(numericRating)) return '';
+  
+  const reviewCount = totalReviews ? ` (${totalReviews.toLocaleString()})` : '';
+  
+  return `<div class="flex items-center text-amber-500 mb-3">
+    <span class="text-lg font-medium mr-1">${numericRating.toFixed(1)}</span>
+    <div class="flex">
+      ${'⭐'.repeat(Math.floor(numericRating))}
+      ${numericRating % 1 >= 0.5 ? '⭐' : ''}
+    </div>
+    <span class="text-gray-500 ml-1">${reviewCount}</span>
+  </div>`;
+}
+
+// Generate affiliate button HTML
+export function generateAffiliateButtonHtml(asin: string | undefined, buttonText: string = 'View on Amazon'): string {
+  if (!asin) return '';
+  
+  const url = formatAmazonUrl(asin);
+  
+  return `<a href="${url}" target="_blank" rel="nofollow noopener" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors">
+    ${buttonText}
+  </a>`;
+}

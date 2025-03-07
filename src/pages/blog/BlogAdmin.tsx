@@ -30,12 +30,14 @@ const BlogAdmin = () => {
   const { posts, loading, error, deletePost, fetchPosts } = useBlog();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
   
   // Use useCallback to prevent function recreation on each render
   const fetchPostsStable = useCallback(() => {
     // Only fetch if not already loading
     if (!loading) {
+      console.log('BlogAdmin: Fetching posts');
       fetchPosts();
     }
   }, [fetchPosts, loading]);
@@ -49,9 +51,29 @@ const BlogAdmin = () => {
 
   const handleDeletePost = async () => {
     if (postToDelete) {
-      await deletePost(postToDelete);
-      setDeleteDialogOpen(false);
-      setPostToDelete(null);
+      setIsDeleting(true);
+      
+      try {
+        console.log(`BlogAdmin: Deleting post with ID: ${postToDelete}`);
+        const success = await deletePost(postToDelete);
+        
+        if (success) {
+          console.log('BlogAdmin: Post deleted successfully');
+          // No need to manually fetch posts again as the state is updated in the context
+        } else {
+          console.error('BlogAdmin: Failed to delete post');
+          // If deletion failed, we should refresh to get the current state
+          fetchPostsStable();
+        }
+      } catch (error) {
+        console.error('BlogAdmin: Error during deletion:', error);
+        // If an error occurred, refresh to get the current state
+        fetchPostsStable();
+      } finally {
+        setIsDeleting(false);
+        setDeleteDialogOpen(false);
+        setPostToDelete(null);
+      }
     }
   };
 
@@ -146,6 +168,7 @@ const BlogAdmin = () => {
                           variant="ghost" 
                           size="sm" 
                           onClick={() => confirmDelete(post.id)}
+                          disabled={isDeleting}
                         >
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>
@@ -168,9 +191,13 @@ const BlogAdmin = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeletePost} className="bg-red-500 hover:bg-red-600">
-              Delete
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeletePost} 
+              className="bg-red-500 hover:bg-red-600"
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

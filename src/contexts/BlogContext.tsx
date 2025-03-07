@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -45,6 +46,7 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       setError(null);
       
+      console.log('Fetching blog posts...');
       const { data, error: fetchError } = await supabase
         .from('blog_posts')
         .select('*')
@@ -52,6 +54,7 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
       
       if (fetchError) throw new Error(fetchError.message);
       
+      console.log(`Fetched ${data?.length || 0} blog posts`);
       setPosts(data as BlogPost[]);
     } catch (err) {
       console.error('Error fetching blog posts:', err);
@@ -174,14 +177,26 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
 
   const deletePost = async (id: string) => {
     try {
+      console.log(`Attempting to delete blog post with ID: ${id}`);
+      
       const { error: deleteError } = await supabase
         .from('blog_posts')
         .delete()
         .eq('id', id);
       
-      if (deleteError) throw new Error(deleteError.message);
+      if (deleteError) {
+        console.error('Supabase error during deletion:', deleteError);
+        throw new Error(deleteError.message);
+      }
       
-      setPosts(prevPosts => prevPosts.filter(post => post.id !== id));
+      console.log(`Successfully deleted blog post with ID: ${id} from database`);
+      
+      // Update local state after successful deletion
+      setPosts(prevPosts => {
+        const updatedPosts = prevPosts.filter(post => post.id !== id);
+        console.log(`Local state updated, removed post. New count: ${updatedPosts.length}`);
+        return updatedPosts;
+      });
       
       toast({
         title: "Post deleted successfully",

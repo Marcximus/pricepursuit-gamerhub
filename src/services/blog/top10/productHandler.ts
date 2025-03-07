@@ -4,7 +4,7 @@
  */
 import { fetchAmazonProducts, extractSearchParamsFromPrompt } from '../amazonProductService';
 import { generateProductHtml } from './htmlGenerator';
-import { showErrorToast, formatAmazonUrl, generateStars, formatPrice } from './utils';
+import { showErrorToast, formatAmazonUrl, generateStars, formatPrice, generateStarsHtml, generateAffiliateButtonHtml } from './utils';
 
 // Get products from localStorage or fetch them
 export async function getProducts(prompt: string): Promise<any[]> {
@@ -40,14 +40,41 @@ export async function getProducts(prompt: string): Promise<any[]> {
               const price = formatPrice(product.price);
               const productUrl = formatAmazonUrl(product.asin);
               
-              product.htmlContent = generateProductHtml(product, index + 1);
+              // Generate HTML content using the new utility functions if possible
+              if (typeof generateStarsHtml === 'function' && typeof generateAffiliateButtonHtml === 'function') {
+                product.htmlContent = `
+                  <div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6">
+                    <div class="p-4">
+                      <h3 class="text-xl font-semibold mb-2">${product.title}</h3>
+                      <div class="flex flex-col md:flex-row">
+                        <div class="md:w-1/3">
+                          <img src="${product.image_url || 'https://via.placeholder.com/300x300?text=No+Image'}" 
+                               alt="${product.title}" 
+                               class="w-full h-auto rounded-md" />
+                        </div>
+                        <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
+                          ${generateStarsHtml(product.rating, product.reviews_count)}
+                          <p class="text-lg font-bold mb-3">${price}</p>
+                          <div class="mb-4">${generateAffiliateButtonHtml(product.asin)}</div>
+                          <div class="text-sm text-gray-600">
+                            <p><strong>ASIN:</strong> ${product.asin}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              } else {
+                product.htmlContent = generateProductHtml(product, index + 1);
+              }
+              
               console.log(`✅ Generated HTML content for product #${index + 1}`);
             }
             return product;
           });
         }
       }
-      // Clear the storage to avoid using these products for another post
+      // Continue to clear the storage
       localStorage.removeItem('currentTop10Products');
     } catch (parseError) {
       console.error('Error parsing stored products:', parseError);
@@ -81,12 +108,38 @@ export async function getProducts(prompt: string): Promise<any[]> {
         console.log('🔄 Generating missing HTML content for newly fetched products...');
         products = products.map((product, index) => {
           if (!product.htmlContent) {
-            // Generate HTML content for the product
-            const stars = generateStars(product.rating);
-            const price = formatPrice(product.price);
-            const productUrl = formatAmazonUrl(product.asin);
+            // Generate HTML content for the product using new utility functions if possible
+            if (typeof generateStarsHtml === 'function' && typeof generateAffiliateButtonHtml === 'function') {
+              product.htmlContent = `
+                <div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6">
+                  <div class="p-4">
+                    <h3 class="text-xl font-semibold mb-2">${product.title}</h3>
+                    <div class="flex flex-col md:flex-row">
+                      <div class="md:w-1/3">
+                        <img src="${product.image_url || 'https://via.placeholder.com/300x300?text=No+Image'}" 
+                             alt="${product.title}" 
+                             class="w-full h-auto rounded-md" />
+                      </div>
+                      <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
+                        ${generateStarsHtml(product.rating, product.reviews_count)}
+                        <p class="text-lg font-bold mb-3">${formatPrice(product.price)}</p>
+                        <div class="mb-4">${generateAffiliateButtonHtml(product.asin)}</div>
+                        <div class="text-sm text-gray-600">
+                          <p><strong>ASIN:</strong> ${product.asin}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            } else {
+              // Fall back to the original method
+              const stars = generateStars(product.rating);
+              const price = formatPrice(product.price);
+              const productUrl = formatAmazonUrl(product.asin);
+              product.htmlContent = generateProductHtml(product, index + 1);
+            }
             
-            product.htmlContent = generateProductHtml(product, index + 1);
             console.log(`✅ Generated HTML content for product #${index + 1}`);
           }
           return product;
