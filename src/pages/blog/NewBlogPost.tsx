@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { toast } from '@/components/ui/use-toast';
 
 const NewBlogPost = () => {
   const {
@@ -149,13 +150,27 @@ const NewBlogPost = () => {
   // Handle toggling preview mode
   const togglePreview = () => {
     setShowPreview(!showPreview);
+    toast({
+      title: showPreview ? "Edit Mode" : "Preview Mode",
+      description: showPreview ? "Now you can edit your post." : "Previewing how your post will look.",
+    });
+  };
+
+  // Handle regenerate with AI
+  const handleRegenerateWithAI = () => {
+    toast({
+      title: "Regenerate Content",
+      description: "Modify your prompt and click 'Generate Blog Content' to regenerate.",
+    });
+    // Scroll to the top of the AI generation form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
   return (
     <div className="min-h-screen pb-16">
       <Navigation />
       
-      <div className="pt-20 container mx-auto px-4 mt-4">
+      <div className="container mx-auto px-4 mt-4 pt-20">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900">
             {editId ? 'Edit Blog Post' : 'Create New Blog Post'}
@@ -211,18 +226,18 @@ const NewBlogPost = () => {
           // Edit Mode
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* AI Generation - Left Section */}
-            <div className="lg:col-span-4 lg:sticky lg:top-20 self-start">
+            <div className="lg:col-span-4 lg:sticky lg:top-24 self-start bg-white p-6 rounded-lg shadow-sm border border-gray-100">
               <div className="space-y-6">
-                <h2 className="text-xl font-semibold">AI Generation</h2>
+                <h2 className="text-xl font-semibold border-b pb-2">AI Generation</h2>
                 
                 <form onSubmit={handleGenerate} className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="category">Post Category*</Label>
+                    <Label htmlFor="category" className="font-medium">Post Category*</Label>
                     <Select
                       value={selectedCategory}
                       onValueChange={setSelectedCategory}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -238,7 +253,7 @@ const NewBlogPost = () => {
                   {showAsinField && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Label htmlFor="asin">
+                        <Label htmlFor="asin" className="font-medium">
                           {selectedCategory === 'Comparison' ? 'First Laptop ASIN' : 'Amazon ASIN'} 
                         </Label>
                         <TooltipProvider>
@@ -264,7 +279,7 @@ const NewBlogPost = () => {
                   {showAsin2Field && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Label htmlFor="asin2">Second Laptop ASIN</Label>
+                        <Label htmlFor="asin2" className="font-medium">Second Laptop ASIN</Label>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -286,7 +301,7 @@ const NewBlogPost = () => {
                   )}
                   
                   <div className="space-y-2">
-                    <Label htmlFor="prompt">Your Request*</Label>
+                    <Label htmlFor="prompt" className="font-medium">Your Request*</Label>
                     <Textarea
                       id="prompt"
                       placeholder={getPromptPlaceholder()}
@@ -336,7 +351,7 @@ const NewBlogPost = () => {
                 {content && (
                   <Button 
                     type="button" 
-                    onClick={() => {}}
+                    onClick={handleRegenerateWithAI}
                     variant="outline" 
                     className="w-full flex items-center justify-center gap-2"
                   >
@@ -350,15 +365,15 @@ const NewBlogPost = () => {
             {/* Content and Settings - Right Section */}
             <div className="lg:col-span-8">
               {!content ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                   <Sparkles className="h-16 w-16 text-primary mb-4" />
                   <h2 className="text-2xl font-bold mb-2">Generate Content First</h2>
                   <p className="text-muted-foreground mb-6">Use the AI Generation panel to create your blog post content.</p>
                 </div>
               ) : (
                 <div className="space-y-8">
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4">Content</h2>
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                    <h2 className="text-xl font-semibold border-b pb-2 mb-4">Content</h2>
                     <PostContent 
                       title={title}
                       content={content}
@@ -370,10 +385,8 @@ const NewBlogPost = () => {
                     />
                   </div>
                   
-                  <Separator className="my-8" />
-                  
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4">Settings & SEO</h2>
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                    <h2 className="text-xl font-semibold border-b pb-2 mb-4">Settings & SEO</h2>
                     <div className="grid grid-cols-1 gap-8">
                       <PostMetadata 
                         post={previewPost}
@@ -392,7 +405,7 @@ const NewBlogPost = () => {
                             previewPost={previewPost}
                             currentUrl={currentUrl}
                             onSave={handleSave}
-                            onOpenAIPrompt={() => {}}
+                            onOpenAIPrompt={handleRegenerateWithAI}
                             onPreview={handlePreview}
                             onCancel={handleCancel}
                             isEdit={!!editId}
