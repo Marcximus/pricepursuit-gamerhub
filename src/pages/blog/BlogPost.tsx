@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { ChevronLeft } from 'lucide-react';
 import { BlogSEO } from '@/components/blog/BlogSEO';
+import { RelatedPosts } from '@/components/blog/RelatedPosts';
 
 const BlogPost = () => {
   const { category, slug } = useParams<{ category: string; slug: string }>();
@@ -25,6 +26,19 @@ const BlogPost = () => {
       document.title = `${post.title} | Laptop Hunter Blog`;
     } else if (slug) {
       document.title = "Post Not Found | Laptop Hunter Blog";
+    }
+    
+    // Initialize Humix video player if script is present
+    if (post && post.content.includes('humixPlayers')) {
+      const existingScript = document.querySelector('script[src="https://www.humix.com/video.js"]');
+      if (!existingScript) {
+        const script = document.createElement('script');
+        script.src = 'https://www.humix.com/video.js';
+        script.async = true;
+        script.setAttribute('data-ezscrex', 'false');
+        script.setAttribute('data-cfasync', 'false');
+        document.body.appendChild(script);
+      }
     }
   }, [post, slug]);
 
@@ -153,6 +167,9 @@ const BlogPost = () => {
               className="prose prose-lg max-w-none" 
               dangerouslySetInnerHTML={{ __html: processedContent }}
             />
+            
+            {/* Add Related Posts */}
+            <RelatedPosts currentPostId={post.id} currentCategory={category} />
             
             <Separator className="my-8" />
             

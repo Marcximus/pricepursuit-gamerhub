@@ -90,29 +90,31 @@ Your writing should:
 - Be factually accurate and up-to-date
 - Include a catchy title
 - Have a brief excerpt/summary (2-3 sentences)
-- Suggest 3-5 relevant tags
-
-Format your response as a JSON object with these fields:
-{
-  "title": "Your generated title",
-  "content": "The full HTML-formatted blog post content",
-  "excerpt": "A brief 2-3 sentence summary",
-  "tags": ["tag1", "tag2", "tag3"]
-}`;
+- Suggest 3-5 relevant tags`;
 
   switch (category) {
     case 'Top10':
       return `${basePrompt}
 
 For a Top 10 list:
-- Create a compelling introduction explaining the criteria used for selection
-- Number each item clearly (1-10)
+- Create a compelling introduction explaining the criteria used for selection (at least 3 paragraphs)
+- Create an HTML table with headers in the intro section showing the top 10 laptops with columns for Rank, Model, Key Specs, and Rating
+- Number each item clearly (1-10) using <h2> tags with the laptop name/model
 - For each item, include:
   * A descriptive heading with the laptop name/model
-  * Key specifications and features
-  * Pros and cons
-  * A brief explanation of why it's ranked in this position
-- Conclude with a summary and additional buying advice`;
+  * Use placeholder text [PRODUCT_DATA_1], [PRODUCT_DATA_2], etc. up to [PRODUCT_DATA_10] where detailed product information will be inserted
+  * Each placeholder should be surrounded by <div class="product-data" data-product-id="X"></div> where X is the number 1-10
+  * Write at least 3 paragraphs of analysis for each laptop explaining its strengths, weaknesses, and ideal use cases
+- Conclude with a summary and additional buying advice
+- After the main content, add space for video with: <div class="video-placeholder"></div>
+
+Format your response as a JSON object with these fields:
+{
+  "title": "Your generated title",
+  "content": "The full HTML-formatted blog post content with placeholders for product data",
+  "excerpt": "A brief 2-3 sentence summary",
+  "tags": ["tag1", "tag2", "tag3"]
+}`;
 
     case 'Review':
       return `${basePrompt}
@@ -129,7 +131,16 @@ For a Laptop Review:
   * Software experience
   * Value for money
 - Provide a balanced assessment of strengths and weaknesses
-- End with a clear conclusion and recommendation`;
+- End with a clear conclusion and recommendation
+- After the main content, add space for video with: <div class="video-placeholder"></div>
+
+Format your response as a JSON object with these fields:
+{
+  "title": "Your generated title",
+  "content": "The full HTML-formatted blog post content",
+  "excerpt": "A brief 2-3 sentence summary",
+  "tags": ["tag1", "tag2", "tag3"]
+}`;
 
     case 'Comparison':
       return `${basePrompt}
@@ -145,7 +156,16 @@ For a Laptop Comparison:
   * Price and value
 - Use tables when appropriate for direct spec comparisons
 - Highlight the key differences between the models
-- Conclude with specific recommendations for different user types`;
+- Conclude with specific recommendations for different user types
+- After the main content, add space for video with: <div class="video-placeholder"></div>
+
+Format your response as a JSON object with these fields:
+{
+  "title": "Your generated title",
+  "content": "The full HTML-formatted blog post content",
+  "excerpt": "A brief 2-3 sentence summary",
+  "tags": ["tag1", "tag2", "tag3"]
+}`;
 
     case 'How-To':
       return `${basePrompt}
@@ -157,10 +177,27 @@ For a How-To Guide:
 - Add prerequisites or required tools/software
 - Use a conversational, instructional tone
 - Include troubleshooting tips for common issues
-- End with a summary and next steps`;
+- End with a summary and next steps
+- After the main content, add space for video with: <div class="video-placeholder"></div>
+
+Format your response as a JSON object with these fields:
+{
+  "title": "Your generated title",
+  "content": "The full HTML-formatted blog post content",
+  "excerpt": "A brief 2-3 sentence summary",
+  "tags": ["tag1", "tag2", "tag3"]
+}`;
 
     default:
-      return basePrompt;
+      return `${basePrompt}
+
+Format your response as a JSON object with these fields:
+{
+  "title": "Your generated title",
+  "content": "The full HTML-formatted blog post content",
+  "excerpt": "A brief 2-3 sentence summary",
+  "tags": ["tag1", "tag2", "tag3"]
+}`;
   }
 }
 
@@ -169,6 +206,15 @@ function parseGeneratedContent(content: string, category: string) {
     // Attempt to parse if it's already valid JSON
     try {
       const parsedJson = JSON.parse(content);
+      
+      // For Top 10 posts, replace the video placeholder with the Humix script
+      if (category === 'Top10' && parsedJson.content) {
+        parsedJson.content = parsedJson.content.replace(
+          /<div class="video-placeholder"><\/div>/g,
+          `<script data-ezscrex="false" data-cfasync="false">(window.humixPlayers = window.humixPlayers || []).push({target: document.currentScript});</script><script async data-ezscrex="false" data-cfasync="false" src="https://www.humix.com/video.js"></script>`
+        );
+      }
+      
       return {
         ...parsedJson,
         category,
@@ -179,6 +225,15 @@ function parseGeneratedContent(content: string, category: string) {
       if (jsonMatch) {
         const jsonStr = jsonMatch[0];
         const parsedJson = JSON.parse(jsonStr);
+        
+        // For Top 10 posts, replace the video placeholder with the Humix script
+        if (category === 'Top10' && parsedJson.content) {
+          parsedJson.content = parsedJson.content.replace(
+            /<div class="video-placeholder"><\/div>/g,
+            `<script data-ezscrex="false" data-cfasync="false">(window.humixPlayers = window.humixPlayers || []).push({target: document.currentScript});</script><script async data-ezscrex="false" data-cfasync="false" src="https://www.humix.com/video.js"></script>`
+          );
+        }
+        
         return {
           ...parsedJson,
           category,
@@ -194,6 +249,14 @@ function parseGeneratedContent(content: string, category: string) {
       const contentMatch = content.match(/content["']?\s*:\s*["']([^]+?)["'],/i);
       if (contentMatch && contentMatch[1]) {
         extractedContent = contentMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+      }
+      
+      // For Top 10 posts, replace the video placeholder with the Humix script
+      if (category === 'Top10' && extractedContent) {
+        extractedContent = extractedContent.replace(
+          /<div class="video-placeholder"><\/div>/g,
+          `<script data-ezscrex="false" data-cfasync="false">(window.humixPlayers = window.humixPlayers || []).push({target: document.currentScript});</script><script async data-ezscrex="false" data-cfasync="false" src="https://www.humix.com/video.js"></script>`
+        );
       }
       
       // Extract tags
