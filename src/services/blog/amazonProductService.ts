@@ -25,10 +25,6 @@ export function extractSearchParamsFromPrompt(prompt: string): ExtractedParams {
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
   
-  if (!title.includes('2024')) {
-    title += ' in 2024';
-  }
-  
   // If title doesn't start with "Top 10", add it
   if (!title.toLowerCase().startsWith('top 10')) {
     title = 'Top 10 ' + title;
