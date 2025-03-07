@@ -8,6 +8,16 @@ interface GeneratedBlogContent {
   excerpt: string;
   category: string;
   tags?: string[];
+  productData?: {
+    asin: string;
+    title: string;
+    brand: string;
+    price: number;
+    rating: number;
+    reviewCount: number;
+    imageUrl: string;
+    productUrl: string;
+  };
 }
 
 interface SearchParam {
@@ -22,13 +32,15 @@ interface SearchParam {
 
 export async function generateBlogPost(
   prompt: string,
-  category: string
+  category: string,
+  asin?: string
 ): Promise<GeneratedBlogContent | null> {
   try {
     const { data, error } = await supabase.functions.invoke('generate-blog-post', {
       body: {
         prompt,
-        category
+        category,
+        asin
       },
     });
 

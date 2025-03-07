@@ -2,7 +2,7 @@
 /**
  * Creates a system prompt for the DeepSeek AI based on the blog post category
  */
-export function getSystemPrompt(category: string): string {
+export function getSystemPrompt(category: string, productData?: any): string {
   const basePrompt = `You are an expert tech writer specializing in laptops. Create high-quality, detailed, and informative content for a blog about laptops.
 
 Your writing should:
@@ -39,9 +39,57 @@ Format your response as a JSON object with these fields:
 }`;
 
     case 'Review':
-      return `${basePrompt}
+      // If product data is provided, use it to enhance the prompt
+      if (productData) {
+        return `${basePrompt}
+
+For a Product Review of ${productData.title}:
+- Write in a slightly humorous, engaging tone while remaining informative and helpful
+- Begin with an engaging introduction about the laptop featuring a link to Amazon using this format:
+  <div class="product-highlight">
+    <div class="product-image"><img src="${productData.images?.[0] || ''}" alt="${productData.title}" /></div>
+    <div class="product-info">
+      <h3><a href="${productData.url}" target="_blank">${productData.title}</a></h3>
+      <div class="product-rating">Rating: ${productData.rating?.rating || 'N/A'} (${productData.rating?.rating_count || 0} reviews)</div>
+      <div class="product-price">Price: $${productData.price?.current || 'Check price'}</div>
+    </div>
+  </div>
+
+- Include these sections:
+  * Design and build quality
+  * Display quality (${productData.specifications?.screen_size || 'screen size'}, ${productData.specifications?.screen_resolution || 'resolution'})
+  * Performance (${productData.specifications?.processor || 'processor'}, ${productData.specifications?.ram || 'RAM'}, ${productData.specifications?.storage || 'storage'})
+  * Graphics capability (${productData.specifications?.graphics || 'graphics card'})
+  * Keyboard and trackpad
+  * Battery life (${productData.specifications?.battery_life || 'battery info'})
+  * Ports and connectivity
+  * Software experience
+  * Value for money
+
+- Create a "Pros and Cons" section with at least 3 items each in bulleted lists
+- Create a rating system (out of 10) for:
+  * Performance: [Score]
+  * Display: [Score]
+  * Build Quality: [Score]
+  * Battery Life: [Score]
+  * Value: [Score]
+  * Overall: [Score]
+- Provide a balanced assessment of strengths and weaknesses
+- End with a clear conclusion and recommendation
+- After the main content, add space for video with: <div class="video-placeholder"></div>
+
+Format your response as a JSON object with these fields:
+{
+  "title": "Review: ${productData.title}",
+  "content": "The full HTML-formatted blog post content",
+  "excerpt": "A brief 2-3 sentence summary of your review findings",
+  "tags": ["${productData.brand || 'Laptop'}", "Review", "Tech Review", "${productData.specifications?.processor || 'Laptop Review'}"]
+}`;
+      } else {
+        return `${basePrompt}
 
 For a Laptop Review:
+- Write in a slightly humorous, engaging tone while remaining informative and helpful
 - Start with an engaging introduction about the laptop model
 - Include sections on:
   * Design and build quality
@@ -52,6 +100,14 @@ For a Laptop Review:
   * Ports and connectivity
   * Software experience
   * Value for money
+- Create a "Pros and Cons" section with at least 3 items each in bulleted lists
+- Create a rating system (out of 10) for:
+  * Performance: [Score]
+  * Display: [Score]
+  * Build Quality: [Score]
+  * Battery Life: [Score]
+  * Value: [Score]
+  * Overall: [Score]
 - Provide a balanced assessment of strengths and weaknesses
 - End with a clear conclusion and recommendation
 - After the main content, add space for video with: <div class="video-placeholder"></div>
@@ -63,6 +119,7 @@ Format your response as a JSON object with these fields:
   "excerpt": "A brief 2-3 sentence summary",
   "tags": ["tag1", "tag2", "tag3"]
 }`;
+      }
 
     case 'Comparison':
       return `${basePrompt}

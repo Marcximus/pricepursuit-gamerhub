@@ -1,15 +1,16 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface BlogAIPromptDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onGenerate: (prompt: string, category: string) => void;
+  onGenerate: (prompt: string, category: string, asin?: string) => void;
   isLoading: boolean;
 }
 
@@ -21,11 +22,18 @@ export function BlogAIPromptDialog({
 }: BlogAIPromptDialogProps) {
   const [prompt, setPrompt] = useState('');
   const [category, setCategory] = useState('Review');
+  const [asin, setAsin] = useState('');
+  const [showAsinField, setShowAsinField] = useState(false);
+
+  useEffect(() => {
+    // Show ASIN field only for Review category
+    setShowAsinField(category === 'Review');
+  }, [category]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (prompt.trim()) {
-      onGenerate(prompt.trim(), category);
+      onGenerate(prompt.trim(), category, showAsinField ? asin : undefined);
     }
   };
 
@@ -34,7 +42,9 @@ export function BlogAIPromptDialog({
       case 'Top10':
         return "E.g., 'Generate a top 10 list of best budget gaming laptops under $1000 in 2024'";
       case 'Review':
-        return "E.g., 'Write a detailed review of the MacBook Air M2, focusing on performance and battery life'";
+        return showAsinField && asin 
+          ? "E.g., 'Write a detailed review focusing on performance and battery life'" 
+          : "E.g., 'Write a detailed review of the MacBook Air M2, focusing on performance and battery life'";
       case 'Comparison':
         return "E.g., 'Compare the Dell XPS 13 and HP Spectre x360, highlighting the key differences for professional users'";
       case 'How-To':
@@ -72,6 +82,23 @@ export function BlogAIPromptDialog({
               </SelectContent>
             </Select>
           </div>
+          
+          {showAsinField && (
+            <div className="space-y-2">
+              <Label htmlFor="asin">
+                Amazon ASIN (Optional)
+                <span className="ml-1 text-xs text-gray-500">
+                  - The AI will fetch product details for your review
+                </span>
+              </Label>
+              <Input
+                id="asin"
+                placeholder="e.g., B09JQMJHXY"
+                value={asin}
+                onChange={(e) => setAsin(e.target.value)}
+              />
+            </div>
+          )}
           
           <div className="space-y-2">
             <Label htmlFor="prompt">Your Request</Label>

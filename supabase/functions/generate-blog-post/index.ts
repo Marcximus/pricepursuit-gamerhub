@@ -19,7 +19,7 @@ serve(async (req) => {
     }
 
     // Extract the request data
-    const { prompt, category } = await req.json();
+    const { prompt, category, asin } = await req.json();
 
     if (!prompt || !category) {
       return new Response(
@@ -28,10 +28,38 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Generating ${category} blog post with prompt: ${prompt}`);
+    console.log(`Generating ${category} blog post with prompt: ${prompt}${asin ? `, ASIN: ${asin}` : ''}`);
 
-    // Create system prompt based on category
-    const systemPrompt = getSystemPrompt(category);
+    // If this is a review and has an ASIN, fetch product data
+    let productData = null;
+    if (category === 'Review' && asin) {
+      try {
+        // Fetch product data from our edge function
+        const productResponse = await fetch(`${req.url.split('/generate-blog-post')[0]}/fetch-product-data`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': req.headers.get('Authorization') || '',
+          },
+          body: JSON.stringify({ asin }),
+        });
+
+        if (!productResponse.ok) {
+          console.error(`Error fetching product data: ${productResponse.status}`);
+          const errorText = await productResponse.text();
+          console.error(`Response: ${errorText}`);
+        } else {
+          productData = await productResponse.json();
+          console.log('Successfully fetched product data:', productData.title);
+        }
+      } catch (error) {
+        console.error('Error fetching product data:', error);
+        // Continue with generation even if product fetch fails
+      }
+    }
+    
+    // Create system prompt based on category and product data if available
+    const systemPrompt = getSystemPrompt(category, productData);
     
     // Generate content using DeepSeek API
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -61,6 +89,20 @@ serve(async (req) => {
     
     // Parse the generated content
     const parsedContent = parseGeneratedContent(generatedContent, category);
+    
+    // If we have product data, augment the parsed content
+    if (productData && category === 'Review') {
+      parsedContent.productData = {
+        asin,
+        title: productData.title,
+        brand: productData.brand,
+        price: productData.price?.current,
+        rating: productData.rating?.rating,
+        reviewCount: productData.rating?.rating_count,
+        imageUrl: productData.images?.[0],
+        productUrl: productData.url
+      };
+    }
     
     console.log('Successfully generated blog content');
     

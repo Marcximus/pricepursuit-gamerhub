@@ -17,11 +17,11 @@ export const usePostAI = (
     setIsAIPromptOpen(true);
   };
   
-  const handleGenerateContent = async (prompt: string, selectedCategory: string) => {
+  const handleGenerateContent = async (prompt: string, selectedCategory: string, asin?: string) => {
     setIsGenerating(true);
     try {
       const { generateBlogPost } = await import('@/services/blogService');
-      const generatedContent = await generateBlogPost(prompt, selectedCategory);
+      const generatedContent = await generateBlogPost(prompt, selectedCategory, asin);
       
       if (generatedContent) {
         setTitle(generatedContent.title);
