@@ -2,59 +2,129 @@
 /**
  * System prompt for Top 10 blog posts
  */
-export function getTop10Prompt(amazonProducts?: any[]): string {
-  const hasProducts = amazonProducts && amazonProducts.length > 0;
-  
-  let productContext = '';
-  if (hasProducts) {
-    productContext = `\n\nI'll provide you with real Amazon product data for the following ${amazonProducts.length} products:\n\n`;
-    
+export function getTop10Prompt(amazonProducts: any[] | null): string {
+  let top10SystemPrompt = `
+You are an expert in writing engaging, detailed, and informative Top 10 blog posts about laptops and technology products that will rank well in search engines. 
+
+YOUR OUTPUT STRUCTURE:
+1. Title: A catchy, SEO-friendly title that includes 'Top 10' and relevant keywords
+2. Excerpt: 1-2 sentence summary of the blog post (no more than 160 characters)
+3. Content: Detailed, informative content with each product clearly marked and described
+4. Tags: 5-10 relevant SEO tags that would help this content rank
+
+SPECIFIC INSTRUCTIONS:
+- Write in a conversational, helpful tone that builds trust with the reader
+- Include an introduction (300-400 words) explaining the criteria used for selecting these products
+- For each product, create a detailed section with: heading, pros/cons, key features, and who it's best for
+- Discuss specific technical aspects like processor performance, RAM, storage, display quality, etc.
+- Share insights about price-to-performance ratio and value proposition
+- Format your content with clear headings, bullet points, and short paragraphs
+- End with a conclusion summarizing the top choices for different use cases
+- Avoid generic statements - be specific about what makes each product stand out
+
+`;
+
+  // If we have product data, include it in the prompt
+  if (amazonProducts && amazonProducts.length > 0) {
+    top10SystemPrompt += `
+PRODUCT DATA:
+I've provided you with detailed information about ${amazonProducts.length} products. Use this data to create a rich, detailed blog post. For each product, I've included:
+
+1. Basic information (title, brand, ASIN, price, rating, etc.)
+2. Specifications and features
+3. Reviews and user feedback
+4. Raw data with additional details about features, specifications, and more
+
+USE THE RAW DATA: Each product has a 'rawData' field containing additional information that isn't presented in the basic fields. Make use of this detailed information to create more specific, accurate descriptions of each product.
+
+Here's the product data to reference:
+`;
+
+    // Add formatted product data in a readable way
     amazonProducts.forEach((product, index) => {
-      productContext += `Product ${index + 1}:\n`;
-      productContext += `- Title: ${product.title}\n`;
-      productContext += `- ASIN: ${product.asin}\n`;
-      productContext += `- Brand: ${product.brand || 'Unknown'}\n`;
-      productContext += `- Price: $${product.price || 'Unknown'}\n`;
-      productContext += `- Rating: ${product.rating || 'Unknown'}/5 (${product.ratingCount || 0} reviews)\n`;
-      productContext += `- Image URL: ${product.imageUrl || 'None'}\n`;
-      productContext += `- Product URL: ${product.productUrl || 'None'}\n\n`;
+      top10SystemPrompt += `
+PRODUCT ${index + 1}: ${product.title}
+- Brand: ${product.brand || 'Unknown'}
+- Price: $${product.price?.toFixed(2) || 'N/A'}
+- Rating: ${product.rating || 'N/A'}/5 (${product.ratingCount || 0} reviews)
+- ASIN: ${product.asin || 'N/A'}
+
+SPECIFICATIONS:
+${product.specs || 'No specifications provided'}
+
+`;
+      
+      // Add raw data information if available
+      if (product.rawData) {
+        // Features
+        if (product.rawData.features && product.rawData.features.length > 0) {
+          top10SystemPrompt += `FEATURES:\n`;
+          product.rawData.features.forEach((feature: string) => {
+            top10SystemPrompt += `- ${feature}\n`;
+          });
+          top10SystemPrompt += `\n`;
+        }
+        
+        // Sample Reviews
+        if (product.rawData.reviews && product.rawData.reviews.length > 0) {
+          top10SystemPrompt += `SAMPLE REVIEWS:\n`;
+          product.rawData.reviews.forEach((review: any, idx: number) => {
+            if (idx < 2 && review.text) { // Limit to 2 reviews to save space
+              top10SystemPrompt += `- ${review.text.substring(0, 200)}${review.text.length > 200 ? '...' : ''}\n`;
+            }
+          });
+          top10SystemPrompt += `\n`;
+        }
+        
+        // Description excerpt
+        if (product.rawData.description) {
+          top10SystemPrompt += `DESCRIPTION EXCERPT:\n${product.rawData.description.substring(0, 300)}${product.rawData.description.length > 300 ? '...' : ''}\n\n`;
+        }
+      }
     });
-    
-    productContext += `Use these real products as the basis for your Top 10 list. For each product, include a placeholder tag where the product data should be inserted: <div class="product-data" data-product-id="X">[PRODUCT_DATA_X]</div> (where X is the product number 1-10).`;
   } else {
-    productContext = `\n\nNo specific product data is available, so make a general list. For each product, include a placeholder tag: <div class="product-data" data-product-id="X">[PRODUCT_DATA_X]</div> (where X is the product number 1-10). These placeholders will be replaced with actual product data later.`;
+    // No product data
+    top10SystemPrompt += `
+NOTE: No product data was provided, so you'll need to generate 10 fictional laptop products based on the user's prompt. Create realistic specifications, prices, and features that would make sense for the requested category. For each product, include:
+
+1. Product name and brand
+2. Price point
+3. Key specifications (processor, RAM, storage, display, graphics, battery life)
+4. 2-3 standout features
+5. Pros and cons
+6. Who it's best for
+`;
   }
 
-  return `You are an expert technology writer creating a "Top 10" list blog post for a laptop review website.${productContext}
+  top10SystemPrompt += `
+FORMAT YOUR CONTENT:
+When referring to each product in your blog post, use the format:
 
-GUIDELINES FOR YOUR CONTENT:
-1. Write in a conversational, slightly humorous style with occasional emojis
-2. Use the reader's perspective with "you" and "your"
-3. Create compelling, catchy titles and subtitles
-4. Be helpful and informative, focusing on what matters to readers
-5. Include an introduction explaining why this top 10 list matters
-6. For each product in the top 10 list:
-   - Create a mini heading with the ranking and product name
-   - Include the [PRODUCT_DATA_X] placeholder tag where X is the ranking (1-10)
-   - Write 1-2 paragraphs of analysis highlighting key features, pros/cons
-   - Explain why this product ranks where it does
-7. After the list, add a conclusion with final thoughts
-8. Don't include any image tags, links or media - only the placeholder tags
+## {Number}. {Product Name}
 
-IMPORTANT FORMATTING INSTRUCTIONS:
-- Format the main title as an H1 heading
-- Format section headings as H2 
-- Format each product name/rank as H3
-- Use paragraphs, bullet points, and occasional bold text
-- Always include a table of contents after the introduction
-- Create a post that's engaging, informative, and conversion-focused
+![{Product Name}](product-image-placeholder-{index})
 
-CONTENT STRUCTURE:
-1. Main Title (H1)
-2. Introduction (2-3 paragraphs)
-3. Table of Contents (list of links to the rankings)
-4. Rankings (#10 through #1, each with placeholder and analysis)
-5. Conclusion
+{Your detailed description of the product including specifications from the provided data}
 
-Do not include any disclaimer about affiliate links or sponsorships. The content should focus purely on helping users make the best choice for their needs. The tone should be friendly, conversational, and slightly funny - like a knowledgeable friend giving advice.`;
+### Pros:
+- {Pro point 1}
+- {Pro point 2}
+- {Pro point 3}
+
+### Cons:
+- {Con point 1}
+- {Con point 2}
+
+{Additional details about the product's performance, value, etc.}
+
+*Price: ${Product Price}*
+
+[Check Price on Amazon](#product-link-placeholder-{index})
+
+---
+
+YOUR GOAL is to create content that genuinely helps consumers make informed purchasing decisions while being highly readable and SEO-friendly.
+`;
+
+  return top10SystemPrompt;
 }

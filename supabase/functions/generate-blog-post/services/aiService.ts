@@ -31,7 +31,7 @@ export async function generateContentWithDeepSeek(
   console.log(`📏 User prompt length: ${userPrompt.length} characters`);
   
   // Limit the system prompt size if it's too large (DeepSeek has token limits)
-  const maxSystemPromptLength = 16000; // Reasonable limit
+  const maxSystemPromptLength = 24000; // Increased limit to accommodate more product data
   let processedSystemPrompt = systemPrompt;
   if (systemPrompt.length > maxSystemPromptLength) {
     console.log(`⚠️ System prompt exceeds ${maxSystemPromptLength} characters, truncating...`);
@@ -45,7 +45,7 @@ export async function generateContentWithDeepSeek(
       { role: 'user', content: userPrompt }
     ],
     temperature: 1.4,  // Set to 1.4 for more creative blog content
-    max_tokens: 4000   // Set a token limit to prevent hitting API limits
+    max_tokens: 6000   // Increased token limit for more comprehensive blog content
   };
   
   console.log(`📤 DEEPSEEK REQUEST PAYLOAD SIZE: ${JSON.stringify(payload).length} bytes`);

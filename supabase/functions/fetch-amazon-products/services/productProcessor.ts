@@ -1,3 +1,4 @@
+
 import { formatSpecs, generateHtmlContent } from "../utils/formatters/index.ts";
 
 export function processAmazonProducts(data: any) {
@@ -29,6 +30,7 @@ export function processAmazonProducts(data: any) {
       console.log(`⚠️ Product might not be a laptop: "${title.substring(0, 50)}${title.length > 50 ? '...' : ''}"`);
     }
     
+    // Return more comprehensive data to allow DeepSeek more flexibility
     return {
       rank: index + 1,
       asin: product.asin || '',
@@ -40,7 +42,22 @@ export function processAmazonProducts(data: any) {
       imageUrl: product.image || '',
       productUrl: product.url || '',
       specs: formatSpecs(product),
-      htmlContent: generateHtmlContent(product, index + 1)
+      htmlContent: generateHtmlContent(product, index + 1),
+      // Include additional raw product data for DeepSeek
+      rawData: {
+        features: product.feature_bullets || [],
+        reviews: product.reviews?.slice(0, 3) || [], // Send a few reviews
+        description: product.description || '',
+        specifications: product.specifications || {},
+        categories: product.categories || [],
+        price_information: product.price || {},
+        availability: product.availability || {},
+        delivery: product.delivery || {},
+        is_prime: product.is_prime || false,
+        is_amazon_choice: product.is_amazon_choice || false,
+        is_best_seller: product.is_best_seller || false,
+        variants: product.variants?.length > 0 ? product.variants.slice(0, 2) : [], // Include limited variant info
+      }
     };
   });
   
@@ -84,6 +101,7 @@ export function processAmazonProducts(data: any) {
   if (top10Products.length > 0) {
     const firstProductTitle = top10Products[0].title || 'Untitled product';
     console.log(`📤 FINAL RESPONSE PREVIEW: First product: "${firstProductTitle.substring(0, 50)}..."`);
+    console.log(`📊 Data richness: ${Object.keys(top10Products[0].rawData || {}).length} additional data fields included per product`);
   } else {
     console.log(`📤 FINAL RESPONSE: No products to return`);
   }
