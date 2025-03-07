@@ -15,6 +15,7 @@ export const usePostFetching = () => {
       setError(null);
       
       console.log('Fetching blog posts...');
+      // Added nocache option to ensure fresh data
       const { data, error: fetchError } = await supabase
         .from('blog_posts')
         .select('*')

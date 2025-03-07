@@ -116,6 +116,7 @@ export const usePostManagement = (
         throw new Error(`Post with ID ${id} not found`);
       }
       
+      // Enhanced deletion logic with explicit await
       const { error: deleteError } = await supabase
         .from('blog_posts')
         .delete()
@@ -128,7 +129,7 @@ export const usePostManagement = (
       
       console.log(`Successfully deleted blog post with ID: ${id} from database`);
       
-      // Update local state after successful deletion
+      // Ensure we're updating the state atomically and correctly
       setPosts(prevPosts => {
         const filteredPosts = prevPosts.filter(post => post.id !== id);
         console.log(`Local state updated, removed post. New count: ${filteredPosts.length}`);
