@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNewBlogPost } from '@/components/blog/newPost/useNewBlogPost';
 import Navigation from '@/components/Navigation';
 import { PostContent } from '@/components/blog/newPost/PostContent';
