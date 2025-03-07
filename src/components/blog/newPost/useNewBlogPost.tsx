@@ -110,9 +110,9 @@ export const useNewBlogPost = () => {
       category,
       image_url: imageUrl || undefined,
       additional_images: additionalImages.length > 0 ? additionalImages : undefined,
+      author,
       published,
       tags: tags.length > 0 ? tags : undefined,
-      // Removed the author property from this object as it's not expected in the type
     }, editId);
   };
 
