@@ -97,22 +97,20 @@ export async function fetchAmazonProducts(params: SearchParam | ExtractedParams)
   console.log('🔍 Fetching Amazon products with parameters:', searchParams);
   
   try {
-    const response = await fetch('/api/fetch-amazon-products', {
+    // Update to use the Supabase edge function directly
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    const response = await supabase.functions.invoke('fetch-amazon-products', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(searchParams),
+      body: searchParams,
     });
     
-    if (!response.ok) {
-      console.error(`Error fetching Amazon products: ${response.status} ${response.statusText}`);
-      const errorText = await response.text();
-      console.error('Error response:', errorText);
-      throw new Error(`Failed to fetch products: ${response.statusText}`);
+    if (response.error) {
+      console.error('Error fetching Amazon products:', response.error);
+      return [];
     }
     
-    const data = await response.json();
+    const data = response.data;
     
     if (!data || !Array.isArray(data.products)) {
       console.error('Invalid response format from Amazon API:', data);

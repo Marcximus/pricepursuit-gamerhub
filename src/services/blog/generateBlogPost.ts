@@ -33,7 +33,7 @@ export async function generateBlogPost(
           toast({
             title: 'Product Fetching Warning',
             description: 'No products were found. The blog post will be generated without real product data.',
-            variant: 'default',  // Changed from 'warning' to 'default'
+            variant: 'default',
           });
         }
       } catch (error) {
