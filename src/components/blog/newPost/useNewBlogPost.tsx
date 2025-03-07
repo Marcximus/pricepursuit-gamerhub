@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useBlog } from '@/contexts/BlogContext';
-import { usePostMetadata, usePostContent, usePostActions, usePostAI } from './hooks';
+import { usePostMetadata, usePostContent, usePostActions } from './hooks';
+import { usePostAI } from './hooks/usePostAI';
 
 export const useNewBlogPost = () => {
   const location = useLocation();

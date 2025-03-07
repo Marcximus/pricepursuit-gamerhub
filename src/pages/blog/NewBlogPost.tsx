@@ -97,7 +97,7 @@ const NewBlogPost = () => {
                 previewPost={previewPost}
                 currentUrl={currentUrl}
                 onSave={handleSave}
-                onOpenAIPrompt={() => {}} // We don't need this anymore, but keeping for type compatibility
+                onOpenAIPrompt={() => {}} 
                 onPreview={handlePreview}
                 onCancel={handleCancel}
                 isEdit={!!editId}
