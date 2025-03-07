@@ -23,7 +23,6 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shine: "shine var(--duration) infinite linear",
-        pulse: "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
       keyframes: {
         "accordion-down": {
@@ -44,10 +43,6 @@ export default {
           to: {
             "background-position": "0% 0%",
           },
-        },
-        pulse: {
-          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
-          '50%': { opacity: '0.7', transform: 'scale(1.05)' },
         },
       },
       colors: {
