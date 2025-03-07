@@ -113,7 +113,13 @@ const NewBlogPost = () => {
                   
                   <div className="flex justify-end">
                     <Button 
-                      onClick={() => document.querySelector('[data-value="settings"]')?.click()}
+                      onClick={() => {
+                        // Find the settings tab trigger and simulate a click
+                        const settingsTab = document.querySelector('[data-value="settings"]');
+                        if (settingsTab instanceof HTMLElement) {
+                          settingsTab.click();
+                        }
+                      }}
                       type="button"
                       className="mt-4"
                     >
