@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Mail, MessageCircle } from 'lucide-react';
 const ContactInfo = () => {
@@ -11,7 +12,7 @@ const ContactInfo = () => {
       <div className="space-y-4">
         <div className="flex items-center">
           <Mail className="w-5 h-5 mr-3 text-gaming-600" />
-          <span>contact@laptophunter</span>
+          <span>contact@laptophunter.example.com</span>
         </div>
         <div className="flex items-center">
           <MessageCircle className="w-5 h-5 mr-3 text-gaming-600" />

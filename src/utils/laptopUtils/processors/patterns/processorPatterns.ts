@@ -1,4 +1,3 @@
-
 /**
  * Regular expression patterns for processor extraction
  */
@@ -31,6 +30,9 @@ export const intelCorePatterns = {
   coreUltra: /\b(?:intel\s+)?(?:core\s+)?ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)\b/i,
   // Original Ultra pattern as fallback
   coreUltraSimple: /\b(?:intel\s+)?core\s+ultra\s+([579])\s*(?:[0-9]{3}[a-z]*)?/i,
+  // Completely new pattern for Intel Core 7-150U style naming (without i)
+  coreWithoutI: /\b(?:intel\s+)?core\s+([3579])(?:[- ](\d{3}[a-z]*))?/i,
+  // Existing core i patterns
   coreI: /\b(?:intel\s+)?core\s+i([3579])(?:[- ](\d{4,5}[a-z]*))?/i,
   iSeries: /\bi([3579])(?:[- ](\d{4,5}[a-z]*))?/i,
   genPrefix: /\b(1[0-4]th)[\s-]gen(?:\s+(?:intel\s+)?core\s+)?i([3579])/i

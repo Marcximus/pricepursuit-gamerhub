@@ -25,6 +25,13 @@ export function ProcessorSpec({ title, processor }: ProcessorSpecProps) {
       displayProcessor = `Intel Core i${intelGenMatch[2]} ${intelGenMatch[1]}th Gen`;
     }
   }
+  // NEW: Check for "Intel Core 7-150U" format (without "i")
+  else if (title.match(/Intel\s+Core\s+([3579])(?:-|\s+)(\d{3}[A-Z]?)/i)) {
+    const coreWithoutIMatch = title.match(/Intel\s+Core\s+([3579])(?:-|\s+)(\d{3}[A-Z]?)/i);
+    if (coreWithoutIMatch) {
+      displayProcessor = `Intel Core i${coreWithoutIMatch[1]}-${coreWithoutIMatch[2]}`;
+    }
+  }
   // Check for Intel Ultra in title with an improved comprehensive pattern
   else if (title.match(/Intel\s+(?:Core\s+)?Ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i)) {
     const ultraMatch = title.match(/Intel\s+(?:Core\s+)?Ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i);

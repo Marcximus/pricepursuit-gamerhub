@@ -33,6 +33,10 @@ export const normalizeProcessor = (processor: string): string => {
     .replace(/intel\s+(?:core\s+)?ultra\s+([579])(?:-|_|\s+)(\d{3}[a-z]*)/i, 'Intel Core Ultra $1-$2')
     .replace(/intel\s+(?:core\s+)?ultra\s+([579])/i, 'Intel Core Ultra $1');
   
+  // NEW: Standardize Intel Core without 'i' (e.g., "Intel Core 7-150U")
+  normalized = normalized
+    .replace(/intel\s+core\s+([3579])(?:-|\s+)(\d{3}[a-z]*)/i, 'Intel Core i$1-$2');
+  
   // Standardize Intel naming
   normalized = normalized
     .replace(/intel\s+core\s+i([3579])[- ](\d{4,5})(H|U|HQ|K)?/i, 'Intel Core i$1-$2$3')

@@ -10,7 +10,7 @@ export function extractIntelProcessor(text: string): string | null {
   const normalizedText = text.toLowerCase();
   
   // Check for specific model format like i7-1355U
-  const specificModelMatch = normalizedText.match(/i([3579])-(\d{4}[a-z]?)/i);
+  const specificModelMatch = normalizedText.match(intelCorePatterns.specificIntelModel);
   if (specificModelMatch) {
     return `Intel Core i${specificModelMatch[1]}-${specificModelMatch[2]}`;
   }
@@ -19,6 +19,13 @@ export function extractIntelProcessor(text: string): string | null {
   const intelGenMatch = normalizedText.match(intelCorePatterns.intelGenFormat);
   if (intelGenMatch) {
     return `Intel Core i${intelGenMatch[2]} ${intelGenMatch[1]}th Gen`;
+  }
+  
+  // NEW: Check for "Intel Core 7-150U" format (without "i")
+  const coreWithoutIMatch = normalizedText.match(intelCorePatterns.coreWithoutI);
+  if (coreWithoutIMatch) {
+    const model = coreWithoutIMatch[2] ? `-${coreWithoutIMatch[2]}` : '';
+    return `Intel Core i${coreWithoutIMatch[1]}${model}`;
   }
   
   // Enhanced check for Intel Ultra with model numbers
