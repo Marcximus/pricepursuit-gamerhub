@@ -20,7 +20,7 @@ export const usePostAI = (
   const handleGenerateContent = async (prompt: string, selectedCategory: string, asin?: string, asin2?: string) => {
     setIsGenerating(true);
     try {
-      const { generateBlogPost } = await import('@/services/blogService');
+      const { generateBlogPost } = await import('@/services/blog');
       
       // Log the generation attempt with category and ASINs if available
       console.log(

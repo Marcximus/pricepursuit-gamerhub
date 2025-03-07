@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { uploadBlogImage } from '@/services/blogService';
+import { uploadBlogImage } from '@/services/blog';
 
 interface ImagePlaceholderHandlerProps {
   content: string;

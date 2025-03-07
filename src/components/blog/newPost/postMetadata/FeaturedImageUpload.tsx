@@ -1,7 +1,7 @@
 
 import { Image } from 'lucide-react';
 import { useState } from 'react';
-import { uploadBlogImage } from '@/services/blogService';
+import { uploadBlogImage } from '@/services/blog';
 import { toast } from '@/components/ui/use-toast';
 
 interface FeaturedImageUploadProps {

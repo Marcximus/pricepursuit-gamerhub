@@ -2,7 +2,7 @@
 import { ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { uploadBlogImage } from '@/services/blogService';
+import { uploadBlogImage } from '@/services/blog';
 import { toast } from '@/components/ui/use-toast';
 
 interface AdditionalImagesUploadProps {
