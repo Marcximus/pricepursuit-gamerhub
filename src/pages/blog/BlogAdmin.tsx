@@ -42,15 +42,11 @@ const BlogAdmin = () => {
   
   useEffect(() => {
     document.title = "Blog Admin | Laptop Hunter";
-    refreshPosts();
-  }, [refreshPosts]);
-
-  // Reset success state when posts change
-  useEffect(() => {
-    if (deleteSuccess) {
-      setDeleteSuccess(false);
-    }
-  }, [posts]);
+    // Only fetch posts on initial load, not on every render
+    fetchPosts();
+    // Intentionally NOT including refreshPosts or fetchPosts in the dependency array
+    // to prevent continuous refreshing
+  }, []);
 
   const handleDeletePost = async () => {
     if (!postToDelete) return;
@@ -64,8 +60,6 @@ const BlogAdmin = () => {
       if (success) {
         console.log('BlogAdmin: Post deleted successfully');
         setDeleteSuccess(true);
-        // Manually refresh posts to ensure the UI is up to date
-        refreshPosts();
       } else {
         console.error('BlogAdmin: Failed to delete post');
       }
