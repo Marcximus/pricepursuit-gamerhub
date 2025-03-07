@@ -117,7 +117,7 @@ When referring to each product in your blog post, use the format:
 
 {Additional details about the product's performance, value, etc.}
 
-*Price: ${Product Price}*
+*Price: ${'{Product Price}'}*
 
 [Check Price on Amazon](#product-link-placeholder-{index})
 
