@@ -1,7 +1,7 @@
 
 import type { Product } from "@/types/product";
 import type { ComparisonSection } from "../types";
-import { calculateBenchmarkScore } from "../utils/benchmarkCalculator";
+import { calculateBenchmarkScore } from "../utils/benchmark";
 
 export const getBenchmarkSpecs = (
   laptopLeft: Product | null, 

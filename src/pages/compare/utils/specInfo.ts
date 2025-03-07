@@ -29,12 +29,12 @@ export const getSpecInfo = (title: string) => {
     case "benchmark score":
       return {
         emoji: "🚀",
-        tooltip: "Overall performance score calculated based on processor (35%), RAM (20%), storage (15%), graphics (20%), and screen resolution (10%). Higher values indicate better overall system performance."
+        tooltip: "Overall performance score calculated based on processor (35%), graphics (25%), RAM (20%), storage (15%), and display (5%). Higher values indicate better overall system performance."
       };
     case "processor score":
       return {
         emoji: "⚡",
-        tooltip: "CPU performance score based on processor type, generation, and model. For example, Apple M3 Ultra (95), Intel i9 (90), AMD Ryzen 9 (88), Intel i7/M2 (80), Intel i5/M1 (70), Intel i3 (50), Celeron/Pentium (30). Higher values indicate faster processing capabilities."
+        tooltip: "CPU performance score based on processor type, generation, core count, and performance variant. Higher values indicate faster processing capabilities."
       };
     case "wilson score":
       return {
@@ -115,4 +115,3 @@ export const getSpecInfo = (title: string) => {
       return { emoji: "", tooltip: "" };
   }
 };
-
