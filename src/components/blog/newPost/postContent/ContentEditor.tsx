@@ -49,6 +49,21 @@ export const ContentEditor = ({
     } as React.ChangeEvent<HTMLTextAreaElement>);
   };
 
+  // Function to sanitize content for preview
+  const prepareContentForPreview = (content: string) => {
+    // Handle JSON-formatted content by extracting only the content value
+    if (content.trim().startsWith('{') && content.includes('"content":')) {
+      try {
+        const parsed = JSON.parse(content);
+        return parsed.content || content;
+      } catch (e) {
+        // If parsing fails, continue with original content
+        console.error('Error parsing JSON content:', e);
+      }
+    }
+    return content;
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -81,9 +96,14 @@ export const ContentEditor = ({
           )}
         </TabsContent>
         <TabsContent value="preview">
-          <div className="border rounded-md p-4 min-h-[400px] prose max-w-none">
+          <div className="border rounded-md p-4 min-h-[400px] prose max-w-none overflow-auto">
             {content ? (
-              <div dangerouslySetInnerHTML={{ __html: content }} />
+              <div 
+                dangerouslySetInnerHTML={{ 
+                  __html: prepareContentForPreview(content) 
+                }} 
+                className="blog-content-preview"
+              />
             ) : (
               <p className="text-gray-400">No content to preview</p>
             )}
