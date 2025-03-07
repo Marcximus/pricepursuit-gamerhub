@@ -15,6 +15,7 @@ import BlogAdmin from './pages/blog/BlogAdmin';
 import NewBlogPost from './pages/blog/NewBlogPost';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ensureBlogAssetsBucket } from './services/blog';
+import { BlogProvider } from './contexts/BlogContext';
 
 function App() {
   useEffect(() => {
@@ -41,7 +42,11 @@ function App() {
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:category/post/:slug" element={<BlogPost />} />
         <Route path="/blog/:category" element={<BlogCategory />} />
-        <Route path="/blog/new" element={<NewBlogPost />} />
+        <Route path="/blog/new" element={
+          <BlogProvider>
+            <NewBlogPost />
+          </BlogProvider>
+        } />
         <Route path="/blog/admin" element={
           <ProtectedRoute>
             <BlogAdmin />
