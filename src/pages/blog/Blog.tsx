@@ -1,15 +1,18 @@
 
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useBlog } from '@/contexts/BlogContext';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { BlogPageSEO } from '@/components/blog/BlogPageSEO';
 
 const Blog = () => {
   const { loading, error, getRecentPosts } = useBlog();
   const recentPosts = getRecentPosts(6);
+  const location = useLocation();
+  const currentUrl = window.location.origin + location.pathname;
   
   useEffect(() => {
     document.title = "Laptop Hunter Blog";
@@ -24,6 +27,13 @@ const Blog = () => {
 
   return (
     <div className="min-h-screen">
+      <BlogPageSEO 
+        title="Laptop Hunter Blog - Expert Reviews, Comparisons & Guides"
+        description="Find expert laptop insights, reviews, and guides to help you make the perfect laptop purchase decision. Browse top 10 lists, detailed reviews, and how-to guides."
+        url={currentUrl}
+        image="/og-image.png"
+      />
+      
       <Navigation />
       
       <div className="pt-20 container mx-auto px-4 mt-10">

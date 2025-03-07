@@ -1,19 +1,22 @@
 
 import { useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useBlog } from '@/contexts/BlogContext';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { ChevronLeft } from 'lucide-react';
+import { BlogSEO } from '@/components/blog/BlogSEO';
 
 const BlogPost = () => {
   const { category, slug } = useParams<{ category: string; slug: string }>();
   const { getPostBySlug } = useBlog();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const post = category && slug ? getPostBySlug(slug, category) : undefined;
+  const currentUrl = window.location.origin + location.pathname;
   
   useEffect(() => {
     if (post) {
@@ -42,6 +45,9 @@ const BlogPost = () => {
 
   return (
     <div className="min-h-screen pb-16">
+      {/* Add SEO meta tags */}
+      <BlogSEO post={post} url={currentUrl} />
+      
       <Navigation />
       
       <div className="pt-20 container mx-auto px-4 mt-10">
