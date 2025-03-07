@@ -19,6 +19,7 @@ const NewBlogPost = () => {
     previewPost,
     currentUrl,
     isValid,
+    category,
     
     setTitle,
     setContent,
@@ -60,6 +61,7 @@ const NewBlogPost = () => {
                 onTitleChange={(e) => setTitle(e.target.value)}
                 onContentChange={(e) => setContent(e.target.value)}
                 onExcerptChange={(e) => setExcerpt(e.target.value)}
+                category={category}
               />
             </div>
             

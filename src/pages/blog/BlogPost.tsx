@@ -26,6 +26,56 @@ const BlogPost = () => {
     }
   }, [post, slug]);
 
+  // Function to inject additional images into content
+  const injectAdditionalImages = (content: string, additionalImages: string[]) => {
+    if (!additionalImages || additionalImages.length === 0) return content;
+    
+    // For Top10 posts, inject an image after each "#" header
+    if (post?.category === 'Top10') {
+      let modifiedContent = content;
+      const headers = content.match(/<h[2-3][^>]*>.*?<\/h[2-3]>/gi) || [];
+      
+      // Only process if we have enough headers and images
+      headers.forEach((header, index) => {
+        if (index < additionalImages.length) {
+          const imageHtml = `<div class="my-4"><img src="${additionalImages[index]}" alt="List item ${index + 1}" class="rounded-lg w-full" /></div>`;
+          modifiedContent = modifiedContent.replace(
+            header,
+            `${header}${imageHtml}`
+          );
+        }
+      });
+      
+      return modifiedContent;
+    }
+    
+    // For other post types, inject images at appropriate positions
+    if (['Review', 'How-To', 'Comparison'].includes(post?.category || '')) {
+      let modifiedContent = content;
+      const paragraphs = content.match(/<p>.*?<\/p>/gi) || [];
+      
+      // Place images after significant paragraphs
+      additionalImages.forEach((img, index) => {
+        const targetParagraphIndex = Math.min(
+          Math.floor(paragraphs.length * (index + 1) / (additionalImages.length + 1)),
+          paragraphs.length - 1
+        );
+        
+        if (targetParagraphIndex >= 0 && paragraphs[targetParagraphIndex]) {
+          const imageHtml = `<div class="my-4"><img src="${img}" alt="Image ${index + 1}" class="rounded-lg w-full" /></div>`;
+          modifiedContent = modifiedContent.replace(
+            paragraphs[targetParagraphIndex],
+            `${paragraphs[targetParagraphIndex]}${imageHtml}`
+          );
+        }
+      });
+      
+      return modifiedContent;
+    }
+    
+    return content;
+  };
+
   if (!category || !slug) {
     return <div>Invalid URL parameters</div>;
   }
@@ -42,6 +92,9 @@ const BlogPost = () => {
       </div>
     );
   }
+
+  // Process the content to include additional images
+  const processedContent = injectAdditionalImages(post.content, post.additional_images || []);
 
   return (
     <div className="min-h-screen pb-16">
@@ -96,7 +149,7 @@ const BlogPost = () => {
             
             <div 
               className="prose prose-lg max-w-none" 
-              dangerouslySetInnerHTML={{ __html: post.content }}
+              dangerouslySetInnerHTML={{ __html: processedContent }}
             />
             
             <Separator className="my-8" />

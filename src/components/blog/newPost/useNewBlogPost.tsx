@@ -21,6 +21,7 @@ export const useNewBlogPost = () => {
   const [excerpt, setExcerpt] = useState('');
   const [category, setCategory] = useState<'Top10' | 'Review' | 'Comparison' | 'How-To'>('Review');
   const [imageUrl, setImageUrl] = useState('');
+  const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const [author, setAuthor] = useState('Laptop Hunter Team');
   const [published, setPublished] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
@@ -33,6 +34,7 @@ export const useNewBlogPost = () => {
     excerpt,
     category,
     image_url: imageUrl,
+    additional_images: additionalImages,
     author,
     published,
     tags,
@@ -53,6 +55,7 @@ export const useNewBlogPost = () => {
         setExcerpt(postToEdit.excerpt);
         setCategory(postToEdit.category);
         setImageUrl(postToEdit.image_url || '');
+        setAdditionalImages(postToEdit.additional_images || []);
         setAuthor(postToEdit.author);
         setPublished(postToEdit.published);
         setTags(postToEdit.tags || []);
@@ -96,6 +99,9 @@ export const useNewBlogPost = () => {
         break;
       case 'image_url':
         setImageUrl(value);
+        break;
+      case 'additional_images':
+        setAdditionalImages(value);
         break;
       default:
         break;
@@ -170,6 +176,15 @@ export const useNewBlogPost = () => {
       });
       return;
     }
+
+    // Check if the content has a video placement
+    const hasVideoPlacement = content.includes("window.humixPlayers");
+    if (!hasVideoPlacement) {
+      const shouldContinue = window.confirm("Your post doesn't include a video placement. Are you sure you want to save without a video?");
+      if (!shouldContinue) {
+        return;
+      }
+    }
     
     try {
       setIsSaving(true);
@@ -181,6 +196,7 @@ export const useNewBlogPost = () => {
         excerpt,
         category,
         image_url: imageUrl || undefined,
+        additional_images: additionalImages.length > 0 ? additionalImages : undefined,
         author,
         published,
         tags: tags.length > 0 ? tags : undefined,
@@ -223,6 +239,7 @@ export const useNewBlogPost = () => {
     excerpt,
     category,
     imageUrl,
+    additionalImages,
     author,
     published,
     tags,
