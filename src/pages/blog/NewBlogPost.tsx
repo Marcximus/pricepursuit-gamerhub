@@ -1,13 +1,10 @@
 
-import { useState } from 'react';
 import { useNewBlogPost } from '@/components/blog/newPost/useNewBlogPost';
 import Navigation from '@/components/Navigation';
-import { toast } from '@/components/ui/use-toast';
-import { HeaderActions } from '@/components/blog/newPost/HeaderActions';
-import { AIGenerationPanel } from '@/components/blog/newPost/AIGenerationPanel';
-import { PreviewMode } from '@/components/blog/newPost/PreviewMode';
-import { EmptyContentState } from '@/components/blog/newPost/EmptyContentState';
-import { EditMode } from '@/components/blog/newPost/EditMode';
+import { PostContent } from '@/components/blog/newPost/PostContent';
+import { PostMetadata } from '@/components/blog/newPost/PostMetadata';
+import { PostActions, PostHeaderActions } from '@/components/blog/newPost/PostActions';
+import { BlogAIPromptDialog } from '@/components/blog/BlogAIPromptDialog';
 
 const NewBlogPost = () => {
   const {
@@ -15,6 +12,7 @@ const NewBlogPost = () => {
     content,
     excerpt,
     tagsInput,
+    isAIPromptOpen,
     isGenerating,
     isSaving,
     editId,
@@ -22,117 +20,81 @@ const NewBlogPost = () => {
     currentUrl,
     isValid,
     category,
-    imageUrl,
     
     setTitle,
     setContent,
     setExcerpt,
+    setIsAIPromptOpen,
     
     handleTagsInputChange,
     handleMetadataChange,
-    handleGenerateContent,
+    handleOpenAIPrompt,
     handlePreview,
     handleCancel,
+    handleGenerateContent,
     handleSave
   } = useNewBlogPost();
-  
-  const [showPreview, setShowPreview] = useState(false);
-  
-  // Handle toggling preview mode
-  const togglePreview = () => {
-    setShowPreview(!showPreview);
-    toast({
-      title: showPreview ? "Edit Mode" : "Preview Mode",
-      description: showPreview ? "Now you can edit your post." : "Previewing how your post will look.",
-    });
-  };
-
-  // Handle regenerate with AI
-  const handleRegenerateWithAI = () => {
-    toast({
-      title: "Regenerate Content",
-      description: "Modify your prompt and click 'Generate Blog Content' to regenerate.",
-    });
-    // Scroll to the top of the AI generation form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
   
   return (
     <div className="min-h-screen pb-16">
       <Navigation />
       
-      <div className="container mx-auto px-4 mt-4 pt-20">
-        <div className="flex justify-between items-center mb-6">
+      <div className="pt-20 container mx-auto px-4 mt-10">
+        <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
             {editId ? 'Edit Blog Post' : 'Create New Blog Post'}
           </h1>
-          
-          {content && (
-            <HeaderActions 
-              showPreview={showPreview}
-              isValid={isValid}
-              isSaving={isSaving}
-              editId={editId}
-              onTogglePreview={togglePreview}
-              onSave={handleSave}
-            />
-          )}
+          <PostHeaderActions 
+            onOpenAIPrompt={handleOpenAIPrompt}
+            onPreview={handlePreview}
+            isValid={isValid}
+          />
         </div>
         
-        {showPreview ? (
-          // Preview Mode
-          <PreviewMode 
-            title={title}
-            content={content}
-            excerpt={excerpt}
-            imageUrl={imageUrl}
-            onExitPreview={togglePreview}
-          />
-        ) : (
-          // Edit Mode
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* AI Generation - Left Section */}
-            <div className="lg:col-span-4 lg:sticky lg:top-24 self-start bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-              <AIGenerationPanel 
-                isGenerating={isGenerating}
-                handleGenerateContent={handleGenerateContent}
-                onRegenerateWithAI={handleRegenerateWithAI}
+        <form onSubmit={handleSave} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="md:col-span-2">
+              <PostContent 
+                title={title}
+                content={content}
+                excerpt={excerpt}
+                onTitleChange={(e) => setTitle(e.target.value)}
+                onContentChange={(e) => setContent(e.target.value)}
+                onExcerptChange={(e) => setExcerpt(e.target.value)}
                 category={category}
-                hasContent={!!content}
               />
             </div>
             
-            {/* Content and Settings - Right Section */}
-            <div className="lg:col-span-8">
-              {!content ? (
-                <EmptyContentState />
-              ) : (
-                <EditMode 
-                  title={title}
-                  content={content}
-                  excerpt={excerpt}
-                  onTitleChange={(e) => setTitle(e.target.value)}
-                  onContentChange={(e) => setContent(e.target.value)}
-                  onExcerptChange={(e) => setExcerpt(e.target.value)}
-                  category={category}
-                  previewPost={previewPost}
-                  tagsInput={tagsInput}
-                  handleTagsInputChange={handleTagsInputChange}
-                  handleMetadataChange={handleMetadataChange}
-                  onRegenerateWithAI={handleRegenerateWithAI}
-                  onSave={handleSave}
-                  onPreview={handlePreview}
-                  onCancel={handleCancel}
-                  isSaving={isSaving}
-                  currentUrl={currentUrl}
-                  editId={editId}
-                  isValid={isValid}
-                />
-              )}
+            <div className="space-y-6">
+              <PostMetadata 
+                post={previewPost}
+                onChange={handleMetadataChange}
+                tagsInput={tagsInput}
+                onTagsInputChange={handleTagsInputChange}
+              />
+              
+              <PostActions 
+                isSaving={isSaving}
+                previewPost={previewPost}
+                currentUrl={currentUrl}
+                onSave={handleSave}
+                onOpenAIPrompt={handleOpenAIPrompt}
+                onPreview={handlePreview}
+                onCancel={handleCancel}
+                isEdit={!!editId}
+                isValid={isValid}
+              />
             </div>
           </div>
-        )}
+        </form>
       </div>
+      
+      <BlogAIPromptDialog 
+        isOpen={isAIPromptOpen}
+        onClose={() => setIsAIPromptOpen(false)}
+        onGenerate={handleGenerateContent}
+        isLoading={isGenerating}
+      />
     </div>
   );
 };

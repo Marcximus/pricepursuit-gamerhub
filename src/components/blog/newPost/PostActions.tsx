@@ -1,10 +1,10 @@
 
 import { Button } from '@/components/ui/button';
-import { HelpCircle, Sparkles } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
 import { BlogSEOPreview } from '@/components/blog/BlogSEOPreview';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { BlogPost } from '@/contexts/BlogContext';
-import { Eye, Save } from 'lucide-react';
+import { Sparkles, Eye, Save } from 'lucide-react';
 
 interface PostActionsProps {
   isSaving: boolean;
@@ -50,17 +50,7 @@ export const PostActions = ({
         <BlogSEOPreview post={previewPost} url={currentUrl} />
       </div>
       
-      <Button 
-        type="button" 
-        onClick={onOpenAIPrompt}
-        variant="outline" 
-        className="w-full flex items-center justify-center gap-2 mb-4"
-      >
-        <Sparkles className="h-4 w-4" />
-        Regenerate with AI
-      </Button>
-      
-      <div className="flex justify-between items-center">
+      <div className="flex justify-end space-x-2">
         <Button 
           type="button" 
           variant="outline" 
@@ -68,50 +58,47 @@ export const PostActions = ({
         >
           Cancel
         </Button>
-        
-        <div className="flex space-x-2">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onPreview}
-            disabled={!isValid}
-            className="flex items-center"
-          >
-            <Eye className="mr-2 h-4 w-4" /> 
-            Preview
-          </Button>
-          
-          <Button 
-            type="submit" 
-            onClick={onSave}
-            disabled={isSaving || !isValid}
-            className="flex items-center"
-          >
-            <Save className="mr-2 h-4 w-4" />
-            {isSaving ? 'Saving...' : isEdit ? 'Update Post' : 'Save Post'}
-          </Button>
-        </div>
+        <Button 
+          type="submit" 
+          disabled={isSaving || !isValid}
+          className="flex items-center"
+        >
+          <Save className="mr-2 h-4 w-4" />
+          {isSaving ? 'Saving...' : isEdit ? 'Update Post' : 'Save Post'}
+        </Button>
       </div>
     </div>
   );
 };
 
 export const PostHeaderActions = ({ 
+  onOpenAIPrompt, 
   onPreview, 
   isValid 
 }: { 
+  onOpenAIPrompt: () => void;
   onPreview: () => void;
   isValid: boolean;
 }) => {
   return (
-    <Button 
-      variant="outline" 
-      onClick={onPreview}
-      disabled={!isValid}
-      className="flex items-center"
-    >
-      <Eye className="mr-2 h-4 w-4" /> 
-      Preview
-    </Button>
+    <div className="flex space-x-2">
+      <Button 
+        variant="outline" 
+        onClick={onOpenAIPrompt}
+        className="flex items-center"
+      >
+        <Sparkles className="mr-2 h-4 w-4" /> 
+        Generate with AI
+      </Button>
+      <Button 
+        variant="outline" 
+        onClick={onPreview}
+        disabled={!isValid}
+        className="flex items-center"
+      >
+        <Eye className="mr-2 h-4 w-4" /> 
+        Preview
+      </Button>
+    </div>
   );
 };
