@@ -6,19 +6,23 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Info, Sparkles } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface BlogAIPromptDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onGenerate: (prompt: string, category: string, asin?: string, asin2?: string) => void;
   isLoading: boolean;
+  defaultOpen?: boolean;
 }
 
 export function BlogAIPromptDialog({
   isOpen,
   onClose,
   onGenerate,
-  isLoading
+  isLoading,
+  defaultOpen = false
 }: BlogAIPromptDialogProps) {
   const [prompt, setPrompt] = useState('');
   const [category, setCategory] = useState('Review');
@@ -66,10 +70,13 @@ export function BlogAIPromptDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen || defaultOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Generate Blog Content with AI</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" /> 
+            Generate Blog Content with AI
+          </DialogTitle>
           <DialogDescription>
             Describe what you'd like to write about, and our AI will generate a draft for you to edit.
           </DialogDescription>
@@ -96,12 +103,21 @@ export function BlogAIPromptDialog({
           
           {showAsinField && (
             <div className="space-y-2">
-              <Label htmlFor="asin">
-                {category === 'Comparison' ? 'First Laptop ASIN' : 'Amazon ASIN'} 
-                <span className="ml-1 text-xs text-gray-500">
-                  - The AI will fetch product details
-                </span>
-              </Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="asin">
+                  {category === 'Comparison' ? 'First Laptop ASIN' : 'Amazon ASIN'} 
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-sm">
+                      <p>The AI will fetch product details using this Amazon ASIN (product ID)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Input
                 id="asin"
                 placeholder="e.g., B09JQMJHXY"
@@ -113,12 +129,19 @@ export function BlogAIPromptDialog({
 
           {showAsin2Field && (
             <div className="space-y-2">
-              <Label htmlFor="asin2">
-                Second Laptop ASIN
-                <span className="ml-1 text-xs text-gray-500">
-                  - The AI will fetch product details for comparison
-                </span>
-              </Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="asin2">Second Laptop ASIN</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-sm">
+                      <p>The AI will fetch product details for the second laptop in the comparison</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Input
                 id="asin2"
                 placeholder="e.g., B09KS19HZ1"
@@ -139,7 +162,7 @@ export function BlogAIPromptDialog({
               required
             />
             {category === 'How-To' && (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Include specific questions you want answered in your guide. This helps the AI create more targeted content.
               </p>
             )}
@@ -149,8 +172,18 @@ export function BlogAIPromptDialog({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!prompt.trim() || isLoading}>
-              {isLoading ? 'Generating...' : 'Generate Content'}
+            <Button type="submit" disabled={!prompt.trim() || isLoading} className="gap-2">
+              {isLoading ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-current border-t-transparent animate-spin rounded-full"></div>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Generate Content
+                </>
+              )}
             </Button>
           </DialogFooter>
         </form>
