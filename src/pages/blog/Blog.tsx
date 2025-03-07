@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useBlog } from '@/contexts/BlogContext';
+import { useBlog } from '@/contexts/blog';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

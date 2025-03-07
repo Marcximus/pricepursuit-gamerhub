@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useBlog } from '@/contexts/BlogContext';
+import { useBlog } from '@/contexts/blog';
 import { toast } from '@/components/ui/use-toast';
 
 export const usePostActions = () => {

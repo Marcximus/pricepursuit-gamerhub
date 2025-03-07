@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useBlog } from '@/contexts/BlogContext';
+import { useBlog } from '@/contexts/blog';
 
 export const usePostDeletion = () => {
   const { deletePost } = useBlog();

@@ -1,7 +1,6 @@
-
 import { useEffect } from 'react';
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useBlog } from '@/contexts/BlogContext';
+import { useBlog } from '@/contexts/blog';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -18,7 +17,6 @@ const BlogPost = () => {
   
   const post = category && slug ? getPostBySlug(slug, category) : undefined;
   
-  // Generate canonical URL with absolute path
   const currentUrl = new URL(location.pathname, window.location.origin).toString();
   
   useEffect(() => {
@@ -28,7 +26,6 @@ const BlogPost = () => {
       document.title = "Post Not Found | Laptop Hunter Blog";
     }
     
-    // Initialize Humix video player if script is present
     if (post && post.content.includes('humixPlayers')) {
       const existingScript = document.querySelector('script[src="https://www.humix.com/video.js"]');
       if (!existingScript) {
@@ -42,16 +39,13 @@ const BlogPost = () => {
     }
   }, [post, slug]);
 
-  // Function to inject additional images into content
   const injectAdditionalImages = (content: string, additionalImages: string[]) => {
     if (!additionalImages || additionalImages.length === 0) return content;
     
-    // For Top10 posts, inject an image after each "#" header
     if (post?.category === 'Top10') {
       let modifiedContent = content;
       const headers = content.match(/<h[2-3][^>]*>.*?<\/h[2-3]>/gi) || [];
       
-      // Only process if we have enough headers and images
       headers.forEach((header, index) => {
         if (index < additionalImages.length) {
           const imageHtml = `<div class="my-4"><img src="${additionalImages[index]}" alt="List item ${index + 1}" class="rounded-lg w-full" /></div>`;
@@ -65,12 +59,10 @@ const BlogPost = () => {
       return modifiedContent;
     }
     
-    // For other post types, inject images at appropriate positions
     if (['Review', 'How-To', 'Comparison'].includes(post?.category || '')) {
       let modifiedContent = content;
       const paragraphs = content.match(/<p>.*?<\/p>/gi) || [];
       
-      // Place images after significant paragraphs
       additionalImages.forEach((img, index) => {
         const targetParagraphIndex = Math.min(
           Math.floor(paragraphs.length * (index + 1) / (additionalImages.length + 1)),
@@ -109,12 +101,10 @@ const BlogPost = () => {
     );
   }
 
-  // Process the content to include additional images
   const processedContent = injectAdditionalImages(post.content, post.additional_images || []);
 
   return (
     <div className="min-h-screen pb-16">
-      {/* Add SEO meta tags */}
       <BlogSEO post={post} url={currentUrl} />
       
       <Navigation />
@@ -168,7 +158,6 @@ const BlogPost = () => {
               dangerouslySetInnerHTML={{ __html: processedContent }}
             />
             
-            {/* Add Related Posts */}
             <RelatedPosts currentPostId={post.id} currentCategory={category} />
             
             <Separator className="my-8" />

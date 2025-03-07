@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useBlog } from '@/contexts/BlogContext';
+import { useBlog } from '@/contexts/blog';
 import Navigation from '@/components/Navigation';
 import { 
   BlogAdminHeader, 

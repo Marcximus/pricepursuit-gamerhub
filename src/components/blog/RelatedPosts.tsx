@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useBlog } from '@/contexts/BlogContext';
-import { BlogPost } from '@/contexts/BlogContext';
+import { useBlog } from '@/contexts/blog';
+import { BlogPost } from '@/contexts/blog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useBlog } from '@/contexts/BlogContext';
+import { useBlog } from '@/contexts/blog';
 import { usePostMetadata, usePostContent, usePostActions } from './hooks';
 import { usePostAI } from './hooks/usePostAI';
 
