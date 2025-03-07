@@ -31,49 +31,50 @@ const BlogAdmin = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
   const navigate = useNavigate();
   
   // Use useCallback to prevent function recreation on each render
-  const fetchPostsStable = useCallback(() => {
-    // Only fetch if not already loading
-    if (!loading) {
-      console.log('BlogAdmin: Fetching posts');
-      fetchPosts();
-    }
-  }, [fetchPosts, loading]);
+  const refreshPosts = useCallback(() => {
+    console.log('BlogAdmin: Manually refreshing posts');
+    fetchPosts();
+  }, [fetchPosts]);
   
   useEffect(() => {
     document.title = "Blog Admin | Laptop Hunter";
-    // Fetch posts only once when the component mounts
-    fetchPostsStable();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    refreshPosts();
+  }, [refreshPosts]);
+
+  // Reset success state when posts change
+  useEffect(() => {
+    if (deleteSuccess) {
+      setDeleteSuccess(false);
+    }
+  }, [posts]);
 
   const handleDeletePost = async () => {
-    if (postToDelete) {
-      setIsDeleting(true);
+    if (!postToDelete) return;
+    
+    setIsDeleting(true);
+    
+    try {
+      console.log(`BlogAdmin: Deleting post with ID: ${postToDelete}`);
+      const success = await deletePost(postToDelete);
       
-      try {
-        console.log(`BlogAdmin: Deleting post with ID: ${postToDelete}`);
-        const success = await deletePost(postToDelete);
-        
-        if (success) {
-          console.log('BlogAdmin: Post deleted successfully');
-          // No need to manually fetch posts again as the state is updated in the context
-        } else {
-          console.error('BlogAdmin: Failed to delete post');
-          // If deletion failed, we should refresh to get the current state
-          fetchPostsStable();
-        }
-      } catch (error) {
-        console.error('BlogAdmin: Error during deletion:', error);
-        // If an error occurred, refresh to get the current state
-        fetchPostsStable();
-      } finally {
-        setIsDeleting(false);
-        setDeleteDialogOpen(false);
-        setPostToDelete(null);
+      if (success) {
+        console.log('BlogAdmin: Post deleted successfully');
+        setDeleteSuccess(true);
+        // Manually refresh posts to ensure the UI is up to date
+        refreshPosts();
+      } else {
+        console.error('BlogAdmin: Failed to delete post');
       }
+    } catch (error) {
+      console.error('BlogAdmin: Error during deletion:', error);
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setPostToDelete(null);
     }
   };
 
@@ -99,11 +100,16 @@ const BlogAdmin = () => {
       <div className="pt-20 container mx-auto px-4 mt-10">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Blog Admin</h1>
-          <Link to="/blog/new">
-            <Button className="flex items-center">
-              <Plus className="mr-2 h-4 w-4" /> New Post
+          <div className="flex space-x-4">
+            <Button onClick={refreshPosts} variant="outline">
+              Refresh Posts
             </Button>
-          </Link>
+            <Link to="/blog/new">
+              <Button className="flex items-center">
+                <Plus className="mr-2 h-4 w-4" /> New Post
+              </Button>
+            </Link>
+          </div>
         </div>
         
         {loading ? (

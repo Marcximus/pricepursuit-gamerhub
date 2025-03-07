@@ -179,6 +179,23 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log(`Attempting to delete blog post with ID: ${id}`);
       
+      // First, check if the post exists
+      const { data: existingPost, error: checkError } = await supabase
+        .from('blog_posts')
+        .select('id')
+        .eq('id', id)
+        .single();
+      
+      if (checkError) {
+        console.error('Error checking if post exists:', checkError);
+        throw new Error(checkError.message);
+      }
+      
+      if (!existingPost) {
+        console.error(`Post with ID ${id} not found`);
+        throw new Error(`Post with ID ${id} not found`);
+      }
+      
       const { error: deleteError } = await supabase
         .from('blog_posts')
         .delete()
@@ -193,9 +210,9 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
       
       // Update local state after successful deletion
       setPosts(prevPosts => {
-        const updatedPosts = prevPosts.filter(post => post.id !== id);
-        console.log(`Local state updated, removed post. New count: ${updatedPosts.length}`);
-        return updatedPosts;
+        const filteredPosts = prevPosts.filter(post => post.id !== id);
+        console.log(`Local state updated, removed post. New count: ${filteredPosts.length}`);
+        return filteredPosts;
       });
       
       toast({
