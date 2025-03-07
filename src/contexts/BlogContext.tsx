@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -11,6 +10,7 @@ export type BlogPost = {
   excerpt: string;
   category: 'Top10' | 'Review' | 'Comparison' | 'How-To';
   image_url?: string;
+  additional_images?: string[];
   author: string;
   created_at: string;
   updated_at?: string;
