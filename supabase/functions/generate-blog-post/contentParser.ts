@@ -1,3 +1,4 @@
+
 /**
  * This file handles parsing AI-generated content into structured blog post data
  */
@@ -137,14 +138,12 @@ function formatTop10Content(content: string): string {
   let cleaned = cleanupContent(content);
   
   // Look for numbered sections that likely represent product entries
-  // We'll use a less aggressive regex to avoid issues
   const productSectionRegex = /#{1,3}\s*(\d+)[.:]?\s*(.*?)(?=\n{2,}|\n#{1,3}|$)/gs;
+  let match;
   const productSections = [];
   
   console.log(`🔍 Searching for product sections in Top10 content...`);
   
-  // First pass: collect all product sections without modifying the text
-  let match;
   while ((match = productSectionRegex.exec(cleaned)) !== null) {
     const number = parseInt(match[1], 10);
     const title = match[2].trim();
@@ -171,30 +170,24 @@ function formatTop10Content(content: string): string {
   // Sort product sections by their position in the text (maintaining original order)
   productSections.sort((a, b) => a.startPosition - b.startPosition);
   
-  // Second pass: replace each product section with the product data placeholder
-  // We'll make a copy of the cleaned content and work with offsets
+  // Replace each product section with the product data placeholder
   let finalContent = cleaned;
   let offset = 0;
   
-  // Process each section separately
   for (const section of productSections) {
     const placeholder = `<div class="product-data" data-product-id="${section.number}">[PRODUCT_DATA_${section.number}]</div>\n\n`;
     const adjustedStartPosition = section.startPosition + offset;
+    const adjustedEndPosition = section.endPosition + offset;
     
-    // Instead of keeping the full content, we'll insert after the heading
-    const headingEndIndex = finalContent.indexOf('\n', adjustedStartPosition);
-    const insertPosition = headingEndIndex !== -1 ? headingEndIndex + 1 : adjustedStartPosition + section.fullMatch.length;
-    
-    // Insert the placeholder after the heading
     finalContent = 
-      finalContent.substring(0, insertPosition) + 
-      '\n' + placeholder + 
-      finalContent.substring(insertPosition);
+      finalContent.substring(0, adjustedStartPosition) + 
+      placeholder + 
+      finalContent.substring(adjustedEndPosition);
     
     // Update offset for subsequent replacements
-    offset += placeholder.length + 1; // +1 for the extra newline
+    offset += placeholder.length - (section.endPosition - section.startPosition);
     
-    console.log(`🔄 Added placeholder for product section #${section.number}`);
+    console.log(`🔄 Replaced product section #${section.number} with placeholder`);
   }
   
   console.log(`✅ Top10 content formatting complete`);

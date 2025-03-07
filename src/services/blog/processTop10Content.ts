@@ -70,44 +70,41 @@ export async function processTop10Content(content: string, prompt: string): Prom
     let replacementsCount = 0;
     
     // Process both standard div placeholders and raw product data mentions
-    // We'll use a more careful approach to avoid regex issues
     for (let i = 0; i < Math.min(products.length, 10); i++) {
       const product = products[i];
-      const productNum = i + 1;
-      const divPlaceholder = `<div class="product-data" data-product-id="${productNum}">[PRODUCT_DATA_${productNum}]</div>`;
-      const rawPlaceholder = `[PRODUCT_DATA_${productNum}]`;
+      const divPlaceholderPattern = `<div class="product-data" data-product-id="${i+1}">[PRODUCT_DATA_${i+1}]</div>`;
+      const rawPlaceholderPattern = `[PRODUCT_DATA_${i+1}]`;
       
-      console.log(`🔍 Looking for placeholder: "${divPlaceholder}" or "${rawPlaceholder}"`);
+      console.log(`🔍 Looking for placeholder: "${divPlaceholderPattern}" or "${rawPlaceholderPattern}"`);
+      
+      const divPlaceholderRegex = new RegExp(divPlaceholderPattern, 'g');
+      const rawPlaceholderRegex = new RegExp(rawPlaceholderPattern, 'g');
+      
+      const divMatchCount = (processedContent.match(divPlaceholderRegex) || []).length;
+      const rawMatchCount = (processedContent.match(rawPlaceholderRegex) || []).length;
       
       if (product && product.htmlContent) {
-        // First, handle the div placeholder (exact string match, no regex)
-        const divMatches = processedContent.split(divPlaceholder).length - 1;
-        if (divMatches > 0) {
-          console.log(`🎯 Found ${divMatches} div placeholder(s) for product #${productNum}`);
-          // Use a simple string replace instead of regex
-          processedContent = processedContent.split(divPlaceholder).join(product.htmlContent || '');
-          replacementsCount += divMatches;
+        // Replace div placeholders
+        if (divMatchCount > 0) {
+          console.log(`🎯 Found ${divMatchCount} div placeholder(s) for product #${i+1}`);
+          processedContent = processedContent.replace(divPlaceholderRegex, product.htmlContent || '');
+          replacementsCount += divMatchCount;
         }
         
-        // Then handle the standalone raw placeholder (only if not part of another already-processed placeholder)
-        // We'll count occurrences first to avoid unnecessary work
-        const rawMatches = processedContent.split(rawPlaceholder).length - 1;
-        if (rawMatches > 0) {
-          // Check if this is a reasonable number of matches (sanity check)
-          if (rawMatches > 100) {
-            console.warn(`⚠️ Too many raw placeholder matches (${rawMatches}) for product #${productNum}, limiting replacement`);
-            // We'll skip this to avoid performance issues
-            continue;
+        // Replace raw text placeholders (not inside div tags)
+        if (rawMatchCount > 0) {
+          // Use a more complex regex to find raw placeholders not inside div tags
+          const standaloneRawRegex = new RegExp(`(?<!<div[^>]*>)${rawPlaceholderPattern}(?!</div>)`, 'g');
+          const standaloneMatches = processedContent.match(standaloneRawRegex) || [];
+          
+          if (standaloneMatches.length > 0) {
+            console.log(`🎯 Found ${standaloneMatches.length} standalone raw placeholder(s) for product #${i+1}`);
+            processedContent = processedContent.replace(standaloneRawRegex, product.htmlContent || '');
+            replacementsCount += standaloneMatches.length;
           }
-          
-          console.log(`🎯 Found ${rawMatches} standalone raw placeholder(s) for product #${productNum}`);
-          
-          // Use a simple string replace instead of regex
-          processedContent = processedContent.split(rawPlaceholder).join(product.htmlContent || '');
-          replacementsCount += rawMatches;
         }
       } else {
-        console.warn(`⚠️ No html content found for product #${productNum}`);
+        console.warn(`⚠️ No html content found for product #${i+1}`);
       }
     }
     
@@ -136,8 +133,9 @@ export async function processTop10Content(content: string, prompt: string): Prom
       console.warn('⚠️ No product placeholders were replaced in the content');
       
       // If no placeholders were found, we'll check the content for any mentions of product data
-      if (content.includes('[PRODUCT_DATA_')) {
-        console.log('🔍 Found placeholder patterns but couldn\'t replace them');
+      const anyPlaceholderMatch = content.match(/\[PRODUCT_DATA_\d+\]/g);
+      if (anyPlaceholderMatch) {
+        console.log('🔍 Found placeholder patterns:', anyPlaceholderMatch);
       } else {
         console.warn('⚠️ No placeholder patterns found in content at all');
       }
