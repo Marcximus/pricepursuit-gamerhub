@@ -1,5 +1,5 @@
 
-import { formatSpecs, generateHtmlContent } from "../utils/productFormatters.ts";
+import { formatSpecs, generateHtmlContent } from "../utils/formatters/index.ts";
 
 export function processAmazonProducts(data: any) {
   if (!data.data?.products || !Array.isArray(data.data.products)) {
