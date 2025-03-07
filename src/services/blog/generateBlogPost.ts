@@ -26,9 +26,9 @@ export async function generateBlogPost(
       console.log('🛒 Fetching Amazon products before generating content...');
       try {
         products = await fetchAmazonProducts(extractedParams);
-        console.log(`📦 Fetched ${products.length} products from Amazon API`);
+        console.log(`📦 Fetched ${products?.length || 0} products from Amazon API`);
         
-        if (products.length === 0) {
+        if (!products || products.length === 0) {
           console.warn('⚠️ No products were fetched from Amazon API');
           toast({
             title: 'Product Fetching Warning',
@@ -38,7 +38,13 @@ export async function generateBlogPost(
         } else {
           // Store products in local storage for use after content generation
           console.log('💾 Storing fetched products in localStorage for later use');
-          localStorage.setItem('currentTop10Products', JSON.stringify(products));
+          try {
+            localStorage.setItem('currentTop10Products', JSON.stringify(products));
+            console.log('✅ Products successfully stored in localStorage');
+          } catch (storageError) {
+            console.error('❌ Error storing products in localStorage:', storageError);
+            console.log('💾 Will continue without localStorage backup');
+          }
         }
       } catch (error) {
         console.error('❌ Error fetching Amazon products:', error);
@@ -52,15 +58,15 @@ export async function generateBlogPost(
 
     // Check if we have any products for Top10 posts
     if (category === 'Top10') {
-      console.log(`📊 Proceeding with ${products.length} products for Top10 post`);
-      if (products.length === 0) {
+      console.log(`📊 Proceeding with ${products?.length || 0} products for Top10 post`);
+      if (!products || products.length === 0) {
         console.warn('⚠️ No products available, blog quality may be affected');
       }
     }
 
     // Now call the Supabase function to generate the blog post
     console.log('🧠 Calling generate-blog-post edge function...');
-    const { data, error } = await supabase.functions.invoke('generate-blog-post', {
+    const response = await supabase.functions.invoke('generate-blog-post', {
       body: {
         prompt,
         category,
@@ -70,13 +76,47 @@ export async function generateBlogPost(
       },
     });
 
-    if (error) {
-      console.error('❌ Error generating blog post:', error);
-      throw new Error(error.message || 'Failed to generate blog post');
+    if (response.error) {
+      console.error('❌ Error generating blog post:', response.error);
+      throw new Error(response.error.message || 'Failed to generate blog post');
+    }
+
+    // Check if response.data exists and is valid
+    if (!response.data) {
+      console.error('❌ Empty response data from edge function');
+      throw new Error('Empty response from edge function');
     }
 
     console.log('✅ Blog post generated successfully');
     console.log('🔄 Processing generated content...');
+    console.log('📦 Response data type:', typeof response.data);
+    
+    let data: GeneratedBlogContent;
+    
+    // Handle parsing for both string and object response formats
+    if (typeof response.data === 'string') {
+      try {
+        // Try to parse as JSON if it's a string
+        console.log('🔍 Trying to parse string response as JSON');
+        data = JSON.parse(response.data);
+      } catch (parseError) {
+        console.error('❌ JSON parse error:', parseError);
+        console.error('📄 Raw response data preview:', response.data.substring(0, 200) + '...');
+        
+        // Create a basic structure with error information
+        data = {
+          title: `New ${category} Post`,
+          content: `Error parsing AI content: ${parseError.message}\n\nOriginal content:\n${response.data}`,
+          excerpt: "There was an error generating this post's content.",
+          category,
+          tags: ['error']
+        };
+      }
+    } else {
+      // If it's already an object, use it directly
+      console.log('🔍 Response is already an object, using directly');
+      data = response.data as GeneratedBlogContent;
+    }
 
     // For Top 10 posts, process product data placeholders
     if (category === 'Top10' && data && data.content) {

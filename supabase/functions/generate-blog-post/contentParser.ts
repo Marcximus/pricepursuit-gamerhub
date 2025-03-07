@@ -7,6 +7,29 @@ export function parseGeneratedContent(content: string, category: string) {
   console.log(`🔍 Parsing content for ${category} post type...`);
   
   try {
+    // Handle potential JSON responses from the AI
+    if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
+      try {
+        console.log('📄 Content appears to be JSON, attempting to parse it');
+        const jsonContent = JSON.parse(content);
+        
+        // If the parsed content has all the fields we need, use it directly
+        if (jsonContent.title && jsonContent.content) {
+          console.log('✅ Successfully parsed JSON content');
+          return {
+            title: jsonContent.title,
+            content: jsonContent.content,
+            excerpt: jsonContent.excerpt || '',
+            category,
+            tags: jsonContent.tags || []
+          };
+        }
+      } catch (jsonError) {
+        console.log('⚠️ Failed to parse content as JSON, falling back to regex extraction');
+        // Continue with regex parsing if JSON parsing fails
+      }
+    }
+    
     // Define regex patterns to extract components
     const titleRegex = /^#\s*(.*?)$|^Title:\s*(.*?)$|^"title":\s*"(.*?)"/im;
     const excerptRegex = /^Excerpt:\s*([\s\S]*?)(?=\n\n)|^"excerpt":\s*"([\s\S]*?)"/im;
@@ -47,7 +70,16 @@ export function parseGeneratedContent(content: string, category: string) {
         try {
           tags = JSON.parse(`[${tagsString}]`);
         } catch (e) {
-          tags = tagsString.split(/,\s*/);
+          try {
+            // Try to fix common issues with JSON tags format
+            const fixedString = tagsString
+              .replace(/'/g, '"')  // Replace single quotes with double quotes
+              .replace(/,\s*$/, ''); // Remove trailing commas
+            tags = JSON.parse(`[${fixedString}]`);
+          } catch (e2) {
+            // If still failing, fallback to simple splitting
+            tags = tagsString.split(/,\s*/);
+          }
         }
       } else {
         tags = tagsString.split(/,\s*/);

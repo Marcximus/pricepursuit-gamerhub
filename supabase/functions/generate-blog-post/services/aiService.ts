@@ -1,94 +1,88 @@
 
 /**
- * Service for interacting with DeepSeek API
+ * Service to handle AI content generation using DeepSeek API
  */
-import { logError } from "../utils/errorHandler.ts";
-
-interface MessageContent {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
-
-interface DeepSeekResponse {
-  choices: Array<{
-    message: {
-      content: string;
-    };
-  }>;
-  usage?: {
-    total_tokens: number;
-  };
-}
 
 export async function generateContentWithDeepSeek(
-  systemPrompt: string, 
-  userPrompt: string, 
+  systemPrompt: string,
+  userPrompt: string,
   apiKey: string
 ): Promise<string> {
-  console.log(`🧠 Calling DeepSeek API...`);
-  console.log(`🔧 Model: deepseek-chat, Temperature: 1.4`);
-  console.log(`📏 System prompt length: ${systemPrompt.length} characters`);
-  console.log(`📏 User prompt length: ${userPrompt.length} characters`);
-  
-  // Limit the system prompt size if it's too large (DeepSeek has token limits)
-  const maxSystemPromptLength = 24000; // Increased limit to accommodate more product data
-  let processedSystemPrompt = systemPrompt;
-  if (systemPrompt.length > maxSystemPromptLength) {
-    console.log(`⚠️ System prompt exceeds ${maxSystemPromptLength} characters, truncating...`);
-    processedSystemPrompt = systemPrompt.substring(0, maxSystemPromptLength);
-  }
-  
-  const payload = {
-    model: 'deepseek-chat',
-    messages: [
-      { role: 'system', content: processedSystemPrompt },
-      { role: 'user', content: userPrompt }
-    ],
-    temperature: 1.4,  // Set to 1.4 for more creative blog content
-    max_tokens: 6000   // Increased token limit for more comprehensive blog content
-  };
-  
-  console.log(`📤 DEEPSEEK REQUEST PAYLOAD SIZE: ${JSON.stringify(payload).length} bytes`);
-  
-  const startTime = Date.now();
-  
   try {
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
+    console.log(`🔄 Preparing DeepSeek API request...`);
+    console.log(`📝 System prompt length: ${systemPrompt.length} characters`);
+    console.log(`📝 User prompt length: ${userPrompt.length} characters`);
+    
+    const payload = {
+      model: "deepseek-chat",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt
+        },
+        {
+          role: "user",
+          content: userPrompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 4000,
+      top_p: 1,
+      stream: false
+    };
+    
+    // Convert payload to JSON and log size
+    const jsonPayload = JSON.stringify(payload);
+    console.log(`📤 DEEPSEEK REQUEST PAYLOAD SIZE: ${jsonPayload.length} bytes`);
+    
+    // If the request is very large, log a more detailed preview
+    if (jsonPayload.length > 10000) {
+      console.log(`⚠️ Large payload, showing system prompt preview: ${systemPrompt.substring(0, 200)}...`);
+      console.log(`⚠️ User prompt preview: ${userPrompt.substring(0, 200)}...`);
+    }
+    
+    // Make the API request
+    console.log(`🚀 Sending request to DeepSeek API...`);
+    const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
       },
-      body: JSON.stringify(payload),
+      body: jsonPayload
     });
     
-    const endTime = Date.now();
-    console.log(`⏱️ DeepSeek API call took ${(endTime - startTime) / 1000} seconds`);
-
+    console.log(`📥 DeepSeek API response status: ${response.status}`);
+    
+    // Check for non-200 response
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ DeepSeek API error:', errorText);
-      console.error(`🔴 Status code: ${response.status}`);
-      throw new Error(`DeepSeek API error (${response.status}): ${errorText}`);
-    }
-
-    const data: DeepSeekResponse = await response.json();
-    console.log(`✅ DeepSeek API response received`);
-    console.log(`📊 Tokens used: ${data.usage?.total_tokens || 'unknown'}`);
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
-      console.error(`❌ Invalid response format from DeepSeek:`, data);
-      throw new Error('Invalid response format from DeepSeek');
+      console.error(`❌ DeepSeek API error: ${response.status} ${response.statusText}`);
+      console.error(`❌ Error details: ${errorText}`);
+      throw new Error(`DeepSeek API error: ${response.status} ${response.statusText}. Details: ${errorText}`);
     }
     
-    const generatedContent = data.choices[0].message.content;
-    const contentPreview = generatedContent.substring(0, 100).replace(/\n/g, ' ');
-    console.log(`📄 Generated content preview: "${contentPreview}..."`);
+    // Parse the response as JSON
+    const data = await response.json();
     
-    return generatedContent;
+    // Log a preview of the response
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      const content = data.choices[0].message.content;
+      console.log(`✅ DeepSeek response received: ${content.length} characters`);
+      console.log(`📄 Content preview: "${content.substring(0, 100)}..."`);
+      
+      // Check if the content appears to be JSON (might cause parsing issues later)
+      if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
+        console.warn(`⚠️ Content appears to be in JSON format, might need special handling`);
+      }
+      
+      return content;
+    } else {
+      console.error(`❌ Unexpected response format from DeepSeek:`, data);
+      throw new Error('Unexpected response format from DeepSeek API');
+    }
   } catch (error) {
-    console.error(`💥 DeepSeek API call failed:`, error);
-    // Add more context to the error for better debugging
-    throw new Error(`DeepSeek API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error(`💥 Error generating content with DeepSeek:`, error);
+    throw new Error(`Failed to generate content: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

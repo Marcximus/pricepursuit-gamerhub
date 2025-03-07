@@ -31,6 +31,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
         localStorage.removeItem('currentTop10Products');
       } catch (parseError) {
         console.error('Error parsing stored products:', parseError);
+        console.error('Raw stored products string:', storedProducts.substring(0, 100) + '...');
         products = [];
       }
     }
@@ -42,6 +43,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
       
       try {
         products = await fetchAmazonProducts(extractedParams);
+        console.log(`✅ fetchAmazonProducts returned ${products?.length || 0} products`);
       } catch (callError) {
         console.error('💥 Exception during Amazon products fetch:', callError);
         toast({
