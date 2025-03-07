@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
@@ -47,15 +48,15 @@ export function FilterSection({
   return (
     <AccordionItem value={title} className="border-b border-slate-200">
       <AccordionTrigger 
-        className="text-sm font-medium hover:no-underline px-3 py-4 rounded-md hover:bg-slate-100 transition-colors group data-[state=open]:bg-blue-50 data-[state=open]:text-blue-700"
+        className="text-sm font-medium hover:no-underline px-3 py-4 rounded-md hover:bg-slate-100 transition-colors group data-[state=open]:bg-green-50 data-[state=open]:text-green-700"
       >
         <div className="flex items-center gap-2.5 w-full">
-          <div className="flex-shrink-0 text-slate-600 group-data-[state=open]:text-blue-600">
+          <div className="flex-shrink-0 text-slate-600 group-data-[state=open]:text-green-600">
             <FilterIcon iconType={icon} />
           </div>
-          <span className="text-slate-800 group-hover:text-slate-900 group-data-[state=open]:text-blue-700">{title}</span>
+          <span className="text-slate-800 group-hover:text-slate-900 group-data-[state=open]:text-green-700">{title}</span>
           {hasSelections && (
-            <Badge variant="outline" className="ml-auto bg-blue-50 text-blue-700 border-blue-200 text-xs font-semibold">
+            <Badge variant="outline" className="ml-auto bg-green-50 text-green-700 border-green-200 text-xs font-semibold">
               {selectedOptions.size}
             </Badge>
           )}

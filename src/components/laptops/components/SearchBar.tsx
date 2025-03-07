@@ -31,13 +31,13 @@ export function SearchBar({ onSearch, placeholder = "Search laptops..." }: Searc
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="pl-9 h-10 bg-white border-slate-200 focus-visible:ring-blue-500"
+          className="pl-9 h-10 bg-white border-slate-200 focus-visible:ring-green-500"
         />
       </div>
       <Button
         onClick={handleSearch}
         variant="default"
-        className="bg-blue-600 hover:bg-blue-700"
+        className="bg-green-600 hover:bg-green-700"
         size="icon"
       >
         <Search className="h-4 w-4" />

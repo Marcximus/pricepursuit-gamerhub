@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Slider } from "@/components/ui/slider";
 
@@ -59,7 +60,7 @@ export function PriceSlider({
         onValueCommit={onSliderCommit}
         showTicks={true}
         tickLabels={generateTickLabels()}
-        className="my-3"
+        className="my-3 [&>[role=slider]]:bg-green-600 [&_[data-orientation=horizontal]>div]:bg-green-600 [&_[data-orientation=horizontal]]:bg-green-200"
       />
     </div>
   );

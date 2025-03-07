@@ -31,7 +31,7 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
         rel="noopener noreferrer"
         className="block text-center"
       >
-        <div className="text-sm text-blue-600 hover:text-blue-800">
+        <div className="text-sm text-green-600 hover:text-green-800">
           Availability Unknown
         </div>
       </a>
@@ -45,7 +45,7 @@ export function LaptopPrice({ currentPrice, originalPrice, productUrl }: LaptopP
       rel="noopener noreferrer"
       className="block text-center"
     >
-      <div className="text-xl font-bold text-blue-600 hover:text-blue-800">
+      <div className="text-xl font-bold text-green-600 hover:text-green-800">
         {formatPrice(currentPrice)}
       </div>
       {originalPrice && originalPrice > currentPrice && (

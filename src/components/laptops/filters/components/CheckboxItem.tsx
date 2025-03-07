@@ -15,12 +15,12 @@ export function CheckboxItem({ id, label, checked, onCheckedChange }: CheckboxIt
   }, [onCheckedChange]);
 
   return (
-    <div className="flex items-center space-x-2 py-1 px-3 rounded hover:bg-blue-50 transition-colors cursor-pointer">
+    <div className="flex items-center space-x-2 py-1 px-3 rounded hover:bg-green-50 transition-colors cursor-pointer">
       <Checkbox
         id={id}
         checked={checked}
         onCheckedChange={handleCheckedChange}
-        className="h-4 w-4 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 border-slate-300"
+        className="h-4 w-4 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 border-slate-300"
       />
       <label
         htmlFor={id}
