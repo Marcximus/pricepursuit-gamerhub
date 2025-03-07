@@ -1,0 +1,100 @@
+
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+interface BlogAIPromptDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onGenerate: (prompt: string, category: string) => void;
+  isLoading: boolean;
+}
+
+export function BlogAIPromptDialog({
+  isOpen,
+  onClose,
+  onGenerate,
+  isLoading
+}: BlogAIPromptDialogProps) {
+  const [prompt, setPrompt] = useState('');
+  const [category, setCategory] = useState('Review');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (prompt.trim()) {
+      onGenerate(prompt.trim(), category);
+    }
+  };
+
+  const getPromptPlaceholder = () => {
+    switch (category) {
+      case 'Top10':
+        return "E.g., 'Generate a top 10 list of best budget gaming laptops under $1000 in 2024'";
+      case 'Review':
+        return "E.g., 'Write a detailed review of the MacBook Air M2, focusing on performance and battery life'";
+      case 'Comparison':
+        return "E.g., 'Compare the Dell XPS 13 and HP Spectre x360, highlighting the key differences for professional users'";
+      case 'How-To':
+        return "E.g., 'Create a guide on how to optimize a laptop for gaming performance and thermal management'";
+      default:
+        return "Describe what you'd like the AI to write about...";
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[525px]">
+        <DialogHeader>
+          <DialogTitle>Generate Blog Content with AI</DialogTitle>
+          <DialogDescription>
+            Describe what you'd like to write about, and our AI will generate a draft for you to edit.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <Label htmlFor="category">Post Category</Label>
+            <Select
+              value={category}
+              onValueChange={setCategory}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Top10">Top 10 Lists</SelectItem>
+                <SelectItem value="Review">Reviews</SelectItem>
+                <SelectItem value="Comparison">Comparisons</SelectItem>
+                <SelectItem value="How-To">How-To Guides</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="prompt">Your Request</Label>
+            <Textarea
+              id="prompt"
+              placeholder={getPromptPlaceholder()}
+              rows={5}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              required
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!prompt.trim() || isLoading}>
+              {isLoading ? 'Generating...' : 'Generate Content'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
