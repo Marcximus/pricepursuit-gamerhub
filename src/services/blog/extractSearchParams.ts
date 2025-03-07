@@ -3,7 +3,7 @@ import { SearchParam } from './types';
 
 export function extractSearchParams(prompt: string): SearchParam[] {
   console.log('🔍 Extracting search parameters from prompt');
-  console.log(`📝 Prompt: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}"`);
+  console.log(`📝 Full prompt for extraction: "${prompt}"`);
   
   // Default search parameter
   const defaultParam: SearchParam = {};
@@ -14,7 +14,7 @@ export function extractSearchParams(prompt: string): SearchParam[] {
     defaultParam.brand = brandMatches[0];
     console.log(`👔 Found brand: ${defaultParam.brand}`);
   } else {
-    console.log('👔 No specific brand found');
+    console.log('👔 No specific brand found in prompt');
   }
   
   // Try to extract processor information
@@ -29,7 +29,7 @@ export function extractSearchParams(prompt: string): SearchParam[] {
     defaultParam.processor = 'i5';
     console.log('💼 Professional keywords detected, added i5 processor');
   } else {
-    console.log('🔍 No specific usage pattern detected');
+    console.log('🔍 No specific usage pattern detected in prompt');
   }
   
   // Extract price ranges
@@ -48,7 +48,7 @@ export function extractSearchParams(prompt: string): SearchParam[] {
   
   // If no parameters were extracted, return a default set
   if (Object.keys(defaultParam).length === 0) {
-    console.log('⚠️ No specific parameters found, using default brand set');
+    console.log('⚠️ No specific parameters found in prompt, using default brand set');
     const defaultParams = [
       { brand: 'Lenovo' },
       { brand: 'HP' },
@@ -56,10 +56,10 @@ export function extractSearchParams(prompt: string): SearchParam[] {
       { brand: 'ASUS' },
       { brand: 'Acer' }
     ];
-    console.log(`🔄 Returning ${defaultParams.length} default brand parameters`);
+    console.log(`🔄 Returning ${defaultParams.length} default brand parameters:`, JSON.stringify(defaultParams, null, 2));
     return defaultParams;
   }
   
-  console.log(`✅ Extracted search parameters:`, defaultParam);
+  console.log(`✅ Extracted search parameters from prompt:`, JSON.stringify(defaultParam, null, 2));
   return [defaultParam];
 }
