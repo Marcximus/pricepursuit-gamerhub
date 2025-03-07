@@ -7,112 +7,119 @@ export function parseGeneratedContent(content: string, category: string) {
   console.log(`🔍 Parsing content for ${category} post type...`);
   
   try {
-    // Handle potential JSON responses from the AI
-    if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
-      try {
-        console.log('📄 Content appears to be JSON, attempting to parse it');
-        const jsonContent = JSON.parse(content);
-        
-        // If the parsed content has all the fields we need, use it directly
-        if (jsonContent.title && jsonContent.content) {
-          console.log('✅ Successfully parsed JSON content');
-          return {
-            title: jsonContent.title,
-            content: jsonContent.content,
-            excerpt: jsonContent.excerpt || '',
-            category,
-            tags: jsonContent.tags || []
-          };
-        }
-      } catch (jsonError) {
-        console.log('⚠️ Failed to parse content as JSON, falling back to regex extraction');
-        // Continue with regex parsing if JSON parsing fails
-      }
-    }
-    
-    // Define regex patterns to extract components
-    const titleRegex = /^#\s*(.*?)$|^Title:\s*(.*?)$|^"title":\s*"(.*?)"/im;
-    const excerptRegex = /^Excerpt:\s*([\s\S]*?)(?=\n\n)|^"excerpt":\s*"([\s\S]*?)"/im;
-    const tagsRegex = /^Tags:\s*(.*?)$|^"tags":\s*\[(.*?)\]/im;
-    
-    // Extract title
-    const titleMatch = content.match(titleRegex);
-    let title = '';
-    if (titleMatch) {
-      title = (titleMatch[1] || titleMatch[2] || titleMatch[3] || '').trim();
-      console.log(`📝 Extracted title: "${title}"`);
-    } else {
-      console.log(`⚠️ No title found, using fallback`);
-      title = `New ${category} Post`;
-    }
-    
-    // Extract excerpt
-    const excerptMatch = content.match(excerptRegex);
+    // Default values
+    let title = `New ${category} Post`;
     let excerpt = '';
-    if (excerptMatch) {
-      excerpt = (excerptMatch[1] || excerptMatch[2] || '').trim();
-      console.log(`📋 Extracted excerpt: "${excerpt.substring(0, 30)}..."`);
-    } else {
-      console.log(`⚠️ No excerpt found, generating from content`);
-      // If no excerpt found, use the first paragraph of content as excerpt
-      const firstParagraph = content.split('\n\n')[1] || content.split('\n\n')[0] || '';
-      excerpt = firstParagraph.replace(/^#.*$/gm, '').trim().substring(0, 160);
-    }
-    
-    // Extract tags
     let tags: string[] = [];
-    const tagsMatch = content.match(tagsRegex);
-    if (tagsMatch) {
-      const tagsString = (tagsMatch[1] || tagsMatch[2] || '').trim();
-      if (tagsString.includes('"') || tagsString.includes("'")) {
-        // Handle JSON format tags
-        console.log(`🏷️ Detected JSON-formatted tags`);
-        try {
-          tags = JSON.parse(`[${tagsString}]`);
-        } catch (e) {
-          try {
-            // Try to fix common issues with JSON tags format
-            const fixedString = tagsString
-              .replace(/'/g, '"')  // Replace single quotes with double quotes
-              .replace(/,\s*$/, ''); // Remove trailing commas
-            tags = JSON.parse(`[${fixedString}]`);
-          } catch (e2) {
-            // If still failing, fallback to simple splitting
-            tags = tagsString.split(/,\s*/);
-          }
-        }
-      } else {
-        tags = tagsString.split(/,\s*/);
-      }
-      console.log(`🏷️ Extracted ${tags.length} tags: ${tags.join(', ')}`);
-    } else {
-      console.log(`⚠️ No tags found`);
-      // Generate some default tags based on category
-      if (category === 'Review') {
-        tags = ['review', 'laptop', 'tech'];
-      } else if (category === 'Comparison') {
-        tags = ['comparison', 'versus', 'laptops'];
-      } else if (category === 'Top10') {
-        tags = ['best laptops', 'top 10', 'recommendations'];
-      } else if (category === 'How-To') {
-        tags = ['how-to', 'tutorial', 'guide'];
-      }
-      console.log(`⚙️ Generated default tags for ${category}: ${tags.join(', ')}`);
-    }
+    let processedContent = content;
     
-    // Process main content
-    console.log(`📄 Processing main content...`);
-    let processedContent = '';
-    
+    // For Top10 posts, we'll use the AI-generated HTML directly
     if (category === 'Top10') {
-      console.log(`🔢 Formatting Top10 content with product placeholders`);
-      // Special handling for Top10 posts to include product data placeholders
-      processedContent = formatTop10Content(content);
+      console.log('📄 Processing Top10 content as direct HTML...');
       
-      // Remove excerpt and tags from the content itself since they'll be stored separately
-      processedContent = processedContent.replace(/\*\*Excerpt:\*\*([\s\S]*?)(?=\n\n)/, '');
-      processedContent = processedContent.replace(/\*\*Tags:\*\*([\s\S]*?)$/, '');
+      // Extract title from h1 tags
+      const titleMatch = content.match(/<h1[^>]*>(.*?)<\/h1>/i);
+      if (titleMatch && titleMatch[1]) {
+        title = titleMatch[1].replace(/<[^>]*>/g, '').trim();
+        console.log(`📝 Extracted title from HTML: "${title}"`);
+      }
+      
+      // Generate excerpt from the first paragraph
+      const excerptMatch = content.match(/<p>(.*?)<\/p>/i);
+      if (excerptMatch && excerptMatch[1]) {
+        // Strip HTML tags and limit to 160 chars
+        excerpt = excerptMatch[1].replace(/<[^>]*>/g, '').trim().substring(0, 160);
+        console.log(`📋 Generated excerpt from first paragraph: "${excerpt.substring(0, 30)}..."`);
+      }
+      
+      // Generate default tags based on title and content
+      tags = generateTagsFromContent(title, content, category);
+      console.log(`🏷️ Generated default tags: ${tags.join(', ')}`);
+      
+      // The content remains as direct HTML
+      processedContent = content;
     } else {
+      // For other post types, handle as before
+      // Handle potential JSON responses from the AI
+      if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
+        try {
+          console.log('📄 Content appears to be JSON, attempting to parse it');
+          const jsonContent = JSON.parse(content);
+          
+          // If the parsed content has all the fields we need, use it directly
+          if (jsonContent.title && jsonContent.content) {
+            console.log('✅ Successfully parsed JSON content');
+            return {
+              title: jsonContent.title,
+              content: jsonContent.content,
+              excerpt: jsonContent.excerpt || '',
+              category,
+              tags: jsonContent.tags || []
+            };
+          }
+        } catch (jsonError) {
+          console.log('⚠️ Failed to parse content as JSON, falling back to regex extraction');
+          // Continue with regex parsing if JSON parsing fails
+        }
+      }
+      
+      // Define regex patterns to extract components
+      const titleRegex = /^#\s*(.*?)$|^Title:\s*(.*?)$|^"title":\s*"(.*?)"/im;
+      const excerptRegex = /^Excerpt:\s*([\s\S]*?)(?=\n\n)|^"excerpt":\s*"([\s\S]*?)"/im;
+      const tagsRegex = /^Tags:\s*(.*?)$|^"tags":\s*\[(.*?)\]/im;
+      
+      // Extract title
+      const titleMatch = content.match(titleRegex);
+      if (titleMatch) {
+        title = (titleMatch[1] || titleMatch[2] || titleMatch[3] || '').trim();
+        console.log(`📝 Extracted title: "${title}"`);
+      } else {
+        console.log(`⚠️ No title found, using fallback`);
+      }
+      
+      // Extract excerpt
+      const excerptMatch = content.match(excerptRegex);
+      if (excerptMatch) {
+        excerpt = (excerptMatch[1] || excerptMatch[2] || '').trim();
+        console.log(`📋 Extracted excerpt: "${excerpt.substring(0, 30)}..."`);
+      } else {
+        console.log(`⚠️ No excerpt found, generating from content`);
+        // If no excerpt found, use the first paragraph of content as excerpt
+        const firstParagraph = content.split('\n\n')[1] || content.split('\n\n')[0] || '';
+        excerpt = firstParagraph.replace(/^#.*$/gm, '').trim().substring(0, 160);
+      }
+      
+      // Extract tags
+      const tagsMatch = content.match(tagsRegex);
+      if (tagsMatch) {
+        const tagsString = (tagsMatch[1] || tagsMatch[2] || '').trim();
+        if (tagsString.includes('"') || tagsString.includes("'")) {
+          // Handle JSON format tags
+          console.log(`🏷️ Detected JSON-formatted tags`);
+          try {
+            tags = JSON.parse(`[${tagsString}]`);
+          } catch (e) {
+            try {
+              // Try to fix common issues with JSON tags format
+              const fixedString = tagsString
+                .replace(/'/g, '"')  // Replace single quotes with double quotes
+                .replace(/,\s*$/, ''); // Remove trailing commas
+              tags = JSON.parse(`[${fixedString}]`);
+            } catch (e2) {
+              // If still failing, fallback to simple splitting
+              tags = tagsString.split(/,\s*/);
+            }
+          }
+        } else {
+          tags = tagsString.split(/,\s*/);
+        }
+        console.log(`🏷️ Extracted ${tags.length} tags: ${tags.join(', ')}`);
+      } else {
+        console.log(`⚠️ No tags found, generating default tags`);
+        tags = generateTagsFromContent(title, content, category);
+      }
+      
+      // Process main content - clean up any markdown or metadata
       processedContent = cleanupContent(content);
     }
     
@@ -169,75 +176,42 @@ function cleanupContent(content: string): string {
 }
 
 /**
- * Format Top10 content with placeholders for product data
+ * Generate tags from content for SEO purposes
  */
-function formatTop10Content(content: string): string {
-  console.log(`🔢 Formatting Top10 content...`);
+function generateTagsFromContent(title: string, content: string, category: string): string[] {
+  const defaultTags: Record<string, string[]> = {
+    'Review': ['review', 'laptop', 'tech'],
+    'Comparison': ['comparison', 'versus', 'laptops'],
+    'Top10': ['best laptops', 'top 10', 'recommendations'],
+    'How-To': ['how-to', 'tutorial', 'guide']
+  };
   
-  // Clean the content first but preserve product sections
-  let cleaned = cleanupContent(content);
+  // Start with category-specific default tags
+  const tags = [...defaultTags[category] || ['tech', 'laptops']];
   
-  // Look for numbered sections that likely represent product entries
-  // We'll use a less aggressive regex to avoid issues
-  const productSectionRegex = /#{1,3}\s*(\d+)[.:]?\s*(.*?)(?=\n{2,}|\n#{1,3}|$)/gs;
-  const productSections = [];
+  // Extract potential keywords from title
+  const titleWords = title.toLowerCase().split(/\s+/);
+  const brandKeywords = ['lenovo', 'hp', 'dell', 'asus', 'acer', 'microsoft', 'apple', 'msi', 'alienware', 'razer'];
+  const typeKeywords = ['gaming', 'business', 'student', 'budget', 'premium', 'ultrabook', 'convertible', 'detachable'];
   
-  console.log(`🔍 Searching for product sections in Top10 content...`);
-  
-  // First pass: collect all product sections without modifying the text
-  let match;
-  while ((match = productSectionRegex.exec(cleaned)) !== null) {
-    const number = parseInt(match[1], 10);
-    const title = match[2].trim();
-    const fullMatch = match[0];
-    const startPosition = match.index;
-    const endPosition = startPosition + fullMatch.length;
-    
-    console.log(`🔹 Found product section #${number}: "${title}"`);
-    
-    // Check if this is a valid product position (1-10)
-    if (number >= 1 && number <= 10) {
-      productSections.push({
-        number,
-        title,
-        fullMatch,
-        startPosition,
-        endPosition
-      });
+  // Add brand if found in title
+  for (const brand of brandKeywords) {
+    if (titleWords.includes(brand)) {
+      tags.push(brand);
+      tags.push(`${brand} laptop`);
+      break;
     }
   }
   
-  console.log(`✅ Found ${productSections.length} product sections in the content`);
-  
-  // Sort product sections by their position in the text (maintaining original order)
-  productSections.sort((a, b) => a.startPosition - b.startPosition);
-  
-  // Second pass: replace each product section with the product data placeholder
-  // We'll make a copy of the cleaned content and work with offsets
-  let finalContent = cleaned;
-  let offset = 0;
-  
-  // Process each section separately
-  for (const section of productSections) {
-    const placeholder = `<div class="product-data" data-product-id="${section.number}">[PRODUCT_DATA_${section.number}]</div>\n\n`;
-    const adjustedStartPosition = section.startPosition + offset;
-    
-    // Instead of keeping the full content, we'll insert after the heading
-    const headingEndIndex = finalContent.indexOf('\n', adjustedStartPosition);
-    const insertPosition = headingEndIndex !== -1 ? headingEndIndex + 1 : adjustedStartPosition + section.fullMatch.length;
-    
-    // Insert the placeholder after the heading
-    finalContent = 
-      finalContent.substring(0, insertPosition) + 
-      '\n' + placeholder + 
-      finalContent.substring(insertPosition);
-    
-    // Update offset for subsequent replacements
-    offset += placeholder.length + 1; // +1 for the extra newline
-    
-    console.log(`🔄 Added placeholder for product section #${section.number}`);
+  // Add laptop type if found in title
+  for (const type of typeKeywords) {
+    if (titleWords.includes(type)) {
+      tags.push(type);
+      tags.push(`${type} laptop`);
+      break;
+    }
   }
   
-  console.log(`✅ Top10 content formatting complete`);
-  return finalContent;
+  // Limit to 10 unique tags
+  return [...new Set(tags)].slice(0, 10);
 }

@@ -62,3 +62,23 @@ export function formatPrice(price: any): string {
   
   return 'Price not available';
 }
+
+// Generate stars for ratings
+export function generateStars(rating: number | string | undefined): string {
+  if (rating === undefined || rating === null) return '';
+  
+  const numericRating = typeof rating === 'string' ? parseFloat(rating) : rating;
+  if (isNaN(numericRating)) return '';
+  
+  const fullStars = Math.floor(numericRating);
+  const halfStar = numericRating % 1 >= 0.5 ? 1 : 0;
+  const emptyStars = 5 - fullStars - halfStar;
+  
+  return '⭐'.repeat(fullStars) + (halfStar ? '½' : '') + '☆'.repeat(emptyStars);
+}
+
+// Format an Amazon product URL with affiliate tag
+export function formatAmazonUrl(asin: string | undefined): string {
+  if (!asin) return '#';
+  return `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
+}

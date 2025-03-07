@@ -4,7 +4,7 @@
  */
 import { fetchAmazonProducts, extractSearchParamsFromPrompt } from '../amazonProductService';
 import { generateProductHtml } from './htmlGenerator';
-import { showErrorToast } from './utils';
+import { showErrorToast, formatAmazonUrl, generateStars, formatPrice } from './utils';
 
 // Get products from localStorage or fetch them
 export async function getProducts(prompt: string): Promise<any[]> {
@@ -34,6 +34,11 @@ export async function getProducts(prompt: string): Promise<any[]> {
               if (!product.title && product.asin) {
                 product.title = `Lenovo Laptop (${product.asin})`;
               }
+              
+              // Generate HTML content for the product
+              const stars = generateStars(product.rating);
+              const price = formatPrice(product.price);
+              const productUrl = formatAmazonUrl(product.asin);
               
               product.htmlContent = generateProductHtml(product, index + 1);
               console.log(`✅ Generated HTML content for product #${index + 1}`);
@@ -76,6 +81,11 @@ export async function getProducts(prompt: string): Promise<any[]> {
         console.log('🔄 Generating missing HTML content for newly fetched products...');
         products = products.map((product, index) => {
           if (!product.htmlContent) {
+            // Generate HTML content for the product
+            const stars = generateStars(product.rating);
+            const price = formatPrice(product.price);
+            const productUrl = formatAmazonUrl(product.asin);
+            
             product.htmlContent = generateProductHtml(product, index + 1);
             console.log(`✅ Generated HTML content for product #${index + 1}`);
           }

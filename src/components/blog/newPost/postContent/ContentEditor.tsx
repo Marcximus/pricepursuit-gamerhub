@@ -67,24 +67,18 @@ export const ContentEditor = ({
       .replace(/\*\*Excerpt:\*\*([\s\S]*?)(?=\n\n)/, '')
       .replace(/\*\*Tags:\*\*([\s\S]*?)$/, '');
       
-    // Add CSS styling for product placeholders to make them more visible in the preview
+    // Highlight product placeholders to make them more visible in the preview
     processedContent = processedContent.replace(
-      /(<div class="product-data"[^>]*>\[PRODUCT_DATA_\d+\]<\/div>)|(\[PRODUCT_DATA_\d+\])/g, 
-      (match) => {
-        // Style the product data placeholders to make them stand out
-        return `<div class="p-4 my-4 border-2 border-dashed border-amber-500 bg-amber-50 rounded-md text-center font-bold">Product Data Placeholder ${match.match(/\d+/)?.[0] || ''} (Will be replaced with actual product data)</div>`;
-      }
+      /<div class="product-placeholder"[^>]*data-asin="([^"]*)"[^>]*data-index="([^"]*)"[^>]*><\/div>/g,
+      '<div class="p-4 my-4 border-2 border-dashed border-amber-500 bg-amber-50 rounded-md text-center font-bold">Product Placeholder #$2 (ASIN: $1)</div>'
     );
     
     // Style raw product card HTML for better preview visualization
     processedContent = processedContent.replace(
       /<div class="product-card"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g,
-      (match) => {
-        return `<div class="p-4 my-4 border-2 border-dashed border-blue-500 bg-blue-50 rounded-md text-center font-bold">Product Card HTML (Will be rendered as proper product card)</div>`;
-      }
+      '<div class="p-4 my-4 border-2 border-dashed border-blue-500 bg-blue-50 rounded-md text-center font-bold">Product Card HTML (Will be rendered as proper product card)</div>'
     );
     
-    // Format the preview to preserve line breaks
     return processedContent;
   };
 
@@ -120,7 +114,7 @@ export const ContentEditor = ({
           )}
         </TabsContent>
         <TabsContent value="preview">
-          <div className="border rounded-md p-4 min-h-[400px] prose max-w-none overflow-auto whitespace-pre-wrap">
+          <div className="border rounded-md p-4 min-h-[400px] prose max-w-none overflow-auto">
             {content ? (
               <div 
                 dangerouslySetInnerHTML={{ 
@@ -137,7 +131,6 @@ export const ContentEditor = ({
             <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-md">
               <p className="text-sm text-amber-800 font-medium">
                 Note: When publishing, product placeholders will be replaced with actual Amazon product data.
-                Excerpt and Tags sections will be stored separately and not shown in the final post content.
               </p>
             </div>
           )}
