@@ -30,6 +30,11 @@ export async function getProducts(prompt: string): Promise<any[]> {
           console.log('🔄 Generating missing HTML content for products...');
           products = products.map((product, index) => {
             if (!product.htmlContent) {
+              // Ensure product has title
+              if (!product.title && product.asin) {
+                product.title = `Lenovo Laptop (${product.asin})`;
+              }
+              
               product.htmlContent = generateProductHtml(product, index + 1);
               console.log(`✅ Generated HTML content for product #${index + 1}`);
             }
@@ -54,6 +59,17 @@ export async function getProducts(prompt: string): Promise<any[]> {
     try {
       products = await fetchAmazonProducts(extractedParams);
       console.log(`✅ fetchAmazonProducts returned ${products?.length || 0} products`);
+      
+      // Check if products are missing titles
+      if (products.length > 0) {
+        // Ensure all products have titles
+        products = products.map((product, index) => {
+          if (!product.title && product.asin) {
+            product.title = `Lenovo Laptop (${product.asin})`;
+          }
+          return product;
+        });
+      }
       
       // Check if htmlContent is missing and generate it if needed
       if (products.length > 0 && !products[0]?.htmlContent) {

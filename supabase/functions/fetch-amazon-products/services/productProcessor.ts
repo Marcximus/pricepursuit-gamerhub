@@ -1,3 +1,4 @@
+
 /**
  * Minimal processor for Amazon products that preserves all raw data
  */
@@ -11,28 +12,51 @@ export function processAmazonProducts(data: any) {
   
   // Simply pass through the complete raw products with minimal enhancements
   const products = data.data.products.map((product: any, index: number) => {
+    // Extract basic product information with fallbacks
+    const title = product.title || product.name || 'Lenovo Laptop';
+    const brand = product.brand || 'Lenovo';
+    const asin = product.asin || '';
+    const imageUrl = product.image || product.images?.[0] || '';
+    const url = product.url || product.link || `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
+    const price = product.price?.value || product.price || '';
+    const rating = product.rating || product.stars || '';
+    const ratingsTotal = product.ratings_total || product.reviews_total || '';
+    
     // Generate HTML content for each product
-    const htmlContent = generateProductHTML(product, index + 1);
+    const htmlContent = generateProductHTML({
+      ...product,
+      title,
+      brand,
+      asin,
+      imageUrl,
+      url,
+      price,
+      rating,
+      ratingsTotal
+    }, index + 1);
+    
     console.log(`✅ Generated HTML content for product #${index + 1}: ${htmlContent.substring(0, 50)}...`);
     
     return {
       ...product,
+      title,
+      brand,
+      asin,
+      image: imageUrl,
+      imageUrl,
+      url,
+      productUrl: url,
+      price: price,
+      rating: rating,
+      ratings_total: ratingsTotal,
       rank: index + 1, // Keep rank property for display order
-      
-      // Add these properties only if they don't already exist - don't override existing values
-      imageUrl: product.imageUrl || product.image || '',
-      productUrl: product.productUrl || product.url || '#',
-      
-      // Always include the HTML content
       htmlContent: htmlContent,
-      
-      // Keep original data structure intact
       _rawData: true // Flag to indicate this has raw data
     };
   });
   
   console.log(`🏁 Returning ${products.length} products with complete raw data`);
-  console.log(`📤 FINAL RESPONSE PREVIEW: First product: "${products[0]?.title?.substring(0, 30)}..." Price: $${products[0]?.price?.value || 'N/A'}`);
+  console.log(`📤 FINAL RESPONSE PREVIEW: First product: "${products[0]?.title?.substring(0, 30)}..." Price: $${products[0]?.price?.value || products[0]?.price || 'N/A'}`);
   console.log(`📤 First product has HTML content: ${!!products[0]?.htmlContent}`);
   
   // Return all products, up to 15 max to ensure we have enough data
@@ -43,48 +67,51 @@ export function processAmazonProducts(data: any) {
  * Generate standardized HTML for product cards
  */
 function generateProductHTML(product: any, rank: number): string {
-  // Extract necessary properties with fallbacks
-  const title = product.title || 'Unknown Product';
-  const price = typeof product.price === 'number' 
+  // Format price with dollar sign if needed
+  const formattedPrice = typeof product.price === 'number' 
     ? `$${product.price.toFixed(2)}` 
-    : (product.price?.value ? `$${parseFloat(product.price.value).toFixed(2)}` : 'Price not available');
-  const rating = product.rating || product.stars || 'No ratings';
-  const reviews = product.ratings_total || product.reviews_total || product.ratingCount || 0;
-  const reviewText = reviews ? `(${reviews} reviews)` : '';
-  const image = product.imageUrl || product.image || product.images?.[0] || '';
-  const asin = product.asin || '';
-  const url = product.productUrl || product.url || product.link || '#';
+    : (typeof product.price?.value === 'number' 
+      ? `$${product.price.value.toFixed(2)}`
+      : (typeof product.price === 'string' && product.price.indexOf('$') === -1
+        ? `$${product.price}`
+        : (product.price || 'Price not available')));
   
-  // Extract features or highlights
-  const features = product.feature_bullets || product.features || [];
+  // Format ratings and review count
+  const formattedRating = product.rating ? `${product.rating}/5` : 'No ratings';
+  const reviewText = product.ratingsTotal ? `(${product.ratingsTotal} reviews)` : '';
   
-  // Generate HTML with proper escaping for any text content
+  // Extract features or highlights - limit to 3 for cleaner display
+  const features = Array.isArray(product.feature_bullets) 
+    ? product.feature_bullets.slice(0, 3) 
+    : (Array.isArray(product.features) ? product.features.slice(0, 3) : []);
+  
+  // Build the HTML for the product card
   return `
-    <div class="product-card" data-asin="${escapeHtml(asin)}" data-rank="${rank}">
+    <div class="product-card" data-asin="${escapeHtml(product.asin)}" data-rank="${rank}">
       <div class="product-rank">#${rank}</div>
       <div class="product-image">
-        <a href="${escapeHtml(url)}" target="_blank" rel="nofollow noopener">
-          <img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" loading="lazy" />
+        <a href="${escapeHtml(product.url)}" target="_blank" rel="nofollow noopener">
+          <img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.title)}" loading="lazy" />
         </a>
       </div>
       <div class="product-details">
         <h4 class="product-title">
-          <a href="${escapeHtml(url)}" target="_blank" rel="nofollow noopener">${escapeHtml(title)}</a>
+          <a href="${escapeHtml(product.url)}" target="_blank" rel="nofollow noopener">${escapeHtml(product.title)}</a>
         </h4>
         <div class="product-meta">
-          <span class="product-price">${escapeHtml(price)}</span>
-          <span class="product-rating">${escapeHtml(String(rating))} ${escapeHtml(reviewText)}</span>
+          <span class="product-price">${escapeHtml(formattedPrice)}</span>
+          <span class="product-rating">${escapeHtml(formattedRating)} ${escapeHtml(reviewText)}</span>
         </div>
         ${features.length > 0 ? 
           `<div class="product-features">
             <ul>
-              ${features.slice(0, 3).map((feature: string) => 
+              ${features.map((feature: string) => 
                 `<li>${escapeHtml(feature)}</li>`).join('')}
             </ul>
           </div>` : ''
         }
         <div class="product-cta">
-          <a href="${escapeHtml(url)}" class="check-price-btn" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
+          <a href="${escapeHtml(product.url)}" class="check-price-btn" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
         </div>
       </div>
     </div>
