@@ -1,5 +1,5 @@
 
-import { ProductData } from './types';
+import { ProductData } from './types.ts';
 
 /**
  * Generate a prompt for Review blog posts
