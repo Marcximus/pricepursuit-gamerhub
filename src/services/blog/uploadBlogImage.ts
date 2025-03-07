@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { ensureBlogBucket } from './ensureBlogBucket';
 
 export async function uploadBlogImage(
   file: File
@@ -8,10 +9,29 @@ export async function uploadBlogImage(
   try {
     // Check if user is authenticated
     const { data: { session } } = await supabase.auth.getSession();
+    
+    // If not authenticated, attempt to check if there's a stored session
     if (!session) {
+      // Try to refresh the session
+      const { data: refreshData } = await supabase.auth.refreshSession();
+      
+      // If still no session after refresh attempt, show error
+      if (!refreshData.session) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to upload images",
+          variant: "destructive",
+        });
+        return null;
+      }
+    }
+
+    // Ensure blog-assets bucket exists
+    const bucketReady = await ensureBlogBucket();
+    if (!bucketReady) {
       toast({
-        title: "Authentication required",
-        description: "You must be logged in to upload images",
+        title: "Storage error",
+        description: "Unable to access image storage. Please try again later.",
         variant: "destructive",
       });
       return null;
