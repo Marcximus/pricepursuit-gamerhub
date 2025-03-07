@@ -2,8 +2,8 @@
 /**
  * Centralized exports for all prompt types
  */
-export * from './reviewPrompt';
-export * from './top10Prompt';
-export * from './comparisonPrompt';
-export * from './howToPrompt';
-export * from './defaultPrompt';
+export * from './reviewPrompt.ts';
+export * from './top10Prompt.ts';
+export * from './comparisonPrompt.ts';
+export * from './howToPrompt.ts';
+export * from './defaultPrompt.ts';

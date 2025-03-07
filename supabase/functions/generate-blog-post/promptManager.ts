@@ -8,9 +8,9 @@ import {
   getComparisonPrompt, 
   getHowToPrompt, 
   getDefaultPrompt 
-} from './prompts';
+} from './prompts/index.ts';
 
-export type { BlogCategory } from './prompts/types';
+export type { BlogCategory } from './prompts/types.ts';
 
 /**
  * Get the system prompt for the AI based on blog post category
