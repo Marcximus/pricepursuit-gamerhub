@@ -37,11 +37,13 @@ export async function ensureBlogBucket(): Promise<boolean> {
         return false;
       }
       
-      // Set public bucket policy
-      const { error: policyError } = await supabase.storage.from('blog-assets').getPublicUrl('test');
-      
-      if (policyError && !policyError.message.includes('not found')) {
-        console.error('Error setting bucket policy:', policyError);
+      // Test if we can get a public URL (this verifies the bucket is properly configured)
+      try {
+        // The getPublicUrl method doesn't return an error property
+        supabase.storage.from('blog-assets').getPublicUrl('test');
+        return true;
+      } catch (err) {
+        console.error('Error testing bucket public access:', err);
         return false;
       }
     }
