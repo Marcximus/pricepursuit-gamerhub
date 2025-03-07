@@ -1,46 +1,36 @@
 
 /**
- * Formats and cleans feature bullet points from product data
+ * Extracts and formats product features
  */
 
 /**
- * Extract and clean feature bullet points from product data
- * @param product The product data containing feature bullets
- * @returns An array of cleaned feature strings
+ * Extract key features from product data
+ * @param product The product data
+ * @returns Array of feature strings
  */
 export function extractFeatures(product: any): string[] {
   const features: string[] = [];
   
-  if (product.feature_bullets) {
-    const bulletPoints = product.feature_bullets.slice(0, 3);
-    for (const feature of bulletPoints) {
-      const cleanFeature = cleanFeatureText(feature);
-      if (isValidFeature(cleanFeature)) {
-        features.push(cleanFeature);
-      }
-    }
+  // Extract from feature bullets if available
+  if (product.feature_bullets && Array.isArray(product.feature_bullets)) {
+    return product.feature_bullets.slice(0, 5);
   }
   
-  return features.length > 0 ? features : ["See product details on Amazon"];
-}
-
-/**
- * Clean a feature text by removing bullet points and brackets
- * @param featureText The raw feature text
- * @returns Cleaned feature text
- */
-function cleanFeatureText(featureText: string): string {
-  return featureText
-    .replace(/^[•\-\*]\s*/, '')  // Remove bullet points
-    .replace(/[\[\]\(\)]/g, '')  // Remove brackets
-    .trim();
-}
-
-/**
- * Check if a feature text is valid (not empty and of reasonable length)
- * @param featureText The feature text to validate
- * @returns True if the feature is valid
- */
-function isValidFeature(featureText: string): boolean {
-  return !!featureText && featureText.length > 5 && featureText.length < 80;
+  // Extract from product specifications if available
+  if (product.specifications && Array.isArray(product.specifications)) {
+    return product.specifications
+      .filter(spec => spec.name && spec.value)
+      .map(spec => `${spec.name}: ${spec.value}`)
+      .slice(0, 5);
+  }
+  
+  // Extract from product attributes if available
+  if (product.attributes && Array.isArray(product.attributes)) {
+    return product.attributes
+      .filter(attr => attr.name && attr.value)
+      .map(attr => `${attr.name}: ${attr.value}`)
+      .slice(0, 5);
+  }
+  
+  return features;
 }
