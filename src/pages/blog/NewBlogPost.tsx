@@ -1,440 +1,437 @@
 
-import { useEffect, useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Save, Eye, ArrowLeft, Sparkles } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useBlog, type BlogPost } from '@/contexts/BlogContext';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useBlog } from '@/contexts/BlogContext';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog';
-import { generateBlogPost } from '@/services/blogService';
-import { toast } from '@/components/ui/use-toast';
 import { BlogAIPromptDialog } from '@/components/blog/BlogAIPromptDialog';
-
-const INITIAL_POST_STATE: Omit<BlogPost, 'id' | 'created_at'> = {
-  title: '',
-  slug: '',
-  content: '',
-  excerpt: '',
-  category: 'Review',
-  author: '',
-  published: false,
-  tags: [],
-};
+import { uploadBlogImage, generateBlogPost } from '@/services/blogService';
+import { Sparkles, Image, Eye, Save } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from '@/components/ui/use-toast';
 
 const NewBlogPost = () => {
-  const { user, isAdmin } = useAuth();
-  const { posts, createPost, updatePost } = useBlog();
   const navigate = useNavigate();
   const location = useLocation();
+  const { posts, createPost, updatePost, getPostBySlug } = useBlog();
+  const [isAIPromptOpen, setIsAIPromptOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
-  const [post, setPost] = useState<Omit<BlogPost, 'id' | 'created_at'>>(INITIAL_POST_STATE);
-  const [editMode, setEditMode] = useState<boolean>(false);
-  const [editId, setEditId] = useState<string | null>(null);
-  const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false);
-  const [tagInput, setTagInput] = useState<string>('');
-  const [isAIDialogOpen, setIsAIDialogOpen] = useState<boolean>(false);
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
-
+  // Get edit ID from query params if available
+  const searchParams = new URLSearchParams(location.search);
+  const editId = searchParams.get('edit');
+  
+  // Form state
+  const [title, setTitle] = useState('');
+  const [slug, setSlug] = useState('');
+  const [content, setContent] = useState('');
+  const [excerpt, setExcerpt] = useState('');
+  const [category, setCategory] = useState<'Top10' | 'Review' | 'Comparison' | 'How-To'>('Review');
+  const [imageUrl, setImageUrl] = useState('');
+  const [author, setAuthor] = useState('Laptop Hunter Team');
+  const [published, setPublished] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagsInput, setTagsInput] = useState('');
+  
+  // Load post data if in edit mode
   useEffect(() => {
-    document.title = editMode ? "Edit Blog Post | Laptop Hunter" : "Create Blog Post | Laptop Hunter";
-    
-    // Check if we're in edit mode
-    const searchParams = new URLSearchParams(location.search);
-    const editPostId = searchParams.get('edit');
-    
-    if (editPostId) {
-      const postToEdit = posts.find(p => p.id === editPostId);
+    if (editId) {
+      const postToEdit = posts.find(post => post.id === editId);
       if (postToEdit) {
-        const { id, created_at, ...postData } = postToEdit;
-        setPost(postData);
-        setEditMode(true);
-        setEditId(id);
+        setTitle(postToEdit.title);
+        setSlug(postToEdit.slug);
+        setContent(postToEdit.content);
+        setExcerpt(postToEdit.excerpt);
+        setCategory(postToEdit.category);
+        setImageUrl(postToEdit.image_url || '');
+        setAuthor(postToEdit.author);
+        setPublished(postToEdit.published);
+        setTags(postToEdit.tags || []);
+        setTagsInput(postToEdit.tags?.join(', ') || '');
+        
+        document.title = `Edit: ${postToEdit.title} | Laptop Hunter Blog`;
       }
     } else {
-      // Set current user as author
-      if (user && user.email) {
-        setPost(prev => ({ ...prev, author: user.email!.split('@')[0] }));
-      }
+      document.title = "New Blog Post | Laptop Hunter Blog";
     }
-  }, [location.search, posts, user]);
-
+  }, [editId, posts]);
+  
+  // Generate a slug from the title
   useEffect(() => {
-    if (!user) {
-      navigate('/login', { state: { from: '/blog/new' } });
-    } else if (!isAdmin) {
-      navigate('/');
+    if (title && !editId) {
+      const generatedSlug = title
+        .toLowerCase()
+        .replace(/[^\w\s]/gi, '')
+        .replace(/\s+/g, '-');
+      setSlug(generatedSlug);
     }
-  }, [user, isAdmin, navigate]);
-
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim();
+  }, [title, editId]);
+  
+  // Handle tag input changes
+  const handleTagsInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTagsInput(e.target.value);
+    setTags(e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag));
   };
-
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTitle = e.target.value;
-    setPost(prev => ({
-      ...prev,
-      title: newTitle,
-      slug: generateSlug(newTitle)
-    }));
-  };
-
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value;
-    setPost(prev => ({ ...prev, content: newContent }));
-  };
-
-  const handleAddTag = () => {
-    if (tagInput.trim() && !post.tags?.includes(tagInput.trim())) {
-      setPost(prev => ({
-        ...prev,
-        tags: [...(prev.tags || []), tagInput.trim()]
-      }));
-      setTagInput('');
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setPost(prev => ({
-      ...prev,
-      tags: prev.tags?.filter(tag => tag !== tagToRemove)
-    }));
-  };
-
-  const handleGenerateWithAI = async (prompt: string, category: string) => {
-    setIsGenerating(true);
-    setIsAIDialogOpen(false);
+  
+  // Handle image upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
     
     try {
-      toast({
-        title: "Generating blog post",
-        description: "Please wait while we generate your content...",
-      });
-      
-      const generatedContent = await generateBlogPost(prompt, category);
-      
-      if (generatedContent) {
-        setPost(prev => ({
-          ...prev,
-          title: generatedContent.title || prev.title,
-          content: generatedContent.content || prev.content,
-          excerpt: generatedContent.excerpt || prev.excerpt,
-          category: generatedContent.category as any || prev.category,
-          slug: generateSlug(generatedContent.title || prev.title),
-          tags: generatedContent.tags || prev.tags,
-        }));
-        
+      setIsUploading(true);
+      const url = await uploadBlogImage(file);
+      if (url) {
+        setImageUrl(url);
         toast({
-          title: "Content generated successfully",
-          description: "Your AI-generated content is ready to edit!",
+          title: "Image uploaded",
+          description: "Your image has been uploaded successfully.",
         });
       }
     } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your image.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  // Handle AI content generation
+  const handleGenerateContent = async (prompt: string, selectedCategory: string) => {
+    setIsGenerating(true);
+    try {
+      const generatedContent = await generateBlogPost(prompt, selectedCategory);
+      
+      if (generatedContent) {
+        setTitle(generatedContent.title);
+        setContent(generatedContent.content);
+        setExcerpt(generatedContent.excerpt);
+        setCategory(generatedContent.category as any);
+        if (generatedContent.tags) {
+          setTags(generatedContent.tags);
+          setTagsInput(generatedContent.tags.join(', '));
+        }
+        
+        toast({
+          title: "Content generated",
+          description: "AI-generated content is ready for your review.",
+        });
+      }
+      
+      setIsAIPromptOpen(false);
+    } catch (error) {
       console.error('Error generating content:', error);
       toast({
-        title: "Error generating content",
-        description: "There was a problem generating your content. Please try again.",
+        title: "Generation failed",
+        description: "There was an error generating content.",
         variant: "destructive",
       });
     } finally {
       setIsGenerating(false);
     }
   };
-
-  const handleSave = async () => {
-    // Validate required fields
-    if (!post.title || !post.content || !post.excerpt || !post.author) {
+  
+  // Save the blog post
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!title || !slug || !content || !excerpt || !category) {
       toast({
-        title: "Missing required fields",
-        description: "Please fill in all required fields before saving.",
+        title: "Validation error",
+        description: "Please fill in all required fields.",
         variant: "destructive",
       });
       return;
     }
-
-    if (editMode && editId) {
-      const success = await updatePost(editId, post);
+    
+    // Check if the slug already exists (and is not the current post)
+    const existingPost = getPostBySlug(slug, category);
+    if (existingPost && existingPost.id !== editId) {
+      toast({
+        title: "Slug already exists",
+        description: "A post with this slug already exists in this category. Please use a different slug.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setIsSaving(true);
+      
+      const postData = {
+        title,
+        slug,
+        content,
+        excerpt,
+        category,
+        image_url: imageUrl || undefined,
+        author,
+        published,
+        tags: tags.length > 0 ? tags : undefined,
+      };
+      
+      let success;
+      if (editId) {
+        success = await updatePost(editId, postData);
+      } else {
+        const newPost = await createPost(postData);
+        success = !!newPost;
+      }
+      
       if (success) {
-        navigate(`/blog/admin`);
+        toast({
+          title: editId ? "Post updated" : "Post created",
+          description: editId 
+            ? "Your blog post has been updated successfully." 
+            : "Your blog post has been created successfully.",
+        });
+        navigate(published ? `/blog/${category}/post/${slug}` : '/blog/admin');
       }
-    } else {
-      const newPost = await createPost(post);
-      if (newPost) {
-        navigate(`/blog/admin`);
-      }
+    } catch (error) {
+      console.error('Error saving post:', error);
+      toast({
+        title: "Save failed",
+        description: "There was an error saving your post.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
-
-  if (!user || !isAdmin) {
-    return null;
-  }
-
+  
   return (
     <div className="min-h-screen pb-16">
       <Navigation />
       
       <div className="pt-20 container mx-auto px-4 mt-10">
         <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-4">
-            <Link to="/blog/admin">
-              <Button variant="outline" size="icon">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </Link>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {editMode ? 'Edit Blog Post' : 'Create New Blog Post'}
-            </h1>
-          </div>
-          <div className="flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-gray-900">
+            {editId ? 'Edit Blog Post' : 'Create New Blog Post'}
+          </h1>
+          <div className="flex space-x-2">
             <Button 
               variant="outline" 
-              className="flex items-center gap-2"
-              onClick={() => setIsAIDialogOpen(true)}
-              disabled={isGenerating}
+              onClick={() => setIsAIPromptOpen(true)}
+              className="flex items-center"
             >
-              <Sparkles className="h-4 w-4" />
+              <Sparkles className="mr-2 h-4 w-4" /> 
               Generate with AI
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => setIsPreviewMode(!isPreviewMode)}
-              className="flex items-center gap-2"
+            <Button 
+              variant="outline" 
+              onClick={() => window.open(`/blog/${category}/post/${slug}`, '_blank')}
+              disabled={!title || !slug || !content}
+              className="flex items-center"
             >
-              <Eye className="h-4 w-4" />
-              {isPreviewMode ? 'Edit' : 'Preview'}
-            </Button>
-            <Button
-              onClick={handleSave}
-              className="flex items-center gap-2"
-            >
-              <Save className="h-4 w-4" />
-              Save {post.published ? 'Published Post' : 'Draft'}
+              <Eye className="mr-2 h-4 w-4" /> 
+              Preview
             </Button>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <Tabs defaultValue={isPreviewMode ? "preview" : "edit"} value={isPreviewMode ? "preview" : "edit"}>
-              <TabsList className="mb-4">
-                <TabsTrigger value="edit" onClick={() => setIsPreviewMode(false)}>
-                  Edit
-                </TabsTrigger>
-                <TabsTrigger value="preview" onClick={() => setIsPreviewMode(true)}>
-                  Preview
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="edit" className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title*</Label>
-                  <Input
-                    id="title"
-                    placeholder="Enter blog post title"
-                    value={post.title}
-                    onChange={handleTitleChange}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="slug">Slug (URL friendly version of title)</Label>
-                  <Input
-                    id="slug"
-                    placeholder="your-blog-post-title"
-                    value={post.slug}
-                    onChange={(e) => setPost(prev => ({ ...prev, slug: e.target.value }))}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="excerpt">Excerpt* (Short summary for previews)</Label>
-                  <Textarea
-                    id="excerpt"
-                    placeholder="Enter a brief summary of your article"
-                    rows={3}
-                    value={post.excerpt}
-                    onChange={(e) => setPost(prev => ({ ...prev, excerpt: e.target.value }))}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="content">Content*</Label>
-                  <Textarea
-                    id="content"
-                    placeholder="Write your blog post content here. HTML is supported for formatting."
-                    rows={20}
-                    value={post.content}
-                    onChange={handleContentChange}
-                    className="font-mono"
-                  />
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="preview" className="space-y-8">
-                <article className="prose prose-lg max-w-none">
-                  <h1>{post.title || 'Untitled Blog Post'}</h1>
-                  
-                  {post.tags && post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 not-prose mb-4">
-                      {post.tags.map((tag, idx) => (
-                        <span key={idx} className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  
-                  <div className="text-gray-500 text-sm mb-8">
-                    By {post.author || 'Unknown'} | {new Date().toLocaleDateString()}
-                  </div>
-                  
-                  {post.content ? (
-                    <div dangerouslySetInnerHTML={{ __html: post.content }} />
-                  ) : (
-                    <p className="text-gray-400 italic">No content yet. Start writing to see the preview.</p>
-                  )}
-                </article>
-              </TabsContent>
-            </Tabs>
-          </div>
-          
-          <div className="space-y-6">
-            <div className="border rounded-lg p-6 space-y-6">
+        <form onSubmit={handleSave} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="md:col-span-2 space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="author">Author*</Label>
-                <Input
-                  id="author"
-                  placeholder="Your name"
-                  value={post.author}
-                  onChange={(e) => setPost(prev => ({ ...prev, author: e.target.value }))}
+                <Label htmlFor="title">Title*</Label>
+                <Input 
+                  id="title" 
+                  value={title} 
+                  onChange={(e) => setTitle(e.target.value)} 
+                  placeholder="Enter post title" 
+                  required
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="category">Category*</Label>
-                <Select
-                  value={post.category}
-                  onValueChange={(value) => setPost(prev => ({ ...prev, category: value as any }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Top10">Top 10 Lists</SelectItem>
-                    <SelectItem value="Review">Reviews</SelectItem>
-                    <SelectItem value="Comparison">Comparisons</SelectItem>
-                    <SelectItem value="How-To">How-To Guides</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="image_url">Featured Image URL</Label>
-                <Input
-                  id="image_url"
-                  placeholder="https://example.com/image.jpg"
-                  value={post.image_url || ''}
-                  onChange={(e) => setPost(prev => ({ ...prev, image_url: e.target.value }))}
-                />
-                {post.image_url && (
-                  <div className="mt-2">
-                    <img 
-                      src={post.image_url} 
-                      alt="Featured" 
-                      className="w-full h-auto rounded-md"
-                      onError={(e) => {
-                        e.currentTarget.src = 'https://placehold.co/600x400?text=Invalid+Image+URL';
-                      }}
+                <Label htmlFor="content">Content*</Label>
+                <Tabs defaultValue="write">
+                  <TabsList className="mb-2">
+                    <TabsTrigger value="write">Write</TabsTrigger>
+                    <TabsTrigger value="preview">Preview</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="write">
+                    <Textarea 
+                      id="content" 
+                      value={content} 
+                      onChange={(e) => setContent(e.target.value)} 
+                      placeholder="Write your blog post content here (HTML formatting supported)" 
+                      className="min-h-[400px]" 
+                      required
                     />
-                  </div>
-                )}
+                  </TabsContent>
+                  <TabsContent value="preview">
+                    <div className="border rounded-md p-4 min-h-[400px] prose max-w-none">
+                      {content ? (
+                        <div dangerouslySetInnerHTML={{ __html: content }} />
+                      ) : (
+                        <p className="text-gray-400">No content to preview</p>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
               
               <div className="space-y-2">
-                <Label>Tags</Label>
-                <div className="flex space-x-2">
-                  <Input
-                    placeholder="Add a tag"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddTag();
-                      }
-                    }}
-                  />
-                  <Button variant="outline" type="button" onClick={handleAddTag}>
-                    Add
-                  </Button>
-                </div>
-                {post.tags && post.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {post.tags.map((tag, idx) => (
-                      <div key={idx} className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm flex items-center">
-                        {tag}
-                        <button
-                          type="button"
-                          className="ml-1 text-gray-500 hover:text-gray-800"
-                          onClick={() => handleRemoveTag(tag)}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex items-center space-x-2 pt-4">
-                <Switch
-                  id="published"
-                  checked={post.published}
-                  onCheckedChange={(checked) => setPost(prev => ({ ...prev, published: checked }))}
+                <Label htmlFor="excerpt">Excerpt*</Label>
+                <Textarea 
+                  id="excerpt" 
+                  value={excerpt} 
+                  onChange={(e) => setExcerpt(e.target.value)} 
+                  placeholder="Brief summary of the post (2-3 sentences)" 
+                  rows={3} 
+                  required
                 />
-                <Label htmlFor="published">Publish immediately</Label>
               </div>
             </div>
             
-            <div className="border rounded-lg p-6">
-              <h3 className="font-semibold mb-4">Publishing Tips</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Use clear, descriptive titles</li>
-                <li>• Break content into sections with headings</li>
-                <li>• Include relevant images where helpful</li>
-                <li>• Use HTML for formatting (<code>&lt;h2&gt;</code>, <code>&lt;p&gt;</code>, etc.)</li>
-                <li>• Add tags to improve searchability</li>
-                <li>• Write a concise, engaging excerpt</li>
-              </ul>
+            {/* Sidebar */}
+            <div className="space-y-6">
+              <Card>
+                <CardContent className="pt-6 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="published">Published</Label>
+                    <Switch 
+                      id="published" 
+                      checked={published} 
+                      onCheckedChange={setPublished} 
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category*</Label>
+                    <Select 
+                      value={category} 
+                      onValueChange={(value: 'Top10' | 'Review' | 'Comparison' | 'How-To') => setCategory(value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Top10">Top 10 Lists</SelectItem>
+                        <SelectItem value="Review">Reviews</SelectItem>
+                        <SelectItem value="Comparison">Comparisons</SelectItem>
+                        <SelectItem value="How-To">How-To Guides</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="slug">Slug*</Label>
+                    <Input 
+                      id="slug" 
+                      value={slug} 
+                      onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^\w-]/g, '-'))} 
+                      placeholder="post-url-slug" 
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="author">Author*</Label>
+                    <Input 
+                      id="author" 
+                      value={author} 
+                      onChange={(e) => setAuthor(e.target.value)} 
+                      placeholder="Author name" 
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="tags">Tags (comma separated)</Label>
+                    <Input 
+                      id="tags" 
+                      value={tagsInput} 
+                      onChange={handleTagsInputChange}
+                      placeholder="tag1, tag2, tag3" 
+                    />
+                    {tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {tags.map((tag, i) => (
+                          <span key={i} className="bg-gray-100 px-2 py-1 rounded-full text-xs">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="image">Featured Image</Label>
+                    <div className="flex flex-col space-y-2">
+                      <label 
+                        htmlFor="image-upload" 
+                        className="cursor-pointer flex items-center justify-center border-2 border-dashed border-gray-300 rounded-md p-4 hover:border-gray-400 transition-colors"
+                      >
+                        <div className="flex flex-col items-center space-y-2">
+                          <Image className="h-8 w-8 text-gray-400" />
+                          <span className="text-sm text-gray-500">
+                            {isUploading ? 'Uploading...' : 'Click to upload an image'}
+                          </span>
+                        </div>
+                      </label>
+                      <input 
+                        id="image-upload" 
+                        type="file" 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={handleImageUpload}
+                        disabled={isUploading}
+                      />
+                    </div>
+                    {imageUrl && (
+                      <div className="mt-2">
+                        <img 
+                          src={imageUrl} 
+                          alt="Featured image" 
+                          className="rounded-md max-h-[200px] w-auto mx-auto"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => navigate('/blog/admin')}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isSaving || !title || !slug || !content || !excerpt}
+                  className="flex items-center"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {isSaving ? 'Saving...' : editId ? 'Update Post' : 'Save Post'}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </form>
       </div>
       
       <BlogAIPromptDialog 
-        isOpen={isAIDialogOpen}
-        onClose={() => setIsAIDialogOpen(false)}
-        onGenerate={handleGenerateWithAI}
+        isOpen={isAIPromptOpen}
+        onClose={() => setIsAIPromptOpen(false)}
+        onGenerate={handleGenerateContent}
         isLoading={isGenerating}
       />
     </div>

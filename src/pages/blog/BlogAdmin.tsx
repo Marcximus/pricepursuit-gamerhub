@@ -1,150 +1,141 @@
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PlusCircle, Trash2, Edit, Eye } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useBlog, type BlogPost } from '@/contexts/BlogContext';
+import { useBlog } from '@/contexts/BlogContext';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { Eye, Edit, Trash2, Plus } from 'lucide-react';
+import { format } from 'date-fns';
 
 const BlogAdmin = () => {
-  const { user, isAdmin } = useAuth();
-  const { posts, loading, error, fetchPosts, deletePost } = useBlog();
+  const { posts, loading, error, deletePost, fetchPosts } = useBlog();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [deletePostId, setDeletePostId] = useState<string | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
+  
   useEffect(() => {
     document.title = "Blog Admin | Laptop Hunter";
     fetchPosts();
   }, [fetchPosts]);
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/login', { state: { from: '/blog/admin' } });
-    } else if (!isAdmin) {
-      navigate('/');
+  const handleDeletePost = async () => {
+    if (postToDelete) {
+      await deletePost(postToDelete);
+      setDeleteDialogOpen(false);
+      setPostToDelete(null);
     }
-  }, [user, isAdmin, navigate]);
-
-  const handleDeleteClick = (postId: string) => {
-    setDeletePostId(postId);
-    setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = async () => {
-    if (deletePostId) {
-      await deletePost(deletePostId);
-      setIsDeleteDialogOpen(false);
-      setDeletePostId(null);
-    }
+  const confirmDelete = (postId: string) => {
+    setPostToDelete(postId);
+    setDeleteDialogOpen(true);
   };
 
   const getCategoryBadgeColor = (category: string) => {
     switch (category) {
       case 'Top10': return 'bg-blue-100 text-blue-800';
       case 'Review': return 'bg-green-100 text-green-800';
-      case 'Comparison': return 'bg-yellow-100 text-yellow-800';
-      case 'How-To': return 'bg-purple-100 text-purple-800';
+      case 'Comparison': return 'bg-purple-100 text-purple-800';
+      case 'How-To': return 'bg-amber-100 text-amber-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const filteredPosts = posts.filter(post => 
-    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.author.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (!user || !isAdmin) {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen pb-16">
+    <div className="min-h-screen">
       <Navigation />
       
       <div className="pt-20 container mx-auto px-4 mt-10">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Blog Admin</h1>
           <Link to="/blog/new">
-            <Button className="flex items-center gap-2">
-              <PlusCircle className="h-4 w-4" />
-              New Post
+            <Button className="flex items-center">
+              <Plus className="mr-2 h-4 w-4" /> New Post
             </Button>
           </Link>
-        </div>
-        
-        <div className="mb-6">
-          <Input
-            placeholder="Search posts by title, category, or author..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md"
-          />
         </div>
         
         {loading ? (
           <div className="text-center py-12">Loading posts...</div>
         ) : error ? (
           <div className="text-center text-red-500 py-12">Error loading posts: {error}</div>
-        ) : filteredPosts.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-lg">
+        ) : posts.length === 0 ? (
+          <div className="text-center py-12">
             <p className="text-gray-500 mb-4">No blog posts found.</p>
             <Link to="/blog/new">
               <Button>Create Your First Post</Button>
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border">
+          <div className="rounded-md border overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Title</TableHead>
                   <TableHead>Category</TableHead>
-                  <TableHead>Author</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead>Created</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPosts.map((post) => (
+                {posts.map((post) => (
                   <TableRow key={post.id}>
-                    <TableCell className="font-medium">{post.title}</TableCell>
+                    <TableCell className="font-medium max-w-[300px] truncate">
+                      {post.title}
+                    </TableCell>
                     <TableCell>
-                      <Badge className={getCategoryBadgeColor(post.category)}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryBadgeColor(post.category)}`}>
                         {post.category}
-                      </Badge>
+                      </span>
                     </TableCell>
-                    <TableCell>{post.author}</TableCell>
-                    <TableCell>{new Date(post.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>{format(new Date(post.created_at), 'MMM d, yyyy')}</TableCell>
                     <TableCell>
-                      <Badge variant={post.published ? "default" : "secondary"}>
-                        {post.published ? "Published" : "Draft"}
-                      </Badge>
+                      {post.published ? (
+                        <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">Published</Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-gray-500">Draft</Badge>
+                      )}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Link to={`/blog/${post.category}/post/${post.slug}`}>
-                          <Button variant="ghost" size="icon">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        <Link to={`/blog/new?edit=${post.id}`}>
-                          <Button variant="ghost" size="icon">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </Link>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-2">
                         <Button 
                           variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleDeleteClick(post.id)}
+                          size="sm" 
+                          onClick={() => navigate(`/blog/${post.category}/post/${post.slug}`)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => navigate(`/blog/new?edit=${post.id}`)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => confirmDelete(post.id)}
                         >
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>
@@ -158,24 +149,22 @@ const BlogAdmin = () => {
         )}
       </div>
       
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this blog post? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the blog post and remove it from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePost} className="bg-red-500 hover:bg-red-600">
               Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

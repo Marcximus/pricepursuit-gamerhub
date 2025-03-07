@@ -13,6 +13,7 @@ export type BlogPost = {
   image_url?: string;
   author: string;
   created_at: string;
+  updated_at?: string;
   published: boolean;
   tags?: string[];
 };
@@ -25,7 +26,7 @@ interface BlogContextType {
   getPostBySlug: (slug: string, category: string) => BlogPost | undefined;
   getPostsByCategory: (category: string) => BlogPost[];
   getRecentPosts: (limit?: number) => BlogPost[];
-  createPost: (post: Omit<BlogPost, 'id' | 'created_at'>) => Promise<BlogPost | null>;
+  createPost: (post: Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>) => Promise<BlogPost | null>;
   updatePost: (id: string, post: Partial<BlogPost>) => Promise<boolean>;
   deletePost: (id: string) => Promise<boolean>;
 }
@@ -82,7 +83,7 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
       .slice(0, limit);
   };
 
-  const createPost = async (postData: Omit<BlogPost, 'id' | 'created_at'>) => {
+  const createPost = async (postData: Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       const { data, error: insertError } = await supabase
         .from('blog_posts')
