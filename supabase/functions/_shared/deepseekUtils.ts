@@ -1,4 +1,3 @@
-
 import { OpenAI } from "https://esm.sh/openai@4.24.1";
 
 export function createDeepSeekClient(apiKey: string) {
@@ -43,7 +42,7 @@ CRITICAL REQUIREMENTS:
 5. Format must match the example EXACTLY`;
 
     const completion = await openai.chat.completions.create({
-      model: "deepseek-chat",
+      model: "deepseek-r1-text",
       messages: [
         {
           role: "system",
@@ -104,4 +103,3 @@ CRITICAL REQUIREMENTS:
     throw error;
   }
 }
-
