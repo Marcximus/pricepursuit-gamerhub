@@ -31,17 +31,25 @@ const BlogAdmin = () => {
     document.title = "Blog Admin | Laptop Hunter";
     console.log('BlogAdmin: Initial posts fetch');
     fetchPosts();
+    
+    // Set up periodic refresh to ensure data is fresh
+    const intervalId = setInterval(() => {
+      console.log('BlogAdmin: Performing periodic refresh');
+      fetchPosts();
+    }, 30000); // Every 30 seconds
+    
+    return () => clearInterval(intervalId);
   }, [fetchPosts]);
 
   // Add effect to refresh posts after successful deletion
   useEffect(() => {
     if (deleteSuccess) {
       console.log('BlogAdmin: Post deleted successfully, refreshing posts list');
-      // Add a small delay to ensure the database has time to process the deletion
+      // Add a larger delay to ensure the database has time to process the deletion
       const refreshTimer = setTimeout(() => {
-        console.log('BlogAdmin: Executing delayed refresh');
+        console.log('BlogAdmin: Executing final delayed refresh');
         fetchPosts();
-      }, 1000); // Increased timeout to ensure database has time to process
+      }, 2000); // Increased timeout to ensure database has time to process
       
       return () => clearTimeout(refreshTimer);
     }

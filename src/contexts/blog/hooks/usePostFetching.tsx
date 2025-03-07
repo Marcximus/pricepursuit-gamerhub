@@ -16,9 +16,9 @@ export const usePostFetching = () => {
       
       console.log('Fetching blog posts...');
       
-      // Using select directly without options to avoid TypeScript errors
-      // Adding a timestamp parameter to avoid caching issues
+      // Adding a cache-busting timestamp to ensure we always get fresh data
       const timestamp = new Date().getTime();
+      
       const { data, error: fetchError } = await supabase
         .from('blog_posts')
         .select('*')
@@ -31,7 +31,6 @@ export const usePostFetching = () => {
       
       console.log(`Fetched ${data?.length || 0} blog posts`);
       
-      // Add more detailed logging for debugging
       if (data && data.length > 0) {
         console.log('Post IDs in fetched data:');
         data.forEach(post => console.log(`- ${post.id}: ${post.title}`));

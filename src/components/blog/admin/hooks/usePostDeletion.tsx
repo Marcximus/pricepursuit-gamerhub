@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useBlog } from '@/contexts/blog';
+import { toast } from '@/components/ui/use-toast';
 
 export const usePostDeletion = () => {
   const { deletePost, fetchPosts } = useBlog();
@@ -30,18 +31,37 @@ export const usePostDeletion = () => {
         console.log('BlogAdmin: Post deleted successfully');
         setDeleteSuccess(true);
         
-        // Force a refetch after deletion to ensure UI is in sync with database
+        // Force multiple refetches to ensure UI is in sync with database
+        // First immediate refetch
+        fetchPosts();
+        
+        // Second delayed refetch in case the first one was too quick
         setTimeout(() => {
-          console.log('BlogAdmin: Forcing refetch after deletion');
+          console.log('BlogAdmin: Forcing delayed refetch after deletion');
           fetchPosts();
-        }, 800);
+        }, 1500);
+        
+        toast({
+          title: "Success",
+          description: "Post deleted successfully",
+        });
       } else {
         console.error('BlogAdmin: Failed to delete post');
         setDeleteSuccess(false);
+        toast({
+          title: "Error",
+          description: "Failed to delete post. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('BlogAdmin: Error during deletion:', error);
       setDeleteSuccess(false);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
     } finally {
       setIsDeleting(false);
       setDeleteDialogOpen(false);

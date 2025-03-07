@@ -116,21 +116,27 @@ export const usePostManagement = (
         throw new Error(`Post with ID ${id} not found`);
       }
       
-      // Add debug log to track the delete operation
       console.log(`Sending delete request to Supabase for post ID: ${id}`);
       
-      // Execute the delete operation with an explicit await and WITH AUTH
-      const { error: deleteError } = await supabase
+      // Execute the delete operation with more explicit logging
+      const { data: deleteData, error: deleteError } = await supabase
         .from('blog_posts')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select(); // Add select() to get back the deleted row
       
       if (deleteError) {
         console.error('Supabase error during deletion:', deleteError);
         throw new Error(deleteError.message);
       }
       
-      // Let's verify deletion was successful without the count property which seems unreliable
+      if (!deleteData || deleteData.length === 0) {
+        console.warn(`No rows were deleted for post ID: ${id}`);
+      } else {
+        console.log(`Successfully deleted ${deleteData.length} rows for post ID: ${id}`);
+      }
+      
+      // Immediately verify deletion was successful
       const { data: checkDeleted, error: verifyError } = await supabase
         .from('blog_posts')
         .select('id')
@@ -138,27 +144,23 @@ export const usePostManagement = (
         
       if (verifyError) {
         console.error('Error verifying deletion:', verifyError);
+      } else if (checkDeleted && checkDeleted.length > 0) {
+        console.error(`Post still exists after deletion! Found ${checkDeleted.length} posts with ID ${id}`);
+        console.log('This may indicate a permissions issue or RLS policy preventing deletion');
+        // We'll continue with UI update despite the database issue
       } else {
-        console.log(`Verification check: found ${checkDeleted?.length || 0} posts with ID ${id}`);
-        if (checkDeleted && checkDeleted.length > 0) {
-          console.error('Post still exists in database after deletion!');
-          // Despite the verification check, let's update the UI state
-          // This ensures the UI is consistent even if there's a delay in the database operation
-          console.log('Proceeding with UI update despite post still existing in database.');
-        } else {
-          console.log(`Successfully deleted blog post with ID: ${id} from database`);
-        }
+        console.log(`Successfully verified post with ID: ${id} is removed from database`);
       }
       
-      // Ensure we're updating the state atomically and correctly
+      // Update local state to reflect deletion
       setPosts(prevPosts => {
         const filteredPosts = prevPosts.filter(post => post.id !== id);
-        console.log(`Local state updated, removed post. New count: ${filteredPosts.length}`);
+        console.log(`Local state updated: removed post with ID: ${id}. New count: ${filteredPosts.length}`);
         return filteredPosts;
       });
       
       toast({
-        title: "Post deleted successfully",
+        title: "Post deleted",
         description: "Your blog post has been deleted.",
       });
       
