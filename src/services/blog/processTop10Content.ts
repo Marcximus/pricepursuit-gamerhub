@@ -1,8 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SearchParam } from './types';
-import { extractSearchParams } from './extractSearchParams';
 import { toast } from '@/components/ui/use-toast';
+import { extractSearchParamsFromPrompt, fetchAmazonProducts } from './amazonProductService';
 
 export async function processTop10Content(content: string, prompt: string): Promise<string> {
   console.log('🔄 Starting processTop10Content');
@@ -12,68 +11,32 @@ export async function processTop10Content(content: string, prompt: string): Prom
   try {
     // Extract search parameters from the prompt
     console.log('🔍 Extracting search parameters from prompt...');
-    const searchParams = extractSearchParams(prompt);
+    const searchParams = extractSearchParamsFromPrompt(prompt);
     console.log('🎯 Extracted search parameters:', JSON.stringify(searchParams, null, 2));
     
-    // Check if we have any valid search parameters
-    if (!searchParams || searchParams.length === 0) {
-      console.warn('⚠️ No valid search parameters extracted from prompt');
-      toast({
-        title: "Search parameters missing",
-        description: "Couldn't extract valid search parameters from your prompt",
-        variant: "destructive",
-      });
-      return content;
-    }
-    
-    // Fetch products using the edge function
-    console.log(`🚀 About to call fetch-top10-products with ${searchParams.length} parameter sets`);
-    console.log('📋 Search parameters data being sent:', JSON.stringify({
-      searchParams,
-      count: 10
-    }, null, 2));
+    // Fetch products from Amazon using RapidAPI
+    console.log(`🚀 About to fetch Amazon products with query: "${searchParams.query}"`);
     
     const startTime = performance.now();
     
     try {
-      console.log('📡 Making supabase.functions.invoke call to fetch-top10-products...');
-      const { data, error } = await supabase.functions.invoke('fetch-top10-products', {
-        body: {
-          searchParams,
-          count: 10
-        },
-      });
+      const products = await fetchAmazonProducts(searchParams);
       
       const endTime = performance.now();
-      console.log(`⏱️ fetch-top10-products call took ${(endTime - startTime).toFixed(2)}ms`);
+      console.log(`⏱️ Amazon products fetch took ${(endTime - startTime).toFixed(2)}ms`);
       
-      if (error) {
-        console.error('❌ Error fetching products:', error);
-        console.error('❌ Error details:', JSON.stringify(error, null, 2));
-        toast({
-          title: 'Error fetching products',
-          description: error.message || 'Failed to fetch product data for the Top 10 post',
-          variant: 'destructive',
-        });
-        return content;
-      }
-      
-      console.log(`📊 Response data:`, data ? 'Data received' : 'No data');
-      if (data) console.log('📊 Response data structure:', Object.keys(data));
-      
-      if (!data || !data.products || data.products.length === 0) {
-        console.warn('⚠️ No products found for the search parameters');
-        console.warn('⚠️ Full response:', JSON.stringify(data, null, 2));
+      if (!products || products.length === 0) {
+        console.warn('⚠️ No Amazon products found');
         toast({
           title: 'No products found',
           description: 'We couldn\'t find any products matching your criteria for the Top 10 post',
-          variant: 'default', // Changed from 'warning' to 'default' as only 'default' and 'destructive' are valid variants
+          variant: 'default',
         });
         return content;
       }
       
-      console.log(`✅ Successfully fetched ${data.products.length} products`);
-      console.log(`🔍 First product: "${data.products[0].title.substring(0, 30)}..."`);
+      console.log(`✅ Successfully fetched ${products.length} products from Amazon`);
+      console.log(`🔍 First product: "${products[0].title.substring(0, 30)}..."`);
       
       // Replace the product data placeholders with actual data
       console.log('🔄 Replacing product data placeholders in content...');
@@ -82,8 +45,8 @@ export async function processTop10Content(content: string, prompt: string): Prom
       let processedContent = content;
       let replacementsCount = 0;
       
-      for (let i = 0; i < Math.min(data.products.length, 10); i++) {
-        const product = data.products[i];
+      for (let i = 0; i < Math.min(products.length, 10); i++) {
+        const product = products[i];
         const placeholderPattern = `<div class="product-data" data-product-id="${i+1}">[PRODUCT_DATA_${i+1}]</div>`;
         console.log(`🔍 Looking for placeholder: "${placeholderPattern}"`);
         
@@ -96,6 +59,24 @@ export async function processTop10Content(content: string, prompt: string): Prom
           replacementsCount++;
         } else {
           console.warn(`⚠️ No placeholder found for product #${i+1}`);
+        }
+      }
+      
+      // Add Humix video embed if not already present
+      if (!processedContent.includes('humixPlayers')) {
+        console.log('📼 Adding Humix video embed to content');
+        const videoEmbed = `<div class="video-container my-8"><script data-ezscrex="false" data-cfasync="false">(window.humixPlayers = window.humixPlayers || []).push({target: document.currentScript});</script><script async data-ezscrex="false" data-cfasync="false" src="https://www.humix.com/video.js"></script></div>`;
+        
+        // Insert after the first h2 or at the end if no h2 is found
+        const h2Match = processedContent.match(/<h2[^>]*>.*?<\/h2>/i);
+        if (h2Match && h2Match.index) {
+          const insertPosition = h2Match.index + h2Match[0].length;
+          processedContent = processedContent.substring(0, insertPosition) + 
+                            '\n\n' + videoEmbed + '\n\n' + 
+                            processedContent.substring(insertPosition);
+        } else {
+          // Add to the end if no h2 is found
+          processedContent += '\n\n' + videoEmbed;
         }
       }
       
@@ -116,7 +97,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
       
       return processedContent;
     } catch (callError) {
-      console.error('💥 Exception during fetch-top10-products call:', callError);
+      console.error('💥 Exception during Amazon products fetch:', callError);
       console.error('💥 Error details:', callError instanceof Error ? callError.message : String(callError));
       console.error('💥 Error stack:', callError instanceof Error ? callError.stack : 'No stack available');
       toast({
