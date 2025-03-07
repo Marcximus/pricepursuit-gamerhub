@@ -1,6 +1,6 @@
-
 import { useState } from 'react';
 import { toast } from '@/components/ui/use-toast';
+import { extractSearchParamsFromPrompt } from '@/services/blog/amazonProductService';
 
 export const usePostAI = (
   setTitle: (value: string) => void,
@@ -34,9 +34,13 @@ export const usePostAI = (
     
     setIsGenerating(true);
     try {
+      if (selectedCategory === 'Top10') {
+        const { title: extractedTitle } = extractSearchParamsFromPrompt(prompt);
+        setTitle(extractedTitle);
+      }
+      
       const { generateBlogPost } = await import('@/services/blog');
       
-      // Log the generation attempt with category and ASINs if available
       console.log(
         `Generating ${selectedCategory} blog post with prompt: ${prompt}` +
         `${asin ? `, ASIN1: ${asin}` : ''}` +
@@ -51,7 +55,9 @@ export const usePostAI = (
       );
       
       if (generatedContent) {
-        setTitle(generatedContent.title);
+        if (selectedCategory !== 'Top10') {
+          setTitle(generatedContent.title);
+        }
         setContent(generatedContent.content);
         setExcerpt(generatedContent.excerpt);
         setCategory(generatedContent.category as any);
@@ -61,13 +67,11 @@ export const usePostAI = (
           setTagsInput(generatedContent.tags.join(', '));
         }
         
-        // For Review posts, store the product data in localStorage for use in the editor
         if (selectedCategory === 'Review' && generatedContent.productData) {
           localStorage.setItem('currentReviewProductData', JSON.stringify(generatedContent.productData));
           console.log('Stored product data for review:', generatedContent.productData);
         }
         
-        // For Comparison posts, store both product data items in localStorage
         if (selectedCategory === 'Comparison' && generatedContent.comparisonData) {
           localStorage.setItem('currentComparisonData', JSON.stringify(generatedContent.comparisonData));
           console.log('Stored comparison data:', generatedContent.comparisonData);

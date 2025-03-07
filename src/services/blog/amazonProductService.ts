@@ -1,108 +1,94 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
-
-export interface AmazonSearchParams {
+export interface SearchParam {
   query: string;
   brand?: string;
   maxPrice?: number;
   category?: string;
+  sortBy?: string;
 }
 
-export async function fetchAmazonProducts(searchParams: AmazonSearchParams): Promise<any[] | null> {
-  console.log('🚀 Fetching Amazon products with params:', searchParams);
-  
-  try {
-    const { data, error } = await supabase.functions.invoke('fetch-amazon-products', {
-      body: searchParams
-    });
-    
-    if (error) {
-      console.error('Error fetching Amazon products:', error);
-      toast({
-        title: 'Error fetching products',
-        description: error.message || 'Failed to fetch product data',
-        variant: 'destructive',
-      });
-      return null;
-    }
-    
-    if (!data || !data.products || data.products.length === 0) {
-      console.warn('No products found with the given search parameters');
-      toast({
-        title: 'No products found',
-        description: 'We couldn\'t find any products matching your criteria',
-        variant: 'default',
-      });
-      return null;
-    }
-    
-    console.log(`✅ Successfully fetched ${data.products.length} products from Amazon`);
-    return data.products;
-  } catch (error) {
-    console.error('Error in fetchAmazonProducts:', error);
-    toast({
-      title: 'Error',
-      description: error instanceof Error ? error.message : 'Failed to fetch Amazon products',
-      variant: 'destructive',
-    });
-    return null;
-  }
+export interface ExtractedParams {
+  searchParams: SearchParam;
+  title: string;
 }
 
-export function extractSearchParamsFromPrompt(prompt: string): AmazonSearchParams {
-  console.log(`📝 Extracting search parameters from prompt: "${prompt}"`);
-  
-  // Default search parameter
-  const searchParams: AmazonSearchParams = {
-    query: '',
-  };
-  
-  // Convert to lowercase for case-insensitive matching
+export function extractSearchParamsFromPrompt(prompt: string): ExtractedParams {
   const promptLower = prompt.toLowerCase();
   
-  // Extract brand (common laptop brands)
-  const brandMatches = promptLower.match(/\b(lenovo|hp|dell|asus|acer|apple|msi|alienware|razer|microsoft|samsung|gigabyte|lg)\b/i);
-  if (brandMatches && brandMatches[0]) {
-    searchParams.brand = brandMatches[0];
-    console.log(`👔 Found brand: ${searchParams.brand}`);
-    
-    // Add brand to query
-    searchParams.query = searchParams.brand;
+  // Extract potential title components
+  const titleMatch = prompt.match(/(?:write about|create|make|generate|do)?\s*(?:a post about|an article about|a blog about|about)?\s*(top\s*10.*?)(?:\.|\?|$)/i);
+  let title = titleMatch ? titleMatch[1].trim() : '';
+  
+  // Capitalize first letter of each word and add year if not present
+  title = title
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+  
+  if (!title.includes('2024')) {
+    title += ' in 2024';
   }
+  
+  // If title doesn't start with "Top 10", add it
+  if (!title.toLowerCase().startsWith('top 10')) {
+    title = 'Top 10 ' + title;
+  }
+  
+  // Add "Best" if not present
+  if (!title.toLowerCase().includes('best')) {
+    title = title.replace('Top 10', 'Top 10 Best');
+  }
+  
+  // Extract brand
+  const brandMatches = promptLower.match(/\b(lenovo|dell|hp|asus|acer|msi|apple|samsung|microsoft|razer|toshiba|lg)\b/i);
+  const brand = brandMatches ? brandMatches[1].toUpperCase() : undefined;
   
   // Extract price range
-  const maxPriceMatch = promptLower.match(/\bunder\s*\$?(\d+)\b/i);
-  if (maxPriceMatch && maxPriceMatch[1]) {
-    searchParams.maxPrice = parseInt(maxPriceMatch[1], 10);
-    console.log(`💰 Found max price: $${searchParams.maxPrice}`);
+  const priceMatch = promptLower.match(/under\s*\$?(\d+)/);
+  const maxPrice = priceMatch ? parseInt(priceMatch[1]) : undefined;
+  
+  // Extract purpose/category
+  const categoryMatches = {
+    gaming: /\b(gaming|games|gamer)\b/i,
+    business: /\b(business|work|professional|office)\b/i,
+    student: /\b(student|school|college|university)\b/i,
+    budget: /\b(budget|cheap|affordable|inexpensive)\b/i,
+  };
+  
+  let category = undefined;
+  for (const [key, regex] of Object.entries(categoryMatches)) {
+    if (regex.test(promptLower)) {
+      category = key;
+      break;
+    }
   }
   
-  // Extract category/usage
-  if (promptLower.includes('gaming')) {
-    searchParams.category = 'gaming';
-    searchParams.query += ' gaming laptop';
-    console.log('🎮 Detected gaming category');
-  } else if (promptLower.includes('business') || promptLower.includes('work')) {
-    searchParams.category = 'business';
-    searchParams.query += ' business laptop';
-    console.log('💼 Detected business category');
-  } else if (promptLower.includes('student') || promptLower.includes('college')) {
-    searchParams.category = 'student';
-    searchParams.query += ' student laptop';
-    console.log('🎓 Detected student category');
-  } else {
-    // Default query if no specific category is found
-    searchParams.query += ' laptop';
-    console.log('📊 Using default laptop category');
+  // Determine sort strategy
+  let sortBy = 'RELEVANCE';
+  if (promptLower.includes('best seller') || promptLower.includes('bestseller')) {
+    sortBy = 'BEST_SELLERS';
+  } else if (promptLower.includes('newest') || promptLower.includes('latest')) {
+    sortBy = 'NEWEST_ARRIVALS';
   }
   
-  // Ensure the query is not empty
-  if (!searchParams.query.trim()) {
-    searchParams.query = 'laptop';
-    console.log('⚠️ Query was empty, defaulting to "laptop"');
+  // Build the query
+  let query = '';
+  if (brand) {
+    query += brand + ' ';
+  }
+  query += 'laptop';
+  if (category === 'gaming') {
+    query += ' gaming';
   }
   
-  console.log(`🔍 Final extracted search parameters:`, searchParams);
-  return searchParams;
+  return {
+    searchParams: {
+      query: query.trim(),
+      brand: brand,
+      maxPrice,
+      category,
+      sortBy
+    },
+    title
+  };
 }
