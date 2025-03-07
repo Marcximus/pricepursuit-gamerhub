@@ -16,7 +16,9 @@ const BlogPost = () => {
   const location = useLocation();
   
   const post = category && slug ? getPostBySlug(slug, category) : undefined;
-  const currentUrl = window.location.origin + location.pathname;
+  
+  // Generate canonical URL with absolute path
+  const currentUrl = new URL(location.pathname, window.location.origin).toString();
   
   useEffect(() => {
     if (post) {

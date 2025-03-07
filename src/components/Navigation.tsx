@@ -1,5 +1,5 @@
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Monitor, Laptop, Computer, Crosshair, Keyboard, Mouse, Headphones, Settings, LogOut, GitCompare, Sparkles, FileText, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 const Navigation = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     try {
@@ -25,6 +26,11 @@ const Navigation = () => {
     }
   };
 
+  // Function to determine if a link is active
+  const isActive = (path: string) => {
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,7 +44,10 @@ const Navigation = () => {
           </Link>
           
           <div className="flex items-center space-x-4">
-            <Link to="/admin" className="nav-link flex items-center space-x-1">
+            <Link
+              to="/admin"
+              className={`nav-link flex items-center space-x-1 ${isActive('/admin') ? 'text-primary font-medium' : ''}`}
+            >
               <Settings className="w-4 h-4" />
               <span>Admin</span>
             </Link>
@@ -59,25 +68,40 @@ const Navigation = () => {
 
       <div className="border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center py-3">
+          <div className="flex items-center py-3 overflow-x-auto hide-scrollbar">
             <div className="flex items-center space-x-4">
-              <Link to="/" className="nav-link flex items-center space-x-1">
+              <Link
+                to="/"
+                className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/') && !isActive('/blog') && !isActive('/compare') && !isActive('/recommend') && !isActive('/about') ? 'text-primary font-medium' : ''}`}
+              >
                 <Laptop className="w-4 h-4" />
                 <span>Laptops</span>
               </Link>
-              <Link to="/compare" className="nav-link flex items-center space-x-1">
+              <Link
+                to="/compare"
+                className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/compare') ? 'text-primary font-medium' : ''}`}
+              >
                 <GitCompare className="w-4 h-4" />
                 <span>Compare</span>
               </Link>
-              <Link to="/recommend" className="nav-link flex items-center space-x-1">
+              <Link
+                to="/recommend"
+                className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/recommend') ? 'text-primary font-medium' : ''}`}
+              >
                 <Sparkles className="w-4 h-4" />
                 <span>Personal Laptop Finder</span>
               </Link>
-              <Link to="/blog" className="nav-link flex items-center space-x-1">
+              <Link
+                to="/blog"
+                className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/blog') ? 'text-primary font-medium' : ''}`}
+              >
                 <FileText className="w-4 h-4" />
                 <span>Blog</span>
               </Link>
-              <Link to="/about" className="nav-link flex items-center space-x-1">
+              <Link
+                to="/about"
+                className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/about') ? 'text-primary font-medium' : ''}`}
+              >
                 <User className="w-4 h-4" />
                 <span>About</span>
               </Link>

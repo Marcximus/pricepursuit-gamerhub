@@ -14,6 +14,9 @@ export const BlogSEO = ({ post, url }: BlogSEOProps) => {
   // Extract keywords from tags or use category
   const keywords = post.tags?.join(', ') || post.category;
   
+  // Ensure URL is properly formatted
+  const canonicalUrl = url.startsWith('http') ? url : window.location.origin + url;
+  
   return (
     <Helmet>
       {/* Basic Meta Tags */}
@@ -22,12 +25,12 @@ export const BlogSEO = ({ post, url }: BlogSEOProps) => {
       <meta name="keywords" content={keywords} />
       
       {/* Canonical URL */}
-      <link rel="canonical" href={url} />
+      <link rel="canonical" href={canonicalUrl} />
       
       {/* Open Graph Tags for Social Media */}
       <meta property="og:title" content={post.title} />
       <meta property="og:description" content={cleanDescription} />
-      <meta property="og:url" content={url} />
+      <meta property="og:url" content={canonicalUrl} />
       <meta property="og:type" content="article" />
       {post.image_url && <meta property="og:image" content={post.image_url} />}
       
