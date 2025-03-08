@@ -39,6 +39,8 @@ export const scheduleNextUpdateTime = (): Date => {
  * Calculate seconds until next update
  */
 export const calculateSecondsUntilNextUpdate = (nextUpdateTime: Date): number => {
+  if (!nextUpdateTime) return 300; // Default to 5 minutes if no time is set
+  
   const currentTime = new Date();
   const millisUntilUpdate = nextUpdateTime.getTime() - currentTime.getTime();
   // Don't allow negative values, but return 0 instead

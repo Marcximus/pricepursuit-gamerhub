@@ -34,7 +34,6 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
       // Set up countdown interval (every second)
       const interval = setInterval(() => {
         const secondsUntilNext = calculateSecondsUntilNextUpdate(nextUpdateTime);
-        console.log('Countdown update: seconds until next update:', secondsUntilNext);
         setTimeUntilNextUpdate(secondsUntilNext);
         
         // If time is up, trigger update
@@ -63,6 +62,11 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
       
       console.log('Auto-update enabled, scheduling next update in 5 minutes');
       console.log('Next update scheduled for:', nextUpdate.toLocaleTimeString());
+      
+      // Clear any existing auto-update interval
+      if (autoUpdateInterval) {
+        clearIntervalSafely(autoUpdateInterval);
+      }
       
       const interval = setInterval(() => {
         if (!isUpdating) {
@@ -111,8 +115,11 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
       }
     }
     
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoUpdateEnabled, isUpdating, onUpdate]);
+    return () => {
+      clearIntervalSafely(autoUpdateInterval);
+      clearIntervalSafely(countdownInterval);
+    };
+  }, [autoUpdateEnabled, isUpdating, onUpdate, countdownInterval, autoUpdateInterval]);
 
   // Clean up intervals on unmount
   useEffect(() => {

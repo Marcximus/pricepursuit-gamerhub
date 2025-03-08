@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { useAutoRefreshManager } from './AutoRefreshManager';
 import { useAutoUpdateManager } from './AutoUpdateManager';
@@ -29,14 +29,14 @@ export const useUpdateProcessManager = ({
     refreshStats
   });
   
-  // Initialize auto-update functionality
+  // Initialize auto-update functionality with the correct update handler
   const { 
     autoUpdateEnabled, 
     timeUntilNextUpdate, 
     toggleAutoUpdate 
   } = useAutoUpdateManager({
     isUpdating,
-    onUpdate: handleUpdateLaptops
+    onUpdate: () => handleUpdateLaptops() // Pass the function reference properly
   });
 
   // Main function to handle laptop updates
@@ -76,9 +76,8 @@ export const useUpdateProcessManager = ({
         // Start auto-refreshing stats
         startAutoRefresh();
         
-        // After 20 minutes (increased from 12 minutes), stop the auto-refresh and do one final refresh
-        // This accounts for the larger batch sizes and potential longer processing time
-        setTimeout(() => {
+        // After 20 minutes, stop the auto-refresh and do one final refresh
+        const finishTimeout = setTimeout(() => {
           if (isUpdating) {
             console.log('Scheduled final refresh after timeout');
             stopAutoRefresh();
@@ -94,6 +93,9 @@ export const useUpdateProcessManager = ({
               });
           }
         }, 20 * 60 * 1000); // 20 minutes
+        
+        // Cleanup timeout if component unmounts
+        return () => clearTimeout(finishTimeout);
       } else {
         setUpdateSuccess(false);
         toast({
