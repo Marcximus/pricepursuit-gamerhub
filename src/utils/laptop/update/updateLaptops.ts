@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { processChunksSequentially } from "./chunkProcessor";
 import { applyAllProductFilters } from "../productFilters";
@@ -17,8 +16,8 @@ export const updateLaptops = async () => {
       
     if (stuckError) {
       console.error('Error checking for stuck updates:', stuckError);
-    } else if (stuckUpdates && stuckUpdates.count > 20) {
-      console.log(`Found ${stuckUpdates.count} laptops stuck in update state. Resetting them...`);
+    } else if (stuckUpdates && stuckUpdates[0]?.count > 20) {
+      console.log(`Found ${stuckUpdates[0].count} laptops stuck in update state. Resetting them...`);
       
       // Reset any stuck updates that are older than 30 minutes
       await supabase
@@ -129,7 +128,7 @@ export const updateLaptops = async () => {
       console.error('Background process error:', error);
     });
     
-    return { success: true, message: `Started updating ${prioritizedLaptops.length} laptops in ${chunks.length} chunks` };
+    return { success: true, message: `Started updating ${laptops.length} laptops in ${Math.ceil(laptops.length / 20)} chunks` };
 
   } catch (error: any) {
     console.error('Failed to update laptops:', error);

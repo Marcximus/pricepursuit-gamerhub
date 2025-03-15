@@ -5,6 +5,20 @@ import { supabase } from "@/integrations/supabase/client";
 const FUNCTION_TIMEOUT = 90000; // 90 seconds timeout (reduced from 120s)
 const DELAY_BETWEEN_CHUNKS = 2000; // Increased from 1000ms to 2000ms for better stability
 
+// Define response type for update-laptops function
+interface UpdateLaptopsResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+  stats?: {
+    successCount?: number;
+    priceUpdates?: number;
+    imageUpdates?: number;
+    errorCount?: number;
+  };
+  results?: any[];
+}
+
 export async function processChunksSequentially(chunks) {
   // Log a summary of all chunks before processing
   console.log(`Preparing to process ${chunks.length} chunks with a total of ${chunks.reduce((count, chunk) => count + chunk.length, 0)} laptops`);
@@ -42,12 +56,12 @@ export async function processChunksSequentially(chunks) {
       console.log(`Invoking update-laptops function for chunk ${i + 1} with ${chunk.length} laptops`);
       
       // Create a promise that rejects after the timeout
-      const timeoutPromise = new Promise((_, reject) => {
+      const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Function invocation timed out')), FUNCTION_TIMEOUT);
       });
       
-      // Create the actual function invocation promise
-      const functionPromise = supabase.functions.invoke('update-laptops', {
+      // Create the actual function invocation promise with proper typing
+      const functionPromise = supabase.functions.invoke<UpdateLaptopsResponse>('update-laptops', {
         body: { 
           laptops: chunk.map(l => ({ 
             id: l.id, 
@@ -90,7 +104,7 @@ export async function processChunksSequentially(chunks) {
       console.error(`Failed to process chunk ${i + 1}:`, error);
       
       // Check if this is a timeout error
-      const isTimeout = error.message && error.message.includes('timed out');
+      const isTimeout = error instanceof Error && error.message && error.message.includes('timed out');
       const errorStatus = isTimeout ? 'timeout' : 'error';
       
       console.log(`Marking chunk ${i + 1} laptops as ${errorStatus} due to ${isTimeout ? 'function timeout' : 'processing error'}`);
