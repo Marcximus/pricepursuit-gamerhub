@@ -39,12 +39,12 @@ serve(async (req) => {
     }, {});
     console.log("Status distribution of incoming laptops:", statusCounts);
 
-    // Reduce parallelism to avoid timeouts
-    const maxParallel = 2; // Reduced from 3-5 to just 2 for better stability
+    // Increase parallelism as requested
+    const maxParallel = 5; // Increased from 2 to 5 for better throughput
     
     console.log(`Processing with parallelism of ${maxParallel}`);
 
-    // Process updates in batches with controlled parallelism
+    // Process updates in batches with increased parallelism
     const results = [];
     const batchSize = maxParallel;
     
@@ -112,10 +112,10 @@ serve(async (req) => {
       
       console.log(`Completed batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(laptops.length/batchSize)}`);
       
-      // Add a larger delay between batches to avoid rate limiting
+      // Add a smaller delay between batches to avoid rate limiting
       if (i + batchSize < laptops.length) {
-        console.log("Adding delay between batches to avoid rate limiting...");
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        console.log("Adding short delay between batches to avoid rate limiting...");
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Reduced to 1000ms
       }
     }
     

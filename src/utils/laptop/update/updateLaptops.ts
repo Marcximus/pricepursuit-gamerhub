@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { processChunksSequentially } from "./chunkProcessor";
 import { applyAllProductFilters } from "../productFilters";
@@ -32,14 +33,16 @@ export const updateLaptops = async () => {
     }
     
     // Modified query: Include laptops with ANY status except "completed"
-    // This ensures we retry laptops stuck in pending_update, error, timeout states
+    // or completed laptops that haven't been updated in 24 hours
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
       .select('id, asin, current_price, title, last_checked, image_url, update_status')
       .eq('is_laptop', true)
-      .not('update_status', 'eq', 'completed') // Only exclude completed laptops
-      .order('last_checked', { nullsFirst: true }) // Prioritize laptops that have never been checked
-      .limit(100); // Reduced from 500 to 100 to ensure we process a smaller batch more effectively
+      .or(`update_status.neq.completed, last_checked.lt.${oneDayAgo.toISOString()}`)
+      .order('last_checked', { nullsFirst: true })
+      .limit(100); // Increased to 100 laptops per batch
 
     if (fetchError) {
       console.error('Error fetching laptops:', fetchError);
@@ -114,8 +117,8 @@ export const updateLaptops = async () => {
     // Log priority distribution
     logPriorityDistribution(formattedLaptops);
 
-    // Split laptops into smaller chunks of 20 (reduced from 50)
-    const chunkSize = 20;
+    // Split laptops into smaller chunks of 100
+    const chunkSize = 100;
     const chunks = [];
     for (let i = 0; i < prioritizedLaptops.length; i += chunkSize) {
       chunks.push(prioritizedLaptops.slice(i, i + chunkSize));
@@ -128,7 +131,7 @@ export const updateLaptops = async () => {
       console.error('Background process error:', error);
     });
     
-    return { success: true, message: `Started updating ${laptops.length} laptops in ${Math.ceil(laptops.length / 20)} chunks` };
+    return { success: true, message: `Started updating ${laptops.length} laptops in ${Math.ceil(laptops.length / 100)} chunks` };
 
   } catch (error: any) {
     console.error('Failed to update laptops:', error);

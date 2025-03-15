@@ -2,8 +2,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // Timeout configuration (in milliseconds)
-const FUNCTION_TIMEOUT = 90000; // 90 seconds timeout (reduced from 120s)
-const DELAY_BETWEEN_CHUNKS = 2000; // Increased from 1000ms to 2000ms for better stability
+const FUNCTION_TIMEOUT = 120000; // Increased to 120 seconds for larger batches
+const DELAY_BETWEEN_CHUNKS = 1000; // Reduced to 1000ms for shorter delays
 
 // Define response type for update-laptops function
 interface UpdateLaptopsResponse {
@@ -122,11 +122,11 @@ export async function processChunksSequentially(chunks) {
       // Add longer recovery delay if we had a timeout
       if (isTimeout) {
         console.log(`Adding extra recovery delay after timeout for chunk ${i + 1}`);
-        await new Promise(resolve => setTimeout(resolve, 10000)); // 10 second recovery delay
+        await new Promise(resolve => setTimeout(resolve, 5000)); // Reduced to 5 seconds recovery delay
       }
     }
 
-    // Add a larger delay between chunks to prevent rate limiting
+    // Add a delay between chunks to prevent rate limiting
     if (i < chunks.length - 1) {
       console.log(`Adding ${DELAY_BETWEEN_CHUNKS}ms delay before processing next chunk...`);
       await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_CHUNKS));
