@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
-import { useAutoRefreshManager } from './AutoRefreshManager';
 import { useAutoUpdateManager } from './AutoUpdateManager';
 
 interface UpdateProcessManagerProps {
@@ -17,27 +16,61 @@ export const useUpdateProcessManager = ({
   const [updateCount, setUpdateCount] = useState(0);
   const [updateStartTime, setUpdateStartTime] = useState<Date | null>(null);
   const [updateSuccess, setUpdateSuccess] = useState<boolean>(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [elapsedInterval, setElapsedInterval] = useState<NodeJS.Timeout | null>(null);
   
-  // Initialize auto-refresh functionality
-  const { 
-    elapsedTime, 
-    startAutoRefresh, 
-    stopAutoRefresh 
-  } = useAutoRefreshManager({
-    isUpdating,
-    updateStartTime,
-    refreshStats
-  });
-  
-  // Initialize auto-update functionality with the correct update handler
+  // Initialize auto-update functionality
   const { 
     autoUpdateEnabled, 
     timeUntilNextUpdate, 
     toggleAutoUpdate 
   } = useAutoUpdateManager({
     isUpdating,
-    onUpdate: () => handleUpdateLaptops() // Pass the function reference properly
+    onUpdate: () => handleUpdateLaptops() // Use the same function for scheduled updates
   });
+
+  // Effect to track elapsed time during updates
+  useEffect(() => {
+    if (isUpdating && updateStartTime) {
+      const interval = setInterval(() => {
+        const now = new Date();
+        const seconds = Math.floor((now.getTime() - updateStartTime.getTime()) / 1000);
+        setElapsedTime(seconds);
+      }, 1000);
+      
+      setElapsedInterval(interval);
+      
+      return () => {
+        clearInterval(interval);
+      };
+    } else {
+      if (elapsedInterval) {
+        clearInterval(elapsedInterval);
+        setElapsedInterval(null);
+      }
+      
+      if (!isUpdating) {
+        setElapsedTime(0);
+      }
+    }
+  }, [isUpdating, updateStartTime]);
+
+  // Auto-refresh stats when updates are in progress
+  useEffect(() => {
+    if (isUpdating) {
+      const interval = setInterval(async () => {
+        console.log('Auto-refreshing stats while updates are in progress...');
+        try {
+          await refreshStats();
+          console.log('Auto-refresh successful');
+        } catch (err) {
+          console.error('Auto-refresh error:', err);
+        }
+      }, 5000); // Refresh every 5 seconds during updates
+      
+      return () => clearInterval(interval);
+    }
+  }, [isUpdating, refreshStats]);
 
   // Main function to handle laptop updates
   async function handleUpdateLaptops() {
@@ -58,12 +91,11 @@ export const useUpdateProcessManager = ({
       console.log('Update Laptops button clicked');
       console.log('Starting laptop update process...');
       
-      // Immediately refresh stats to get current state
+      // Initial stats refresh
       try {
         await refreshStats();
       } catch (err) {
         console.error('Error refreshing stats before update:', err);
-        // Continue with update process despite refresh error
       }
       
       const result = await updateLaptops();
@@ -79,15 +111,11 @@ export const useUpdateProcessManager = ({
           title: "Update Started",
           description: `${result.message || "Started updating laptop information."} The progress will be updated automatically.`,
         });
-
-        // Start auto-refreshing stats
-        startAutoRefresh();
         
-        // After 15 minutes (reduced from 20), stop the auto-refresh and do one final refresh
+        // After 15 minutes, stop the update and do final refresh
         const finishTimeout = setTimeout(() => {
           if (isUpdating) {
             console.log('Scheduled final refresh after timeout');
-            stopAutoRefresh();
             
             refreshStats()
               .then(() => {
@@ -101,7 +129,7 @@ export const useUpdateProcessManager = ({
           }
         }, 15 * 60 * 1000); // 15 minutes
         
-        // Cleanup timeout if component unmounts
+        // Cleanup timeout
         return () => clearTimeout(finishTimeout);
       } else {
         setUpdateSuccess(false);
@@ -112,7 +140,6 @@ export const useUpdateProcessManager = ({
         });
         console.error('Update finished with result:', result);
         setIsUpdating(false);
-        stopAutoRefresh();
       }
       
       // Refresh stats again after starting updates
@@ -129,7 +156,6 @@ export const useUpdateProcessManager = ({
         description: "Failed to start laptop updates: " + (error.message || "Unknown error"),
         variant: "destructive"
       });
-      stopAutoRefresh();
       setIsUpdating(false);
     }
   }
@@ -149,7 +175,7 @@ export const useUpdateProcessManager = ({
     };
     
     if (isUpdating && updateCount > 0) {
-      return `Currently updating ${updateCount} laptops in batches of 20. Process has been running for ${formatElapsedTime(elapsedTime)}. Updates prioritize oldest check date, missing prices and images.`;
+      return `Currently updating ${updateCount} laptops. Process has been running for ${formatElapsedTime(elapsedTime)}. Updates prioritize oldest check date, missing prices and images.`;
     }
     
     if (autoUpdateEnabled && !isUpdating) {
