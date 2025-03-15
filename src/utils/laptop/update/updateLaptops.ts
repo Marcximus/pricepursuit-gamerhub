@@ -7,6 +7,31 @@ export const updateLaptops = async () => {
   try {
     console.log('Starting update for ALL laptops...');
     
+    // First, check for any stuck updates that might be preventing new ones
+    const { data: stuckUpdates, error: stuckError } = await supabase
+      .from('products')
+      .select('count')
+      .eq('is_laptop', true)
+      .in('update_status', ['pending_update', 'in_progress'])
+      .gte('last_checked', new Date(Date.now() - 30 * 60 * 1000).toISOString());
+      
+    if (stuckError) {
+      console.error('Error checking for stuck updates:', stuckError);
+    } else if (stuckUpdates && stuckUpdates.count > 20) {
+      console.log(`Found ${stuckUpdates.count} laptops stuck in update state. Resetting them...`);
+      
+      // Reset any stuck updates that are older than 30 minutes
+      await supabase
+        .from('products')
+        .update({ 
+          update_status: 'pending',
+          last_checked: new Date().toISOString()
+        })
+        .eq('is_laptop', true)
+        .in('update_status', ['pending_update', 'in_progress'])
+        .lt('last_checked', new Date(Date.now() - 30 * 60 * 1000).toISOString());
+    }
+    
     // Modified query: Include laptops with ANY status except "completed"
     // This ensures we retry laptops stuck in pending_update, error, timeout states
     const { data: laptops, error: fetchError } = await supabase
@@ -15,7 +40,7 @@ export const updateLaptops = async () => {
       .eq('is_laptop', true)
       .not('update_status', 'eq', 'completed') // Only exclude completed laptops
       .order('last_checked', { nullsFirst: true }) // Prioritize laptops that have never been checked
-      .limit(500); // Maintained limit of 500
+      .limit(100); // Reduced from 500 to 100 to ensure we process a smaller batch more effectively
 
     if (fetchError) {
       console.error('Error fetching laptops:', fetchError);
@@ -90,8 +115,8 @@ export const updateLaptops = async () => {
     // Log priority distribution
     logPriorityDistribution(formattedLaptops);
 
-    // Split laptops into chunks of 50 (increased from 20)
-    const chunkSize = 50;
+    // Split laptops into smaller chunks of 20 (reduced from 50)
+    const chunkSize = 20;
     const chunks = [];
     for (let i = 0; i < prioritizedLaptops.length; i += chunkSize) {
       chunks.push(prioritizedLaptops.slice(i, i + chunkSize));

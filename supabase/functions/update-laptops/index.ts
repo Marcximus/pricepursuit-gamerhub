@@ -26,8 +26,10 @@ serve(async (req) => {
     }
 
     console.log(`Received request to update ${laptops.length} laptops`);
-    console.log(`First 5 laptops: ${laptops.slice(0, 5).map(l => l.asin).join(', ')}`);
-    console.log(`Last 5 laptops: ${laptops.slice(-5).map(l => l.asin).join(', ')}`);
+    console.log(`First ${Math.min(5, laptops.length)} laptops: ${laptops.slice(0, 5).map(l => l.asin).join(', ')}`);
+    if (laptops.length > 5) {
+      console.log(`Last ${Math.min(5, laptops.length)} laptops: ${laptops.slice(-5).map(l => l.asin).join(', ')}`);
+    }
     
     // Log status distribution
     const statusCounts = laptops.reduce((acc, laptop) => {
@@ -37,12 +39,8 @@ serve(async (req) => {
     }, {});
     console.log("Status distribution of incoming laptops:", statusCounts);
 
-    // Increase parallelism based on laptop count
-    // For large batches, process fewer in parallel to avoid timeouts
-    let maxParallel = 5; // Default parallel processing
-    if (laptops.length > 30) {
-      maxParallel = 3; // For large batches, reduce parallel processing
-    }
+    // Reduce parallelism to avoid timeouts
+    const maxParallel = 2; // Reduced from 3-5 to just 2 for better stability
     
     console.log(`Processing with parallelism of ${maxParallel}`);
 
@@ -64,29 +62,39 @@ serve(async (req) => {
             .update({ update_status: 'in_progress' })
             .eq('id', laptop.id);
           
-          // Fetch latest data from Oxylabs
-          const productData = await fetchProductData(laptop.asin);
+          // Add timeout for oxylabs fetch
+          const controller = new AbortController();
+          const fetchTimeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
           
-          if (!productData) {
-            console.error(`Failed to fetch data for ASIN ${laptop.asin}`);
-            await supabase
-              .from('products')
-              .update({ update_status: 'error' })
-              .eq('id', laptop.id);
-            return { asin: laptop.asin, success: false, error: 'Data fetch failed' };
+          try {
+            // Fetch latest data from Oxylabs with timeout
+            const productData = await fetchProductData(laptop.asin);
+            clearTimeout(fetchTimeout);
+            
+            if (!productData) {
+              console.error(`Failed to fetch data for ASIN ${laptop.asin}`);
+              await supabase
+                .from('products')
+                .update({ update_status: 'error' })
+                .eq('id', laptop.id);
+              return { asin: laptop.asin, success: false, error: 'Data fetch failed' };
+            }
+            
+            // Process the data and update in database with enhanced processing
+            const updateResult = await updateProductInDatabase(supabase, laptop, productData);
+            
+            return { 
+              asin: laptop.asin, 
+              success: updateResult.success, 
+              priceUpdated: updateResult.priceUpdated,
+              imageUpdated: updateResult.imageUpdated,
+              specsUpdated: updateResult.specsUpdated,
+              error: updateResult.error 
+            };
+          } catch (error) {
+            clearTimeout(fetchTimeout);
+            throw error; // Rethrow to be caught by outer catch
           }
-          
-          // Process the data and update in database with enhanced processing
-          const updateResult = await updateProductInDatabase(supabase, laptop, productData);
-          
-          return { 
-            asin: laptop.asin, 
-            success: updateResult.success, 
-            priceUpdated: updateResult.priceUpdated,
-            imageUpdated: updateResult.imageUpdated,
-            specsUpdated: updateResult.specsUpdated,
-            error: updateResult.error 
-          };
         } catch (error) {
           console.error(`Error updating laptop ${laptop.asin}:`, error);
           // Mark as error in database
@@ -104,10 +112,10 @@ serve(async (req) => {
       
       console.log(`Completed batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(laptops.length/batchSize)}`);
       
-      // Add a small delay between batches to avoid rate limiting
+      // Add a larger delay between batches to avoid rate limiting
       if (i + batchSize < laptops.length) {
-        console.log("Adding small delay between batches...");
-        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log("Adding delay between batches to avoid rate limiting...");
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
     

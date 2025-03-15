@@ -2,8 +2,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // Timeout configuration (in milliseconds)
-const FUNCTION_TIMEOUT = 120000; // 120 seconds timeout (increased from 60s)
-const DELAY_BETWEEN_CHUNKS = 1000; // Reduced from 1500ms to 1000ms
+const FUNCTION_TIMEOUT = 90000; // 90 seconds timeout (reduced from 120s)
+const DELAY_BETWEEN_CHUNKS = 2000; // Increased from 1000ms to 2000ms for better stability
 
 export async function processChunksSequentially(chunks) {
   // Log a summary of all chunks before processing
@@ -22,7 +22,7 @@ export async function processChunksSequentially(chunks) {
       status: l.update_status || 'pending'
     })));
 
-    // Mark chunk laptops as pending update
+    // Mark chunk laptops as pending update with a fresh timestamp
     console.log(`Marking ${chunk.length} laptops as pending_update`);
     const { error: statusError } = await supabase
       .from('products')
@@ -62,8 +62,7 @@ export async function processChunksSequentially(chunks) {
       });
       
       // Race the promises - whichever completes first wins
-      // Fix: Properly type the result as any to avoid TypeScript errors
-      const result: any = await Promise.race([functionPromise, timeoutPromise]);
+      const result = await Promise.race([functionPromise, timeoutPromise]);
       
       if (result && result.error) {
         console.error(`Error processing chunk ${i + 1}:`, result.error);
@@ -106,14 +105,14 @@ export async function processChunksSequentially(chunks) {
         console.error(`Failed to mark chunk ${i + 1} as ${errorStatus}:`, markError);
       }
       
-      // If we had a timeout, we should give the system a bit more time to recover
+      // Add longer recovery delay if we had a timeout
       if (isTimeout) {
         console.log(`Adding extra recovery delay after timeout for chunk ${i + 1}`);
-        await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second recovery delay
+        await new Promise(resolve => setTimeout(resolve, 10000)); // 10 second recovery delay
       }
     }
 
-    // Add a small delay between chunks to prevent rate limiting
+    // Add a larger delay between chunks to prevent rate limiting
     if (i < chunks.length - 1) {
       console.log(`Adding ${DELAY_BETWEEN_CHUNKS}ms delay before processing next chunk...`);
       await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_CHUNKS));

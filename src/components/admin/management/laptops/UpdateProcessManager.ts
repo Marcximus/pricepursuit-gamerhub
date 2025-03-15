@@ -41,7 +41,14 @@ export const useUpdateProcessManager = ({
 
   // Main function to handle laptop updates
   async function handleUpdateLaptops() {
-    if (isUpdating) return;
+    if (isUpdating) {
+      console.log("Update already in progress, skipping request");
+      toast({
+        title: "Update in Progress",
+        description: "Please wait for the current update to complete",
+      });
+      return;
+    }
     
     try {
       setIsUpdating(true);
@@ -76,7 +83,7 @@ export const useUpdateProcessManager = ({
         // Start auto-refreshing stats
         startAutoRefresh();
         
-        // After 20 minutes, stop the auto-refresh and do one final refresh
+        // After 15 minutes (reduced from 20), stop the auto-refresh and do one final refresh
         const finishTimeout = setTimeout(() => {
           if (isUpdating) {
             console.log('Scheduled final refresh after timeout');
@@ -92,7 +99,7 @@ export const useUpdateProcessManager = ({
                 setIsUpdating(false);
               });
           }
-        }, 20 * 60 * 1000); // 20 minutes
+        }, 15 * 60 * 1000); // 15 minutes
         
         // Cleanup timeout if component unmounts
         return () => clearTimeout(finishTimeout);
