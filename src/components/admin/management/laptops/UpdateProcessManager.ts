@@ -86,7 +86,7 @@ export const useUpdateProcessManager = ({
         setElapsedTime(0);
       }
     }
-  }, [isUpdating, updateStartTime]);
+  }, [isUpdating, updateStartTime, elapsedInterval]);
 
   // Auto-refresh stats when updates are in progress
   useEffect(() => {
@@ -163,15 +163,18 @@ export const useUpdateProcessManager = ({
           description: `${result.message || "Started updating laptop information."} The progress will be updated automatically.`,
         });
         
-        // Store timestamp of last initiated update
+        // If we're using auto-update, call the edge function to record the current time 
         if (autoUpdateEnabled) {
-          await supabase
-            .from('system_config')
-            .upsert({ 
-              key: 'last_scheduled_update', 
-              value: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+          try {
+            await supabase.functions.invoke('toggle-scheduler', {
+              body: { 
+                enabled: true,
+                updateLastScheduledTime: true
+              }
             });
+          } catch (err) {
+            console.error('Error updating last scheduled time:', err);
+          }
         }
         
         // After 15 minutes, stop the update and do final refresh

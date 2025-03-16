@@ -1,45 +1,52 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { corsHeaders } from "../_shared/cors.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+console.log("Scheduled Update function started");
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Starting scheduled update process...');
+    // Set up Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const supabase = createClient(supabaseUrl, supabaseKey);
     
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
-
-    // Check if auto-updates are enabled
+    console.log("Checking if auto-update is enabled...");
+    
+    // Check if auto-update is enabled
     const { data: configData, error: configError } = await supabase
       .from('system_config')
       .select('value')
       .eq('key', 'auto_update_enabled')
       .single();
-      
+    
     if (configError) {
-      throw new Error(`Failed to check auto-update status: ${configError.message}`);
+      console.error("Error checking auto-update status:", configError);
+      throw configError;
     }
     
-    if (configData?.value !== 'true') {
-      console.log('Auto-update is disabled, skipping scheduled update');
+    const isEnabled = configData?.value === 'true';
+    
+    if (!isEnabled) {
+      console.log("Auto-update is disabled, skipping scheduled update");
       return new Response(
-        JSON.stringify({ message: 'Auto-update is disabled' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({
+          success: true,
+          message: "Auto-update is disabled, skipping scheduled update",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
-
-    // Update system config to record this scheduled run
+    
+    console.log("Auto-update is enabled, updating last scheduled time...");
+    
+    // Update the last scheduled update timestamp
     await supabase
       .from('system_config')
       .upsert({ 
@@ -47,211 +54,137 @@ serve(async (req) => {
         value: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
-
-    // First, check for any stuck updates that might be preventing new ones
-    const { data: stuckUpdates, error: stuckError } = await supabase
+    
+    // Find laptops that need updating
+    console.log("Finding laptops that need updating...");
+    
+    // Prioritize laptops with:
+    // 1. No current price (is_laptop=true and current_price is null)
+    // 2. No image (is_laptop=true and image_url is null)
+    // 3. Oldest checked laptops (is_laptop=true order by last_checked asc)
+    // 4. Limit to a batch size to prevent overloading
+    const BATCH_SIZE = 5; // Process 5 laptops per scheduled run
+    
+    // Start with missing prices
+    let { data: missingPricesData, error: missingPricesError } = await supabase
       .from('products')
-      .select('count')
+      .select('id, asin')
       .eq('is_laptop', true)
-      .in('update_status', ['pending_update', 'in_progress'])
-      .gte('last_checked', new Date(Date.now() - 30 * 60 * 1000).toISOString());
+      .is('current_price', null)
+      .limit(BATCH_SIZE);
+    
+    if (missingPricesError) {
+      console.error("Error finding laptops with missing prices:", missingPricesError);
+      throw missingPricesError;
+    }
+    
+    let laptopsToUpdate = missingPricesData || [];
+    let remainingSlots = BATCH_SIZE - laptopsToUpdate.length;
+    
+    // If we haven't filled our batch, add laptops with missing images
+    if (remainingSlots > 0 && laptopsToUpdate.length < BATCH_SIZE) {
+      const { data: missingImagesData, error: missingImagesError } = await supabase
+        .from('products')
+        .select('id, asin')
+        .eq('is_laptop', true)
+        .is('image_url', null)
+        .not('id', 'in', laptopsToUpdate.map(l => l.id).join(','))
+        .limit(remainingSlots);
       
-    if (stuckError) {
-      console.error('Error checking for stuck updates:', stuckError);
-    } else if (stuckUpdates && stuckUpdates[0]?.count > 20) {
-      console.log(`Found ${stuckUpdates[0].count} laptops stuck in update state. Resetting them...`);
+      if (missingImagesError) {
+        console.error("Error finding laptops with missing images:", missingImagesError);
+      } else if (missingImagesData) {
+        laptopsToUpdate = [...laptopsToUpdate, ...missingImagesData];
+        remainingSlots = BATCH_SIZE - laptopsToUpdate.length;
+      }
+    }
+    
+    // If we still haven't filled our batch, add oldest checked laptops
+    if (remainingSlots > 0 && laptopsToUpdate.length < BATCH_SIZE) {
+      const { data: oldestCheckedData, error: oldestCheckedError } = await supabase
+        .from('products')
+        .select('id, asin')
+        .eq('is_laptop', true)
+        .not('id', 'in', laptopsToUpdate.map(l => l.id).join(','))
+        .order('last_checked', { ascending: true, nullsFirst: true })
+        .limit(remainingSlots);
       
-      // Reset any stuck updates that are older than 30 minutes
+      if (oldestCheckedError) {
+        console.error("Error finding oldest checked laptops:", oldestCheckedError);
+      } else if (oldestCheckedData) {
+        laptopsToUpdate = [...laptopsToUpdate, ...oldestCheckedData];
+      }
+    }
+    
+    if (laptopsToUpdate.length === 0) {
+      console.log("No laptops need updating at this time");
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "No laptops need updating at this time",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+    
+    console.log(`Found ${laptopsToUpdate.length} laptops to update:`, laptopsToUpdate);
+    
+    // Mark these laptops as pending update
+    const now = new Date().toISOString();
+    for (const laptop of laptopsToUpdate) {
       await supabase
         .from('products')
         .update({ 
-          update_status: 'pending',
-          last_checked: new Date().toISOString()
+          update_status: 'pending_update',
+          last_checked: now
         })
-        .eq('is_laptop', true)
-        .in('update_status', ['pending_update', 'in_progress'])
-        .lt('last_checked', new Date(Date.now() - 30 * 60 * 1000).toISOString());
-    }
-
-    // Get laptops that need updating using the same prioritization as updateLaptops.ts
-    // 1. Laptops in error state
-    // 2. Laptops with missing prices
-    // 3. Laptops with missing images
-    // 4. Laptops ordered by oldest checked date
-    
-    // Get error state laptops
-    const { data: errorLaptops, error: errorFetchError } = await supabase
-      .from('products')
-      .select('id, asin, current_price, image_url, last_checked, update_status')
-      .eq('is_laptop', true)
-      .in('update_status', ['error', 'timeout'])
-      .order('last_checked', { ascending: true, nullsFirst: true })
-      .limit(25);
-      
-    if (errorFetchError) {
-      console.error('Error fetching error state laptops:', errorFetchError);
+        .eq('id', laptop.id);
     }
     
-    // Get laptops with missing prices
-    const { data: missingPriceLaptops, error: priceFetchError } = await supabase
-      .from('products')
-      .select('id, asin, current_price, image_url, last_checked, update_status')
-      .eq('is_laptop', true)
-      .is('current_price', null)
-      .not('update_status', 'in', ['pending_update', 'in_progress'])
-      .order('last_checked', { ascending: true, nullsFirst: true })
-      .limit(25);
-      
-    if (priceFetchError) {
-      console.error('Error fetching laptops with missing prices:', priceFetchError);
-    }
+    // Trigger update through the update-laptops function
+    console.log("Triggering update-laptops function...");
     
-    // Get laptops with missing images
-    const { data: missingImageLaptops, error: imageFetchError } = await supabase
-      .from('products')
-      .select('id, asin, current_price, image_url, last_checked, update_status')
-      .eq('is_laptop', true)
-      .is('image_url', null)
-      .not('current_price', 'is', null) // Skip those already covered by missing price query
-      .not('update_status', 'in', ['pending_update', 'in_progress'])
-      .order('last_checked', { ascending: true, nullsFirst: true })
-      .limit(25);
-      
-    if (imageFetchError) {
-      console.error('Error fetching laptops with missing images:', imageFetchError);
-    }
-    
-    // Get laptops that haven't been checked in the last 24 hours
-    const { data: oldLaptops, error: oldFetchError } = await supabase
-      .from('products')
-      .select('id, asin, current_price, image_url, last_checked, update_status')
-      .eq('is_laptop', true)
-      .lt('last_checked', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-      .not('update_status', 'in', ['pending_update', 'in_progress'])
-      .not('current_price', 'is', null) // Skip those already covered by missing price query
-      .not('image_url', 'is', null) // Skip those already covered by missing image query
-      .order('last_checked', { ascending: true, nullsFirst: true })
-      .limit(25);
-      
-    if (oldFetchError) {
-      console.error('Error fetching old laptops:', oldFetchError);
-    }
-    
-    // Combine and deduplicate the results
-    const laptopMap = new Map();
-    
-    // Add in priority order
-    [
-      ...(errorLaptops || []),
-      ...(missingPriceLaptops || []),
-      ...(missingImageLaptops || []),
-      ...(oldLaptops || [])
-    ].forEach(laptop => {
-      if (!laptopMap.has(laptop.id)) {
-        laptopMap.set(laptop.id, laptop);
+    // Call the update-laptops function to actually do the updates
+    const updateResponse = await fetch(
+      `${supabaseUrl}/functions/v1/update-laptops`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`
+        },
+        body: JSON.stringify({
+          laptops: laptopsToUpdate.map(l => ({ id: l.id, asin: l.asin })),
+          batchUpdate: true
+        })
       }
-    });
-    
-    const laptops = Array.from(laptopMap.values());
-
-    if (!laptops || laptops.length === 0) {
-      console.log('No laptops need updating at this time');
-      return new Response(
-        JSON.stringify({ message: 'No laptops to update' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log(`Found ${laptops.length} laptops to update in the following categories:`);
-    console.log(`- Error state: ${errorLaptops?.length || 0}`);
-    console.log(`- Missing prices: ${missingPriceLaptops?.length || 0}`);
-    console.log(`- Missing images: ${missingImageLaptops?.length || 0}`);
-    console.log(`- Not checked in 24h: ${oldLaptops?.length || 0}`);
-    
-    // Take only the first 10 for a single scheduled batch
-    const batchSize = 10;
-    const updateBatch = laptops.slice(0, batchSize);
-    const laptopIds = updateBatch.map(l => l.id);
-
-    // Mark laptops as pending_update
-    const { error: statusError } = await supabase
-      .from('products')
-      .update({ 
-        update_status: 'pending_update',
-        last_checked: new Date().toISOString()
-      })
-      .in('id', laptopIds);
-
-    if (statusError) {
-      throw new Error(`Failed to update status: ${statusError.message}`);
-    }
-
-    // Call the update-laptops function with the selected batch
-    const updateProcess = async () => {
-      try {
-        console.log(`Starting update process for batch of ${updateBatch.length} laptops`);
-        
-        // Call the update-laptops edge function
-        const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/update-laptops`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
-          },
-          body: JSON.stringify({ laptops: updateBatch })
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`Error response from update-laptops: ${response.status} ${errorText}`);
-          throw new Error(`Failed to call update-laptops: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-        console.log('Update process completed with result:', result);
-        
-        // Update system_config with completion time
-        await supabase
-          .from('system_config')
-          .upsert({ 
-            key: 'last_completed_update', 
-            value: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-          
-        return result;
-      } catch (error) {
-        console.error('Error in update process:', error);
-        
-        // If there's an error, reset the laptops to pending status
-        await supabase
-          .from('products')
-          .update({ 
-            update_status: 'pending',
-            last_checked: new Date().toISOString()
-          })
-          .in('id', laptopIds);
-          
-        throw error;
-      }
-    };
-
-    // Use waitUntil to ensure the function runs to completion
-    Deno.serve.waitUntil(updateProcess());
-
-    return new Response(
-      JSON.stringify({ 
-        message: `Started update process for ${updateBatch.length} laptops`,
-        laptops: laptopIds
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
-  } catch (error) {
-    console.error('Scheduled update error:', error);
+    
+    if (!updateResponse.ok) {
+      throw new Error(`Failed to call update-laptops: ${updateResponse.status} ${updateResponse.statusText}`);
+    }
+    
+    const updateResult = await updateResponse.json();
+    
+    console.log("Update triggered successfully:", updateResult);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      JSON.stringify({
+        success: true,
+        message: `Scheduled update triggered for ${laptopsToUpdate.length} laptops`,
+        laptops: laptopsToUpdate.length,
+        updateResult
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+    );
+  } catch (error) {
+    console.error("Error in scheduled-update function:", error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message || "Unknown error occurred",
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
 });

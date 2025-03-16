@@ -17,8 +17,38 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Parse the request body
-    const { enabled } = await req.json();
+    // Handle GET request to check status
+    if (req.method === "GET") {
+      // Get current state from system_config
+      const { data: enabledData, error: enabledError } = await supabase
+        .from('system_config')
+        .select('value')
+        .eq('key', 'auto_update_enabled')
+        .single();
+        
+      if (enabledError) {
+        throw enabledError;
+      }
+      
+      const { data: lastScheduledData, error: lastScheduledError } = await supabase
+        .from('system_config')
+        .select('value')
+        .eq('key', 'last_scheduled_update')
+        .single();
+        
+      return new Response(
+        JSON.stringify({
+          enabled: enabledData?.value === 'true',
+          lastScheduled: lastScheduledError ? null : lastScheduledData?.value,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+    
+    // Parse the request body for POST requests
+    const requestData = await req.json();
+    const enabled = requestData.enabled === true;
+    const updateLastScheduledTime = requestData.updateLastScheduledTime === true;
     
     console.log(`Request to ${enabled ? 'enable' : 'disable'} the laptop update scheduler`);
     
@@ -31,8 +61,8 @@ serve(async (req) => {
         updated_at: new Date().toISOString()
       });
     
-    if (enabled) {
-      // If enabling, also update the last_scheduled_update timestamp
+    // If enabling or explicitly requested, also update the last_scheduled_update timestamp
+    if (enabled || updateLastScheduledTime) {
       await supabase
         .from('system_config')
         .upsert({ 
@@ -42,11 +72,31 @@ serve(async (req) => {
         });
     }
     
+    // Call PostgreSQL function to create or remove the cron job based on enabled state
+    if (enabled) {
+      // Call the database function to create the scheduler
+      const { data: cronData, error: cronError } = await supabase.rpc('create_laptop_update_schedule');
+      if (cronError) {
+        console.error("Error creating cron job:", cronError);
+      } else {
+        console.log("Cron job created:", cronData);
+      }
+    } else {
+      // Call the database function to remove the scheduler
+      const { data: cronData, error: cronError } = await supabase.rpc('remove_laptop_update_schedule');
+      if (cronError) {
+        console.error("Error removing cron job:", cronError);
+      } else {
+        console.log("Cron job removed:", cronData);
+      }
+    }
+    
     // Return success response
     return new Response(
       JSON.stringify({
         success: true,
         message: `Laptop update scheduler has been ${enabled ? 'enabled' : 'disabled'}`,
+        enabled: enabled
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );

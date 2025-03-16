@@ -20,43 +20,36 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
   useEffect(() => {
     const checkSchedulerStatus = async () => {
       try {
-        // Check if the scheduler is already enabled in the database
-        const { data, error } = await supabase
-          .from('system_config')
-          .select('value')
-          .eq('key', 'auto_update_enabled')
-          .single();
+        console.log('Checking scheduler status...');
+        // Call the edge function to check the current status
+        const { data, error } = await supabase.functions.invoke('toggle-scheduler', {
+          method: 'GET'
+        });
           
         if (error) {
           console.error('Error checking scheduler status:', error);
+          setSchedulerStatus('inactive');
           return;
         }
         
-        const isEnabled = data?.value === 'true';
+        // Update state based on response
+        const isEnabled = data?.enabled === true;
         setAutoUpdateEnabled(isEnabled);
         setSchedulerStatus(isEnabled ? 'active' : 'inactive');
         
-        if (isEnabled) {
-          // Get the next scheduled run time
-          const { data: scheduleData, error: scheduleError } = await supabase
-            .from('system_config')
-            .select('value')
-            .eq('key', 'last_scheduled_update')
-            .single();
-            
-          if (!scheduleError && scheduleData) {
-            const lastRun = new Date(scheduleData.value);
-            setLastScheduledTime(lastRun);
-            
-            // Calculate time until next update (5 minutes after last run)
-            const nextUpdateTime = new Date(lastRun.getTime() + 5 * 60 * 1000);
-            const now = new Date();
-            const secondsUntilNext = Math.max(0, Math.floor((nextUpdateTime.getTime() - now.getTime()) / 1000));
-            setTimeUntilNextUpdate(secondsUntilNext > 0 ? secondsUntilNext : 300);
-          }
+        if (isEnabled && data?.lastScheduled) {
+          const lastRun = new Date(data.lastScheduled);
+          setLastScheduledTime(lastRun);
+          
+          // Calculate time until next update (5 minutes after last run)
+          const nextUpdateTime = new Date(lastRun.getTime() + 5 * 60 * 1000);
+          const now = new Date();
+          const secondsUntilNext = Math.max(0, Math.floor((nextUpdateTime.getTime() - now.getTime()) / 1000));
+          setTimeUntilNextUpdate(secondsUntilNext > 0 ? secondsUntilNext : 300);
         }
       } catch (err) {
         console.error('Error in checkSchedulerStatus:', err);
+        setSchedulerStatus('inactive');
       }
     };
     
@@ -106,7 +99,7 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
         setCountdownInterval(null);
       }
     }
-  }, [autoUpdateEnabled, isUpdating, onUpdate, lastScheduledTime]);
+  }, [autoUpdateEnabled, isUpdating, onUpdate, lastScheduledTime, countdownInterval]);
 
   // Toggle auto-update function - now communicates with the server
   const toggleAutoUpdate = async () => {
@@ -114,10 +107,12 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
       console.log('Toggle auto-update called, current state:', autoUpdateEnabled);
       
       const newState = !autoUpdateEnabled;
+      
+      // Set UI state optimistically
       setAutoUpdateEnabled(newState);
       
       // Call edge function to enable/disable the server-side scheduler
-      const { error } = await supabase.functions.invoke('toggle-scheduler', {
+      const { data, error } = await supabase.functions.invoke('toggle-scheduler', {
         body: { enabled: newState }
       });
       
