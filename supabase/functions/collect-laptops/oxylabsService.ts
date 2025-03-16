@@ -18,7 +18,7 @@ export async function scrapeBrandData(brand: string, page: number = 1): Promise<
     const brandQuery = encodeURIComponent(`${brand} laptop`);
     console.log(`Scraping data for ${brand} laptops, page ${page}`);
 
-    // Build the request payload
+    // Build the request payload with enhanced options
     const payload = {
       source: "amazon_search",
       domain: "com",
@@ -27,7 +27,9 @@ export async function scrapeBrandData(brand: string, page: number = 1): Promise<
       pages: 1,
       parse: true,
       context: [
-        { key: "category_id", value: "565108" } // Electronics > Computers & Accessories > Laptops
+        { key: "category_id", value: "565108" }, // Electronics > Computers & Accessories > Laptops
+        { key: "include_html", value: "true" }, // Include HTML to better extract information
+        { key: "user_agent_type", value: "desktop" } // Use desktop user agent for better results
       ]
     };
 
@@ -77,8 +79,31 @@ export async function scrapeBrandData(brand: string, page: number = 1): Promise<
       return [];
     }
     
-    // Log the number of laptops found
+    // Log the number of laptops found and the data quality
     console.log(`Found ${laptops.length} laptops for ${brand} on page ${page}`);
+    
+    // Log some data quality metrics
+    const withImages = laptops.filter(l => l.image || (l.images && l.images.length > 0)).length;
+    const withPrices = laptops.filter(l => l.price || l.price_information?.current_price).length;
+    
+    console.log(`Data quality: ${withImages}/${laptops.length} have images, ${withPrices}/${laptops.length} have prices`);
+    
+    // Enhance result images if possible
+    laptops = laptops.map(laptop => {
+      // Ensure we have the best image URL
+      if (!laptop.image && laptop.images && Array.isArray(laptop.images) && laptop.images.length > 0) {
+        laptop.image = laptop.images[0];
+      }
+      
+      // Ensure we have price information structured correctly
+      if (laptop.price && !laptop.price_information) {
+        laptop.price_information = {
+          current_price: laptop.price
+        };
+      }
+      
+      return laptop;
+    });
     
     // Return the array of laptops
     return laptops;
