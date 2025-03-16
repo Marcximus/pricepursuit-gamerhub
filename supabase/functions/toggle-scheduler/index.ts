@@ -22,90 +22,22 @@ serve(async (req) => {
     
     console.log(`Request to ${enabled ? 'enable' : 'disable'} the laptop update scheduler`);
     
-    // Check if pg_cron extension is enabled
-    const { data: extCheck, error: extError } = await supabase.rpc('check_extension_exists', { 
-      extension_name: 'pg_cron'
-    });
+    // Update system_config auto_update_enabled flag
+    await supabase
+      .from('system_config')
+      .upsert({ 
+        key: 'auto_update_enabled', 
+        value: enabled ? 'true' : 'false',
+        updated_at: new Date().toISOString()
+      });
     
-    if (extError) {
-      console.error("Error checking for pg_cron extension:", extError);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Failed to check for required extensions: " + extError.message,
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-      );
-    }
-    
-    if (!extCheck) {
-      console.error("pg_cron extension is not available");
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "The pg_cron extension is not available. Please contact your database administrator.",
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-      );
-    }
-    
-    // Toggle scheduler status
     if (enabled) {
-      // Enable the scheduler: Create or update the cron job
-      const { data: cronData, error: cronError } = await supabase.rpc('create_laptop_update_schedule');
-      
-      if (cronError) {
-        console.error("Error creating cron job:", cronError);
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: "Failed to create cron job: " + cronError.message,
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-        );
-      }
-      
-      console.log("Successfully enabled laptop update scheduler:", cronData);
-      
-      // Update system_config
-      await supabase
-        .from('system_config')
-        .upsert([
-          { 
-            key: 'auto_update_enabled', 
-            value: 'true',
-            updated_at: new Date().toISOString()
-          },
-          { 
-            key: 'last_scheduled_update', 
-            value: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ]);
-        
-    } else {
-      // Disable the scheduler: Remove the cron job
-      const { data: cronData, error: cronError } = await supabase.rpc('remove_laptop_update_schedule');
-      
-      if (cronError) {
-        console.error("Error removing cron job:", cronError);
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: "Failed to remove cron job: " + cronError.message,
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-        );
-      }
-      
-      console.log("Successfully disabled laptop update scheduler:", cronData);
-      
-      // Update system_config
+      // If enabling, also update the last_scheduled_update timestamp
       await supabase
         .from('system_config')
         .upsert({ 
-          key: 'auto_update_enabled', 
-          value: 'false',
+          key: 'last_scheduled_update', 
+          value: new Date().toISOString(),
           updated_at: new Date().toISOString()
         });
     }

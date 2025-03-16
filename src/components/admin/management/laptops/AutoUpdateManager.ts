@@ -134,15 +134,6 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
         return;
       }
       
-      // Update system_config in database to persist the setting
-      await supabase
-        .from('system_config')
-        .upsert({ 
-          key: 'auto_update_enabled', 
-          value: newState.toString(),
-          updated_at: new Date().toISOString()
-        });
-      
       setLastScheduledTime(newState ? new Date() : null);
       
       toast({

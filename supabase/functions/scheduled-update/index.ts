@@ -20,6 +20,25 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
+    // Check if auto-updates are enabled
+    const { data: configData, error: configError } = await supabase
+      .from('system_config')
+      .select('value')
+      .eq('key', 'auto_update_enabled')
+      .single();
+      
+    if (configError) {
+      throw new Error(`Failed to check auto-update status: ${configError.message}`);
+    }
+    
+    if (configData?.value !== 'true') {
+      console.log('Auto-update is disabled, skipping scheduled update');
+      return new Response(
+        JSON.stringify({ message: 'Auto-update is disabled' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Update system config to record this scheduled run
     await supabase
       .from('system_config')
@@ -218,7 +237,7 @@ serve(async (req) => {
     };
 
     // Use waitUntil to ensure the function runs to completion
-    EdgeRuntime.waitUntil(updateProcess());
+    Deno.serve.waitUntil(updateProcess());
 
     return new Response(
       JSON.stringify({ 
