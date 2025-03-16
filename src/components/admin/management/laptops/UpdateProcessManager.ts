@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { useAutoUpdateManager } from './AutoUpdateManager';
+import { supabase } from "@/integrations/supabase/client";
 
 interface UpdateProcessManagerProps {
   updateLaptops: () => Promise<any>;
@@ -23,11 +24,43 @@ export const useUpdateProcessManager = ({
   const { 
     autoUpdateEnabled, 
     timeUntilNextUpdate, 
-    toggleAutoUpdate 
+    toggleAutoUpdate,
+    schedulerStatus
   } = useAutoUpdateManager({
     isUpdating,
     onUpdate: () => handleUpdateLaptops() // Use the same function for scheduled updates
   });
+
+  // Check update status on load
+  useEffect(() => {
+    const checkActiveUpdates = async () => {
+      try {
+        // Check if there are active updates in progress
+        const { count, error } = await supabase
+          .from('products')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_laptop', true)
+          .in('update_status', ['pending_update', 'in_progress']);
+          
+        if (error) {
+          console.error('Error checking active updates:', error);
+          return;
+        }
+        
+        if (count && count > 0) {
+          console.log(`Found ${count} laptops with active update status`);
+          setIsUpdating(true);
+          setUpdateCount(count);
+          setUpdateStartTime(new Date());
+          setUpdateSuccess(true);
+        }
+      } catch (err) {
+        console.error('Error in checkActiveUpdates:', err);
+      }
+    };
+    
+    checkActiveUpdates();
+  }, []);
 
   // Effect to track elapsed time during updates
   useEffect(() => {
@@ -63,6 +96,24 @@ export const useUpdateProcessManager = ({
         try {
           await refreshStats();
           console.log('Auto-refresh successful');
+          
+          // Also check if updates are still in progress
+          const { count, error } = await supabase
+            .from('products')
+            .select('*', { count: 'exact', head: true })
+            .eq('is_laptop', true)
+            .in('update_status', ['pending_update', 'in_progress']);
+            
+          if (error) {
+            console.error('Error checking if updates are still in progress:', error);
+            return;
+          }
+          
+          // If no more updates in progress, set isUpdating to false
+          if (count === 0) {
+            console.log('No more laptops being updated, ending update session');
+            setIsUpdating(false);
+          }
         } catch (err) {
           console.error('Auto-refresh error:', err);
         }
@@ -111,6 +162,17 @@ export const useUpdateProcessManager = ({
           title: "Update Started",
           description: `${result.message || "Started updating laptop information."} The progress will be updated automatically.`,
         });
+        
+        // Store timestamp of last initiated update
+        if (autoUpdateEnabled) {
+          await supabase
+            .from('system_config')
+            .upsert({ 
+              key: 'last_scheduled_update', 
+              value: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+        }
         
         // After 15 minutes, stop the update and do final refresh
         const finishTimeout = setTimeout(() => {
@@ -179,6 +241,9 @@ export const useUpdateProcessManager = ({
     }
     
     if (autoUpdateEnabled && !isUpdating) {
+      if (schedulerStatus === 'checking') {
+        return "Checking auto-update status...";
+      }
       return `Auto-update enabled. Next update in ${formatTimeUntilNextUpdate(timeUntilNextUpdate)}. Updates prioritize oldest check date, missing prices and images.`;
     }
     

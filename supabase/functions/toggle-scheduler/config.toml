@@ -1,0 +1,6 @@
+
+# This default config is applied to all functions
+# but can be overridden in the function's own config.toml
+
+project_id = "kkebyebrhdpcwqnxhjcx"
+verify_jwt = true
