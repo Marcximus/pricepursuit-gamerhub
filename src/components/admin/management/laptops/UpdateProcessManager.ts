@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -174,7 +173,8 @@ export const useUpdateProcessManager = ({
       if (error) {
         console.error('Error resetting pending_update products:', error);
       } else {
-        console.log(`Reset ${data?.length || 0} pending_update products to error state`);
+        const resetCount = data ? data.length : 0;
+        console.log(`Reset ${resetCount} pending_update products to error state`);
         
         // Refresh stats to show updated status
         await refreshStats();
