@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { processChunksSequentially } from "./chunkProcessor";
 
@@ -34,17 +35,14 @@ export const updateLaptops = async () => {
         .lt('last_checked', new Date(Date.now() - 30 * 60 * 1000).toISOString());
     }
     
-    // Modified query: Include laptops with ANY status except "completed"
-    // or completed laptops that haven't been updated in 24 hours
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    
+    // MODIFIED QUERY: Prioritize laptops with missing prices and images
+    // We'll query for laptops that need to be updated, with a priority system
     const { data: laptops, error: fetchError } = await supabase
       .from('products')
       .select('id, asin, current_price, title, last_checked, image_url, update_status')
       .eq('is_laptop', true)
-      .or(`update_status.neq.completed, last_checked.lt.${oneDayAgo.toISOString()}`)
       .order('last_checked', { nullsFirst: true })
-      .limit(200); // Increased to 200 laptops per batch for more throughput
+      .limit(200); // Keeping the 200 laptop batch size
 
     if (fetchError) {
       console.error('Error fetching laptops:', fetchError);
@@ -90,7 +88,7 @@ export const updateLaptops = async () => {
 
     console.log(`After minimal filtering: ${filteredLaptops.length} valid laptops remaining for update out of ${laptops.length} fetched`);
 
-    // Prioritize laptops with missing prices or images, but still keep all laptops in the queue
+    // IMPROVED PRIORITIZATION: Prioritize laptops with missing prices or images
     const prioritizedLaptops = [...filteredLaptops].sort((a, b) => {
       // Priority 0: Error or stuck states get highest priority
       const errorStates = ['error', 'timeout', 'pending_update'];
@@ -134,7 +132,7 @@ export const updateLaptops = async () => {
       }
     });
 
-    // Log priority distribution
+    // Enhanced logging for priority distribution
     logPriorityDistribution(formattedLaptops);
 
     // Split laptops into smaller chunks for processing

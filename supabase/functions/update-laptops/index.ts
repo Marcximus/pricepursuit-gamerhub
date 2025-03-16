@@ -39,7 +39,12 @@ serve(async (req) => {
     }, {});
     console.log("Status distribution of incoming laptops:", statusCounts);
 
-    // Increase parallelism as requested
+    // Count missing prices and images
+    const missingPriceCount = laptops.filter(l => l.current_price === null).length;
+    const missingImageCount = laptops.filter(l => !l.image_url).length;
+    console.log(`Updating ${missingPriceCount} laptops with missing prices and ${missingImageCount} laptops with missing images`);
+
+    // Increase parallelism for faster processing
     const maxParallel = 5; // Increased from 2 to 5 for better throughput
     
     console.log(`Processing with parallelism of ${maxParallel}`);
@@ -78,6 +83,11 @@ serve(async (req) => {
                 .update({ update_status: 'error' })
                 .eq('id', laptop.id);
               return { asin: laptop.asin, success: false, error: 'Data fetch failed' };
+            }
+            
+            // Log if this is a high-priority update (missing price or image)
+            if (laptop.current_price === null || !laptop.image_url) {
+              console.log(`HIGH PRIORITY update for ${laptop.asin} - Missing: ${laptop.current_price === null ? 'price' : ''}${(!laptop.current_price && !laptop.image_url) ? ' and ' : ''}${!laptop.image_url ? 'image' : ''}`);
             }
             
             // Process the data and update in database with enhanced processing

@@ -24,6 +24,17 @@ export function extractPrice(content: any): number | null {
     }
   }
   
+  // Try to extract from any text field that might contain price
+  if (content.title) {
+    const priceMatch = content.title.match(/\$(\d+\.?\d*)/);
+    if (priceMatch && priceMatch[1]) {
+      const price = parseFloat(priceMatch[1]);
+      if (!isNaN(price) && price > 0) {
+        return price;
+      }
+    }
+  }
+  
   // If stock says unavailable, price is truly null
   if (content.stock && content.stock.includes('unavailable')) {
     return null;
