@@ -4,8 +4,9 @@ export {
   resetStaleCollections,
   checkActiveCollections,
   updateBrandStatus,
-  processPage
-} from './collection/statusManagement';
+  processPage,
+  shouldCollectProductByTitle
+} from './collection/status/pageProcessing';
 
 export {
   processProductData

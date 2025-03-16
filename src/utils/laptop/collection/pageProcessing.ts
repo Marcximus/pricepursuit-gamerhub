@@ -1,3 +1,4 @@
+
 import { containsForbiddenKeywords } from "../productFilters";
 
 /**
@@ -11,7 +12,7 @@ export function shouldCollectProduct(title: string): boolean {
 }
 
 // Export processPage as default so we can import it without the shouldCollectProduct function
-export default function processPage(
+export default async function processPage(
   brand: string,
   page: number,
   groupIndex: number,
