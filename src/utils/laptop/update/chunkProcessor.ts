@@ -1,137 +1,70 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Timeout configuration (in milliseconds)
-const FUNCTION_TIMEOUT = 120000; // Increased to 120 seconds for larger batches
-const DELAY_BETWEEN_CHUNKS = 1000; // Reduced to 1000ms for shorter delays
-
-// Define response type for update-laptops function
-interface UpdateLaptopsResponse {
-  success: boolean;
-  message?: string;
-  error?: string;
-  stats?: {
-    successCount?: number;
-    priceUpdates?: number;
-    imageUpdates?: number;
-    errorCount?: number;
-  };
-  results?: any[];
-}
-
-export async function processChunksSequentially(chunks) {
-  // Log a summary of all chunks before processing
-  console.log(`Preparing to process ${chunks.length} chunks with a total of ${chunks.reduce((count, chunk) => count + chunk.length, 0)} laptops`);
+/**
+ * Process an array of chunks sequentially to avoid overwhelming the Edge Function
+ * @param chunks Array of laptop chunks to process
+ */
+export async function processChunksSequentially(chunks: any[][]) {
+  console.log(`Preparing to process ${chunks.length} chunks with a total of ${chunks.flat().length} laptops`);
   
+  // Process each chunk in order
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
-    const chunkAsins = chunk.map(l => l.asin);
-    
     console.log(`----- Processing chunk ${i + 1}/${chunks.length} with ${chunk.length} laptops -----`);
-    console.log(`First 5 laptops in chunk ${i + 1}:`, chunk.slice(0, 5).map(l => ({ 
-      asin: l.asin, 
-      lastChecked: l.last_checked ? new Date(l.last_checked).toLocaleString() : 'Never',
-      price: l.current_price === null ? 'NULL' : `$${l.current_price}`,
-      hasImage: l.image_url ? 'Yes' : 'No',
-      status: l.update_status || 'pending'
+    
+    // Log first few laptops in this chunk for debugging
+    console.log(`First ${Math.min(5, chunk.length)} laptops in chunk ${i + 1}:`, chunk.slice(0, 5).map(laptop => ({
+      asin: laptop.asin,
+      lastChecked: laptop.formattedLastChecked || (laptop.last_checked ? new Date(laptop.last_checked).toLocaleString() : 'Never'),
+      price: laptop.current_price ? `$${laptop.current_price}` : 'NULL',
+      hasImage: laptop.image_url ? 'Yes' : 'No',
+      status: laptop.update_status || 'pending'
     })));
-
-    // Mark chunk laptops as pending update with a fresh timestamp
-    console.log(`Marking ${chunk.length} laptops as pending_update`);
-    const { error: statusError } = await supabase
-      .from('products')
-      .update({ 
-        update_status: 'pending_update',
-        last_checked: new Date().toISOString()
-      })
-      .in('asin', chunkAsins);
-
-    if (statusError) {
-      console.error(`Error marking chunk ${i + 1} laptops for update:`, statusError);
-      continue;
-    }
-
-    // Call edge function for this chunk with proper timeout handling
+    
     try {
+      // Mark these laptops as pending_update
+      await supabase
+        .from('products')
+        .update({ 
+          update_status: 'pending_update',
+          last_checked: new Date().toISOString()
+        })
+        .in('id', chunk.map(l => l.id));
+        
+      console.log(`Marking ${chunk.length} laptops as pending_update`);
+      
+      // Call the Edge Function to process this chunk
       console.log(`Invoking update-laptops function for chunk ${i + 1} with ${chunk.length} laptops`);
       
-      // Create a promise that rejects after the timeout
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Function invocation timed out')), FUNCTION_TIMEOUT);
+      const { data, error } = await supabase.functions.invoke('update-laptops', {
+        body: { laptops: chunk }
       });
       
-      // Create the actual function invocation promise with proper typing
-      const functionPromise = supabase.functions.invoke<UpdateLaptopsResponse>('update-laptops', {
-        body: { 
-          laptops: chunk.map(l => ({ 
-            id: l.id, 
-            asin: l.asin, 
-            current_price: l.current_price, 
-            title: l.title,
-            last_checked: l.last_checked,
-            image_url: l.image_url,
-            update_status: l.update_status || 'pending'
-          }))
-        }
-      });
+      if (error) {
+        console.error(`Error processing chunk ${i + 1}:`, error);
+      } else {
+        console.log(`Chunk ${i + 1} processed successfully:`, {
+          success: data?.success,
+          message: data?.message,
+          statsSuccess: data?.stats?.success || 0,
+          statsFailed: data?.stats?.failed || 0,
+          statsPriceUpdated: data?.stats?.priceUpdated || 0,
+          statsImageUpdated: data?.stats?.imageUpdated || 0,
+          statsSpecsUpdated: data?.stats?.specsUpdated || 0
+        });
+      }
       
-      // Race the promises - whichever completes first wins
-      const result = await Promise.race([functionPromise, timeoutPromise]);
-      
-      if (result && result.error) {
-        console.error(`Error processing chunk ${i + 1}:`, result.error);
-        console.log(`Marking chunk ${i + 1} laptops as error due to function invocation failure`);
-        await supabase
-          .from('products')
-          .update({ update_status: 'error' })
-          .in('asin', chunkAsins);
-      } else if (result && result.data) {
-        console.log(`Successfully initiated update for chunk ${i + 1}`);
-        
-        // Log successful results summary
-        if (result.data && result.data.success) {
-          const statsData = result.data.stats || {};
-          console.log(`Update-laptops function processed chunk ${i + 1} with results:`, {
-            total: chunk.length,
-            successful: statsData.successCount || 0,
-            priceUpdates: statsData.priceUpdates || 0,
-            imageUpdates: statsData.imageUpdates || 0,
-            errors: statsData.errorCount || 0
-          });
-        }
+      // Add a small delay between chunks to avoid overwhelming the API
+      if (i < chunks.length - 1) {
+        console.log(`Waiting 5 seconds before processing next chunk...`);
+        await new Promise(resolve => setTimeout(resolve, 5000));
       }
     } catch (error) {
-      console.error(`Failed to process chunk ${i + 1}:`, error);
-      
-      // Check if this is a timeout error
-      const isTimeout = error instanceof Error && error.message && error.message.includes('timed out');
-      const errorStatus = isTimeout ? 'timeout' : 'error';
-      
-      console.log(`Marking chunk ${i + 1} laptops as ${errorStatus} due to ${isTimeout ? 'function timeout' : 'processing error'}`);
-      
-      // Make sure to mark laptops as error in case of exception
-      try {
-        await supabase
-          .from('products')
-          .update({ update_status: errorStatus })
-          .in('asin', chunkAsins);
-      } catch (markError) {
-        console.error(`Failed to mark chunk ${i + 1} as ${errorStatus}:`, markError);
-      }
-      
-      // Add longer recovery delay if we had a timeout
-      if (isTimeout) {
-        console.log(`Adding extra recovery delay after timeout for chunk ${i + 1}`);
-        await new Promise(resolve => setTimeout(resolve, 5000)); // Reduced to 5 seconds recovery delay
-      }
-    }
-
-    // Add a delay between chunks to prevent rate limiting
-    if (i < chunks.length - 1) {
-      console.log(`Adding ${DELAY_BETWEEN_CHUNKS}ms delay before processing next chunk...`);
-      await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_CHUNKS));
+      console.error(`Error processing chunk ${i + 1}:`, error);
+      // Continue with next chunk anyway
     }
   }
   
-  console.log('All chunks processing completed');
+  console.log(`All ${chunks.length} chunks have been processed`);
 }

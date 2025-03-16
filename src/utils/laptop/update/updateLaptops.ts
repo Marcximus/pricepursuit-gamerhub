@@ -1,7 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { processChunksSequentially } from "./chunkProcessor";
-import { applyAllProductFilters } from "../productFilters";
 
+/**
+ * Update all laptops with current pricing and specs information
+ * @returns Result of the update operation
+ */
 export const updateLaptops = async () => {
   try {
     console.log('Starting update for ALL laptops...');
@@ -41,7 +44,7 @@ export const updateLaptops = async () => {
       .eq('is_laptop', true)
       .or(`update_status.neq.completed, last_checked.lt.${oneDayAgo.toISOString()}`)
       .order('last_checked', { nullsFirst: true })
-      .limit(100); // Increased to 100 laptops per batch
+      .limit(200); // Increased to 200 laptops per batch for more throughput
 
     if (fetchError) {
       console.error('Error fetching laptops:', fetchError);
@@ -59,15 +62,33 @@ export const updateLaptops = async () => {
       return acc;
     }, {}));
 
-    // Filter out any obviously non-laptop products using filters
-    const filteredLaptops = applyAllProductFilters(laptops);
+    // MODIFIED: Don't filter out laptops with product filters, only remove obviously invalid entries
+    const filteredLaptops = laptops.filter(laptop => {
+      // Only filter out laptops with completely missing ASIN or title
+      if (!laptop.asin || !laptop.title) {
+        console.log(`Filtering out invalid laptop: missing ASIN or title`);
+        return false;
+      }
+      
+      // Check for obvious non-laptop items based on title keywords
+      const nonLaptopTitlePatterns = [
+        /\b(replacement battery ONLY|AC adapter ONLY|power cord ONLY|case ONLY|screen protector)\b/i
+      ];
+      
+      if (laptop.title && nonLaptopTitlePatterns.some(pattern => pattern.test(laptop.title))) {
+        console.log(`Filtering out non-laptop accessory: "${laptop.title?.substring(0, 50)}..."`);
+        return false;
+      }
+      
+      return true;
+    });
     
     if (filteredLaptops.length === 0) {
-      console.log('No valid laptops found after filtering');
-      return { success: false, message: 'No valid laptops found after filtering' };
+      console.log('No valid laptops found after minimal filtering');
+      return { success: false, message: 'No valid laptops found after minimal filtering' };
     }
 
-    console.log(`After filtering: ${filteredLaptops.length} valid laptops remaining for update`);
+    console.log(`After minimal filtering: ${filteredLaptops.length} valid laptops remaining for update out of ${laptops.length} fetched`);
 
     // Prioritize laptops with missing prices or images, but still keep all laptops in the queue
     const prioritizedLaptops = [...filteredLaptops].sort((a, b) => {
@@ -116,8 +137,8 @@ export const updateLaptops = async () => {
     // Log priority distribution
     logPriorityDistribution(formattedLaptops);
 
-    // Split laptops into smaller chunks of 100
-    const chunkSize = 100;
+    // Split laptops into smaller chunks for processing
+    const chunkSize = 20; // Process in smaller batches for better reliability
     const chunks = [];
     for (let i = 0; i < prioritizedLaptops.length; i += chunkSize) {
       chunks.push(prioritizedLaptops.slice(i, i + chunkSize));
@@ -130,7 +151,7 @@ export const updateLaptops = async () => {
       console.error('Background process error:', error);
     });
     
-    return { success: true, message: `Started updating ${laptops.length} laptops in ${Math.ceil(laptops.length / 100)} chunks` };
+    return { success: true, message: `Started updating ${prioritizedLaptops.length} laptops in ${chunks.length} chunks` };
 
   } catch (error: any) {
     console.error('Failed to update laptops:', error);
