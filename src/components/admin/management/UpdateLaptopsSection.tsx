@@ -1,7 +1,8 @@
 
-import React from "react";
-import { RefreshCw, Clock } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { RefreshCw, Clock, AlertOctagon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { useStats } from "@/components/admin/stats/StatsContext";
 import ManagementCard from "./ManagementCard";
 import { useUpdateProcessManager } from "./laptops/UpdateProcessManager";
@@ -22,6 +23,9 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
   // Use the refreshStats prop if context is not available, otherwise use context
   const refreshFunction = statsRefresh || refreshStats;
   
+  // State to track if update has been running for too long
+  const [showResetButton, setShowResetButton] = useState(false);
+  
   // Initialize update process manager
   const {
     isUpdating,
@@ -31,11 +35,21 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
     timeUntilNextUpdate,
     toggleAutoUpdate,
     handleUpdateLaptops,
-    getDescription
+    getDescription,
+    forceResetUpdateState
   } = useUpdateProcessManager({
     updateLaptops,
     refreshStats: refreshFunction
   });
+
+  // Effect to show reset button after 5 minutes of updating
+  useEffect(() => {
+    if (isUpdating && elapsedTime > 5 * 60) {
+      setShowResetButton(true);
+    } else {
+      setShowResetButton(false);
+    }
+  }, [isUpdating, elapsedTime]);
 
   const handleToggleAutoUpdate = () => {
     console.log('UpdateLaptopsSection: Auto-update toggle clicked, current state:', autoUpdateEnabled);
@@ -53,6 +67,18 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
       disabled={isUpdating}
       customActions={
         <div className="flex items-center gap-2">
+          {showResetButton && (
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={forceResetUpdateState}
+              className="mr-2 flex items-center gap-1"
+            >
+              <AlertOctagon className="h-3.5 w-3.5" />
+              Reset Update
+            </Button>
+          )}
+          
           <Switch
             checked={autoUpdateEnabled}
             onCheckedChange={handleToggleAutoUpdate}
