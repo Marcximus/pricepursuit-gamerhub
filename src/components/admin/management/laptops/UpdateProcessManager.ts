@@ -168,12 +168,15 @@ export const useUpdateProcessManager = ({
       const { data, error } = await supabase
         .from('products')
         .update({ update_status: 'error' })
-        .eq('update_status', 'pending_update');
+        .eq('update_status', 'pending_update')
+        .select();
       
       if (error) {
         console.error('Error resetting pending_update products:', error);
       } else {
-        const resetCount = data ? data.length : 0;
+        // Using optional chaining to safely access the length property
+        // Explicitly cast data as an array type since TypeScript sees it as 'never'
+        const resetCount = Array.isArray(data) ? data.length : 0;
         console.log(`Reset ${resetCount} pending_update products to error state`);
         
         // Refresh stats to show updated status
