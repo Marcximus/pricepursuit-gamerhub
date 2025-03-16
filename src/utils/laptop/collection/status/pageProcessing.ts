@@ -6,7 +6,7 @@ import { CollectionStats } from "../../types";
  * @param title Product title
  * @returns Boolean indicating whether to collect the product
  */
-export function shouldCollectProduct(title: string | null | undefined): boolean {
+export function shouldCollectProductByTitle(title: string | null | undefined): boolean {
   if (!title) return false;
   
   // Convert to lowercase for case-insensitive matching
