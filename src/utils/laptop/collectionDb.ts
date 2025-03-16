@@ -3,7 +3,10 @@
 export {
   resetStaleCollections,
   checkActiveCollections,
-  updateBrandStatus,
+  updateBrandStatus
+} from './collection/status/statusUpdates';
+
+export {
   processPage,
   shouldCollectProductByTitle
 } from './collection/status/pageProcessing';
