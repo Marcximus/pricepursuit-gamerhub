@@ -59,7 +59,7 @@ const UpdateLaptopsSection: React.FC<UpdateLaptopsSectionProps> = ({
   return (
     <ManagementCard
       title="Update Laptops"
-      description={getDescription(elapsedTime, timeUntilNextUpdate)}
+      description={getDescription(isUpdating, elapsedTime, autoUpdateEnabled, timeUntilNextUpdate)}
       icon={RefreshCw}
       buttonText={isUpdating ? "Updating..." : "Update Prices"}
       onClick={handleUpdateLaptops}
