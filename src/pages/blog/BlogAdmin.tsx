@@ -1,7 +1,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useBlog } from '@/contexts/blog';
+import { useAuth } from '@/contexts/AuthContext';
+import { Navigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import Navigation from '@/components/Navigation';
+import { toast } from '@/components/ui/use-toast';
 import { 
   BlogAdminHeader, 
   BlogPostTable, 
@@ -11,6 +15,7 @@ import {
 } from '@/components/blog/admin';
 
 const BlogAdmin = () => {
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
   const { posts, loading, error, fetchPosts } = useBlog();
   const { 
     deleteDialogOpen, 
@@ -30,16 +35,20 @@ const BlogAdmin = () => {
   useEffect(() => {
     document.title = "Blog Admin | Laptop Hunter";
     console.log('BlogAdmin: Initial posts fetch');
-    fetchPosts();
     
-    // Set up periodic refresh to ensure data is fresh
-    const intervalId = setInterval(() => {
-      console.log('BlogAdmin: Performing periodic refresh');
+    // Only fetch posts if user is authenticated
+    if (user) {
       fetchPosts();
-    }, 30000); // Every 30 seconds
-    
-    return () => clearInterval(intervalId);
-  }, [fetchPosts]);
+      
+      // Set up periodic refresh to ensure data is fresh
+      const intervalId = setInterval(() => {
+        console.log('BlogAdmin: Performing periodic refresh');
+        fetchPosts();
+      }, 30000); // Every 30 seconds
+      
+      return () => clearInterval(intervalId);
+    }
+  }, [fetchPosts, user]);
 
   // Add effect to refresh posts after successful deletion
   useEffect(() => {
@@ -54,6 +63,34 @@ const BlogAdmin = () => {
       return () => clearTimeout(refreshTimer);
     }
   }, [deleteSuccess, fetchPosts]);
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated or not an admin
+  if (!user) {
+    toast({
+      title: "Authentication Required",
+      description: "You must be logged in to access the admin panel.",
+      variant: "destructive",
+    });
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!isAdmin) {
+    toast({
+      title: "Permission Denied",
+      description: "Only administrators can access the admin panel.",
+      variant: "destructive",
+    });
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

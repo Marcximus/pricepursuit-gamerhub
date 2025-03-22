@@ -2,15 +2,35 @@
 import { useState } from 'react';
 import { useBlog } from '@/contexts/blog';
 import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const usePostDeletion = () => {
   const { deletePost, fetchPosts } = useBlog();
+  const { user, isAdmin } = useAuth();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
 
   const confirmDelete = (postId: string) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "You must be logged in to delete posts.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isAdmin) {
+      toast({
+        title: "Permission Denied",
+        description: "Only administrators can delete blog posts.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setPostToDelete(postId);
     setDeleteDialogOpen(true);
     // Reset delete success state when opening a new delete dialog
@@ -19,6 +39,15 @@ export const usePostDeletion = () => {
 
   const handleDeletePost = async () => {
     if (!postToDelete) return;
+    if (!user || !isAdmin) {
+      toast({
+        title: "Permission Denied",
+        description: "Only administrators can delete blog posts.",
+        variant: "destructive",
+      });
+      setDeleteDialogOpen(false);
+      return;
+    }
     
     setIsDeleting(true);
     setDeleteSuccess(false);
@@ -33,13 +62,13 @@ export const usePostDeletion = () => {
         
         // Force multiple refetches to ensure UI is in sync with database
         // First immediate refetch
-        fetchPosts();
+        await fetchPosts();
         
         // Second delayed refetch in case the first one was too quick
         setTimeout(() => {
           console.log('BlogAdmin: Forcing delayed refetch after deletion');
           fetchPosts();
-        }, 1500);
+        }, 2000);
         
         toast({
           title: "Success",
@@ -50,7 +79,7 @@ export const usePostDeletion = () => {
         setDeleteSuccess(false);
         toast({
           title: "Error",
-          description: "Failed to delete post. Please try again.",
+          description: "Failed to delete post. Please try again or check your permissions.",
           variant: "destructive",
         });
       }
@@ -59,7 +88,7 @@ export const usePostDeletion = () => {
       setDeleteSuccess(false);
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "An unexpected error occurred. Please check your admin permissions.",
         variant: "destructive",
       });
     } finally {

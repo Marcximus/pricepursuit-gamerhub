@@ -18,6 +18,11 @@ export const usePostManagement = (
       
       if (insertError) {
         console.error('Supabase error:', insertError);
+        
+        if (insertError.message.includes('row-level security') || insertError.code === '42501') {
+          throw new Error('Permission denied. Only administrators can create blog posts.');
+        }
+        
         throw new Error(insertError.message);
       }
       
@@ -34,7 +39,7 @@ export const usePostManagement = (
         ? err.message 
         : 'An unknown error occurred';
       
-      if (errorMessage.includes('row-level security')) {
+      if (errorMessage.includes('row-level security') || errorMessage.includes('permission denied')) {
         toast({
           title: "Permission Error",
           description: "You don't have permission to create blog posts. Only admins can perform this action.",
@@ -58,7 +63,13 @@ export const usePostManagement = (
         .update(postData)
         .eq('id', id);
       
-      if (updateError) throw new Error(updateError.message);
+      if (updateError) {
+        if (updateError.message.includes('row-level security') || updateError.code === '42501') {
+          throw new Error('Permission denied. Only administrators can update blog posts.');
+        }
+        
+        throw new Error(updateError.message);
+      }
       
       setPosts(prevPosts => 
         prevPosts.map(post => post.id === id ? { ...post, ...postData } : post)
@@ -77,7 +88,7 @@ export const usePostManagement = (
         ? err.message 
         : 'An unknown error occurred';
       
-      if (errorMessage.includes('row-level security')) {
+      if (errorMessage.includes('row-level security') || errorMessage.includes('permission denied')) {
         toast({
           title: "Permission Error",
           description: "You don't have permission to update blog posts. Only admins can perform this action.",
@@ -108,6 +119,11 @@ export const usePostManagement = (
       
       if (checkError) {
         console.error('Error checking if post exists:', checkError);
+        
+        if (checkError.message.includes('row-level security') || checkError.code === '42501') {
+          throw new Error('Permission denied. Only administrators can delete blog posts.');
+        }
+        
         throw new Error(checkError.message);
       }
       
@@ -127,11 +143,21 @@ export const usePostManagement = (
       
       if (deleteError) {
         console.error('Supabase error during deletion:', deleteError);
+        
+        if (deleteError.message.includes('row-level security') || deleteError.code === '42501') {
+          throw new Error('Permission denied. Only administrators can delete blog posts.');
+        }
+        
         throw new Error(deleteError.message);
       }
       
       if (!deleteData || deleteData.length === 0) {
         console.warn(`No rows were deleted for post ID: ${id}`);
+        // Check if this is a permission issue
+        const { data: checkPermission } = await supabase.rpc('has_role', { _role: 'admin' });
+        if (!checkPermission) {
+          throw new Error('Permission denied. Only administrators can delete blog posts.');
+        }
       } else {
         console.log(`Successfully deleted ${deleteData.length} rows for post ID: ${id}`);
       }
@@ -147,7 +173,12 @@ export const usePostManagement = (
       } else if (checkDeleted && checkDeleted.length > 0) {
         console.error(`Post still exists after deletion! Found ${checkDeleted.length} posts with ID ${id}`);
         console.log('This may indicate a permissions issue or RLS policy preventing deletion');
-        // We'll continue with UI update despite the database issue
+        
+        // Check admin permission
+        const { data: isAdmin } = await supabase.rpc('has_role', { _role: 'admin' });
+        if (!isAdmin) {
+          throw new Error('Permission denied. Only administrators can delete blog posts.');
+        }
       } else {
         console.log(`Successfully verified post with ID: ${id} is removed from database`);
       }
@@ -172,7 +203,7 @@ export const usePostManagement = (
         ? err.message 
         : 'An unknown error occurred';
       
-      if (errorMessage.includes('row-level security')) {
+      if (errorMessage.includes('row-level security') || errorMessage.includes('permission denied')) {
         toast({
           title: "Permission Error",
           description: "You don't have permission to delete blog posts. Only admins can perform this action.",
