@@ -280,24 +280,6 @@ export type Database = {
         }
         Relationships: []
       }
-      system_config: {
-        Row: {
-          key: string
-          updated_at: string
-          value: string
-        }
-        Insert: {
-          key: string
-          updated_at?: string
-          value: string
-        }
-        Update: {
-          key?: string
-          updated_at?: string
-          value?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string
@@ -330,10 +312,6 @@ export type Database = {
         }
         Returns: number
       }
-      create_laptop_update_schedule: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
       get_duplicate_asins: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -346,10 +324,6 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
-      }
-      remove_laptop_update_schedule: {
-        Args: Record<PropertyKey, never>
-        Returns: string
       }
       update_product_with_price_history: {
         Args: {

@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { COLLECTION_CONFIG } from "@/utils/laptop/config";
 
 interface AutoUpdateManagerProps {
   isUpdating: boolean;
@@ -10,21 +9,18 @@ interface AutoUpdateManagerProps {
 }
 
 export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManagerProps) => {
-  // Auto-update state - initialize to null/undefined until we get server status
-  const [autoUpdateEnabled, setAutoUpdateEnabled] = useState<boolean>(false);
+  // Auto-update state
+  const [autoUpdateEnabled, setAutoUpdateEnabled] = useState(false);
   const [lastScheduledTime, setLastScheduledTime] = useState<Date | null>(null);
-  const [timeUntilNextUpdate, setTimeUntilNextUpdate] = useState<number>(COLLECTION_CONFIG.AUTO_UPDATE_INTERVAL_MINUTES * 60);
+  const [timeUntilNextUpdate, setTimeUntilNextUpdate] = useState<number>(300); // 5 minutes in seconds
   const [countdownInterval, setCountdownInterval] = useState<NodeJS.Timeout | null>(null);
   const [schedulerStatus, setSchedulerStatus] = useState<'checking' | 'active' | 'inactive'>('checking');
-  const [isInitialized, setIsInitialized] = useState(false);
 
   // Initial check for existing schedule
   useEffect(() => {
     const checkSchedulerStatus = async () => {
       try {
         console.log('Checking scheduler status...');
-        setSchedulerStatus('checking');
-        
         // Call the edge function to check the current status
         const { data, error } = await supabase.functions.invoke('toggle-scheduler', {
           method: 'GET'
@@ -33,85 +29,52 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
         if (error) {
           console.error('Error checking scheduler status:', error);
           setSchedulerStatus('inactive');
-          setAutoUpdateEnabled(false);
-          toast({
-            title: "Error",
-            description: "Failed to check auto-update status",
-            variant: "destructive"
-          });
-          setIsInitialized(true);
           return;
         }
         
-        // Update state based on response - explicitly check for true
+        // Update state based on response
         const isEnabled = data?.enabled === true;
-        console.log('Server reports auto-update status:', isEnabled);
         setAutoUpdateEnabled(isEnabled);
         setSchedulerStatus(isEnabled ? 'active' : 'inactive');
         
-        if (data?.lastScheduled) {
+        if (isEnabled && data?.lastScheduled) {
           const lastRun = new Date(data.lastScheduled);
           setLastScheduledTime(lastRun);
           
-          // Calculate time until next update based on config
-          const nextUpdateTime = new Date(
-            lastRun.getTime() + COLLECTION_CONFIG.AUTO_UPDATE_INTERVAL_MINUTES * 60 * 1000
-          );
+          // Calculate time until next update (5 minutes after last run)
+          const nextUpdateTime = new Date(lastRun.getTime() + 5 * 60 * 1000);
           const now = new Date();
           const secondsUntilNext = Math.max(0, Math.floor((nextUpdateTime.getTime() - now.getTime()) / 1000));
-          
-          // If time has passed, use the default interval
-          setTimeUntilNextUpdate(
-            secondsUntilNext > 0 ? 
-            secondsUntilNext : 
-            COLLECTION_CONFIG.AUTO_UPDATE_INTERVAL_MINUTES * 60
-          );
+          setTimeUntilNextUpdate(secondsUntilNext > 0 ? secondsUntilNext : 300);
         }
-        
-        setIsInitialized(true);
       } catch (err) {
         console.error('Error in checkSchedulerStatus:', err);
         setSchedulerStatus('inactive');
-        setAutoUpdateEnabled(false);
-        setIsInitialized(true);
       }
     };
     
     checkSchedulerStatus();
   }, []);
 
-  // Effect for managing the countdown timer based on autoUpdateEnabled state
+  // Effect for managing the scheduled update status and UI countdown
   useEffect(() => {
-    // Skip if not initialized yet
-    if (!isInitialized) {
-      return;
-    }
-    
-    console.log('Auto-update state changed to:', autoUpdateEnabled);
-    
-    // Always clean up existing interval when this effect runs
-    if (countdownInterval) {
-      console.log('Clearing existing countdown interval');
-      clearInterval(countdownInterval);
-      setCountdownInterval(null);
-    }
-
     if (autoUpdateEnabled) {
-      console.log('Auto-update is enabled, starting UI countdown from', timeUntilNextUpdate, 'seconds');
+      console.log('Auto-update enabled, UI countdown started');
       
-      // Start new countdown interval
+      // Start countdown for display purposes only
       const newCountdownInterval = setInterval(() => {
         setTimeUntilNextUpdate(prev => {
           if (prev <= 1) {
-            // When countdown reaches zero, reset to configured interval
-            console.log('UI countdown complete, resetting to', COLLECTION_CONFIG.AUTO_UPDATE_INTERVAL_MINUTES * 60, 'seconds');
+            // When countdown reaches zero, reset to 5 minutes
+            // The actual update is handled by the server-side scheduler
+            console.log('UI countdown complete, resetting to 5 minutes');
             
-            // Optionally trigger update when countdown completes
+            // Optionally, we can refresh stats to show latest progress
             if (!isUpdating) {
               onUpdate();
             }
             
-            return COLLECTION_CONFIG.AUTO_UPDATE_INTERVAL_MINUTES * 60;
+            return 300;
           }
           return prev - 1;
         });
@@ -119,35 +82,38 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
       
       setCountdownInterval(newCountdownInterval);
       
-      // Return cleanup function
+      // Set last scheduled time if not set
+      if (!lastScheduledTime) {
+        setLastScheduledTime(new Date());
+      }
+      
       return () => {
-        console.log('Cleaning up countdown interval on unmount/disable');
-        clearInterval(newCountdownInterval);
+        if (countdownInterval) {
+          clearInterval(countdownInterval);
+        }
       };
     } else {
-      console.log('Auto-update is disabled, no countdown needed');
-      // Reset the countdown to default when disabled
-      setTimeUntilNextUpdate(COLLECTION_CONFIG.AUTO_UPDATE_INTERVAL_MINUTES * 60);
+      // Clean up when disabled
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+        setCountdownInterval(null);
+      }
     }
-  }, [autoUpdateEnabled, isUpdating, onUpdate, timeUntilNextUpdate, isInitialized]);
+  }, [autoUpdateEnabled, isUpdating, onUpdate, lastScheduledTime, countdownInterval]);
 
-  // Toggle auto-update function - communicates with the server
+  // Toggle auto-update function - now communicates with the server
   const toggleAutoUpdate = async () => {
     try {
       console.log('Toggle auto-update called, current state:', autoUpdateEnabled);
       
-      // Set scheduler status to checking during toggle
-      setSchedulerStatus('checking');
-      
       const newState = !autoUpdateEnabled;
-      console.log('Attempting to set auto-update to:', newState);
+      
+      // Set UI state optimistically
+      setAutoUpdateEnabled(newState);
       
       // Call edge function to enable/disable the server-side scheduler
       const { data, error } = await supabase.functions.invoke('toggle-scheduler', {
-        body: { 
-          enabled: newState,
-          updateLastScheduledTime: true // Always update the timestamp when toggling
-        }
+        body: { enabled: newState }
       });
       
       if (error) {
@@ -158,37 +124,17 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
           variant: "destructive"
         });
         
-        // On error, revert back to checking server state
-        const statusCheck = await supabase.functions.invoke('toggle-scheduler', {
-          method: 'GET'
-        });
-        
-        if (!statusCheck.error) {
-          setAutoUpdateEnabled(statusCheck.data?.enabled === true);
-          setSchedulerStatus(statusCheck.data?.enabled === true ? 'active' : 'inactive');
-        } else {
-          setSchedulerStatus('inactive');
-        }
-        
+        // Revert state on error
+        setAutoUpdateEnabled(!newState);
         return;
       }
       
-      console.log('Server responded successfully:', data);
-      
-      // Only update state after successful server response
-      setAutoUpdateEnabled(newState);
       setLastScheduledTime(newState ? new Date() : null);
-      setSchedulerStatus(newState ? 'active' : 'inactive');
-      
-      // Reset countdown timer to full interval when enabling
-      if (newState) {
-        setTimeUntilNextUpdate(COLLECTION_CONFIG.AUTO_UPDATE_INTERVAL_MINUTES * 60);
-      }
       
       toast({
         title: newState ? "Auto-Update Enabled" : "Auto-Update Disabled",
         description: newState 
-          ? `Laptop updates will run automatically every ${COLLECTION_CONFIG.AUTO_UPDATE_INTERVAL_MINUTES} minutes` 
+          ? "Laptop updates are now scheduled to run automatically every 5 minutes" 
           : "Automatic updates have been turned off",
       });
       
@@ -199,7 +145,6 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
       }
     } catch (err) {
       console.error('Error in toggleAutoUpdate:', err);
-      setSchedulerStatus('inactive');
       toast({
         title: "Error",
         description: "Failed to toggle auto-update mode",

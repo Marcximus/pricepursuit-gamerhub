@@ -19,8 +19,6 @@ serve(async (req) => {
     
     // Handle GET request to check status
     if (req.method === "GET") {
-      console.log("GET request received - checking current status");
-      
       // Get current state from system_config
       const { data: enabledData, error: enabledError } = await supabase
         .from('system_config')
@@ -29,7 +27,6 @@ serve(async (req) => {
         .single();
         
       if (enabledError) {
-        console.error("Error fetching auto_update_enabled:", enabledError);
         throw enabledError;
       }
       
@@ -38,14 +35,10 @@ serve(async (req) => {
         .select('value')
         .eq('key', 'last_scheduled_update')
         .single();
-      
-      // Convert string 'true' to boolean true for consistent response format
-      const isEnabled = enabledData?.value === 'true';
-      console.log("Current auto-update status:", isEnabled);
         
       return new Response(
         JSON.stringify({
-          enabled: isEnabled,
+          enabled: enabledData?.value === 'true',
           lastScheduled: lastScheduledError ? null : lastScheduledData?.value,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
@@ -60,36 +53,23 @@ serve(async (req) => {
     console.log(`Request to ${enabled ? 'enable' : 'disable'} the laptop update scheduler`);
     
     // Update system_config auto_update_enabled flag
-    const { error: updateError } = await supabase
+    await supabase
       .from('system_config')
       .upsert({ 
         key: 'auto_update_enabled', 
         value: enabled ? 'true' : 'false',
         updated_at: new Date().toISOString()
       });
-      
-    if (updateError) {
-      console.error("Error updating auto_update_enabled:", updateError);
-      throw updateError;
-    }
     
     // If enabling or explicitly requested, also update the last_scheduled_update timestamp
     if (enabled || updateLastScheduledTime) {
-      const now = new Date().toISOString();
-      console.log("Updating last_scheduled_update to:", now);
-      
-      const { error: timestampError } = await supabase
+      await supabase
         .from('system_config')
         .upsert({ 
           key: 'last_scheduled_update', 
-          value: now,
-          updated_at: now
+          value: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         });
-        
-      if (timestampError) {
-        console.error("Error updating last_scheduled_update:", timestampError);
-        throw timestampError;
-      }
     }
     
     // Call PostgreSQL function to create or remove the cron job based on enabled state
@@ -98,7 +78,6 @@ serve(async (req) => {
       const { data: cronData, error: cronError } = await supabase.rpc('create_laptop_update_schedule');
       if (cronError) {
         console.error("Error creating cron job:", cronError);
-        throw cronError;
       } else {
         console.log("Cron job created:", cronData);
       }
@@ -107,13 +86,12 @@ serve(async (req) => {
       const { data: cronData, error: cronError } = await supabase.rpc('remove_laptop_update_schedule');
       if (cronError) {
         console.error("Error removing cron job:", cronError);
-        throw cronError;
       } else {
         console.log("Cron job removed:", cronData);
       }
     }
     
-    // Return success response with clear enabled state
+    // Return success response
     return new Response(
       JSON.stringify({
         success: true,
