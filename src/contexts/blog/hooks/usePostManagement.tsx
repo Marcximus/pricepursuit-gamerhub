@@ -3,14 +3,11 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { BlogPost } from '../types';
-import { useAuth } from '@/contexts/AuthContext';
 
 export const usePostManagement = (
   posts: BlogPost[],
   setPosts: React.Dispatch<React.SetStateAction<BlogPost[]>>
 ) => {
-  const { isAdmin, user } = useAuth();
-
   const createPost = async (postData: Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       const { data, error: insertError } = await supabase
@@ -37,19 +34,11 @@ export const usePostManagement = (
         ? err.message 
         : 'An unknown error occurred';
       
-      if (errorMessage.includes('row-level security')) {
-        toast({
-          title: "Permission Error",
-          description: "You don't have permission to create blog posts. Only admins can perform this action.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error creating blog post",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error creating blog post",
+        description: errorMessage,
+        variant: "destructive",
+      });
       return null;
     }
   };
@@ -80,19 +69,11 @@ export const usePostManagement = (
         ? err.message 
         : 'An unknown error occurred';
       
-      if (errorMessage.includes('row-level security')) {
-        toast({
-          title: "Permission Error",
-          description: "You don't have permission to update blog posts. Only admins can perform this action.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error updating blog post",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error updating blog post",
+        description: errorMessage,
+        variant: "destructive",
+      });
       
       return false;
     }
@@ -100,28 +81,7 @@ export const usePostManagement = (
 
   const deletePost = async (id: string) => {
     try {
-      if (!isAdmin) {
-        console.error('Permission denied: Only admins can delete posts');
-        toast({
-          title: "Permission Error",
-          description: "Only administrators can delete blog posts.",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      if (!user) {
-        console.error('No user found. Must be logged in to delete posts');
-        toast({
-          title: "Authentication Error",
-          description: "You must be logged in to delete posts.",
-          variant: "destructive",
-        });
-        return false;
-      }
-
       console.log(`Attempting to delete blog post with ID: ${id}`);
-      console.log(`Current user ID: ${user.id}, isAdmin: ${isAdmin}`);
       
       // First, check if the post exists
       const { data: existingPost, error: checkError } = await supabase

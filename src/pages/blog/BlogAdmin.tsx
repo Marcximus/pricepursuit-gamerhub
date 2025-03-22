@@ -1,10 +1,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useBlog } from '@/contexts/blog';
-import { useAuth } from '@/contexts/AuthContext';
 import Navigation from '@/components/Navigation';
 import { toast } from '@/components/ui/use-toast';
-import { Navigate } from 'react-router-dom';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { 
   BlogAdminHeader, 
@@ -16,7 +14,6 @@ import {
 
 const BlogAdmin = () => {
   const { posts, loading, error, fetchPosts } = useBlog();
-  const { isAdmin, isLoading, user } = useAuth();
   const { 
     deleteDialogOpen, 
     setDeleteDialogOpen, 
@@ -59,53 +56,6 @@ const BlogAdmin = () => {
       return () => clearTimeout(refreshTimer);
     }
   }, [deleteSuccess, fetchPosts]);
-
-  // Log auth state for debugging
-  useEffect(() => {
-    console.log('BlogAdmin: Auth state -', {
-      isLoading,
-      isAdmin,
-      userLoggedIn: !!user,
-      userId: user?.id
-    });
-  }, [isLoading, isAdmin, user]);
-
-  // Handle authentication loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="h-8 w-8 animate-spin mr-2" />
-        <p>Loading admin panel...</p>
-      </div>
-    );
-  }
-
-  // Check if user is logged in
-  if (!user) {
-    console.log('BlogAdmin: User not logged in, redirecting to login page');
-    toast({
-      title: "Authentication Required",
-      description: "Please log in to access the admin panel",
-      variant: "destructive",
-    });
-    return <Navigate to="/login" replace />;
-  }
-
-  // Check admin privileges
-  if (!isAdmin) {
-    console.log('BlogAdmin: User lacks admin privileges, redirecting to home');
-    toast({
-      title: "Access Denied",
-      description: "Only administrators can access the admin panel",
-      variant: "destructive",
-    });
-    
-    // Show more detailed debug information in development
-    console.log('BlogAdmin: User ID lacking admin access:', user.id);
-    console.log('BlogAdmin: Email:', user.email);
-    
-    return <Navigate to="/" replace />;
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
