@@ -16,6 +16,12 @@ export async function processTop10Content(content: string, prompt: string): Prom
   console.log(`📄 Content length before processing: ${content.length} characters`);
   
   try {
+    // First, clean up the content
+    let processedContent = cleanupContent(content);
+    
+    // Fix any malformed HTML tags from AI response
+    processedContent = fixHtmlTags(processedContent);
+    
     // Get products either from localStorage or by fetching them
     const products = await getProducts(prompt);
     
@@ -27,7 +33,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
         description: 'We couldn\'t find any products matching your criteria for the Top 10 post',
         variant: 'default',
       });
-      return fixHtmlTags(content); // At least fix HTML tags even without products
+      return fixHtmlTags(processedContent); // At least fix HTML tags even without products
     }
     
     console.log(`✅ Successfully fetched ${products.length} products from Amazon`);
@@ -36,12 +42,6 @@ export async function processTop10Content(content: string, prompt: string): Prom
       console.log(`First product has image URL: ${products[0]?.image_url || products[0]?.image || 'None'}`);
       console.log(`First product has HTML content: ${!!products[0]?.htmlContent}`);
     }
-    
-    // First, clean up the content
-    let processedContent = cleanupContent(content);
-    
-    // Fix any malformed HTML tags from AI response
-    processedContent = fixHtmlTags(processedContent);
     
     // Replace the product data placeholders with actual data
     console.log('🔄 Replacing product data placeholders in content...');
@@ -60,27 +60,26 @@ export async function processTop10Content(content: string, prompt: string): Prom
     if (replacementsCount === 0) {
       console.warn('⚠️ No product placeholders were replaced in the content');
       
-      // If no placeholders were found, we'll check the content for any mentions of product data
-      if (content.includes('[PRODUCT_DATA_')) {
-        console.log('🔍 Found placeholder patterns but couldn\'t replace them');
-      } else {
-        console.warn('⚠️ No placeholder patterns found in content at all');
-        
-        // As a fallback, add products one by one at the end of the content
-        console.log('🔄 Adding fallback product cards at the end');
-        processedContent += '<h2>Top 10 Lenovo Laptops</h2>';
-        
-        for (let i = 0; i < Math.min(products.length, 10); i++) {
-          const product = products[i];
-          if (product) {
-            processedContent += '\n\n' + generateProductHtml(product, i + 1);
-          }
+      // If no placeholders were found, we'll add products one by one at the end of the content
+      console.log('🔄 Adding fallback product cards at the end');
+      processedContent += '<h2>Top 10 Lenovo Laptops</h2>';
+      
+      for (let i = 0; i < Math.min(products.length, 10); i++) {
+        const product = products[i];
+        if (product) {
+          processedContent += '\n\n' + generateProductHtml(product, i + 1);
         }
       }
     }
     
     // Final cleanup to make sure no malformed HTML remains
     processedContent = fixHtmlTags(processedContent);
+    
+    // Log what we're returning for debugging
+    console.log(`📄 Final content length: ${processedContent.length} characters`);
+    console.log(`📄 Content first 100 chars: "${processedContent.substring(0, 100)}..."`);
+    console.log(`📄 Content has video: ${processedContent.includes('humixPlayers')}`);
+    console.log(`📄 Product card count: ${(processedContent.match(/product-card/g) || []).length}`);
     
     return processedContent;
   } catch (error) {

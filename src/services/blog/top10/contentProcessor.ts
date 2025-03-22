@@ -1,3 +1,4 @@
+
 /**
  * Functions for processing Top10 content
  */
@@ -30,6 +31,12 @@ export function fixHtmlTags(content: string): string {
   // Fix any unclosed list items
   processedContent = processedContent.replace(/<li>([^<]*?)(?=<(?!\/li>))/g, '<li>$1</li>');
   
+  // Clean up any product-placeholder divs that might be malformed
+  processedContent = processedContent.replace(/<div class="product-placeholder"[^>]*>.*?<\/div>/g, '[PRODUCT_PLACEHOLDER]');
+  
+  // Remove duplicate product cards that might already be in the content
+  processedContent = processedContent.replace(/<div class="product-card[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g, '[PRODUCT_PLACEHOLDER]');
+  
   // Wrap plain text blocks in <p> tags if they're not already wrapped
   processedContent = processedContent.replace(/(?<=>)([^<]+)(?=<)/g, (match, p1) => {
     // Skip if it's just whitespace
@@ -46,6 +53,7 @@ export function replaceProductPlaceholders(content: string, products: any[]): {
   content: string; 
   replacementsCount: number 
 } {
+  // First, clean up the content of any existing product cards
   let processedContent = content;
   let replacementsCount = 0;
   
@@ -56,63 +64,106 @@ export function replaceProductPlaceholders(content: string, products: any[]): {
   const productLimit = Math.min(products.length, 10);
   console.log(`🔢 Will use exactly ${productLimit} products for the Top10 list`);
   
-  // First, remove any existing product cards that might be in text form
-  processedContent = processedContent.replace(/<div class="product-card"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g, '[PRODUCT_PLACEHOLDER]');
+  // Remove all existing product cards to prevent duplication
+  processedContent = processedContent.replace(/<div class="product-card[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g, '[PRODUCT_PLACEHOLDER]');
   
-  // Process placeholders in order
-  for (let i = 0; i < productLimit; i++) {
-    const product = products[i];
-    const productNum = i + 1;
-    
-    if (product) {
-      // Generate fresh HTML for each product to avoid any issues with existing HTML
-      const productHtml = generateProductHtml(product, productNum);
-      
-      // Replace placeholders with our properly formatted product HTML
-      const divPlaceholder = `<div class="product-placeholder" data-product-id="${productNum}">[PRODUCT_DATA_${productNum}]</div>`;
-      const rawPlaceholder = `[PRODUCT_DATA_${productNum}]`;
-      const simplePlaceholder = `[PRODUCT_PLACEHOLDER]`;
-      
-      if (processedContent.includes(divPlaceholder)) {
-        processedContent = processedContent.replace(divPlaceholder, productHtml);
-        replacementsCount += 1;
-      } else if (processedContent.includes(rawPlaceholder)) {
-        processedContent = processedContent.replace(rawPlaceholder, productHtml);
-        replacementsCount += 1;
-      } else if (processedContent.includes(simplePlaceholder) && i === 0) {
-        // Replace the first placeholder we find with the product HTML
-        processedContent = processedContent.replace(simplePlaceholder, productHtml);
-        replacementsCount += 1;
-      } else {
-        // If no specific placeholder for this product number, add it at the end
-        if (i === 0) {
-          const h2Match = processedContent.match(/<h2[^>]*>.*?<\/h2>/i);
-          if (h2Match && h2Match.index) {
-            const insertPosition = h2Match.index + h2Match[0].length;
-            processedContent = 
-              processedContent.substring(0, insertPosition) + 
-              '\n\n' + productHtml + '\n\n' + 
-              processedContent.substring(insertPosition);
-            replacementsCount += 1;
-          } else {
-            // No h2 found, append at the end
-            processedContent += '\n\n' + productHtml;
-            replacementsCount += 1;
-          }
-        } else {
-          // For other products, just append them at the end
-          processedContent += '\n\n' + productHtml;
-          replacementsCount += 1;
-        }
+  // Extract all potential places where products should be inserted
+  const placeholders = [
+    ...processedContent.matchAll(/<div class="product-placeholder"[^>]*>\s*\[PRODUCT_DATA_(\d+)\]\s*<\/div>/g),
+    ...processedContent.matchAll(/\[PRODUCT_DATA_(\d+)\]/g),
+    ...processedContent.matchAll(/\[PRODUCT_PLACEHOLDER\]/g)
+  ];
+  
+  console.log(`📍 Found ${placeholders.length} potential product placeholders`);
+  
+  // If we have explicit numbered placeholders like [PRODUCT_DATA_1], use those first
+  const numberedPlaceholders = new Map();
+  placeholders.forEach(match => {
+    if (match[1]) {
+      const productNum = parseInt(match[1], 10);
+      if (!numberedPlaceholders.has(productNum)) {
+        numberedPlaceholders.set(productNum, match[0]);
       }
-      
-      // Replace any remaining placeholders with the product rank
-      processedContent = processedContent.replace(
-        new RegExp(`\\[PRODUCT_DATA_${productNum}\\]`, 'g'), 
-        `<strong>#${productNum} ${product.title || 'Lenovo Laptop'}</strong>`
-      );
+    }
+  });
+  
+  // For each explicitly numbered placeholder, insert the corresponding product
+  for (let i = 1; i <= productLimit; i++) {
+    const placeholder = numberedPlaceholders.get(i);
+    
+    if (placeholder && i <= products.length) {
+      const product = products[i - 1];
+      const productHtml = generateProductHtml(product, i);
+      processedContent = processedContent.replace(placeholder, productHtml);
+      replacementsCount++;
     }
   }
+  
+  // If we still have products left and there are un-numbered placeholders, use those
+  const remainingPlaceholders = processedContent.match(/\[PRODUCT_PLACEHOLDER\]/g) || [];
+  let placeholderIndex = 0;
+  
+  for (let i = 0; i < productLimit; i++) {
+    if (replacementsCount >= productLimit) break;
+    
+    if (placeholderIndex < remainingPlaceholders.length) {
+      const product = products[i];
+      const productHtml = generateProductHtml(product, i + 1);
+      processedContent = processedContent.replace('[PRODUCT_PLACEHOLDER]', productHtml);
+      replacementsCount++;
+      placeholderIndex++;
+    }
+  }
+  
+  // If we STILL haven't placed all products, append them after suitable headings
+  if (replacementsCount < productLimit) {
+    console.log(`⚠️ Didn't find enough placeholders, will attempt to insert products after headings`);
+    
+    // Find all h3 tags that might be product titles
+    const h3Tags = [...processedContent.matchAll(/<h3[^>]*>(.*?)<\/h3>/g)];
+    
+    for (let i = 0; i < Math.min(h3Tags.length, productLimit); i++) {
+      if (replacementsCount >= productLimit) break;
+      
+      if (i < h3Tags.length && i < products.length) {
+        const h3Tag = h3Tags[i][0];
+        const h3Position = processedContent.indexOf(h3Tag) + h3Tag.length;
+        
+        // Check if there's already a product card after this heading
+        const nextChunk = processedContent.substring(h3Position, h3Position + 200);
+        if (!nextChunk.includes('product-card')) {
+          const product = products[i];
+          const productHtml = generateProductHtml(product, i + 1);
+          
+          processedContent = 
+            processedContent.substring(0, h3Position) + 
+            '\n\n' + productHtml + '\n\n' + 
+            processedContent.substring(h3Position);
+          
+          replacementsCount++;
+        }
+      }
+    }
+  }
+  
+  // Final fallback: if we still haven't placed all products, add them at the end
+  if (replacementsCount < productLimit) {
+    console.log(`⚠️ Fallback: Adding remaining products at the end of content`);
+    processedContent += '\n<h2>Top Lenovo Laptops</h2>\n';
+    
+    for (let i = replacementsCount; i < productLimit; i++) {
+      if (i < products.length) {
+        const product = products[i];
+        processedContent += '\n\n' + generateProductHtml(product, i + 1);
+        replacementsCount++;
+      }
+    }
+  }
+  
+  // Clean up any remaining placeholders
+  processedContent = processedContent.replace(/\[PRODUCT_DATA_\d+\]/g, '');
+  processedContent = processedContent.replace(/\[PRODUCT_PLACEHOLDER\]/g, '');
+  processedContent = processedContent.replace(/<div class="product-placeholder"[^>]*>.*?<\/div>/g, '');
   
   return { content: processedContent, replacementsCount };
 }
