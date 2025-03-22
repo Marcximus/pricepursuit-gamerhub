@@ -23,56 +23,27 @@ export async function getProducts(prompt: string): Promise<any[]> {
       console.log(`Found ${products.length} products in localStorage`);
       if (products.length > 0) {
         console.log(`First product title: ${products[0]?.title || 'Unknown'}`);
-        console.log(`First product has HTML content: ${!!products[0]?.htmlContent}`);
+        console.log(`First product image URL: ${products[0]?.image_url || products[0]?.image || 'None'}`);
         
-        // If htmlContent is missing, generate it now
-        if (!products[0]?.htmlContent) {
-          console.log('🔄 Generating missing HTML content for products...');
-          products = products.map((product, index) => {
-            if (!product.htmlContent) {
-              // Ensure product has title
-              if (!product.title && product.asin) {
-                product.title = `Lenovo Laptop (${product.asin})`;
-              }
-              
-              // Generate HTML content for the product
-              const stars = generateStars(product.rating);
-              const price = formatPrice(product.price);
-              const productUrl = formatAmazonUrl(product.asin);
-              
-              // Generate HTML content using the new utility functions if possible
-              if (typeof generateStarsHtml === 'function' && typeof generateAffiliateButtonHtml === 'function') {
-                product.htmlContent = `
-                  <div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6">
-                    <div class="p-4">
-                      <h3 class="text-xl font-semibold mb-2">${product.title}</h3>
-                      <div class="flex flex-col md:flex-row">
-                        <div class="md:w-1/3">
-                          <img src="${product.image_url || 'https://via.placeholder.com/300x300?text=No+Image'}" 
-                               alt="${product.title}" 
-                               class="w-full h-auto rounded-md" />
-                        </div>
-                        <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
-                          ${generateStarsHtml(product.rating, product.reviews_count)}
-                          <p class="text-lg font-bold mb-3">${price}</p>
-                          <div class="mb-4">${generateAffiliateButtonHtml(product.asin)}</div>
-                          <div class="text-sm text-gray-600">
-                            <p><strong>ASIN:</strong> ${product.asin}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                `;
-              } else {
-                product.htmlContent = generateProductHtml(product, index + 1);
-              }
-              
-              console.log(`✅ Generated HTML content for product #${index + 1}`);
-            }
-            return product;
-          });
-        }
+        // Normalize image URL property across all products
+        products = products.map(product => {
+          // Ensure all products have a standardized image_url property
+          if (!product.image_url && product.image) {
+            product.image_url = product.image;
+          }
+          if (!product.image_url && !product.image && product.imageUrl) {
+            product.image_url = product.imageUrl;
+          }
+          if (!product.image_url) {
+            product.image_url = 'https://via.placeholder.com/300x200?text=Lenovo+Laptop';
+          }
+          
+          // Generate fresh HTML for each product
+          const productHtml = generateProductHtml(product, product.rank || 1);
+          product.htmlContent = productHtml;
+          
+          return product;
+        });
       }
       // Continue to clear the storage
       localStorage.removeItem('currentTop10Products');
@@ -92,56 +63,31 @@ export async function getProducts(prompt: string): Promise<any[]> {
       products = await fetchAmazonProducts(extractedParams);
       console.log(`✅ fetchAmazonProducts returned ${products?.length || 0} products`);
       
-      // Check if products are missing titles
+      // Normalize product data
       if (products.length > 0) {
-        // Ensure all products have titles
         products = products.map((product, index) => {
+          // Ensure essential fields
           if (!product.title && product.asin) {
             product.title = `Lenovo Laptop (${product.asin})`;
           }
-          return product;
-        });
-      }
-      
-      // Check if htmlContent is missing and generate it if needed
-      if (products.length > 0 && !products[0]?.htmlContent) {
-        console.log('🔄 Generating missing HTML content for newly fetched products...');
-        products = products.map((product, index) => {
-          if (!product.htmlContent) {
-            // Generate HTML content for the product using new utility functions if possible
-            if (typeof generateStarsHtml === 'function' && typeof generateAffiliateButtonHtml === 'function') {
-              product.htmlContent = `
-                <div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6">
-                  <div class="p-4">
-                    <h3 class="text-xl font-semibold mb-2">${product.title}</h3>
-                    <div class="flex flex-col md:flex-row">
-                      <div class="md:w-1/3">
-                        <img src="${product.image_url || 'https://via.placeholder.com/300x300?text=No+Image'}" 
-                             alt="${product.title}" 
-                             class="w-full h-auto rounded-md" />
-                      </div>
-                      <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
-                        ${generateStarsHtml(product.rating, product.reviews_count)}
-                        <p class="text-lg font-bold mb-3">${formatPrice(product.price)}</p>
-                        <div class="mb-4">${generateAffiliateButtonHtml(product.asin)}</div>
-                        <div class="text-sm text-gray-600">
-                          <p><strong>ASIN:</strong> ${product.asin}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              `;
-            } else {
-              // Fall back to the original method
-              const stars = generateStars(product.rating);
-              const price = formatPrice(product.price);
-              const productUrl = formatAmazonUrl(product.asin);
-              product.htmlContent = generateProductHtml(product, index + 1);
-            }
-            
-            console.log(`✅ Generated HTML content for product #${index + 1}`);
+          
+          // Standardize image URL field
+          if (!product.image_url && product.image) {
+            product.image_url = product.image;
           }
+          if (!product.image_url && !product.image && product.imageUrl) {
+            product.image_url = product.imageUrl;
+          }
+          if (!product.image_url) {
+            product.image_url = 'https://via.placeholder.com/300x200?text=Lenovo+Laptop';
+          }
+          
+          // Add rank
+          product.rank = index + 1;
+          
+          // Generate HTML content
+          product.htmlContent = generateProductHtml(product, product.rank);
+          
           return product;
         });
       }

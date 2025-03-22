@@ -5,7 +5,7 @@
 import { toast } from '@/components/ui/use-toast';
 import { getProducts } from './productHandler';
 import { cleanupContent, fixHtmlTags, replaceProductPlaceholders } from './contentProcessor';
-import { addVideoEmbed } from './htmlGenerator';
+import { addVideoEmbed, generateProductHtml } from './htmlGenerator';
 
 /**
  * Process a Top10 blog post content by inserting product data and enhancing the content
@@ -33,6 +33,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
     console.log(`✅ Successfully fetched ${products.length} products from Amazon`);
     if (products.length > 0) {
       console.log(`🔍 First product: "${products[0]?.title?.substring(0, 30) || 'Unknown'}..."`);
+      console.log(`First product has image URL: ${products[0]?.image_url || products[0]?.image || 'None'}`);
       console.log(`First product has HTML content: ${!!products[0]?.htmlContent}`);
     }
     
@@ -64,8 +65,22 @@ export async function processTop10Content(content: string, prompt: string): Prom
         console.log('🔍 Found placeholder patterns but couldn\'t replace them');
       } else {
         console.warn('⚠️ No placeholder patterns found in content at all');
+        
+        // As a fallback, add products one by one at the end of the content
+        console.log('🔄 Adding fallback product cards at the end');
+        processedContent += '<h2>Top 10 Lenovo Laptops</h2>';
+        
+        for (let i = 0; i < Math.min(products.length, 10); i++) {
+          const product = products[i];
+          if (product) {
+            processedContent += '\n\n' + generateProductHtml(product, i + 1);
+          }
+        }
       }
     }
+    
+    // Final cleanup to make sure no malformed HTML remains
+    processedContent = fixHtmlTags(processedContent);
     
     return processedContent;
   } catch (error) {

@@ -13,7 +13,7 @@ export function generateProductHtml(product: any, rank: number): string {
     : (product.price?.value ? `$${parseFloat(product.price.value).toFixed(2)}` : 'Price not available');
   const rating = product.rating ? `${product.rating}/5` : 'No ratings';
   const reviews = product.ratings_total ? `(${product.ratings_total} reviews)` : '';
-  const image = product.imageUrl || product.image || '';
+  const image = product.imageUrl || product.image || product.image_url || 'https://via.placeholder.com/300x200?text=Lenovo+Laptop';
   const asin = product.asin || '';
   const url = product.productUrl || product.url || `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
   
@@ -23,7 +23,7 @@ export function generateProductHtml(product: any, rank: number): string {
     : (Array.isArray(product.features) ? product.features.slice(0, 3) : []);
   
   return `
-    <div class="product-card flex flex-col md:flex-row overflow-hidden rounded-lg shadow-lg border border-gray-200 my-8 hover:shadow-xl transition-shadow bg-white" data-asin="${escapeHtml(asin)}" data-rank="${rank}">
+    <div class="product-card w-full clear-both flex flex-col md:flex-row overflow-hidden rounded-lg shadow-lg border border-gray-200 my-12 hover:shadow-xl transition-shadow bg-white" data-asin="${escapeHtml(asin)}" data-rank="${rank}">
       <div class="relative product-image w-full md:w-1/3 flex-shrink-0">
         <span class="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded font-bold text-sm product-rank">#${rank}</span>
         <a href="${escapeHtml(url)}" target="_blank" rel="nofollow noopener">
@@ -67,7 +67,7 @@ export function generateProductHtml(product: any, rank: number): string {
 export function addVideoEmbed(content: string): string {
   if (!content.includes('humixPlayers')) {
     console.log('📼 Adding Humix video embed to content');
-    const videoEmbed = `<div class="video-container my-8"><script data-ezscrex="false" data-cfasync="false">(window.humixPlayers = window.humixPlayers || []).push({target: document.currentScript});</script><script async data-ezscrex="false" data-cfasync="false" src="https://www.humix.com/video.js"></script></div>`;
+    const videoEmbed = `<div class="video-container my-8 clear-both"><script data-ezscrex="false" data-cfasync="false">(window.humixPlayers = window.humixPlayers || []).push({target: document.currentScript});</script><script async data-ezscrex="false" data-cfasync="false" src="https://www.humix.com/video.js"></script></div>`;
     
     // Insert after the first h2 or at the end if no h2 is found
     const h2Match = content.match(/<h2[^>]*>.*?<\/h2>/i);

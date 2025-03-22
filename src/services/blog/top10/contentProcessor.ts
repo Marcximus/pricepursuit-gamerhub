@@ -56,50 +56,61 @@ export function replaceProductPlaceholders(content: string, products: any[]): {
   const productLimit = Math.min(products.length, 10);
   console.log(`🔢 Will use exactly ${productLimit} products for the Top10 list`);
   
-  // Process both standard div placeholders and raw product data mentions
+  // First, remove any existing product cards that might be in text form
+  processedContent = processedContent.replace(/<div class="product-card"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g, '[PRODUCT_PLACEHOLDER]');
+  
+  // Process placeholders in order
   for (let i = 0; i < productLimit; i++) {
     const product = products[i];
     const productNum = i + 1;
     
-    // Look for the product card HTML that appears as text in the content
-    const productCardRegex = new RegExp(`\\s*<div class="product-card"[^>]*>([\\s\\S]*?)<\\/div>\\s*`, 'g');
-    
     if (product) {
-      let productHtml = product.htmlContent;
+      // Generate fresh HTML for each product to avoid any issues with existing HTML
+      const productHtml = generateProductHtml(product, productNum);
       
-      // If htmlContent is missing but we have product data, generate it on the fly
-      if (!productHtml) {
-        console.warn(`⚠️ No HTML content found for product #${productNum}`);
-        console.log(`Product data exists but htmlContent is missing. Title: ${product.title || 'Unknown'}`);
-        productHtml = generateProductHtml(product, productNum);
-      }
-      
-      // Replace the product card HTML that's showing as text
-      if (productCardRegex.test(processedContent)) {
-        processedContent = processedContent.replace(productCardRegex, '\n' + productHtml + '\n');
-        replacementsCount += 1;
-      }
-      
-      // Also replace any remaining placeholders
+      // Replace placeholders with our properly formatted product HTML
       const divPlaceholder = `<div class="product-placeholder" data-product-id="${productNum}">[PRODUCT_DATA_${productNum}]</div>`;
       const rawPlaceholder = `[PRODUCT_DATA_${productNum}]`;
+      const simplePlaceholder = `[PRODUCT_PLACEHOLDER]`;
       
       if (processedContent.includes(divPlaceholder)) {
-        processedContent = processedContent.split(divPlaceholder).join(productHtml);
+        processedContent = processedContent.replace(divPlaceholder, productHtml);
         replacementsCount += 1;
+      } else if (processedContent.includes(rawPlaceholder)) {
+        processedContent = processedContent.replace(rawPlaceholder, productHtml);
+        replacementsCount += 1;
+      } else if (processedContent.includes(simplePlaceholder) && i === 0) {
+        // Replace the first placeholder we find with the product HTML
+        processedContent = processedContent.replace(simplePlaceholder, productHtml);
+        replacementsCount += 1;
+      } else {
+        // If no specific placeholder for this product number, add it at the end
+        if (i === 0) {
+          const h2Match = processedContent.match(/<h2[^>]*>.*?<\/h2>/i);
+          if (h2Match && h2Match.index) {
+            const insertPosition = h2Match.index + h2Match[0].length;
+            processedContent = 
+              processedContent.substring(0, insertPosition) + 
+              '\n\n' + productHtml + '\n\n' + 
+              processedContent.substring(insertPosition);
+            replacementsCount += 1;
+          } else {
+            // No h2 found, append at the end
+            processedContent += '\n\n' + productHtml;
+            replacementsCount += 1;
+          }
+        } else {
+          // For other products, just append them at the end
+          processedContent += '\n\n' + productHtml;
+          replacementsCount += 1;
+        }
       }
       
-      if (processedContent.includes(rawPlaceholder)) {
-        processedContent = processedContent.split(rawPlaceholder).join(productHtml);
-        replacementsCount += 1;
-      }
-      
-      // Replace product placeholders with data-asin attribute
-      const asinPlaceholderRegex = new RegExp(`<div class="product-placeholder"[^>]*data-asin="${product.asin}"[^>]*><\\/div>`, 'g');
-      if (asinPlaceholderRegex.test(processedContent)) {
-        processedContent = processedContent.replace(asinPlaceholderRegex, productHtml);
-        replacementsCount += 1;
-      }
+      // Replace any remaining placeholders with the product rank
+      processedContent = processedContent.replace(
+        new RegExp(`\\[PRODUCT_DATA_${productNum}\\]`, 'g'), 
+        `<strong>#${productNum} ${product.title || 'Lenovo Laptop'}</strong>`
+      );
     }
   }
   
