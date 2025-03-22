@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useBlog } from '@/contexts/blog';
@@ -34,12 +35,6 @@ const BlogPost = () => {
           .prose ul.my-4 { margin: 1rem 0; padding-left: 1.5rem; }
           .prose ul.my-4 li { margin-bottom: 0.5rem; list-style-type: none; position: relative; padding-left: 1.5rem; }
           .prose ul.my-4 li:before { content: "✅"; position: absolute; left: 0; }
-          
-          /* Product card styling */
-          .product-card { margin: 2rem 0; border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden; }
-          .product-card img { max-width: 100%; height: auto; display: block; }
-          .product-card h4 { font-size: 1.25rem; margin-bottom: 0.5rem; }
-          .product-card a.check-price-btn { display: inline-block; padding: 0.5rem 1rem; background-color: #2563eb; color: white; border-radius: 0.25rem; text-decoration: none; }
         `;
         document.head.appendChild(styleElement);
       }
@@ -116,15 +111,8 @@ const BlogPost = () => {
   const fixTopTenHtmlIfNeeded = (content: string, category: string) => {
     if (category !== 'Top10') return content;
     
-    // Check if there are unclosed tags or malformed HTML in the content
+    // Check if there are unclosed tags in the content
     let processedContent = content;
-    
-    // Remove any broken product card HTML
-    processedContent = processedContent.replace(/<div class="product-image">[\s\S]*?<\/div>\s*<\/div>\s*<\/div>\s*/g, '');
-    processedContent = processedContent.replace(/<div class="product-details">[\s\S]*?<\/div>\s*<\/div>\s*<\/div>\s*/g, '');
-    
-    // Remove overlapping product cards
-    processedContent = processedContent.replace(/<div class="product-card"[^>]*>(?:[^<]|<(?!div class="product-card"))*?<div class="product-card"/g, '<div class="product-card"');
     
     // Ensure h1 tags are properly formatted
     processedContent = processedContent.replace(/<h1([^>]*)>([^<]*?)(?=<(?!\/h1>))/g, '<h1$1>$2</h1>');

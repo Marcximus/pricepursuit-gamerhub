@@ -5,7 +5,7 @@
 import { toast } from '@/components/ui/use-toast';
 import { getProducts } from './productHandler';
 import { cleanupContent, fixHtmlTags, replaceProductPlaceholders } from './contentProcessor';
-import { addVideoEmbed, generateProductHtml } from './htmlGenerator';
+import { addVideoEmbed } from './htmlGenerator';
 
 /**
  * Process a Top10 blog post content by inserting product data and enhancing the content
@@ -16,12 +16,6 @@ export async function processTop10Content(content: string, prompt: string): Prom
   console.log(`📄 Content length before processing: ${content.length} characters`);
   
   try {
-    // First, clean up the content - do this before fetching products to ensure clean HTML
-    let processedContent = cleanupContent(content);
-    
-    // Fix any malformed HTML tags from AI response
-    processedContent = fixHtmlTags(processedContent);
-    
     // Get products either from localStorage or by fetching them
     const products = await getProducts(prompt);
     
@@ -33,7 +27,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
         description: 'We couldn\'t find any products matching your criteria for the Top 10 post',
         variant: 'default',
       });
-      return processedContent; // Already fixed HTML tags above
+      return fixHtmlTags(content); // At least fix HTML tags even without products
     }
     
     console.log(`✅ Successfully fetched ${products.length} products from Amazon`);
@@ -41,6 +35,12 @@ export async function processTop10Content(content: string, prompt: string): Prom
       console.log(`🔍 First product: "${products[0]?.title?.substring(0, 30) || 'Unknown'}..."`);
       console.log(`First product has HTML content: ${!!products[0]?.htmlContent}`);
     }
+    
+    // First, clean up the content
+    let processedContent = cleanupContent(content);
+    
+    // Fix any malformed HTML tags from AI response
+    processedContent = fixHtmlTags(processedContent);
     
     // Replace the product data placeholders with actual data
     console.log('🔄 Replacing product data placeholders in content...');
@@ -53,9 +53,6 @@ export async function processTop10Content(content: string, prompt: string): Prom
     // Add Humix video embed if not already present
     processedContent = addVideoEmbed(processedContent);
     
-    // Final cleanup pass to ensure all HTML is valid
-    processedContent = fixHtmlTags(processedContent);
-    
     console.log(`✅ Replaced ${replacementsCount} product placeholders in content`);
     console.log(`📏 Content length after processing: ${processedContent.length} characters`);
     
@@ -65,24 +62,6 @@ export async function processTop10Content(content: string, prompt: string): Prom
       // If no placeholders were found, we'll check the content for any mentions of product data
       if (content.includes('[PRODUCT_DATA_')) {
         console.log('🔍 Found placeholder patterns but couldn\'t replace them');
-        
-        // Try a more aggressive approach to insert products if normal method failed
-        const h3Tags = processedContent.match(/<h3>.*?<\/h3>/g);
-        if (h3Tags && h3Tags.length > 0 && products.length > 0) {
-          console.log('🔧 Attempting alternative product insertion method using h3 tags');
-          
-          // Insert products after each h3 tag
-          for (let i = 0; i < Math.min(h3Tags.length, products.length); i++) {
-            const productHtml = products[i].htmlContent || generateProductHtml(products[i], i + 1);
-            const h3Tag = h3Tags[i];
-            processedContent = processedContent.replace(
-              h3Tag,
-              `${h3Tag}\n${productHtml}\n`
-            );
-          }
-          
-          console.log('✅ Alternative product insertion completed');
-        }
       } else {
         console.warn('⚠️ No placeholder patterns found in content at all');
       }
