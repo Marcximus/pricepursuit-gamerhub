@@ -130,19 +130,16 @@ export const usePostManagement = (
       
       console.log(`Sending delete request to Supabase for post ID: ${id}`);
       
-      // Use explicit RPC call for deletion to bypass potential RLS issues
-      const { data: deleteData, error: deleteError } = await supabase
-        .rpc('delete_blog_post', { post_id: id });
+      // Directly call delete operation instead of using RPC
+      // Since we're authenticated as admin, RLS policies will allow this
+      const { error: deleteError } = await supabase
+        .from('blog_posts')
+        .delete()
+        .eq('id', id);
       
       if (deleteError) {
         console.error('Supabase error during deletion:', deleteError);
         throw new Error(deleteError.message);
-      }
-      
-      if (!deleteData) {
-        console.warn(`No confirmation received for deletion of post ID: ${id}`);
-      } else {
-        console.log(`Successfully deleted post ID: ${id} with result:`, deleteData);
       }
       
       // Update local state to reflect deletion

@@ -334,6 +334,12 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      delete_blog_post: {
+        Args: {
+          post_id: string
+        }
+        Returns: boolean
+      }
       get_duplicate_asins: {
         Args: Record<PropertyKey, never>
         Returns: {
