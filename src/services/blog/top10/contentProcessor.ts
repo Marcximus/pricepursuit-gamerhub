@@ -1,3 +1,4 @@
+
 /**
  * Functions for processing Top10 content
  */
@@ -36,6 +37,11 @@ export function fixHtmlTags(content: string): string {
   // Remove any duplicate or nested product-card divs
   processedContent = processedContent.replace(/<div class="product-card"[^>]*>(?:[^<]|<(?!div class="product-card"))*?<div class="product-card"/g, '<div class="product-card"');
   
+  // Fix broken div closures in product cards
+  processedContent = processedContent.replace(/<div class="product-card[^>]*>(?:[^<]|<(?!\/div>))*?<\/div>(?![^<]*<\/div>)/g, match => {
+    return match + '</div>';
+  });
+  
   // Wrap plain text blocks in <p> tags if they're not already wrapped
   processedContent = processedContent.replace(/(?<=>)([^<]+)(?=<)/g, (match, p1) => {
     // Skip if it's just whitespace
@@ -66,6 +72,9 @@ export function replaceProductPlaceholders(content: string, products: any[]): {
   processedContent = processedContent.replace(/<div class="product-card"[^>]*>[\s\S]*?<\/div>\s*<\/div>\s*<\/div>\s*/g, '');
   processedContent = processedContent.replace(/<div class="product-image">[\s\S]*?<\/div>\s*<\/div>\s*<\/div>\s*/g, '');
   
+  // Add spacing between replacement operations for better separation
+  const addedProductHtml: string[] = [];
+  
   // Process both standard div placeholders and raw product data mentions
   for (let i = 0; i < productLimit; i++) {
     const product = products[i];
@@ -80,6 +89,13 @@ export function replaceProductPlaceholders(content: string, products: any[]): {
         console.log(`Product data exists but htmlContent is missing. Title: ${product.title || 'Unknown'}`);
         productHtml = generateProductHtml(product, productNum);
       }
+      
+      // Track which product HTML we've already added to avoid duplicates
+      if (addedProductHtml.includes(productHtml)) {
+        // Regenerate the HTML with small variations to avoid exact duplicates
+        productHtml = generateProductHtml({...product, productNum}, productNum);
+      }
+      addedProductHtml.push(productHtml);
       
       // Replace the product card placeholder divs
       const divPlaceholder = `<div class="product-placeholder" data-product-id="${productNum}">[PRODUCT_DATA_${productNum}]</div>`;

@@ -9,7 +9,7 @@
 export function generateProductHtml(product: any, rank: number): string {
   if (!product) {
     console.warn(`⚠️ Cannot generate HTML for undefined product at rank ${rank}`);
-    return `<div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6">
+    return `<div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-8">
       <div class="p-4">
         <h4 class="text-xl font-semibold mb-2">Product information unavailable</h4>
       </div>
@@ -28,8 +28,8 @@ export function generateProductHtml(product: any, rank: number): string {
   const reviewText = reviewCount > 0 ? `(${reviewCount} reviews)` : '';
   const productUrl = product.url || product.productUrl || `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
   
-  // Return a clean, well-structured product card
-  return `<div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6">
+  // Return a clean, well-structured product card with proper spacing
+  return `<div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-8 clear-both w-full">
     <div class="p-4">
       <div class="flex flex-col md:flex-row">
         <div class="md:w-1/3 mb-4 md:mb-0">
