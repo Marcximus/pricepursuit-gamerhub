@@ -9,7 +9,7 @@ interface AutoUpdateManagerProps {
 }
 
 export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManagerProps) => {
-  // Auto-update state
+  // Auto-update state - explicitly initialize to false
   const [autoUpdateEnabled, setAutoUpdateEnabled] = useState(false);
   const [lastScheduledTime, setLastScheduledTime] = useState<Date | null>(null);
   const [timeUntilNextUpdate, setTimeUntilNextUpdate] = useState<number>(300); // 5 minutes in seconds
@@ -29,11 +29,13 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
         if (error) {
           console.error('Error checking scheduler status:', error);
           setSchedulerStatus('inactive');
+          setAutoUpdateEnabled(false); // Ensure it's false on error
           return;
         }
         
-        // Update state based on response
+        // Update state based on response - explicitly check for true
         const isEnabled = data?.enabled === true;
+        console.log('Server reports auto-update status:', isEnabled);
         setAutoUpdateEnabled(isEnabled);
         setSchedulerStatus(isEnabled ? 'active' : 'inactive');
         
@@ -50,6 +52,7 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
       } catch (err) {
         console.error('Error in checkSchedulerStatus:', err);
         setSchedulerStatus('inactive');
+        setAutoUpdateEnabled(false); // Ensure it's false on error
       }
     };
     
@@ -58,8 +61,14 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
 
   // Effect for managing the scheduled update status and UI countdown
   useEffect(() => {
+    // Clean up any existing interval regardless of state change
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+      setCountdownInterval(null);
+    }
+
     if (autoUpdateEnabled) {
-      console.log('Auto-update enabled, UI countdown started');
+      console.log('Auto-update is enabled, starting UI countdown');
       
       // Start countdown for display purposes only
       const newCountdownInterval = setInterval(() => {
@@ -87,19 +96,14 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
         setLastScheduledTime(new Date());
       }
       
+      // Return cleanup function
       return () => {
-        if (countdownInterval) {
-          clearInterval(countdownInterval);
-        }
+        clearInterval(newCountdownInterval);
       };
-    } else {
-      // Clean up when disabled
-      if (countdownInterval) {
-        clearInterval(countdownInterval);
-        setCountdownInterval(null);
-      }
     }
-  }, [autoUpdateEnabled, isUpdating, onUpdate, lastScheduledTime, countdownInterval]);
+    
+    // No need for else or return here since we already cleaned up at the start
+  }, [autoUpdateEnabled, isUpdating, onUpdate, lastScheduledTime]);
 
   // Toggle auto-update function - now communicates with the server
   const toggleAutoUpdate = async () => {
@@ -108,10 +112,8 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
       
       const newState = !autoUpdateEnabled;
       
-      // Set UI state optimistically
-      setAutoUpdateEnabled(newState);
-      
       // Call edge function to enable/disable the server-side scheduler
+      // Only update the UI state after we get a successful response
       const { data, error } = await supabase.functions.invoke('toggle-scheduler', {
         body: { enabled: newState }
       });
@@ -124,11 +126,11 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
           variant: "destructive"
         });
         
-        // Revert state on error
-        setAutoUpdateEnabled(!newState);
-        return;
+        return; // Don't update state if there's an error
       }
       
+      // Only update state after successful server response
+      setAutoUpdateEnabled(newState);
       setLastScheduledTime(newState ? new Date() : null);
       
       toast({
