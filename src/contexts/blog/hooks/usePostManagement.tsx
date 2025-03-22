@@ -9,7 +9,7 @@ export const usePostManagement = (
   posts: BlogPost[],
   setPosts: React.Dispatch<React.SetStateAction<BlogPost[]>>
 ) => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
 
   const createPost = async (postData: Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>) => {
     try {
@@ -110,7 +110,18 @@ export const usePostManagement = (
         return false;
       }
 
+      if (!user) {
+        console.error('No user found. Must be logged in to delete posts');
+        toast({
+          title: "Authentication Error",
+          description: "You must be logged in to delete posts.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
       console.log(`Attempting to delete blog post with ID: ${id}`);
+      console.log(`Current user ID: ${user.id}, isAdmin: ${isAdmin}`);
       
       // First, check if the post exists
       const { data: existingPost, error: checkError } = await supabase
@@ -131,38 +142,18 @@ export const usePostManagement = (
       
       console.log(`Sending delete request to Supabase for post ID: ${id}`);
       
-      // Try both methods for deletion to ensure it works
-      // 1. First, try direct delete operation
-      let deleteSuccess = false;
-      
-      // Direct delete method
-      const { error: directDeleteError } = await supabase
+      // Use direct delete method
+      const { error: deleteError } = await supabase
         .from('blog_posts')
         .delete()
         .eq('id', id);
       
-      if (directDeleteError) {
-        console.warn('Direct deletion failed, error:', directDeleteError);
-        
-        // 2. If direct delete fails, try using RPC function
-        const { data: rpcResult, error: rpcError } = await supabase
-          .rpc('delete_blog_post', { post_id: id });
-        
-        if (rpcError) {
-          console.error('RPC deletion also failed:', rpcError);
-          throw new Error(rpcError.message);
-        } else {
-          console.log('RPC deletion result:', rpcResult);
-          deleteSuccess = true;
-        }
-      } else {
-        console.log('Direct deletion succeeded');
-        deleteSuccess = true;
+      if (deleteError) {
+        console.error('Delete operation error:', deleteError);
+        throw new Error(deleteError.message);
       }
       
-      if (!deleteSuccess) {
-        throw new Error('Failed to delete post using both methods');
-      }
+      console.log('Direct deletion succeeded');
       
       // Update local state to reflect deletion
       setPosts(prevPosts => {

@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Navigation from '@/components/Navigation';
 import { toast } from '@/components/ui/use-toast';
 import { Navigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { 
   BlogAdminHeader, 
   BlogPostTable, 
@@ -99,6 +99,11 @@ const BlogAdmin = () => {
       description: "Only administrators can access the admin panel",
       variant: "destructive",
     });
+    
+    // Show more detailed debug information in development
+    console.log('BlogAdmin: User ID lacking admin access:', user.id);
+    console.log('BlogAdmin: Email:', user.email);
+    
     return <Navigate to="/" replace />;
   }
 
@@ -112,7 +117,10 @@ const BlogAdmin = () => {
         {loading ? (
           <div className="text-center py-12">Loading posts...</div>
         ) : error ? (
-          <div className="text-center text-red-500 py-12">Error loading posts: {error}</div>
+          <div className="text-center text-red-500 py-12">
+            <AlertTriangle className="h-8 w-8 mx-auto mb-2" />
+            <p>Error loading posts: {error}</p>
+          </div>
         ) : posts.length === 0 ? (
           <EmptyState />
         ) : (
