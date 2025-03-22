@@ -39,6 +39,7 @@ serve(async (req) => {
         .eq('key', 'last_scheduled_update')
         .single();
       
+      // Explicitly check against string 'true' for consistency
       const isEnabled = enabledData?.value === 'true';
       console.log("Current auto-update status:", isEnabled);
         
@@ -97,6 +98,7 @@ serve(async (req) => {
       const { data: cronData, error: cronError } = await supabase.rpc('create_laptop_update_schedule');
       if (cronError) {
         console.error("Error creating cron job:", cronError);
+        throw cronError;
       } else {
         console.log("Cron job created:", cronData);
       }
@@ -105,12 +107,13 @@ serve(async (req) => {
       const { data: cronData, error: cronError } = await supabase.rpc('remove_laptop_update_schedule');
       if (cronError) {
         console.error("Error removing cron job:", cronError);
+        throw cronError;
       } else {
         console.log("Cron job removed:", cronData);
       }
     }
     
-    // Return success response
+    // Return success response with clear enabled state
     return new Response(
       JSON.stringify({
         success: true,
