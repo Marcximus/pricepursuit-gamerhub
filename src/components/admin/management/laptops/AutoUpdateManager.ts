@@ -59,10 +59,13 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
     checkSchedulerStatus();
   }, []);
 
-  // Effect for managing the scheduled update status and UI countdown
+  // Effect for managing the countdown timer based on autoUpdateEnabled state
   useEffect(() => {
-    // Clean up any existing interval regardless of state change
+    console.log('Auto-update state changed:', autoUpdateEnabled);
+    
+    // Always clean up existing interval when this effect runs
     if (countdownInterval) {
+      console.log('Clearing existing countdown interval');
       clearInterval(countdownInterval);
       setCountdownInterval(null);
     }
@@ -70,15 +73,14 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
     if (autoUpdateEnabled) {
       console.log('Auto-update is enabled, starting UI countdown');
       
-      // Start countdown for display purposes only
+      // Start new countdown interval
       const newCountdownInterval = setInterval(() => {
         setTimeUntilNextUpdate(prev => {
           if (prev <= 1) {
             // When countdown reaches zero, reset to 5 minutes
-            // The actual update is handled by the server-side scheduler
             console.log('UI countdown complete, resetting to 5 minutes');
             
-            // Optionally, we can refresh stats to show latest progress
+            // Optionally trigger update when countdown completes
             if (!isUpdating) {
               onUpdate();
             }
@@ -98,11 +100,14 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
       
       // Return cleanup function
       return () => {
+        console.log('Cleaning up countdown interval on unmount/disable');
         clearInterval(newCountdownInterval);
       };
+    } else {
+      console.log('Auto-update is disabled, no countdown needed');
+      // Reset the countdown to default when disabled
+      setTimeUntilNextUpdate(300);
     }
-    
-    // No need for else or return here since we already cleaned up at the start
   }, [autoUpdateEnabled, isUpdating, onUpdate, lastScheduledTime]);
 
   // Toggle auto-update function - now communicates with the server
@@ -111,9 +116,9 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
       console.log('Toggle auto-update called, current state:', autoUpdateEnabled);
       
       const newState = !autoUpdateEnabled;
+      console.log('Attempting to set auto-update to:', newState);
       
       // Call edge function to enable/disable the server-side scheduler
-      // Only update the UI state after we get a successful response
       const { data, error } = await supabase.functions.invoke('toggle-scheduler', {
         body: { enabled: newState }
       });
@@ -128,6 +133,8 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
         
         return; // Don't update state if there's an error
       }
+      
+      console.log('Server responded successfully:', data);
       
       // Only update state after successful server response
       setAutoUpdateEnabled(newState);
