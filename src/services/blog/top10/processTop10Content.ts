@@ -5,7 +5,7 @@
 import { toast } from '@/components/ui/use-toast';
 import { getProducts } from './productHandler';
 import { cleanupContent, fixHtmlTags, replaceProductPlaceholders } from './contentProcessor';
-import { addVideoEmbed } from './htmlGenerator';
+import { addVideoEmbed, generateProductHtml } from './htmlGenerator';
 
 /**
  * Process a Top10 blog post content by inserting product data and enhancing the content
