@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from "@/components/ui/use-toast";
-import { clearIntervalSafely } from './utils/updateTimer';
+import { clearIntervalSafely } from './utils/updateTimerUtils';
 
 interface AutoRefreshManagerProps {
   isUpdating: boolean;
