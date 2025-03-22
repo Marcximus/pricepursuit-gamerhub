@@ -8,12 +8,14 @@ type AuthContextType = {
   user: User | null;
   isAdmin: boolean;
   isLoading: boolean;
+  checkAdminRole: (userId?: string) => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isAdmin: false,
   isLoading: true,
+  checkAdminRole: async () => false,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -21,32 +23,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      checkAdminRole(session?.user?.id);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null);
-      checkAdminRole(session?.user?.id);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const checkAdminRole = async (userId: string | undefined) => {
-    if (!userId) {
+  const checkAdminRole = async (userId?: string) => {
+    const idToCheck = userId ?? user?.id;
+    
+    if (!idToCheck) {
       setIsAdmin(false);
-      setIsLoading(false);
-      return;
+      return false;
     }
 
     try {
-      const { data, error } = await supabase
-        .rpc('has_role', { _role: 'admin' });
+      console.log('Checking admin role for user:', idToCheck);
+      const { data, error } = await supabase.rpc('has_role', { _role: 'admin' });
 
       if (error) {
         console.error('Error checking admin role:', error);
@@ -56,18 +43,60 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           variant: "destructive"
         });
         setIsAdmin(false);
+        return false;
       } else {
-        setIsAdmin(data ?? false);
+        console.log('Admin role check result:', data);
+        setIsAdmin(!!data);
+        return !!data;
       }
     } catch (error) {
-      console.error('Error checking admin role:', error);
+      console.error('Exception checking admin role:', error);
       setIsAdmin(false);
+      return false;
     }
-    setIsLoading(false);
   };
 
+  useEffect(() => {
+    // Check current session
+    const initAuth = async () => {
+      try {
+        setIsLoading(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await checkAdminRole(session.user.id);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        setUser(null);
+        setIsAdmin(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        await checkAdminRole(session.user.id);
+      } else {
+        setIsAdmin(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, isAdmin, isLoading }}>
+    <AuthContext.Provider value={{ user, isAdmin, isLoading, checkAdminRole }}>
       {children}
     </AuthContext.Provider>
   );

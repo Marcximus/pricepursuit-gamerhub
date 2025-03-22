@@ -6,13 +6,14 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export const usePostDeletion = () => {
   const { deletePost, fetchPosts } = useBlog();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, checkAdminRole } = useAuth();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
 
-  const confirmDelete = (postId: string) => {
+  const confirmDelete = async (postId: string) => {
+    // Re-verify admin status before opening delete dialog
     if (!user) {
       toast({
         title: "Authentication Required",
@@ -22,7 +23,10 @@ export const usePostDeletion = () => {
       return;
     }
 
-    if (!isAdmin) {
+    // Check admin status before proceeding
+    const adminStatus = await checkAdminRole();
+    if (!adminStatus) {
+      console.log('Admin check failed in usePostDeletion');
       toast({
         title: "Permission Denied",
         description: "Only administrators can delete blog posts.",
@@ -39,7 +43,9 @@ export const usePostDeletion = () => {
 
   const handleDeletePost = async () => {
     if (!postToDelete) return;
-    if (!user || !isAdmin) {
+    
+    // Final admin check before actual deletion
+    if (!user || !(await checkAdminRole())) {
       toast({
         title: "Permission Denied",
         description: "Only administrators can delete blog posts.",

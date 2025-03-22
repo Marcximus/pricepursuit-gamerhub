@@ -15,7 +15,7 @@ import {
 } from '@/components/blog/admin';
 
 const BlogAdmin = () => {
-  const { user, isAdmin, isLoading: authLoading } = useAuth();
+  const { user, isAdmin, isLoading: authLoading, checkAdminRole } = useAuth();
   const { posts, loading, error, fetchPosts } = useBlog();
   const { 
     deleteDialogOpen, 
@@ -36,11 +36,19 @@ const BlogAdmin = () => {
     document.title = "Blog Admin | Laptop Hunter";
     console.log('BlogAdmin: Initial posts fetch');
     
-    // Only fetch posts if user is authenticated
+    // Verify admin status on component mount
+    const verifyAdmin = async () => {
+      if (user) {
+        console.log('BlogAdmin: Verifying admin status');
+        await checkAdminRole();
+        fetchPosts();
+      }
+    };
+    
+    verifyAdmin();
+    
+    // Set up periodic refresh to ensure data is fresh
     if (user) {
-      fetchPosts();
-      
-      // Set up periodic refresh to ensure data is fresh
       const intervalId = setInterval(() => {
         console.log('BlogAdmin: Performing periodic refresh');
         fetchPosts();
@@ -48,7 +56,7 @@ const BlogAdmin = () => {
       
       return () => clearInterval(intervalId);
     }
-  }, [fetchPosts, user]);
+  }, [fetchPosts, user, checkAdminRole]);
 
   // Add effect to refresh posts after successful deletion
   useEffect(() => {
@@ -84,6 +92,7 @@ const BlogAdmin = () => {
   }
 
   if (!isAdmin) {
+    console.log('User is not admin, redirecting from BlogAdmin');
     toast({
       title: "Permission Denied",
       description: "Only administrators can access the admin panel.",
