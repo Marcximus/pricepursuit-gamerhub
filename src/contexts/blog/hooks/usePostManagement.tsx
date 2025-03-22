@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -83,34 +82,18 @@ export const usePostManagement = (
     try {
       console.log(`Attempting to delete blog post with ID: ${id}`);
       
-      // First, check if the post exists
-      const { data: existingPost, error: checkError } = await supabase
-        .from('blog_posts')
-        .select('id')
-        .eq('id', id)
-        .single();
+      // Call the delete_blog_post RPC function directly
+      const { data, error } = await supabase
+        .rpc('delete_blog_post', { post_id: id });
       
-      if (checkError) {
-        console.error('Error checking if post exists:', checkError);
-        throw new Error(checkError.message);
+      if (error) {
+        console.error('Error deleting blog post:', error);
+        throw new Error(error.message);
       }
       
-      if (!existingPost) {
-        console.error(`Post with ID ${id} not found`);
-        throw new Error(`Post with ID ${id} not found`);
-      }
-      
-      console.log(`Sending delete request to Supabase for post ID: ${id}`);
-      
-      // Use direct delete method
-      const { error: deleteError } = await supabase
-        .from('blog_posts')
-        .delete()
-        .eq('id', id);
-      
-      if (deleteError) {
-        console.error('Delete operation error:', deleteError);
-        throw new Error(deleteError.message);
+      if (!data) {
+        console.error(`Post with ID ${id} not found or could not be deleted`);
+        throw new Error(`Post with ID ${id} not found or could not be deleted`);
       }
       
       console.log('Direct deletion succeeded');
