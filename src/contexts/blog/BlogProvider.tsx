@@ -5,7 +5,7 @@ import BlogContext from './BlogContext';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const BlogProvider = ({ children }: { children: ReactNode }) => {
-  const { user, isAdmin, checkAdminRole } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { posts, setPosts, loading, error, fetchPosts } = usePostFetching();
   const { createPost, updatePost, deletePost } = usePostManagement(posts, setPosts);
   const { getPostBySlug, getPostsByCategory, getRecentPosts } = usePostQueries(posts);

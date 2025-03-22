@@ -29,7 +29,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (!idToCheck) {
         console.log('No user ID to check admin role for');
-        setIsAdmin(false);
         return false;
       }
 
@@ -38,16 +37,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) {
         console.error('Error checking admin role:', error);
-        setIsAdmin(false);
         return false;
       }
       
       console.log('Admin role check result:', data);
-      setIsAdmin(!!data);
+      // Update context state if we're checking the current user
+      if (!userId || userId === user?.id) {
+        setIsAdmin(!!data);
+      }
       return !!data;
     } catch (error) {
       console.error('Exception checking admin role:', error);
-      setIsAdmin(false);
       return false;
     }
   };
@@ -60,11 +60,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const { data: { session } } = await supabase.auth.getSession();
         
         console.log('Initial session check:', session ? 'Session exists' : 'No session');
-        setUser(session?.user ?? null);
         
         if (session?.user) {
-          await checkAdminRole(session.user.id);
+          setUser(session.user);
+          const isUserAdmin = await checkAdminRole(session.user.id);
+          setIsAdmin(isUserAdmin);
+          console.log('Initial admin check complete:', { isAdmin: isUserAdmin });
         } else {
+          setUser(null);
           setIsAdmin(false);
         }
       } catch (error) {
@@ -81,11 +84,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.id);
-      setUser(session?.user ?? null);
       
       if (session?.user) {
-        await checkAdminRole(session.user.id);
+        setUser(session.user);
+        const isUserAdmin = await checkAdminRole(session.user.id);
+        setIsAdmin(isUserAdmin);
+        console.log('Admin check after auth change:', { isAdmin: isUserAdmin });
       } else {
+        setUser(null);
         setIsAdmin(false);
       }
     });

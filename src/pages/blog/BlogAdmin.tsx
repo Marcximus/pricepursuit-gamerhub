@@ -15,9 +15,9 @@ import {
 } from '@/components/blog/admin';
 
 const BlogAdmin = () => {
-  const { user, isAdmin, isLoading: authLoading, checkAdminRole } = useAuth();
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
   const { posts, loading, error, fetchPosts } = useBlog();
-  const [isVerifyingAdmin, setIsVerifyingAdmin] = useState(false);
+  const [verifyingAdmin, setVerifyingAdmin] = useState(false);
   const [adminVerified, setAdminVerified] = useState(false);
   
   const { 
@@ -35,37 +35,35 @@ const BlogAdmin = () => {
     fetchPosts();
   }, [fetchPosts]);
   
-  // Separate effect for admin verification to avoid circular dependencies
+  // Handle admin verification
   useEffect(() => {
-    const verifyAdmin = async () => {
-      if (user && !authLoading) {
-        try {
-          setIsVerifyingAdmin(true);
-          console.log('BlogAdmin: Explicitly verifying admin status');
-          const isAdminUser = await checkAdminRole(user.id);
-          console.log('Admin verification result:', isAdminUser);
-          setAdminVerified(isAdminUser);
-        } catch (error) {
-          console.error('Admin verification error:', error);
-          setAdminVerified(false);
-        } finally {
-          setIsVerifyingAdmin(false);
-        }
+    console.log('BlogAdmin: Auth state changed - checking admin status', { 
+      authLoading, 
+      user: !!user, 
+      isAdmin 
+    });
+    
+    if (!authLoading && user) {
+      if (isAdmin) {
+        console.log('BlogAdmin: User is confirmed admin');
+        setAdminVerified(true);
+        setVerifyingAdmin(false);
       } else {
+        console.log('BlogAdmin: User is not an admin');
         setAdminVerified(false);
+        setVerifyingAdmin(false);
       }
-    };
-    
-    verifyAdmin();
-  }, [user, authLoading, checkAdminRole]);
+    } else if (!authLoading && !user) {
+      console.log('BlogAdmin: No authenticated user');
+      setAdminVerified(false);
+      setVerifyingAdmin(false);
+    }
+  }, [user, isAdmin, authLoading]);
   
-  // Separate effect for initialization tasks
+  // Fetch posts once admin is verified
   useEffect(() => {
-    document.title = "Blog Admin | Laptop Hunter";
-    console.log('BlogAdmin: Initial component mount');
-    
-    // Only fetch posts if we've verified admin status
     if (adminVerified) {
+      document.title = "Blog Admin | Laptop Hunter";
       console.log('BlogAdmin: Admin verified, fetching posts');
       fetchPosts();
       
@@ -79,7 +77,7 @@ const BlogAdmin = () => {
     }
   }, [adminVerified, fetchPosts]);
 
-  // Add effect to refresh posts after successful deletion
+  // Refresh posts after successful deletion
   useEffect(() => {
     if (deleteSuccess) {
       console.log('BlogAdmin: Post deleted successfully, refreshing posts list');
@@ -90,7 +88,7 @@ const BlogAdmin = () => {
   // Detailed console logs for debugging
   console.log('BlogAdmin render state:', { 
     authLoading, 
-    isVerifyingAdmin,
+    verifyingAdmin,
     user: !!user, 
     isAdmin, 
     adminVerified,
@@ -100,12 +98,12 @@ const BlogAdmin = () => {
   });
 
   // Show loading while checking authentication
-  if (authLoading || isVerifyingAdmin) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
-          <p className="text-gray-600">Verifying permissions...</p>
+          <p className="text-gray-600">Checking authentication...</p>
         </div>
       </div>
     );
@@ -122,8 +120,8 @@ const BlogAdmin = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Redirect if not an admin (based on verified admin status)
-  if (!adminVerified) {
+  // Redirect if not an admin
+  if (!authLoading && !isAdmin) {
     console.log('User is not admin, redirecting from BlogAdmin');
     toast({
       title: "Permission Denied",
