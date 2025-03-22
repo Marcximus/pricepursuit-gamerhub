@@ -16,7 +16,7 @@ import {
 
 const BlogAdmin = () => {
   const { posts, loading, error, fetchPosts } = useBlog();
-  const { isAdmin, isLoading } = useAuth();
+  const { isAdmin, isLoading, user } = useAuth();
   const { 
     deleteDialogOpen, 
     setDeleteDialogOpen, 
@@ -60,6 +60,16 @@ const BlogAdmin = () => {
     }
   }, [deleteSuccess, fetchPosts]);
 
+  // Log auth state for debugging
+  useEffect(() => {
+    console.log('BlogAdmin: Auth state -', {
+      isLoading,
+      isAdmin,
+      userLoggedIn: !!user,
+      userId: user?.id
+    });
+  }, [isLoading, isAdmin, user]);
+
   // Handle authentication loading state
   if (isLoading) {
     return (
@@ -70,8 +80,20 @@ const BlogAdmin = () => {
     );
   }
 
+  // Check if user is logged in
+  if (!user) {
+    console.log('BlogAdmin: User not logged in, redirecting to login page');
+    toast({
+      title: "Authentication Required",
+      description: "Please log in to access the admin panel",
+      variant: "destructive",
+    });
+    return <Navigate to="/login" replace />;
+  }
+
   // Check admin privileges
   if (!isAdmin) {
+    console.log('BlogAdmin: User lacks admin privileges, redirecting to home');
     toast({
       title: "Access Denied",
       description: "Only administrators can access the admin panel",

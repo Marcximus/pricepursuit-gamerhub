@@ -24,12 +24,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Auth: Session check completed', session ? 'User is logged in' : 'No active session');
       setUser(session?.user ?? null);
       checkAdminRole(session?.user?.id);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth: State change detected:', event);
       setUser(session?.user ?? null);
       checkAdminRole(session?.user?.id);
     });
@@ -39,28 +41,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const checkAdminRole = async (userId: string | undefined) => {
     if (!userId) {
+      console.log('Auth: No user ID provided, setting isAdmin to false');
       setIsAdmin(false);
       setIsLoading(false);
       return;
     }
 
     try {
+      console.log('Auth: Checking admin role for user ID:', userId);
+      
       const { data, error } = await supabase
         .rpc('has_role', { _role: 'admin' });
 
       if (error) {
-        console.error('Error checking admin role:', error);
+        console.error('Auth: Error checking admin role:', error);
         toast({
           title: "Error",
-          description: "Failed to check admin permissions",
+          description: "Failed to check admin permissions: " + error.message,
           variant: "destructive"
         });
         setIsAdmin(false);
       } else {
+        console.log('Auth: Admin role check result:', data);
         setIsAdmin(data ?? false);
+        
+        if (data) {
+          console.log('Auth: User confirmed as admin');
+        } else {
+          console.log('Auth: User is not an admin');
+        }
       }
     } catch (error) {
-      console.error('Error checking admin role:', error);
+      console.error('Auth: Exception during admin role check:', error);
       setIsAdmin(false);
     }
     setIsLoading(false);

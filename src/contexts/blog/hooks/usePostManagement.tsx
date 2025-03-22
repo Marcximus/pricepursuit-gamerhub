@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -130,16 +131,37 @@ export const usePostManagement = (
       
       console.log(`Sending delete request to Supabase for post ID: ${id}`);
       
-      // Directly call delete operation instead of using RPC
-      // Since we're authenticated as admin, RLS policies will allow this
-      const { error: deleteError } = await supabase
+      // Try both methods for deletion to ensure it works
+      // 1. First, try direct delete operation
+      let deleteSuccess = false;
+      
+      // Direct delete method
+      const { error: directDeleteError } = await supabase
         .from('blog_posts')
         .delete()
         .eq('id', id);
       
-      if (deleteError) {
-        console.error('Supabase error during deletion:', deleteError);
-        throw new Error(deleteError.message);
+      if (directDeleteError) {
+        console.warn('Direct deletion failed, error:', directDeleteError);
+        
+        // 2. If direct delete fails, try using RPC function
+        const { data: rpcResult, error: rpcError } = await supabase
+          .rpc('delete_blog_post', { post_id: id });
+        
+        if (rpcError) {
+          console.error('RPC deletion also failed:', rpcError);
+          throw new Error(rpcError.message);
+        } else {
+          console.log('RPC deletion result:', rpcResult);
+          deleteSuccess = true;
+        }
+      } else {
+        console.log('Direct deletion succeeded');
+        deleteSuccess = true;
+      }
+      
+      if (!deleteSuccess) {
+        throw new Error('Failed to delete post using both methods');
       }
       
       // Update local state to reflect deletion
