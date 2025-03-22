@@ -1,27 +1,16 @@
 
 import { useState } from 'react';
 import { useBlog } from '@/contexts/blog';
-import { useAuth } from '@/contexts/AuthContext'; 
 import { toast } from '@/components/ui/use-toast';
 
 export const usePostDeletion = () => {
   const { deletePost, fetchPosts } = useBlog();
-  const { isAdmin } = useAuth();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
 
   const confirmDelete = (postId: string) => {
-    if (!isAdmin) {
-      toast({
-        title: "Permission Error",
-        description: "Only administrators can delete blog posts",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setPostToDelete(postId);
     setDeleteDialogOpen(true);
     // Reset delete success state when opening a new delete dialog
@@ -30,15 +19,6 @@ export const usePostDeletion = () => {
 
   const handleDeletePost = async () => {
     if (!postToDelete) return;
-    if (!isAdmin) {
-      toast({
-        title: "Permission Error",
-        description: "Only administrators can delete blog posts",
-        variant: "destructive",
-      });
-      setDeleteDialogOpen(false);
-      return;
-    }
     
     setIsDeleting(true);
     setDeleteSuccess(false);

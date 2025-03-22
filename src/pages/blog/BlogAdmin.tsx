@@ -2,8 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useBlog } from '@/contexts/blog';
 import Navigation from '@/components/Navigation';
-import { toast } from '@/components/ui/use-toast';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { 
   BlogAdminHeader, 
   BlogPostTable, 
