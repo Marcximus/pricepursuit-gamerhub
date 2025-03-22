@@ -83,11 +83,12 @@ export const usePostManagement = (
     try {
       console.log(`Attempting to delete blog post with ID: ${id}`);
       
-      // Let's try the simplest approach - direct delete without RPC or complex queries
-      const { error } = await supabase
+      // Call the delete_blog_post RPC function directly
+      const { data, error } = await supabase
         .from('blog_posts')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select();
       
       if (error) {
         console.error('Error deleting blog post:', error);
