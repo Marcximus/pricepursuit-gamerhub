@@ -1,13 +1,15 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { BlogPost } from '../types';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const usePostManagement = (
   posts: BlogPost[],
   setPosts: React.Dispatch<React.SetStateAction<BlogPost[]>>
 ) => {
+  const { isAdmin } = useAuth();
+
   const createPost = async (postData: Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       const { data, error: insertError } = await supabase
@@ -97,6 +99,16 @@ export const usePostManagement = (
 
   const deletePost = async (id: string) => {
     try {
+      if (!isAdmin) {
+        console.error('Permission denied: Only admins can delete posts');
+        toast({
+          title: "Permission Error",
+          description: "Only administrators can delete blog posts.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
       console.log(`Attempting to delete blog post with ID: ${id}`);
       
       // First, check if the post exists
@@ -118,38 +130,19 @@ export const usePostManagement = (
       
       console.log(`Sending delete request to Supabase for post ID: ${id}`);
       
-      // Execute the delete operation with more explicit logging
+      // Use explicit RPC call for deletion to bypass potential RLS issues
       const { data: deleteData, error: deleteError } = await supabase
-        .from('blog_posts')
-        .delete()
-        .eq('id', id)
-        .select(); // Add select() to get back the deleted row
+        .rpc('delete_blog_post', { post_id: id });
       
       if (deleteError) {
         console.error('Supabase error during deletion:', deleteError);
         throw new Error(deleteError.message);
       }
       
-      if (!deleteData || deleteData.length === 0) {
-        console.warn(`No rows were deleted for post ID: ${id}`);
+      if (!deleteData) {
+        console.warn(`No confirmation received for deletion of post ID: ${id}`);
       } else {
-        console.log(`Successfully deleted ${deleteData.length} rows for post ID: ${id}`);
-      }
-      
-      // Immediately verify deletion was successful
-      const { data: checkDeleted, error: verifyError } = await supabase
-        .from('blog_posts')
-        .select('id')
-        .eq('id', id);
-        
-      if (verifyError) {
-        console.error('Error verifying deletion:', verifyError);
-      } else if (checkDeleted && checkDeleted.length > 0) {
-        console.error(`Post still exists after deletion! Found ${checkDeleted.length} posts with ID ${id}`);
-        console.log('This may indicate a permissions issue or RLS policy preventing deletion');
-        // We'll continue with UI update despite the database issue
-      } else {
-        console.log(`Successfully verified post with ID: ${id} is removed from database`);
+        console.log(`Successfully deleted post ID: ${id} with result:`, deleteData);
       }
       
       // Update local state to reflect deletion
@@ -172,19 +165,11 @@ export const usePostManagement = (
         ? err.message 
         : 'An unknown error occurred';
       
-      if (errorMessage.includes('row-level security')) {
-        toast({
-          title: "Permission Error",
-          description: "You don't have permission to delete blog posts. Only admins can perform this action.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error deleting blog post",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error deleting blog post",
+        description: errorMessage,
+        variant: "destructive",
+      });
       
       return false;
     }

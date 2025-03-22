@@ -1,7 +1,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useBlog } from '@/contexts/blog';
+import { useAuth } from '@/contexts/AuthContext';
 import Navigation from '@/components/Navigation';
+import { toast } from '@/components/ui/use-toast';
+import { Navigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { 
   BlogAdminHeader, 
   BlogPostTable, 
@@ -12,6 +16,7 @@ import {
 
 const BlogAdmin = () => {
   const { posts, loading, error, fetchPosts } = useBlog();
+  const { isAdmin, isLoading } = useAuth();
   const { 
     deleteDialogOpen, 
     setDeleteDialogOpen, 
@@ -54,6 +59,26 @@ const BlogAdmin = () => {
       return () => clearTimeout(refreshTimer);
     }
   }, [deleteSuccess, fetchPosts]);
+
+  // Handle authentication loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin mr-2" />
+        <p>Loading admin panel...</p>
+      </div>
+    );
+  }
+
+  // Check admin privileges
+  if (!isAdmin) {
+    toast({
+      title: "Access Denied",
+      description: "Only administrators can access the admin panel",
+      variant: "destructive",
+    });
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
