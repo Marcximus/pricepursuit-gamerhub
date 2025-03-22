@@ -10,8 +10,8 @@ interface AutoUpdateManagerProps {
 }
 
 export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManagerProps) => {
-  // Auto-update state - explicitly initialize to false
-  const [autoUpdateEnabled, setAutoUpdateEnabled] = useState(false);
+  // Auto-update state - initialize to null/undefined until we get server status
+  const [autoUpdateEnabled, setAutoUpdateEnabled] = useState<boolean>(false);
   const [lastScheduledTime, setLastScheduledTime] = useState<Date | null>(null);
   const [timeUntilNextUpdate, setTimeUntilNextUpdate] = useState<number>(COLLECTION_CONFIG.AUTO_UPDATE_INTERVAL_MINUTES * 60);
   const [countdownInterval, setCountdownInterval] = useState<NodeJS.Timeout | null>(null);
@@ -33,12 +33,13 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
         if (error) {
           console.error('Error checking scheduler status:', error);
           setSchedulerStatus('inactive');
-          setAutoUpdateEnabled(false); // Ensure it's false on error
+          setAutoUpdateEnabled(false);
           toast({
             title: "Error",
             description: "Failed to check auto-update status",
             variant: "destructive"
           });
+          setIsInitialized(true);
           return;
         }
         
@@ -71,7 +72,7 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
       } catch (err) {
         console.error('Error in checkSchedulerStatus:', err);
         setSchedulerStatus('inactive');
-        setAutoUpdateEnabled(false); // Ensure it's false on error
+        setAutoUpdateEnabled(false);
         setIsInitialized(true);
       }
     };
@@ -86,7 +87,7 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
       return;
     }
     
-    console.log('Auto-update state changed:', autoUpdateEnabled);
+    console.log('Auto-update state changed to:', autoUpdateEnabled);
     
     // Always clean up existing interval when this effect runs
     if (countdownInterval) {
@@ -130,10 +131,13 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
     }
   }, [autoUpdateEnabled, isUpdating, onUpdate, timeUntilNextUpdate, isInitialized]);
 
-  // Toggle auto-update function - now communicates with the server
+  // Toggle auto-update function - communicates with the server
   const toggleAutoUpdate = async () => {
     try {
       console.log('Toggle auto-update called, current state:', autoUpdateEnabled);
+      
+      // Set scheduler status to checking during toggle
+      setSchedulerStatus('checking');
       
       const newState = !autoUpdateEnabled;
       console.log('Attempting to set auto-update to:', newState);
@@ -154,7 +158,19 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
           variant: "destructive"
         });
         
-        return; // Don't update state if there's an error
+        // On error, revert back to checking server state
+        const statusCheck = await supabase.functions.invoke('toggle-scheduler', {
+          method: 'GET'
+        });
+        
+        if (!statusCheck.error) {
+          setAutoUpdateEnabled(statusCheck.data?.enabled === true);
+          setSchedulerStatus(statusCheck.data?.enabled === true ? 'active' : 'inactive');
+        } else {
+          setSchedulerStatus('inactive');
+        }
+        
+        return;
       }
       
       console.log('Server responded successfully:', data);
@@ -183,6 +199,7 @@ export const useAutoUpdateManager = ({ isUpdating, onUpdate }: AutoUpdateManager
       }
     } catch (err) {
       console.error('Error in toggleAutoUpdate:', err);
+      setSchedulerStatus('inactive');
       toast({
         title: "Error",
         description: "Failed to toggle auto-update mode",

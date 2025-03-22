@@ -39,7 +39,7 @@ serve(async (req) => {
         .eq('key', 'last_scheduled_update')
         .single();
       
-      // Explicitly check against string 'true' for consistency
+      // Convert string 'true' to boolean true for consistent response format
       const isEnabled = enabledData?.value === 'true';
       console.log("Current auto-update status:", isEnabled);
         
