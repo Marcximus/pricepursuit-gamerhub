@@ -1,48 +1,11 @@
 
 /**
- * Format time display (mm:ss)
- */
-export const formatElapsedTime = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-};
-
-/**
- * Format time until next update (mm:ss)
- */
-export const formatTimeUntilNextUpdate = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-};
-
-/**
  * Clear interval safely
+ * 
+ * @deprecated Use clearIntervalSafely from updateTimerUtils.ts instead
  */
 export const clearIntervalSafely = (intervalRef: NodeJS.Timeout | null): void => {
   if (intervalRef) {
     clearInterval(intervalRef);
   }
-};
-
-/**
- * Schedule next update time (5 minutes from now)
- */
-export const scheduleNextUpdateTime = (): Date => {
-  const nextUpdate = new Date();
-  nextUpdate.setMinutes(nextUpdate.getMinutes() + 5);
-  return nextUpdate;
-};
-
-/**
- * Calculate seconds until next update
- */
-export const calculateSecondsUntilNextUpdate = (nextUpdateTime: Date): number => {
-  if (!nextUpdateTime) return 300; // Default to 5 minutes if no time is set
-  
-  const currentTime = new Date();
-  const millisUntilUpdate = nextUpdateTime.getTime() - currentTime.getTime();
-  // Don't allow negative values, but return 0 instead
-  return Math.max(0, Math.floor(millisUntilUpdate / 1000));
 };

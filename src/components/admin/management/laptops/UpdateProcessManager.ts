@@ -1,9 +1,17 @@
-import { useState, useEffect } from 'react';
+
+import { useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useAutoRefreshManager } from './AutoRefreshManager';
 import { useAutoUpdateManager } from './AutoUpdateManager';
-import { clearIntervalSafely } from './utils/updateTimer';
+import { useUpdateState } from './hooks/useUpdateState';
+import { useDbResetHandler } from './hooks/useDbResetHandler';
+import { useUpdateDescription } from './hooks/useUpdateDescription';
+import { 
+  clearIntervalSafely, 
+  clearTimeoutSafely,
+  createLongUpdateWarningTimeout,
+  createMaxUpdateTimeout
+} from './utils/updateTimerUtils';
 
 interface UpdateProcessManagerProps {
   updateLaptops: () => Promise<any>;
@@ -14,13 +22,22 @@ export const useUpdateProcessManager = ({
   updateLaptops, 
   refreshStats 
 }: UpdateProcessManagerProps) => {
-  // State for update tracking
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [updateSuccess, setUpdateSuccess] = useState(false);
-  const [updateStartTime, setUpdateStartTime] = useState<Date | null>(null);
-  const [showLongUpdateMessage, setShowLongUpdateMessage] = useState(false);
-  const [longUpdateWarningTimeout, setLongUpdateWarningTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [maxUpdateWarningTimeout, setMaxUpdateWarningTimeout] = useState<NodeJS.Timeout | null>(null);
+  // Use the update state hook
+  const {
+    isUpdating,
+    updateSuccess,
+    updateStartTime,
+    showLongUpdateMessage,
+    longUpdateWarningTimeout,
+    maxUpdateWarningTimeout,
+    setIsUpdating,
+    setUpdateSuccess,
+    setUpdateStartTime,
+    setShowLongUpdateMessage,
+    setLongUpdateWarningTimeout,
+    setMaxUpdateWarningTimeout,
+    resetState
+  } = useUpdateState();
 
   // Initialize auto-refresh manager
   const { 
@@ -44,42 +61,28 @@ export const useUpdateProcessManager = ({
     onUpdate: handleUpdateLaptops
   });
 
+  // Initialize database reset handler
+  const { handleReset } = useDbResetHandler(refreshStats);
+
+  // Use the description generator
+  const { getDescription } = useUpdateDescription();
+
   // Effect to check for stuck update status
   useEffect(() => {
     if (!isUpdating) return;
     
     // Set timeout for showing warning after 2 minutes
-    const warningTimeout = setTimeout(() => {
-      console.log('Update taking longer than expected (2 minutes). Showing warning...');
-      setShowLongUpdateMessage(true);
-      
-      toast({
-        title: "Updates Taking Longer Than Expected",
-        description: "Updates are still in progress but taking longer than expected. You can refresh the page to reset.",
-        variant: "destructive",
-        duration: 10000
-      });
-    }, 2 * 60 * 1000); // 2 minutes
+    const warningTimeout = createLongUpdateWarningTimeout(setShowLongUpdateMessage);
     
     // Set timeout for max update time (15 minutes)
-    const maxTimeout = setTimeout(() => {
-      console.log('Update timed out after 15 minutes. Auto-resetting...');
-      forceResetUpdateState();
-      
-      toast({
-        title: "Update Process Timed Out",
-        description: "The update process took too long and was automatically reset.",
-        variant: "destructive",
-        duration: 10000
-      });
-    }, 15 * 60 * 1000); // 15 minutes
+    const maxTimeout = createMaxUpdateTimeout(forceResetUpdateState);
     
     setLongUpdateWarningTimeout(warningTimeout);
     setMaxUpdateWarningTimeout(maxTimeout);
     
     return () => {
-      clearTimeout(warningTimeout);
-      clearTimeout(maxTimeout);
+      clearTimeoutSafely(warningTimeout);
+      clearTimeoutSafely(maxTimeout);
       setLongUpdateWarningTimeout(null);
       setMaxUpdateWarningTimeout(null);
     };
@@ -137,8 +140,8 @@ export const useUpdateProcessManager = ({
       });
     } finally {
       // Clear any timeouts and stop auto-refresh
-      clearIntervalSafely(longUpdateWarningTimeout);
-      clearIntervalSafely(maxUpdateWarningTimeout);
+      clearTimeoutSafely(longUpdateWarningTimeout);
+      clearTimeoutSafely(maxUpdateWarningTimeout);
       stopAutoRefresh();
       
       // Reset state
@@ -150,68 +153,16 @@ export const useUpdateProcessManager = ({
 
   // Force reset update state (for manual reset button)
   const forceResetUpdateState = async () => {
-    console.log('Manually resetting update state');
-    
     // Clear any timeouts and stop auto-refresh
-    clearIntervalSafely(longUpdateWarningTimeout);
-    clearIntervalSafely(maxUpdateWarningTimeout);
+    clearTimeoutSafely(longUpdateWarningTimeout);
+    clearTimeoutSafely(maxUpdateWarningTimeout);
     stopAutoRefresh();
     
     // Reset UI state
-    setIsUpdating(false);
-    setUpdateStartTime(null);
-    setShowLongUpdateMessage(false);
+    resetState();
     
-    // Attempt to reset any hung database records
-    try {
-      console.log('Resetting any stuck products in the database');
-      const { data, error } = await supabase
-        .from('products')
-        .update({ update_status: 'error' })
-        .eq('update_status', 'pending_update')
-        .select();
-      
-      if (error) {
-        console.error('Error resetting pending_update products:', error);
-      } else {
-        // Using optional chaining to safely access the length property
-        // Explicitly cast data as an array type since TypeScript sees it as 'never'
-        const resetCount = Array.isArray(data) ? data.length : 0;
-        console.log(`Reset ${resetCount} pending_update products to error state`);
-        
-        // Refresh stats to show updated status
-        await refreshStats();
-      }
-    } catch (err) {
-      console.error('Error in database reset operation:', err);
-    }
-    
-    toast({
-      title: "Update Reset",
-      description: "The update process has been manually reset.",
-      duration: 5000
-    });
-  };
-
-  // Generate button description based on current state
-  const getDescription = (elapsedTime: number, timeUntilNextUpdate: number) => {
-    if (isUpdating) {
-      const minutes = Math.floor(elapsedTime / 60);
-      const seconds = elapsedTime % 60;
-      const timeString = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-      
-      return `Updating product data... (${timeString})`;
-    }
-    
-    if (autoUpdateEnabled) {
-      const minutes = Math.floor(timeUntilNextUpdate / 60);
-      const seconds = timeUntilNextUpdate % 60;
-      const timeString = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-      
-      return `Auto-update enabled. Next update in ${timeString}`;
-    }
-    
-    return "Update laptop prices, images, and specifications";
+    // Reset database records
+    await handleReset();
   };
 
   return {
