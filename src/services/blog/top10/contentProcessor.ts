@@ -1,4 +1,3 @@
-
 /**
  * Functions for processing Top10 content
  */
@@ -11,6 +10,33 @@ export function cleanupContent(content: string): string {
   
   // Remove the tags
   processedContent = processedContent.replace(/\*\*Tags:\*\*.*$/s, '');
+  
+  return processedContent;
+}
+
+// Fix HTML tags that might be malformed in the AI response
+export function fixHtmlTags(content: string): string {
+  let processedContent = content;
+  
+  // Ensure h1 tags are properly formatted (the AI sometimes forgets to close them)
+  processedContent = processedContent.replace(/<h1([^>]*)>([^<]*)/g, '<h1$1>$2</h1>');
+  
+  // Fix paragraph tags - ensure they're properly wrapped
+  processedContent = processedContent.replace(/<p>([^<]*?)(?=<(?!\/p>))/g, '<p>$1</p>');
+  
+  // Ensure other heading tags are properly closed
+  processedContent = processedContent.replace(/<h([2-6])([^>]*)>([^<]*)/g, '<h$1$2>$3</h$1>');
+  
+  // Fix any unclosed list items
+  processedContent = processedContent.replace(/<li>([^<]*?)(?=<(?!\/li>))/g, '<li>$1</li>');
+  
+  // Wrap plain text blocks in <p> tags if they're not already wrapped
+  processedContent = processedContent.replace(/(?<=>)([^<]+)(?=<)/g, (match, p1) => {
+    // Skip if it's just whitespace
+    if (p1.trim() === '') return p1;
+    // Otherwise wrap in paragraph tags
+    return `<p>${p1}</p>`;
+  });
   
   return processedContent;
 }
@@ -55,7 +81,7 @@ export function replaceProductPlaceholders(content: string, products: any[]): {
       }
       
       // Also replace any remaining placeholders
-      const divPlaceholder = `<div class="product-data" data-product-id="${productNum}">[PRODUCT_DATA_${productNum}]</div>`;
+      const divPlaceholder = `<div class="product-placeholder" data-product-id="${productNum}">[PRODUCT_DATA_${productNum}]</div>`;
       const rawPlaceholder = `[PRODUCT_DATA_${productNum}]`;
       
       if (processedContent.includes(divPlaceholder)) {
@@ -65,6 +91,13 @@ export function replaceProductPlaceholders(content: string, products: any[]): {
       
       if (processedContent.includes(rawPlaceholder)) {
         processedContent = processedContent.split(rawPlaceholder).join(productHtml);
+        replacementsCount += 1;
+      }
+      
+      // Replace product placeholders with data-asin attribute
+      const asinPlaceholderRegex = new RegExp(`<div class="product-placeholder"[^>]*data-asin="${product.asin}"[^>]*><\\/div>`, 'g');
+      if (asinPlaceholderRegex.test(processedContent)) {
+        processedContent = processedContent.replace(asinPlaceholderRegex, productHtml);
         replacementsCount += 1;
       }
     }

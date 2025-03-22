@@ -4,7 +4,7 @@
  */
 import { toast } from '@/components/ui/use-toast';
 import { getProducts } from './productHandler';
-import { cleanupContent, replaceProductPlaceholders } from './contentProcessor';
+import { cleanupContent, fixHtmlTags, replaceProductPlaceholders } from './contentProcessor';
 import { addVideoEmbed } from './htmlGenerator';
 
 /**
@@ -27,7 +27,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
         description: 'We couldn\'t find any products matching your criteria for the Top 10 post',
         variant: 'default',
       });
-      return content;
+      return fixHtmlTags(content); // At least fix HTML tags even without products
     }
     
     console.log(`✅ Successfully fetched ${products.length} products from Amazon`);
@@ -38,6 +38,9 @@ export async function processTop10Content(content: string, prompt: string): Prom
     
     // First, clean up the content
     let processedContent = cleanupContent(content);
+    
+    // Fix any malformed HTML tags from AI response
+    processedContent = fixHtmlTags(processedContent);
     
     // Replace the product data placeholders with actual data
     console.log('🔄 Replacing product data placeholders in content...');
@@ -74,6 +77,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
       description: error instanceof Error ? error.message : 'Failed to process Top 10 content',
       variant: 'destructive',
     });
-    return content;
+    // Even if we encounter an error, try to at least fix the HTML tags
+    return fixHtmlTags(content);
   }
 }

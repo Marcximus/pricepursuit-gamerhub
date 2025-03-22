@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useBlog } from '@/contexts/blog';
@@ -22,6 +23,21 @@ const BlogPost = () => {
   useEffect(() => {
     if (post) {
       document.title = `${post.title} | Laptop Hunter Blog`;
+      
+      // Add styling for Top10 list items if not already present
+      if (post.category === 'Top10' && !document.getElementById('top10-blog-styles')) {
+        const styleElement = document.createElement('style');
+        styleElement.id = 'top10-blog-styles';
+        styleElement.textContent = `
+          .prose h1 { font-size: 2.5rem; line-height: 1.2; margin-bottom: 1.5rem; text-align: center; }
+          .prose h3 { font-size: 1.75rem; line-height: 1.3; margin-top: 2rem; margin-bottom: 1rem; color: #2563eb; }
+          .prose hr { margin: 2rem 0; }
+          .prose ul.my-4 { margin: 1rem 0; padding-left: 1.5rem; }
+          .prose ul.my-4 li { margin-bottom: 0.5rem; list-style-type: none; position: relative; padding-left: 1.5rem; }
+          .prose ul.my-4 li:before { content: "✅"; position: absolute; left: 0; }
+        `;
+        document.head.appendChild(styleElement);
+      }
     } else if (slug) {
       document.title = "Post Not Found | Laptop Hunter Blog";
     }
@@ -37,6 +53,14 @@ const BlogPost = () => {
         document.body.appendChild(script);
       }
     }
+    
+    // Clean up
+    return () => {
+      const styleElement = document.getElementById('top10-blog-styles');
+      if (styleElement) {
+        styleElement.remove();
+      }
+    };
   }, [post, slug]);
 
   const injectAdditionalImages = (content: string, additionalImages: string[]) => {
@@ -84,6 +108,30 @@ const BlogPost = () => {
     return content;
   };
 
+  const fixTopTenHtmlIfNeeded = (content: string, category: string) => {
+    if (category !== 'Top10') return content;
+    
+    // Check if there are unclosed tags in the content
+    let processedContent = content;
+    
+    // Ensure h1 tags are properly formatted
+    processedContent = processedContent.replace(/<h1([^>]*)>([^<]*?)(?=<(?!\/h1>))/g, '<h1$1>$2</h1>');
+    
+    // Ensure h3 tags are properly formatted
+    processedContent = processedContent.replace(/<h3>([^<]*?)(?=<(?!\/h3>))/g, '<h3>$1</h3>');
+    
+    // Fix paragraph tags
+    processedContent = processedContent.replace(/<p>([^<]*?)(?=<(?!\/p>))/g, '<p>$1</p>');
+    
+    // Fix list items
+    processedContent = processedContent.replace(/<li>([^<]*?)(?=<(?!\/li>))/g, '<li>$1</li>');
+    
+    // Ensure proper list tag closure
+    processedContent = processedContent.replace(/<ul class="my-4">([^]*?)(?=<(?!\/ul>))/g, '<ul class="my-4">$1</ul>');
+    
+    return processedContent;
+  };
+
   if (!category || !slug) {
     return <div>Invalid URL parameters</div>;
   }
@@ -101,7 +149,8 @@ const BlogPost = () => {
     );
   }
 
-  const processedContent = injectAdditionalImages(post.content, post.additional_images || []);
+  const fixedContent = fixTopTenHtmlIfNeeded(post.content, post.category);
+  const processedContent = injectAdditionalImages(fixedContent, post.additional_images || []);
 
   return (
     <div className="min-h-screen pb-16">
