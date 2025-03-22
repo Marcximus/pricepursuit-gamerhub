@@ -14,7 +14,7 @@ export const useDbResetHandler = (refreshStats: () => Promise<void>) => {
       
       if (error) {
         console.error('Error resetting pending_update products:', error);
-        return 0;
+        throw new Error(`Database error: ${error.message}`);
       } else {
         // Safely determine the count of reset records
         const resetCount = Array.isArray(data) ? data.length : 0;
@@ -23,7 +23,11 @@ export const useDbResetHandler = (refreshStats: () => Promise<void>) => {
       }
     } catch (err) {
       console.error('Error in database reset operation:', err);
-      return 0;
+      // Convert any error to a more descriptive message
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'Unknown database error occurred';
+      throw new Error(`Failed to reset products: ${errorMessage}`);
     }
   };
 
@@ -39,18 +43,30 @@ export const useDbResetHandler = (refreshStats: () => Promise<void>) => {
       
       toast({
         title: "Update Reset",
-        description: `The update process has been manually reset. ${resetCount > 0 ? `Reset ${resetCount} pending updates.` : ''}`,
+        description: `The update process has been manually reset. ${resetCount > 0 ? `Reset ${resetCount} pending updates.` : 'No pending updates were found.'}`,
         duration: 5000
       });
     } catch (err) {
       console.error('Error in reset operation:', err);
       
+      // Provide more specific error messages based on the error type
+      const errorMessage = err instanceof Error
+        ? err.message
+        : 'An unknown error occurred while resetting the update process';
+      
       toast({
         title: "Reset Error",
-        description: "Failed to reset update process. Please try again.",
+        description: errorMessage,
         variant: "destructive",
         duration: 5000
       });
+      
+      // Attempt to refresh stats even after error to ensure UI is up-to-date
+      try {
+        await refreshStats();
+      } catch (refreshErr) {
+        console.error('Failed to refresh stats after reset error:', refreshErr);
+      }
     }
   };
 
