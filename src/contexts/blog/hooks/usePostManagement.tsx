@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -84,16 +85,14 @@ export const usePostManagement = (
       
       // Call the delete_blog_post RPC function directly
       const { data, error } = await supabase
-        .rpc('delete_blog_post', { post_id: id });
+        .from('blog_posts')
+        .delete()
+        .eq('id', id)
+        .select();
       
       if (error) {
         console.error('Error deleting blog post:', error);
         throw new Error(error.message);
-      }
-      
-      if (!data) {
-        console.error(`Post with ID ${id} not found or could not be deleted`);
-        throw new Error(`Post with ID ${id} not found or could not be deleted`);
       }
       
       console.log('Direct deletion succeeded');
