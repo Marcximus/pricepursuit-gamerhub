@@ -1,38 +1,17 @@
 
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode } from 'react';
 import { usePostFetching, usePostManagement, usePostQueries } from './hooks';
 import BlogContext from './BlogContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
 
 export const BlogProvider = ({ children }: { children: ReactNode }) => {
-  const { user, isAdmin } = useAuth();
   const { posts, setPosts, loading, error, fetchPosts } = usePostFetching();
   const { createPost, updatePost, deletePost } = usePostManagement(posts, setPosts);
   const { getPostBySlug, getPostsByCategory, getRecentPosts } = usePostQueries(posts);
-  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
-    // Track initialization to avoid duplicate fetches
-    if (!hasInitialized) {
-      console.log('BlogProvider: Initial fetch of posts');
-      fetchPosts().then(() => setHasInitialized(true));
-    }
-    
-    // Refetch posts when user authentication state changes
-    if (user) {
-      console.log('User authenticated in BlogProvider, refreshing posts');
-      fetchPosts();
-    }
-  }, [fetchPosts, user, hasInitialized]);
-
-  // Add debugging info
-  console.log('BlogProvider state:', { 
-    hasUser: !!user, 
-    isAdmin, 
-    postsLoaded: posts.length > 0,
-    loading,
-    error
-  });
+    fetchPosts();
+  }, [fetchPosts]);
 
   const value = {
     posts,
@@ -45,7 +24,6 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
     createPost,
     updatePost,
     deletePost,
-    isAdmin
   };
 
   return <BlogContext.Provider value={value}>{children}</BlogContext.Provider>;
