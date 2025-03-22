@@ -1,85 +1,88 @@
 
 /**
- * HTML generation for product cards
+ * Generate HTML components for blog posts
  */
-import { escapeHtml } from './utils';
 
-// Generate fallback HTML if the product doesn't have htmlContent
+/**
+ * Generate HTML for a product based on its data and position
+ */
 export function generateProductHtml(product: any, rank: number): string {
-  // Extract product data with fallbacks
-  const title = product.title || 'Lenovo Laptop';
-  const price = typeof product.price === 'number' 
-    ? `$${product.price.toFixed(2)}` 
-    : (product.price?.value ? `$${parseFloat(product.price.value).toFixed(2)}` : 'Price not available');
-  const rating = product.rating ? `${product.rating}/5` : 'No ratings';
-  const reviews = product.ratings_total ? `(${product.ratings_total} reviews)` : '';
-  const image = product.imageUrl || product.image || '';
-  const asin = product.asin || '';
-  const url = product.productUrl || product.url || `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
-  
-  // Extract features or highlights - limit to 3 for cleaner display
-  const features = Array.isArray(product.feature_bullets) 
-    ? product.feature_bullets.slice(0, 3) 
-    : (Array.isArray(product.features) ? product.features.slice(0, 3) : []);
-  
-  return `
-    <div class="product-card flex flex-col md:flex-row overflow-hidden rounded-lg shadow-lg border border-gray-200 my-8 hover:shadow-xl transition-shadow bg-white" data-asin="${escapeHtml(asin)}" data-rank="${rank}">
-      <div class="relative product-image w-full md:w-1/3 flex-shrink-0">
-        <span class="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded font-bold text-sm product-rank">#${rank}</span>
-        <a href="${escapeHtml(url)}" target="_blank" rel="nofollow noopener">
-          <img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" class="w-full h-64 object-contain p-4" loading="lazy" />
-        </a>
+  if (!product) {
+    console.warn(`⚠️ Cannot generate HTML for undefined product at rank ${rank}`);
+    return `<div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6">
+      <div class="p-4">
+        <h4 class="text-xl font-semibold mb-2">Product information unavailable</h4>
       </div>
-      <div class="product-details p-4 flex flex-col justify-between flex-grow">
-        <div>
-          <h3 class="product-title text-xl font-bold mb-2">
-            <a href="${escapeHtml(url)}" target="_blank" rel="nofollow noopener" class="text-blue-700 hover:text-blue-900">${escapeHtml(title)}</a>
-          </h3>
-          <div class="product-meta flex flex-wrap items-center gap-2 mb-4">
-            <span class="product-price text-lg font-bold text-green-600">${escapeHtml(price)}</span>
-            <span class="mx-2 text-gray-400">|</span>
-            <span class="product-rating flex items-center text-amber-500">
-              ${rating !== 'No ratings' ? '⭐'.repeat(Math.round(parseFloat(rating))) : ''}
-              <span class="ml-1 text-gray-700">${escapeHtml(rating)} ${escapeHtml(reviews)}</span>
-            </span>
-          </div>
-          ${features.length > 0 ? 
-            `<div class="product-features mb-4">
-              <h4 class="font-semibold text-gray-700 mb-2">Key Features:</h4>
-              <ul class="list-disc list-inside space-y-1 text-gray-600">
-                ${features.map((feature: string) => 
-                  `<li>${escapeHtml(feature)}</li>`).join('')}
-              </ul>
-            </div>` : ''
-          }
+    </div>`;
+  }
+  
+  // Ensure we have at least minimal product data
+  const title = product.title || `Lenovo Laptop`;
+  const asin = product.asin || '';
+  const imageUrl = product.image || product.imageUrl || 'https://via.placeholder.com/300x300?text=No+Image';
+  const price = typeof product.price === 'object' 
+    ? `$${product.price.value || 'Price unavailable'}` 
+    : (product.price ? `$${product.price}` : 'Price unavailable');
+  const rating = product.rating || 'No ratings';
+  const reviewCount = product.ratings_total || product.reviews_count || 0;
+  const reviewText = reviewCount > 0 ? `(${reviewCount} reviews)` : '';
+  const productUrl = product.url || product.productUrl || `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
+  
+  // Return a clean, well-structured product card
+  return `<div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6">
+    <div class="p-4">
+      <div class="flex flex-col md:flex-row">
+        <div class="md:w-1/3 mb-4 md:mb-0">
+          <a href="${productUrl}" target="_blank" rel="nofollow noopener">
+            <img src="${imageUrl}" alt="${title}" class="w-full h-auto rounded-md" loading="lazy" />
+          </a>
         </div>
-        <div class="product-cta mt-4">
-          <a href="${escapeHtml(url)}" class="check-price-btn inline-block bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-6 rounded-full transition-colors text-center" target="_blank" rel="nofollow noopener">
-            View on Amazon
+        <div class="md:w-2/3 md:pl-4">
+          <h4 class="text-xl font-semibold mb-2">
+            <a href="${productUrl}" target="_blank" rel="nofollow noopener">${title}</a>
+          </h4>
+          <div class="flex items-center mb-2">
+            <span class="text-yellow-500 mr-1">★</span>
+            <span>${rating}</span>
+            <span class="ml-1 text-gray-600 text-sm">${reviewText}</span>
+          </div>
+          <div class="text-lg font-bold mb-3">${price}</div>
+          <a href="${productUrl}" 
+             class="inline-block bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition-colors"
+             target="_blank" rel="nofollow noopener">
+            Check Price on Amazon
           </a>
         </div>
       </div>
     </div>
-  `;
+  </div>`;
 }
 
-// Add Humix video embed if not already present
+/**
+ * Adds a video embed if one is not already present
+ */
 export function addVideoEmbed(content: string): string {
-  if (!content.includes('humixPlayers')) {
-    console.log('📼 Adding Humix video embed to content');
-    const videoEmbed = `<div class="video-container my-8"><script data-ezscrex="false" data-cfasync="false">(window.humixPlayers = window.humixPlayers || []).push({target: document.currentScript});</script><script async data-ezscrex="false" data-cfasync="false" src="https://www.humix.com/video.js"></script></div>`;
-    
-    // Insert after the first h2 or at the end if no h2 is found
-    const h2Match = content.match(/<h2[^>]*>.*?<\/h2>/i);
-    if (h2Match && h2Match.index) {
-      const insertPosition = h2Match.index + h2Match[0].length;
-      return content.substring(0, insertPosition) + 
-              '\n\n' + videoEmbed + '\n\n' + 
-              content.substring(insertPosition);
-    } else {
-      // Add to the end if no h2 is found
-      return content + '\n\n' + videoEmbed;
-    }
+  // Check if content already has a video embed
+  if (content.includes('humixPlayers') || content.includes('iframe')) {
+    return content;
   }
+  
+  // Add a Humix video embed before the first horizontal rule that follows the introduction
+  const firstHrAfterIntro = content.indexOf('<hr class="my-8">');
+  if (firstHrAfterIntro > 0) {
+    const videoEmbed = `
+<div class="video-container my-8">
+  <div id="humixPlayer1" style="width: 100%; max-width: 800px; margin: 0 auto; aspect-ratio: 16/9;"></div>
+  <script>
+    window.humixPlayers = window.humixPlayers || [];
+    window.humixPlayers.push({
+      container: 'humixPlayer1',
+      videoId: 'r8c3e4f64c76gd66',
+    });
+  </script>
+</div>`;
+    return content.slice(0, firstHrAfterIntro) + videoEmbed + content.slice(firstHrAfterIntro);
+  }
+  
   return content;
 }
