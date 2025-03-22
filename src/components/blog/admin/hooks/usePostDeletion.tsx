@@ -31,15 +31,20 @@ export const usePostDeletion = () => {
         console.log('BlogAdmin: Post deleted successfully');
         setDeleteSuccess(true);
         
-        // Force multiple refetches to ensure UI is in sync with database
-        // First immediate refetch
+        // Immediately trigger a refetch to update UI
         fetchPosts();
         
         // Second delayed refetch in case the first one was too quick
         setTimeout(() => {
           console.log('BlogAdmin: Forcing delayed refetch after deletion');
           fetchPosts();
-        }, 1500);
+        }, 1000);
+        
+        // Final refetch after a longer delay to ensure database consistency
+        setTimeout(() => {
+          console.log('BlogAdmin: Executing final delayed refresh');
+          fetchPosts();
+        }, 2000);
         
         toast({
           title: "Success",
