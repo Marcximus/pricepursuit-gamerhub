@@ -1,5 +1,5 @@
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { usePostFetching, usePostManagement, usePostQueries } from './hooks';
 import BlogContext from './BlogContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,23 +9,30 @@ export const BlogProvider = ({ children }: { children: ReactNode }) => {
   const { posts, setPosts, loading, error, fetchPosts } = usePostFetching();
   const { createPost, updatePost, deletePost } = usePostManagement(posts, setPosts);
   const { getPostBySlug, getPostsByCategory, getRecentPosts } = usePostQueries(posts);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
-    // Initial fetch of posts
-    fetchPosts();
+    // Track initialization to avoid duplicate fetches
+    if (!hasInitialized) {
+      console.log('BlogProvider: Initial fetch of posts');
+      fetchPosts().then(() => setHasInitialized(true));
+    }
     
     // Refetch posts when user authentication state changes
     if (user) {
-      console.log('User authenticated, refreshing posts');
+      console.log('User authenticated in BlogProvider, refreshing posts');
       fetchPosts();
-      
-      // Double-check admin status when needed for blog admin access
-      if (window.location.pathname.includes('/blog/admin')) {
-        console.log('On blog admin page, verifying admin status');
-        checkAdminRole();
-      }
     }
-  }, [fetchPosts, user, checkAdminRole]);
+  }, [fetchPosts, user, hasInitialized]);
+
+  // Add debugging info
+  console.log('BlogProvider state:', { 
+    hasUser: !!user, 
+    isAdmin, 
+    postsLoaded: posts.length > 0,
+    loading,
+    error
+  });
 
   const value = {
     posts,

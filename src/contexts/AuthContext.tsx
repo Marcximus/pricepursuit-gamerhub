@@ -24,31 +24,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const checkAdminRole = async (userId?: string) => {
-    const idToCheck = userId ?? user?.id;
-    
-    if (!idToCheck) {
-      setIsAdmin(false);
-      return false;
-    }
-
     try {
+      const idToCheck = userId ?? user?.id;
+      
+      if (!idToCheck) {
+        console.log('No user ID to check admin role for');
+        setIsAdmin(false);
+        return false;
+      }
+
       console.log('Checking admin role for user:', idToCheck);
       const { data, error } = await supabase.rpc('has_role', { _role: 'admin' });
 
       if (error) {
         console.error('Error checking admin role:', error);
-        toast({
-          title: "Error",
-          description: "Failed to check admin permissions",
-          variant: "destructive"
-        });
         setIsAdmin(false);
         return false;
-      } else {
-        console.log('Admin role check result:', data);
-        setIsAdmin(!!data);
-        return !!data;
       }
+      
+      console.log('Admin role check result:', data);
+      setIsAdmin(!!data);
+      return !!data;
     } catch (error) {
       console.error('Exception checking admin role:', error);
       setIsAdmin(false);
@@ -62,6 +58,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         setIsLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
+        
+        console.log('Initial session check:', session ? 'Session exists' : 'No session');
         setUser(session?.user ?? null);
         
         if (session?.user) {
@@ -94,6 +92,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Provide more debugging information
+  console.log('AuthContext state:', { user: !!user, isAdmin, isLoading });
 
   return (
     <AuthContext.Provider value={{ user, isAdmin, isLoading, checkAdminRole }}>

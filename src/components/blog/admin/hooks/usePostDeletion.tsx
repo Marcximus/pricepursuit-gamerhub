@@ -13,8 +13,11 @@ export const usePostDeletion = () => {
   const [deleteSuccess, setDeleteSuccess] = useState(false);
 
   const confirmDelete = async (postId: string) => {
+    console.log(`usePostDeletion: Confirming deletion for post ID: ${postId}`);
+    
     // Re-verify admin status before opening delete dialog
     if (!user) {
+      console.log('usePostDeletion: No user found, preventing deletion');
       toast({
         title: "Authentication Required",
         description: "You must be logged in to delete posts.",
@@ -23,42 +26,72 @@ export const usePostDeletion = () => {
       return;
     }
 
-    // Check admin status before proceeding
-    const adminStatus = await checkAdminRole();
-    if (!adminStatus) {
-      console.log('Admin check failed in usePostDeletion');
+    try {
+      // Check admin status before proceeding
+      console.log('usePostDeletion: Verifying admin status before deletion');
+      const adminStatus = await checkAdminRole(user.id);
+      
+      if (!adminStatus) {
+        console.log('Admin check failed in usePostDeletion');
+        toast({
+          title: "Permission Denied",
+          description: "Only administrators can delete blog posts.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      console.log('usePostDeletion: Admin verified, proceeding with deletion confirmation');
+      setPostToDelete(postId);
+      setDeleteDialogOpen(true);
+      // Reset delete success state when opening a new delete dialog
+      setDeleteSuccess(false);
+    } catch (error) {
+      console.error('Error verifying admin status:', error);
       toast({
-        title: "Permission Denied",
-        description: "Only administrators can delete blog posts.",
+        title: "Error",
+        description: "Failed to verify permissions. Please try again.",
         variant: "destructive",
       });
-      return;
     }
-
-    setPostToDelete(postId);
-    setDeleteDialogOpen(true);
-    // Reset delete success state when opening a new delete dialog
-    setDeleteSuccess(false);
   };
 
   const handleDeletePost = async () => {
-    if (!postToDelete) return;
-    
-    // Final admin check before actual deletion
-    if (!user || !(await checkAdminRole())) {
-      toast({
-        title: "Permission Denied",
-        description: "Only administrators can delete blog posts.",
-        variant: "destructive",
-      });
-      setDeleteDialogOpen(false);
+    if (!postToDelete) {
+      console.log('usePostDeletion: No post ID to delete');
       return;
     }
     
-    setIsDeleting(true);
-    setDeleteSuccess(false);
-    
     try {
+      // Final admin check before actual deletion
+      if (!user) {
+        console.log('usePostDeletion: No user found during final check');
+        toast({
+          title: "Authentication Required",
+          description: "You must be logged in to delete posts.",
+          variant: "destructive",
+        });
+        setDeleteDialogOpen(false);
+        return;
+      }
+      
+      console.log('usePostDeletion: Performing final admin verification');
+      const isAdminUser = await checkAdminRole(user.id);
+      
+      if (!isAdminUser) {
+        console.log('usePostDeletion: Admin check failed during final verification');
+        toast({
+          title: "Permission Denied",
+          description: "Only administrators can delete blog posts.",
+          variant: "destructive",
+        });
+        setDeleteDialogOpen(false);
+        return;
+      }
+      
+      setIsDeleting(true);
+      setDeleteSuccess(false);
+      
       console.log(`BlogAdmin: Deleting post with ID: ${postToDelete}`);
       const success = await deletePost(postToDelete);
       
@@ -66,15 +99,8 @@ export const usePostDeletion = () => {
         console.log('BlogAdmin: Post deleted successfully');
         setDeleteSuccess(true);
         
-        // Force multiple refetches to ensure UI is in sync with database
-        // First immediate refetch
+        // Force refetch to ensure UI is in sync with database
         await fetchPosts();
-        
-        // Second delayed refetch in case the first one was too quick
-        setTimeout(() => {
-          console.log('BlogAdmin: Forcing delayed refetch after deletion');
-          fetchPosts();
-        }, 2000);
         
         toast({
           title: "Success",
