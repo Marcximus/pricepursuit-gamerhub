@@ -1,13 +1,6 @@
 
-/**
- * Video embedding utilities for Top10 blog posts
- */
-
-/**
- * Add a Humix video embed to the content if not already present
- */
 export function addVideoEmbed(content: string): string {
-  console.log('📼 Adding Humix video embed to content');
+  console.log('📼 Preparing Humix video embed');
   
   // Check if the content already has a Humix player
   if (content.includes('humixPlayers') || content.includes('humix-player')) {
@@ -26,14 +19,16 @@ export function addVideoEmbed(content: string): string {
 </div>
 `;
   
-  // Find a good position to insert the video
-  // Aim for after the introduction but before the first product
-  const firstH3Index = content.indexOf('<h3');
-  if (firstH3Index > 0) {
-    // Insert before the first product heading
-    return content.substring(0, firstH3Index) + videoEmbed + content.substring(firstH3Index);
+  // Find the conclusion section
+  const conclusionMatch = content.match(/<h[23]>Conclusion/i);
+  
+  if (conclusionMatch) {
+    // Insert video just before the conclusion
+    const conclusionIndex = conclusionMatch.index;
+    return content.substring(0, conclusionIndex) + videoEmbed + content.substring(conclusionIndex);
   }
   
-  // Fallback: insert at the end
+  // Fallback: insert at the end if no conclusion found
   return content + videoEmbed;
 }
+
