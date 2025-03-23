@@ -2,7 +2,7 @@
 /**
  * Generate standardized HTML for product cards
  */
-import { escapeHtml } from '../utils/security';
+import { escapeHtml } from '../utils/security.ts';
 
 export function generateProductHTML(product: any, rank: number): string {
   // Format price with dollar sign if needed
