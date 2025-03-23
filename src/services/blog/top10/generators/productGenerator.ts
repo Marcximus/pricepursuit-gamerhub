@@ -58,7 +58,11 @@ export function generateProductHtml(product: any, index: number): string {
   // Format the title with the rank number in front
   const rankedTitle = `#${rank} ${productTitle}`;
   
+  // Generate star rating HTML
+  const starsHtml = generateStarsHtml(productRating, productRatingTotal);
+  
   console.log(`🖼️ Generating HTML for product #${rank}: ${productTitle}, image: ${imageUrl.substring(0, 50)}...`);
+  console.log(`⭐ Rating: ${productRating || 'N/A'}, Reviews: ${productRatingTotal || 'N/A'}`);
   
   return `
 <div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6" data-asin="${product.asin || ''}" data-title="${productTitle}">
@@ -73,7 +77,7 @@ export function generateProductHtml(product: any, index: number): string {
       </div>
       <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
         <h4 class="text-xl font-semibold mb-2">${rankedTitle}</h4>
-        ${generateStarsHtml(productRating, productRatingTotal)}
+        ${starsHtml}
         <p class="text-lg font-bold mb-3">${productPrice}</p>
         <div class="mb-4">
           <a href="${productUrl}" 

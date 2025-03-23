@@ -17,8 +17,49 @@ export function generateHtmlContent(product: any, rank: number): string {
   const price = product.price?.value 
     ? `$${parseFloat(product.price.value).toFixed(2)}` 
     : (typeof product.price === 'string' ? product.price : 'Price not available');
-  const rating = product.rating ? `${product.rating}/5` : 'No ratings';
-  const reviews = product.ratings_total ? `(${product.ratings_total} reviews)` : '';
+  
+  // Enhanced rating and reviews display
+  let rating = 'No ratings';
+  let reviews = '';
+  
+  if (product.rating) {
+    rating = typeof product.rating === 'number' 
+      ? `${product.rating.toFixed(1)}/5` 
+      : `${product.rating}/5`;
+  }
+  
+  if (product.ratings_total || product.reviews_count) {
+    const reviewCount = product.ratings_total || product.reviews_count || 0;
+    reviews = `(${reviewCount.toLocaleString()} reviews)`;
+  }
+  
+  // Generate star symbols based on rating value
+  let starHTML = '';
+  if (product.rating) {
+    const ratingValue = parseFloat(product.rating);
+    if (!isNaN(ratingValue)) {
+      const fullStars = Math.floor(ratingValue);
+      const halfStar = ratingValue % 1 >= 0.5 ? 1 : 0;
+      const emptyStars = 5 - fullStars - halfStar;
+      
+      // Generate filled stars
+      starHTML = '<span class="text-amber-500">' + '★'.repeat(fullStars);
+      
+      // Add half star if needed
+      if (halfStar) {
+        starHTML += '½';
+      }
+      
+      // Close filled stars span
+      starHTML += '</span>';
+      
+      // Add empty stars
+      if (emptyStars > 0) {
+        starHTML += '<span class="text-gray-300">' + '☆'.repeat(emptyStars) + '</span>';
+      }
+    }
+  }
+  
   const image = product.image || product.imageUrl || '';
   const asin = product.asin || '';
   const url = product.url || product.productUrl || `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
@@ -51,8 +92,8 @@ export function generateHtmlContent(product: any, rank: number): string {
           <div class="product-meta flex flex-wrap items-center gap-2 mb-4">
             <span class="product-price text-lg font-bold text-green-600">${escapeHtml(price)}</span>
             <span class="mx-2 text-gray-400">|</span>
-            <span class="product-rating flex items-center text-amber-500">
-              ${rating !== 'No ratings' ? '⭐'.repeat(Math.round(parseFloat(rating))) : ''}
+            <span class="product-rating flex items-center">
+              ${starHTML}
               <span class="ml-1 text-gray-700">${escapeHtml(rating)} ${escapeHtml(reviews)}</span>
             </span>
           </div>

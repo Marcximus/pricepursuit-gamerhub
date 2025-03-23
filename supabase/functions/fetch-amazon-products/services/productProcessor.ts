@@ -18,9 +18,17 @@ export function processAmazonProducts(data: any) {
     const asin = product.asin || '';
     const imageUrl = product.image || product.images?.[0] || '';
     const url = product.url || product.link || `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
-    const price = product.price?.value || product.price || '';
-    const rating = product.rating || product.stars || '';
-    const ratingsTotal = product.ratings_total || product.reviews_total || '';
+    
+    // Enhanced price extraction with better fallbacks
+    const price = extractPrice(product);
+    
+    // Enhanced rating extraction with validation
+    const rating = extractRating(product);
+    const ratingsTotal = extractReviewCount(product);
+    
+    // Log extracted data for debugging
+    console.log(`🔍 Product #${index + 1}: "${title.substring(0, 30)}..."`);
+    console.log(`⭐ Rating: ${rating || 'N/A'}, Reviews: ${ratingsTotal || 'N/A'}`);
     
     // Generate HTML content for each product
     const htmlContent = generateProductHTML({
@@ -34,8 +42,6 @@ export function processAmazonProducts(data: any) {
       rating,
       ratingsTotal
     }, index + 1);
-    
-    console.log(`✅ Generated HTML content for product #${index + 1}: ${htmlContent.substring(0, 50)}...`);
     
     return {
       ...product,
@@ -56,11 +62,86 @@ export function processAmazonProducts(data: any) {
   });
   
   console.log(`🏁 Returning ${products.length} products with complete raw data`);
-  console.log(`📤 FINAL RESPONSE PREVIEW: First product: "${products[0]?.title?.substring(0, 30)}..." Price: $${products[0]?.price?.value || products[0]?.price || 'N/A'}`);
-  console.log(`📤 First product has HTML content: ${!!products[0]?.htmlContent}`);
   
   // Return all products, up to 15 max to ensure we have enough data
   return products.slice(0, 15);
+}
+
+/**
+ * Extract price from various possible formats in the API response
+ */
+function extractPrice(product: any): string | number {
+  if (product.price?.value) {
+    return product.price.value;
+  }
+  
+  if (product.price?.current_price) {
+    return product.price.current_price;
+  }
+  
+  if (typeof product.price === 'number') {
+    return product.price;
+  }
+  
+  if (typeof product.price === 'string' && product.price) {
+    // Try to extract numeric value if it's a string like "$599.99"
+    const match = product.price.match(/\d+(\.\d+)?/);
+    if (match) {
+      return parseFloat(match[0]);
+    }
+    return product.price;
+  }
+  
+  return 'Price not available';
+}
+
+/**
+ * Extract rating with validation
+ */
+function extractRating(product: any): number | null {
+  // Check direct rating property
+  if (product.rating && !isNaN(parseFloat(product.rating))) {
+    return parseFloat(product.rating);
+  }
+  
+  // Check stars property (alternative name)
+  if (product.stars && !isNaN(parseFloat(product.stars))) {
+    return parseFloat(product.stars);
+  }
+  
+  // Check rating object if it exists
+  if (product.rating_breakdown?.stars_average) {
+    return parseFloat(product.rating_breakdown.stars_average);
+  }
+  
+  return null;
+}
+
+/**
+ * Extract review count
+ */
+function extractReviewCount(product: any): number | null {
+  // Check direct count property
+  if (product.ratings_total && !isNaN(parseInt(product.ratings_total))) {
+    return parseInt(product.ratings_total);
+  }
+  
+  // Check reviews_total property (alternative name)
+  if (product.reviews_total && !isNaN(parseInt(product.reviews_total))) {
+    return parseInt(product.reviews_total);
+  }
+  
+  // Check reviews count if it exists
+  if (product.reviews_count && !isNaN(parseInt(product.reviews_count))) {
+    return parseInt(product.reviews_count);
+  }
+  
+  // Count reviews array if it exists
+  if (product.reviews && Array.isArray(product.reviews)) {
+    return product.reviews.length;
+  }
+  
+  return null;
 }
 
 /**
@@ -76,9 +157,30 @@ function generateProductHTML(product: any, rank: number): string {
         ? `$${product.price}`
         : (product.price || 'Price not available')));
   
-  // Format ratings and review count
-  const formattedRating = product.rating ? `${product.rating}/5` : 'No ratings';
-  const reviewText = product.ratingsTotal ? `(${product.ratingsTotal} reviews)` : '';
+  // Enhanced rating display with stars
+  let ratingDisplay = '';
+  let reviewText = '';
+  
+  if (product.rating) {
+    const ratingValue = parseFloat(product.rating);
+    if (!isNaN(ratingValue)) {
+      // Generate star symbols based on rating
+      const fullStars = Math.floor(ratingValue);
+      const halfStar = ratingValue % 1 >= 0.5 ? 1 : 0;
+      
+      ratingDisplay = `<span class="text-amber-500">${'★'.repeat(fullStars)}${halfStar ? '½' : ''}</span>`;
+      ratingDisplay += ` ${ratingValue.toFixed(1)}/5`;
+    } else {
+      ratingDisplay = `${product.rating}/5`;
+    }
+  } else {
+    ratingDisplay = 'No ratings';
+  }
+  
+  if (product.ratingsTotal || product.ratings_total) {
+    const count = product.ratingsTotal || product.ratings_total;
+    reviewText = `(${count.toLocaleString()} reviews)`;
+  }
   
   // Extract features or highlights - limit to 3 for cleaner display
   const features = Array.isArray(product.feature_bullets) 
@@ -100,7 +202,7 @@ function generateProductHTML(product: any, rank: number): string {
         </h4>
         <div class="product-meta">
           <span class="product-price">${escapeHtml(formattedPrice)}</span>
-          <span class="product-rating">${escapeHtml(formattedRating)} ${escapeHtml(reviewText)}</span>
+          <span class="product-rating">${ratingDisplay} ${escapeHtml(reviewText)}</span>
         </div>
         ${features.length > 0 ? 
           `<div class="product-features">
