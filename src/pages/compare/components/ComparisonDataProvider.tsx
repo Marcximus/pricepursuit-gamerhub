@@ -4,7 +4,20 @@ import { useNavigate } from "react-router-dom";
 import { useComparison } from "@/contexts/ComparisonContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/types/product";
-import type { ComparisonResult } from "../types";
+
+export type ComparisonResult = {
+  winner: 'left' | 'right' | 'tie';
+  analysis: string;
+  advantages: {
+    left: string[];
+    right: string[];
+  };
+  recommendation: string;
+  valueForMoney: {
+    left: string;
+    right: string;
+  };
+};
 
 interface ComparisonDataProviderProps {
   children: (props: {
@@ -73,7 +86,7 @@ const ComparisonDataProvider: React.FC<ComparisonDataProviderProps> = ({ childre
         
         console.log('Comparison result received:', data);
         setComparisonResult(data);
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error fetching comparison:', err);
         setError('Failed to compare laptops. Please try again.');
       } finally {

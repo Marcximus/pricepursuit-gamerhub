@@ -27,52 +27,6 @@ Your output must be structured EXACTLY as valid JSON in the following format:
   "valueForMoney": {
     "left": "Value assessment for left laptop",
     "right": "Value assessment for right laptop"
-  },
-  "specifications": {
-    "left": {
-      "brand": "Left laptop brand",
-      "model": "Left laptop model",
-      "price": "Price with currency",
-      "os": "Operating system",
-      "releaseYear": "Estimated release year",
-      "processor": "Full processor name",
-      "ram": "RAM amount and type",
-      "storage": "Storage capacity and type",
-      "graphics": "Graphics card or integrated GPU",
-      "screenSize": "Screen size in inches",
-      "screenResolution": "Screen resolution (e.g. FHD, 1920x1080)",
-      "refreshRate": "Screen refresh rate (e.g. 60Hz, 144Hz)",
-      "weight": "Weight in pounds/kg",
-      "batteryLife": "Battery life in hours",
-      "ports": "Summary of available ports",
-      "rating": "Rating out of 5",
-      "ratingCount": "Number of ratings",
-      "totalReviews": "Total number of reviews",
-      "wilsonScore": "Wilson score value",
-      "benchmarkScore": "Benchmark score if available"
-    },
-    "right": {
-      "brand": "Right laptop brand",
-      "model": "Right laptop model",
-      "price": "Price with currency",
-      "os": "Operating system",
-      "releaseYear": "Estimated release year",
-      "processor": "Full processor name",
-      "ram": "RAM amount and type",
-      "storage": "Storage capacity and type",
-      "graphics": "Graphics card or integrated GPU",
-      "screenSize": "Screen size in inches",
-      "screenResolution": "Screen resolution (e.g. FHD, 1920x1080)",
-      "refreshRate": "Screen refresh rate (e.g. 60Hz, 144Hz)",
-      "weight": "Weight in pounds/kg",
-      "batteryLife": "Battery life in hours",
-      "ports": "Summary of available ports",
-      "rating": "Rating out of 5",
-      "ratingCount": "Number of ratings",
-      "totalReviews": "Total number of reviews",
-      "wilsonScore": "Wilson score value",
-      "benchmarkScore": "Benchmark score if available"
-    }
   }
 }
 
@@ -80,24 +34,49 @@ IMPORTANT:
 - Your analysis MUST use multiple paragraphs with line breaks for readability
 - Include 1-2 subtle humorous comments or analogies in your analysis
 - Keep your technical assessment accurate and helpful despite the humor
-- Return ONLY valid JSON that follows the exact structure above (no markdown, no additional text)
-- For values that are unavailable, use "Not specified" rather than leaving them blank`;
+- Return ONLY valid JSON that follows the exact structure above (no markdown, no additional text)`;
 }
 
-// Create the comparison prompt with raw Oxylabs API response data
-export function generateUserPrompt(laptopLeftData: any, laptopRightData: any): string {
+// Create the comparison prompt with all available product details
+export function generateUserPrompt(laptopLeft: Product, laptopRight: Product): string {
   return `
 Compare these two laptops with complete details:
 
-LEFT LAPTOP:
-${JSON.stringify(laptopLeftData.results[0].content, null, 2)}
+LEFT LAPTOP (${laptopLeft.id}):
+- Brand: ${laptopLeft.brand || 'Not specified'}
+- Model: ${laptopLeft.model || 'Not specified'}
+- Full Title: ${laptopLeft.title || 'Not specified'}
+- Processor: ${laptopLeft.processor || 'Not specified'}
+- RAM: ${laptopLeft.ram || 'Not specified'}
+- Storage: ${laptopLeft.storage || 'Not specified'}
+- Graphics: ${laptopLeft.graphics || 'Not specified'}
+- Screen: ${laptopLeft.screen_size || 'Not specified'} ${laptopLeft.screen_resolution ? `(${laptopLeft.screen_resolution})` : ''}
+- Operating System: ${laptopLeft.operating_system || 'Not specified'}
+- Weight: ${laptopLeft.weight || 'Not specified'}
+- Battery Life: ${laptopLeft.battery_life || 'Not specified'}
+- Price: $${laptopLeft.price?.toFixed(2) || 'Not specified'}
+- Original Price: $${laptopLeft.original_price?.toFixed(2) || 'Not specified'}
+- Rating: ${laptopLeft.rating ? `${laptopLeft.rating}/5 (${laptopLeft.rating_count} reviews)` : 'Not specified'}
+- Benchmark Score: ${laptopLeft.benchmark_score || 'Not specified'}
+- Wilson Score: ${laptopLeft.wilson_score || 'Not specified'}
 
-RIGHT LAPTOP:
-${JSON.stringify(laptopRightData.results[0].content, null, 2)}
+RIGHT LAPTOP (${laptopRight.id}):
+- Brand: ${laptopRight.brand || 'Not specified'}
+- Model: ${laptopRight.model || 'Not specified'}
+- Full Title: ${laptopRight.title || 'Not specified'}
+- Processor: ${laptopRight.processor || 'Not specified'}
+- RAM: ${laptopRight.ram || 'Not specified'}
+- Storage: ${laptopRight.storage || 'Not specified'}
+- Graphics: ${laptopRight.graphics || 'Not specified'}
+- Screen: ${laptopRight.screen_size || 'Not specified'} ${laptopRight.screen_resolution ? `(${laptopRight.screen_resolution})` : ''}
+- Operating System: ${laptopRight.operating_system || 'Not specified'}
+- Weight: ${laptopRight.weight || 'Not specified'}
+- Battery Life: ${laptopRight.battery_life || 'Not specified'}
+- Price: $${laptopRight.price?.toFixed(2) || 'Not specified'}
+- Original Price: $${laptopRight.original_price?.toFixed(2) || 'Not specified'}
+- Rating: ${laptopRight.rating ? `${laptopRight.rating}/5 (${laptopRight.rating_count} reviews)` : 'Not specified'}
+- Benchmark Score: ${laptopRight.benchmark_score || 'Not specified'}
+- Wilson Score: ${laptopRight.wilson_score || 'Not specified'}
 
-Based on the raw data above, provide a comprehensive comparison. Include which laptop is better overall, which one provides better value for money, and what are the specific advantages of each. 
-
-For the specifications section, extract all the requested information accurately from the raw data. For fields like ports, refresh rate, and release year, you'll need to infer from the available data. Be thorough and precise when populating every field in the specifications object.
-
-Remember to use multiple paragraphs for readability and include some witty observations that don't compromise the technical accuracy of your analysis.`;
+Based on the specifications above, provide a comprehensive comparison. Include which laptop is better overall, which one provides better value for money, and what are the specific advantages of each. Remember to use multiple paragraphs for readability and include some witty observations that don't compromise the technical accuracy of your analysis.`;
 }
