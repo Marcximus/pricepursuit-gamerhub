@@ -1,141 +1,110 @@
+/**
+ * Content processing utilities for blog posts
+ */
+
+import type { BlogPost } from '@/contexts/blog';
 
 /**
- * Fixes HTML in Top10 blog posts to ensure proper tag closure
+ * Fix Top10 HTML formatting if needed
  */
-export const fixTopTenHtmlIfNeeded = (content: string, category: string): string => {
+export function fixTopTenHtmlIfNeeded(content: string, category: string): string {
   if (category !== 'Top10') return content;
   
-  // Check if there are unclosed tags in the content
-  let processedContent = content;
+  let fixedContent = content;
   
-  // Ensure h1 tags are properly formatted
-  processedContent = processedContent.replace(/<h1([^>]*)>([^<]*?)(?=<(?!\/h1>))/g, '<h1$1>$2</h1>');
+  // Fix h3 tags that don't have proper closing tags
+  fixedContent = fixedContent.replace(/<h3([^>]*)>([^<]+)(?!<\/h3>)/g, '<h3$1>$2</h3>');
   
-  // Ensure h3 tags are properly formatted
-  processedContent = processedContent.replace(/<h3>([^<]*?)(?=<(?!\/h3>))/g, '<h3>$1</h3>');
+  // Fix p tags that don't have proper closing tags
+  fixedContent = fixedContent.replace(/<p>([^<]+)(?!<\/p>)/g, '<p>$1</p>');
   
-  // Fix paragraph tags
-  processedContent = processedContent.replace(/<p>([^<]*?)(?=<(?!\/p>))/g, '<p>$1</p>');
+  // Fix ul tags that don't have proper closing tags
+  fixedContent = fixedContent.replace(/<ul([^>]*)>([^<]+)(?!<\/ul>)/g, '<ul$1>$2</ul>');
   
-  // Fix list items
-  processedContent = processedContent.replace(/<li>([^<]*?)(?=<(?!\/li>))/g, '<li>$1</li>');
+  // Fix li tags that don't have proper closing tags
+  fixedContent = fixedContent.replace(/<li>([^<]+)(?!<\/li>)/g, '<li>$1</li>');
   
-  // Ensure proper list tag closure
-  processedContent = processedContent.replace(/<ul class="my-4">([^]*?)(?=<(?!\/ul>))/g, '<ul class="my-4">$1</ul>');
-  
-  return processedContent;
-};
+  return fixedContent;
+}
 
 /**
- * Injects additional images into the blog post content at appropriate positions
+ * Add image fallbacks
  */
-export const injectAdditionalImages = (content: string, additionalImages: string[] | undefined, category?: string): string => {
+export function addImageFallbacks(content: string): string {
+  // Add onerror handler to images that don't already have one
+  return content.replace(
+    /<img([^>]*)(?!onerror=)([^>]*)>/g, 
+    '<img$1$2 onerror="this.onerror=null; this.src=\'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300&q=80\'; this.classList.add(\'fallback-image\');">'
+  );
+}
+
+/**
+ * Inject additional images into the content
+ */
+export function injectAdditionalImages(
+  content: string, 
+  additionalImages: string[] | null, 
+  category: string
+): string {
   if (!additionalImages || additionalImages.length === 0) return content;
   
-  if (category === 'Top10') {
-    let modifiedContent = content;
-    const headers = content.match(/<h[2-3][^>]*>.*?<\/h[2-3]>/gi) || [];
+  let modifiedContent = content;
+  
+  // Only inject for certain categories
+  if (['How-To', 'News'].includes(category)) {
+    const paragraphs = content.match(/<p>.*?<\/p>/gs) || [];
     
-    headers.forEach((header, index) => {
-      if (index < additionalImages.length) {
-        const imgSrc = additionalImages[index];
-        const imageHtml = `<div class="my-4">
-          <img 
-            src="${imgSrc}" 
-            alt="List item ${index + 1}" 
-            class="rounded-lg w-full" 
-            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
-          />
-        </div>`;
-        
+    // Inject after some paragraphs
+    additionalImages.forEach((imageUrl, index) => {
+      const targetIndex = Math.min(paragraphs.length - 1, 2 + index * 3);
+      if (targetIndex >= 0 && paragraphs[targetIndex]) {
+        const imgHtml = `
+          <figure class="my-6">
+            <img src="${imageUrl}" alt="Article image ${index + 1}" class="rounded-lg w-full max-w-3xl mx-auto" />
+          </figure>
+        `;
         modifiedContent = modifiedContent.replace(
-          header,
-          `${header}${imageHtml}`
+          paragraphs[targetIndex],
+          `${paragraphs[targetIndex]}${imgHtml}`
         );
       }
     });
-    
-    return modifiedContent;
   }
   
-  if (['Review', 'How-To', 'Comparison'].includes(category || '')) {
-    let modifiedContent = content;
-    const paragraphs = content.match(/<p>.*?<\/p>/gi) || [];
-    
-    additionalImages.forEach((img, index) => {
-      const targetParagraphIndex = Math.min(
-        Math.floor(paragraphs.length * (index + 1) / (additionalImages.length + 1)),
-        paragraphs.length - 1
-      );
-      
-      if (targetParagraphIndex >= 0 && paragraphs[targetParagraphIndex]) {
-        const imageHtml = `<div class="my-4">
-          <img 
-            src="${img}" 
-            alt="Image ${index + 1}" 
-            class="rounded-lg w-full" 
-            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
-          />
-        </div>`;
-        
-        modifiedContent = modifiedContent.replace(
-          paragraphs[targetParagraphIndex],
-          `${paragraphs[targetParagraphIndex]}${imageHtml}`
-        );
-      }
-    });
-    
-    return modifiedContent;
-  }
-  
-  return content;
-};
+  return modifiedContent;
+}
 
 /**
- * Add fallback handlers to img tags
+ * Improve spacing between paragraphs and sections
  */
-export const addImageFallbacks = (content: string): string => {
-  return content.replace(
-    /<img([^>]*)>/g, 
-    '<img$1 onerror="this.onerror=null; this.src=\'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200\';">'
-  );
-};
-
-/**
- * Improves paragraph spacing in blog content, especially for emoji-prefixed paragraphs
- */
-export const improveContentSpacing = (content: string): string => {
-  let improvedContent = content;
+export function improveContentSpacing(content: string): string {
+  let enhancedContent = content;
   
-  // Fix spacing for emoji-prefixed paragraphs
-  improvedContent = improvedContent.replace(
-    /(<p>[📱🌟💻✅🚀💡✨🔥👉][^<]*?<\/p>)(<p>)/g, 
-    '$1\n<div class="my-6"></div>$2'
+  // Add attributes to paragraphs that start with emojis to improve their styling
+  enhancedContent = enhancedContent.replace(
+    /<p>(\s*[🌟🚀💡📱💻🔥✨⭐🎮🌊🎒💼🖥️☕].*?)<\/p>/g, 
+    '<p emoji-prefix="true">$1</p>'
   );
   
-  // Add additional spacing between regular paragraphs if they don't have it
-  improvedContent = improvedContent.replace(
-    /(<\/p>)(<p>)/g,
-    '$1\n<div class="my-4"></div>$2'
+  // Fix common spacing issues
+  enhancedContent = enhancedContent
+    // Add space after period if missing
+    .replace(/\.([A-Z])/g, '. $1')
+    // Add space after comma if missing
+    .replace(/,([A-Za-z])/g, ', $1')
+    // Remove excess whitespace between paragraphs
+    .replace(/>\s+</g, '><')
+    // Add breathing room around horizontal rules
+    .replace(/<hr\s*\/?>/g, '<hr class="my-8" />');
+  
+  // Remove excessively long product titles that might have been included
+  enhancedContent = enhancedContent.replace(
+    /<h3>.*?(\w+\s+\w+\s+\w+).*?<\/h3>/g,
+    (match, shortTitle) => {
+      // Keep only the first few words for the title
+      return `<h3>${shortTitle}</h3>`;
+    }
   );
   
-  // Add spacing before bullet lists
-  improvedContent = improvedContent.replace(
-    /(<\/p>)(<ul)/g,
-    '$1\n<div class="my-4"></div>$2'
-  );
-  
-  // Add spacing after bullet lists
-  improvedContent = improvedContent.replace(
-    /(<\/ul>)(<p>)/g,
-    '$1\n<div class="my-4"></div>$2'
-  );
-  
-  // Ensure emoji bullets have proper spacing
-  improvedContent = improvedContent.replace(
-    /<p>(✅[^<]*?)<\/p>/g,
-    '<p class="flex items-start mb-2"><span class="mr-2 flex-shrink-0">✅</span><span>$1</span></p>'
-  );
-  
-  return improvedContent;
-};
+  return enhancedContent;
+}
