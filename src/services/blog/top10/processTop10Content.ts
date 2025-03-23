@@ -20,10 +20,13 @@ export async function processTop10Content(content: string, prompt: string): Prom
     const hasHtmlStructure = content.includes('<h1>') || content.includes('<h2>') || content.includes('<h3>') || 
                             (content.includes('<p>') && content.includes('</p>'));
     
+    console.log(`🔍 Content has HTML structure: ${hasHtmlStructure}`);
+    
     // If content appears to be plain text, convert it to HTML
     if (!hasHtmlStructure) {
       console.warn('⚠️ Content appears to be plain text, converting to HTML structure');
       content = wrapTextInHtml(content, prompt);
+      console.log(`📏 Content after wrapping in HTML: ${content.length} characters`);
     }
     
     // Basic HTML sanity check - add missing header tags if needed
@@ -54,9 +57,11 @@ export async function processTop10Content(content: string, prompt: string): Prom
     }
     
     // First, clean up the content and fix basic HTML issues
+    console.log('🧹 Cleaning up content structure');
     let processedContent = cleanupContent(content);
     
     // Fix any malformed HTML tags from AI response
+    console.log('🔧 Fixing HTML tags');
     processedContent = fixHtmlTags(processedContent);
     
     // Replace the product data placeholders with actual data
@@ -84,10 +89,24 @@ export async function processTop10Content(content: string, prompt: string): Prom
       }
     }
     
-    // Final sanity check to make sure the HTML is valid
+    // Final sanity check to make sure the HTML is valid - run the fix a second time
+    // This is crucial for ensuring all content has proper HTML structure
     const finalContent = fixHtmlTags(processedContent);
     
-    return finalContent;
+    // Convert any remaining non-HTML text to paragraphs
+    let enhancedContent = finalContent;
+    
+    // If there are no paragraph tags, something went wrong with the HTML processing
+    if (!enhancedContent.includes('<p>')) {
+      console.warn('⚠️ No paragraph tags found in processed content, attempting emergency fix');
+      enhancedContent = wrapTextInHtml(enhancedContent, prompt);
+    }
+    
+    // Final log before returning
+    console.log(`📤 Final content character count: ${enhancedContent.length}`);
+    console.log(`📤 Final content has proper HTML: ${enhancedContent.includes('<h1>') && enhancedContent.includes('<p>')}`);
+    
+    return enhancedContent;
   } catch (error) {
     console.error('💥 Error in processTop10Content:', error);
     console.error('💥 Error details:', error instanceof Error ? error.message : String(error));
@@ -97,7 +116,18 @@ export async function processTop10Content(content: string, prompt: string): Prom
       description: error instanceof Error ? error.message : 'Failed to process Top 10 content',
       variant: 'destructive',
     });
+    
     // Even if we encounter an error, try to at least fix the HTML tags
-    return fixHtmlTags(content);
+    try {
+      // Attempt to wrap in HTML if the content seems to be plain text
+      if (!content.includes('<h1>') && !content.includes('<p>')) {
+        return fixHtmlTags(wrapTextInHtml(content, prompt));
+      }
+      return fixHtmlTags(content);
+    } catch (fallbackError) {
+      console.error('💥 Error in emergency fallback:', fallbackError);
+      // If everything fails, return the content with basic HTML wrapping
+      return `<h1>${prompt}</h1><p>${content}</p>`;
+    }
   }
 }

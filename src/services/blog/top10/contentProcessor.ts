@@ -66,6 +66,37 @@ export function cleanupContent(content: string): string {
     cleaned = result.join('\n');
   }
   
+  // Handle emoji-prefixed paragraphs (common in AI-generated content)
+  cleaned = cleaned.replace(/^(😍|🚀|💡|✨|🔥|👉)(.+)$/gm, '<p>$1 $2</p>');
+  
+  // Make sure each line that looks like a paragraph is wrapped in <p> tags
+  const lines = cleaned.split('\n');
+  let result = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Skip empty lines or lines that already have HTML
+    if (!line || line.startsWith('<') || line.endsWith('>')) {
+      result.push(lines[i]);
+      continue;
+    }
+    
+    // If this is a standalone text line not wrapped in tags
+    // and it's not immediately after an opening tag or before a closing tag
+    const prevLine = i > 0 ? lines[i-1].trim() : '';
+    const nextLine = i < lines.length - 1 ? lines[i+1].trim() : '';
+    
+    const isPrevLineOpeningTag = prevLine.endsWith('>') && !prevLine.startsWith('</');
+    const isNextLineClosingTag = nextLine.startsWith('</');
+    
+    if (!isPrevLineOpeningTag && !isNextLineClosingTag && line.length > 10) {
+      result.push(`<p>${line}</p>`);
+    } else {
+      result.push(lines[i]);
+    }
+  }
+  cleaned = result.join('\n');
+  
   console.log('✅ Content cleaned successfully');
   return cleaned;
 }
@@ -78,9 +109,65 @@ export function fixHtmlTags(content: string): string {
   
   let fixed = content;
   
-  // Make sure text is wrapped in proper tags
+  // Wrap text that doesn't have tags
   // First, find all text nodes that aren't inside a tag
-  fixed = fixed.replace(/^((?!<h1>|<h2>|<h3>|<p>|<ul>|<li>|<div>).+)$/gm, '<p>$1</p>');
+  const paragraphs = content.split(/\n{2,}/);
+  let newContent = [];
+  
+  for (let paragraph of paragraphs) {
+    // Skip if empty
+    if (!paragraph.trim()) continue;
+    
+    // Skip if it's already an HTML tag
+    if (paragraph.trim().startsWith('<') && paragraph.trim().endsWith('>')) {
+      newContent.push(paragraph);
+      continue;
+    }
+    
+    // If has bullet points, convert to list
+    if (/^[•✅-]\s+/m.test(paragraph)) {
+      const items = paragraph.split(/\n/).filter(item => /^[•✅-]\s+/.test(item));
+      if (items.length > 0) {
+        let list = '<ul class="my-4">\n';
+        for (const item of items) {
+          const cleanItem = item.replace(/^[•✅-]\s+/, '');
+          list += `  <li>${cleanItem}</li>\n`;
+        }
+        list += '</ul>';
+        newContent.push(list);
+        continue;
+      }
+    }
+    
+    // If it looks like a heading (short and doesn't end with period)
+    if (paragraph.length < 80 && !paragraph.trim().endsWith('.') && !paragraph.includes('\n')) {
+      // Check if it mentions a Lenovo model
+      if (/Lenovo\s+[\w\s]+(Pro|Slim|Book|X\d|Yoga|Flex|Legion|ThinkPad|IdeaPad)/i.test(paragraph)) {
+        newContent.push(`<h3>${paragraph.trim()}</h3>`);
+      } 
+      // Is this a numbered heading?
+      else if (/^#?\d+[\.:]\s*/.test(paragraph)) {
+        newContent.push(`<h3>${paragraph.trim()}</h3>`);
+      }
+      // General subheading
+      else if (paragraph.length < 50) {
+        newContent.push(`<h2>${paragraph.trim()}</h2>`);
+      } 
+      else {
+        newContent.push(`<p>${paragraph.trim()}</p>`);
+      }
+    } 
+    // Emoji-prefixed paragraph
+    else if (/^[😍🚀💡✨🔥👉].+/m.test(paragraph)) {
+      newContent.push(`<p>${paragraph.trim()}</p>`);
+    } 
+    // Regular paragraph
+    else {
+      newContent.push(`<p>${paragraph.trim()}</p>`);
+    }
+  }
+  
+  fixed = newContent.join('\n\n');
   
   // Make sure headings have proper spacing
   fixed = fixed.replace(/<(h[1-6])>\s*(.+?)\s*<\/(h[1-6])>/g, '<$1>$2</$3>\n\n');

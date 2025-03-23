@@ -106,29 +106,44 @@ export function wrapTextInHtml(content: string, title: string): string {
     // Skip empty paragraphs
     if (!para.trim()) return;
     
-    // Check if this looks like a heading (short, ends with no period)
-    if (para.length < 60 && !para.trim().endsWith('.') && !para.includes('\n')) {
-      // This is likely a heading - check if it's a numbered item or a model name
-      if (/^\d+\.|\bLenovo\b/.test(para)) {
-        htmlContent += `<h3>${para.trim()}</h3>\n\n`;
-      } else {
-        htmlContent += `<h2>${para.trim()}</h2>\n\n`;
-      }
-    } 
-    // Check if it's a bullet point list
-    else if (para.includes('✅') || para.includes('•') || para.includes('-')) {
-      const items = para.split(/\n/).filter(item => item.trim());
-      if (items.length > 1) {
+    // Check if this paragraph contains bullet points
+    if (para.includes('✅') || para.includes('•') || para.includes('-') && para.includes('\n')) {
+      // This is a list
+      const listItems = para.split(/\n/).filter(line => line.trim().length > 0);
+      if (listItems.length > 1) {
         htmlContent += '<ul class="my-4">\n';
-        items.forEach(item => {
-          // Clean up bullet points
-          const cleanItem = item.replace(/^[•✅-]\s*/, '').trim();
-          htmlContent += `  <li>${cleanItem}</li>\n`;
+        listItems.forEach(item => {
+          const cleanItem = item.trim().replace(/^[•✅-]\s*/, '');
+          if (cleanItem) {
+            htmlContent += `<li>${cleanItem}</li>\n`;
+          }
         });
         htmlContent += '</ul>\n\n';
-      } else {
+        return;
+      }
+    }
+    
+    // Check if this looks like a heading (short, ends with no period)
+    if (para.length < 80 && !para.trim().endsWith('.') && !para.includes('\n')) {
+      // Is this a model name (like "Lenovo ThinkPad X1")?
+      if (/Lenovo\s+[\w\s]+(Pro|Slim|Book|X\d|Yoga|Flex|Legion|ThinkPad|IdeaPad)/i.test(para)) {
+        htmlContent += `<h3>${para.trim()}</h3>\n\n`;
+      } 
+      // Is this a numbered heading like "#1: Lenovo ThinkPad"?
+      else if (/^#?\d+[\.:]\s*/.test(para) || /^[A-Z][a-z]+\s+\d+:/.test(para)) {
+        htmlContent += `<h3>${para.trim()}</h3>\n\n`;
+      }
+      // General subheading
+      else if (index > 0 && para.length < 50) {
+        htmlContent += `<h2>${para.trim()}</h2>\n\n`;
+      } 
+      else {
         htmlContent += `<p>${para.trim()}</p>\n\n`;
       }
+    } 
+    // For emojis at the start of paragraphs, ensure proper formatting
+    else if (/^[😍🚀💡✨🔥👉].+/m.test(para)) {
+      htmlContent += `<p>${para.trim()}</p>\n\n`;
     } 
     // Regular paragraph
     else {
