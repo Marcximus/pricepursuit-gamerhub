@@ -8,7 +8,8 @@ import {
   usePerformanceSpecs,
   useDisplaySpecs,
   usePhysicalSpecs,
-  useReviewSpecs
+  useReviewSpecs,
+  useReviewDetails
 } from './hooks';
 
 export const useSpecifications = (
@@ -26,6 +27,7 @@ export const useSpecifications = (
   const displaySpecs = useDisplaySpecs(laptopLeft, laptopRight, leftSpecs, rightSpecs);
   const physicalSpecs = usePhysicalSpecs(laptopLeft, laptopRight, leftSpecs, rightSpecs);
   const reviewSpecs = useReviewSpecs(laptopLeft, laptopRight, leftSpecs, rightSpecs);
+  const reviewDetails = useReviewDetails(laptopLeft, laptopRight, leftSpecs, rightSpecs);
 
   // Combine all spec rows
   const specRows = useMemo(() => {
@@ -34,10 +36,11 @@ export const useSpecifications = (
     // Combine all categories into a single array
     return [
       ...basicSpecs,
-      ...performanceSpecs,
+      ...performanceSpecs, 
       ...displaySpecs,
       ...physicalSpecs,
-      ...reviewSpecs
+      ...reviewSpecs,
+      ...reviewDetails
     ];
   }, [
     basicSpecs,
@@ -45,6 +48,7 @@ export const useSpecifications = (
     displaySpecs,
     physicalSpecs,
     reviewSpecs,
+    reviewDetails,
     laptopLeft,
     laptopRight
   ]);

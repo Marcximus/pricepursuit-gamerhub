@@ -17,20 +17,20 @@ export const useReviewSpecs = (
     return [
       { 
         title: 'Rating', 
-        leftValue: leftSpecs?.rating || 'Not available', 
-        rightValue: rightSpecs?.rating || 'Not available',
+        leftValue: leftSpecs?.rating || laptopLeft?.rating?.toString() || 'Not available', 
+        rightValue: rightSpecs?.rating || laptopRight?.rating?.toString() || 'Not available',
         compare: compareScores
       },
       { 
         title: 'Rating Count', 
-        leftValue: leftSpecs?.ratingCount || 'Not available', 
-        rightValue: rightSpecs?.ratingCount || 'Not available',
+        leftValue: leftSpecs?.ratingCount || laptopLeft?.rating_count?.toString() || 'Not available', 
+        rightValue: rightSpecs?.ratingCount || laptopRight?.rating_count?.toString() || 'Not available',
         compare: compareScores
       },
       { 
         title: 'Total Reviews', 
-        leftValue: leftSpecs?.totalReviews || 'Not available', 
-        rightValue: rightSpecs?.totalReviews || 'Not available',
+        leftValue: leftSpecs?.totalReviews || laptopLeft?.total_reviews?.toString() || 'Not available', 
+        rightValue: rightSpecs?.totalReviews || laptopRight?.total_reviews?.toString() || 'Not available',
         compare: compareScores
       },
       { 
