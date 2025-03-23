@@ -116,7 +116,7 @@ export async function generateBlogPost(
         throw new Error('Failed to create request payload');
       }
       
-      // Explicitly set content-type and use the stringified JSON in the body
+      // Explicitly set content-type and use the request payload
       const response = await supabase.functions.invoke('generate-blog-post', {
         body: requestPayload,
         headers: {
@@ -126,13 +126,35 @@ export async function generateBlogPost(
 
       if (response.error) {
         console.error('❌ Error generating blog post:', response.error);
-        throw new Error(response.error.message || 'Failed to generate blog post');
+        // Return a fallback response with error information for debugging
+        return {
+          title: `New ${category} Post (Error)`,
+          content: `
+            <h1>Error Generating Content</h1>
+            <p>There was an error calling the blog generation service: ${response.error.message || 'Unknown error'}</p>
+            <p>Please try again in a few moments.</p>
+          `,
+          excerpt: "There was an error generating this content. Please try again.",
+          category: category as any,
+          tags: ['error']
+        };
       }
 
       // Check if response.data exists and is valid
       if (!response.data) {
         console.error('❌ Empty response data from edge function');
-        throw new Error('Empty response from edge function');
+        // Return a fallback response with error information
+        return {
+          title: `New ${category} Post (Error)`,
+          content: `
+            <h1>Error Generating Content</h1>
+            <p>The blog generation service returned an empty response.</p>
+            <p>Please try again in a few moments.</p>
+          `,
+          excerpt: "There was an error generating this content. Please try again.",
+          category: category as any,
+          tags: ['error']
+        };
       }
 
       console.log('✅ Blog post generated successfully');
@@ -156,7 +178,7 @@ export async function generateBlogPost(
             title: `New ${category} Post`,
             content: `Error parsing AI content: ${parseError.message}\n\nOriginal content:\n${response.data}`,
             excerpt: "There was an error generating this post's content.",
-            category,
+            category: category as any,
             tags: ['error']
           };
         }
@@ -180,7 +202,19 @@ export async function generateBlogPost(
         description: 'The blog generation service is currently unavailable. Please try again later.',
         variant: 'destructive',
       });
-      throw error; // Re-throw to be caught by the outer try/catch
+      
+      // Return a fallback response with error information
+      return {
+        title: `New ${category} Post (Error)`,
+        content: `
+          <h1>Error Generating Content</h1>
+          <p>There was an error calling the blog generation service: ${error instanceof Error ? error.message : 'Unknown error'}</p>
+          <p>Please try again in a few moments.</p>
+        `,
+        excerpt: "There was an error generating this content. Please try again.",
+        category: category as any,
+        tags: ['error']
+      };
     }
   } catch (error) {
     console.error('💥 Error in generateBlogPost:', error);
@@ -189,6 +223,18 @@ export async function generateBlogPost(
       description: error instanceof Error ? error.message : 'Failed to generate blog post',
       variant: 'destructive',
     });
-    return null;
+    
+    // Return a fallback response with error information
+    return {
+      title: `New ${category} Post (Error)`,
+      content: `
+        <h1>Error Generating Content</h1>
+        <p>An unexpected error occurred: ${error instanceof Error ? error.message : 'Unknown error'}</p>
+        <p>Please try again in a few moments.</p>
+      `,
+      excerpt: "There was an error generating this content. Please try again.",
+      category: category as any,
+      tags: ['error']
+    };
   }
 }

@@ -29,38 +29,49 @@ serve(async (req) => {
     }
     console.log("🔑✅ DeepSeek API key validated");
 
-    // Extract the request data
-    const requestData = await extractRequestData(req);
+    // Log request info to debug empty body issue
+    console.log(`📥 Request method: ${req.method}`);
+    console.log(`📥 Content-Type: ${req.headers.get('content-type')}`);
+    console.log(`📥 Content-Length: ${req.headers.get('content-length')}`);
     
-    // Validate request data
-    validateRequestData(requestData);
-    
-    const { prompt, category, asin, asin2, products } = requestData;
+    // Extract the request data with improved error handling
+    try {
+      const requestData = await extractRequestData(req);
+      
+      // Validate request data
+      validateRequestData(requestData);
+      
+      const { prompt, category, asin, asin2, products } = requestData;
 
-    // Fetch product data if needed
-    const { firstProductData, secondProductData, amazonProducts } = 
-      await fetchRequiredProductData(
-        category, 
-        asin, 
-        asin2, 
-        products, 
-        req.url, 
-        req.headers.get('Authorization')
+      // Fetch product data if needed
+      const { firstProductData, secondProductData, amazonProducts } = 
+        await fetchRequiredProductData(
+          category, 
+          asin, 
+          asin2, 
+          products, 
+          req.url, 
+          req.headers.get('Authorization')
+        );
+      
+      // Generate blog content
+      const blogContent = await generateBlogContent(
+        prompt,
+        category,
+        firstProductData,
+        secondProductData,
+        amazonProducts,
+        DEEPSEEK_API_KEY
       );
-    
-    // Generate blog content
-    const blogContent = await generateBlogContent(
-      prompt,
-      category,
-      firstProductData,
-      secondProductData,
-      amazonProducts,
-      DEEPSEEK_API_KEY
-    );
-    
-    // Return the generated content
-    return createJsonResponse(blogContent);
+      
+      // Return the generated content
+      return createJsonResponse(blogContent);
+    } catch (processingError) {
+      console.error("💥 Error processing request:", processingError);
+      return createErrorResponse(processingError);
+    }
   } catch (error) {
+    console.error("💥 Global error catch:", error);
     return createErrorResponse(error);
   }
 });
