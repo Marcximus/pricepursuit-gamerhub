@@ -11,10 +11,11 @@ export async function generateBlogPost(
   asin?: string,
   asin2?: string
 ): Promise<GeneratedBlogContent | null> {
+  const startTime = Date.now();
+  console.log(`🚀 [${new Date().toISOString()}] Starting blog post generation for category: ${category}`);
+  console.log(`📝 User prompt: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}"`);
+  
   try {
-    console.log(`🚀 Starting blog post generation for category: ${category}`);
-    console.log(`📝 User prompt: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}"`);
-    
     // For Top10 category, we need to fetch Amazon products first
     let products = [];
     if (category === 'Top10') {
@@ -88,7 +89,7 @@ export async function generateBlogPost(
     
     // Now call the Supabase function to generate the blog post
     console.log('🧠 Calling generate-blog-post edge function...');
-    console.log('📤 Calling Supabase Edge Function with payload size:', payloadString.length);
+    console.log('📤 Calling Supabase Edge Function at:', Date.now() - startTime, 'ms');
     
     // Add retry logic for API failures
     const maxRetries = 2;
@@ -98,9 +99,14 @@ export async function generateBlogPost(
     
     while (retryCount <= maxRetries) {
       try {
+        console.log(`📤 Attempt ${retryCount + 1}/${maxRetries + 1} to call Edge Function`);
+        const callStartTime = Date.now();
+        
         response = await supabase.functions.invoke('generate-blog-post', {
           body: requestPayload,
         });
+        
+        console.log(`📥 Edge function response received in ${Date.now() - callStartTime}ms`);
         
         // Check for API errors
         if (response.error) {
@@ -162,6 +168,7 @@ export async function generateBlogPost(
       try {
         // Try to parse as JSON if it's a string
         console.log('🔍 Trying to parse string response as JSON');
+        console.log('🔍 Response string preview:', response.data.substring(0, 100) + '...');
         data = JSON.parse(response.data);
       } catch (parseError) {
         console.error('❌ JSON parse error:', parseError);
@@ -180,6 +187,14 @@ export async function generateBlogPost(
     // Log the content length for debugging
     console.log('📄 Final content length:', data?.content?.length || 0, 'characters');
     
+    if (!data.content || data.content.length === 0) {
+      console.error('❌ CRITICAL ERROR: Content is empty after API call');
+      console.error('❌ Response data structure:', JSON.stringify(response.data, null, 2).substring(0, 500) + '...');
+      
+      // Replace with fallback content
+      data = createFallbackContent(category, prompt, new Error('Empty content from API'), null, products);
+    }
+    
     // Add a short preview of the content for debugging
     if (data && data.content) {
       console.log('📄 Content first 100 chars:', 
@@ -192,12 +207,22 @@ export async function generateBlogPost(
     // For Top 10 posts, process product data placeholders
     if (category === 'Top10' && data && data.content) {
       console.log('🔄 Processing Top10 content with product data...');
+      const beforeProcessingLength = data.content.length;
       data.content = await processTop10Content(data.content, prompt);
+      console.log(`🔄 Content length change after processing: ${beforeProcessingLength} → ${data.content.length} characters`);
+      
+      if (data.content.length === 0) {
+        console.error('❌ EMERGENCY: Content is empty after Top10 processing!');
+        // Use fallback content
+        data.content = `<h1>${data.title || prompt}</h1><p>We encountered an error while processing this content. Please try again later.</p>`;
+      }
     }
 
+    console.log(`🎉 Blog generation completed in ${Date.now() - startTime}ms`);
     return data;
   } catch (error) {
     console.error('💥 Error in generateBlogPost:', error);
+    console.error('💥 Error occurred after:', Date.now() - startTime, 'ms');
     toast({
       title: 'Error',
       description: error instanceof Error ? error.message : 'Failed to generate blog post',
@@ -217,6 +242,8 @@ function createFallbackContent(
   rawResponse?: string,
   products?: any[]
 ): GeneratedBlogContent {
+  console.log('⚠️ Creating fallback content due to error:', error?.message);
+  
   // Extract title from prompt
   let title = '';
   if (category === 'Top10') {

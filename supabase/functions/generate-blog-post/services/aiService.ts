@@ -49,6 +49,7 @@ export async function generateContentWithDeepSeek(
     
     // Make the API request
     console.log(`🚀 Sending request to DeepSeek API...`);
+    const startTime = Date.now();
     const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -58,7 +59,8 @@ export async function generateContentWithDeepSeek(
       body: jsonPayload
     });
     
-    console.log(`📥 DeepSeek API response status: ${response.status}`);
+    const requestDuration = Date.now() - startTime;
+    console.log(`📥 DeepSeek API response received in ${requestDuration}ms with status: ${response.status}`);
     
     // Check for non-200 response
     if (!response.ok) {
@@ -80,18 +82,24 @@ export async function generateContentWithDeepSeek(
     let data;
     try {
       data = await response.json();
+      console.log(`✅ DeepSeek API JSON parsed successfully`);
     } catch (jsonError) {
       console.error(`❌ Error parsing API response as JSON: ${jsonError}`);
       const rawText = await response.text();
-      console.error(`❌ Raw response: ${rawText.substring(0, 500)}...`);
+      console.error(`❌ Raw response preview: ${rawText.substring(0, 500)}...`);
       throw new Error(`Failed to parse DeepSeek API response: ${jsonError.message}`);
     }
     
     // Log a preview of the response
     if (data.choices && data.choices[0] && data.choices[0].message) {
       const content = data.choices[0].message.content;
-      console.log(`✅ DeepSeek response received: ${content.length} characters`);
-      console.log(`📄 Content preview: "${content.substring(0, 100)}..."`);
+      console.log(`✅ DeepSeek response content received: ${content ? content.length : 0} characters`);
+      if (!content || content.length === 0) {
+        console.error(`❌ DeepSeek returned EMPTY content! Response structure:`, JSON.stringify(data));
+        throw new Error('DeepSeek API returned empty content');
+      }
+      console.log(`📄 Content preview (first 100 chars): "${content.substring(0, 100)}..."`);
+      console.log(`📄 Content preview (last 100 chars): "...${content.substring(content.length - 100)}"`);
       
       // Extra validation to ensure the content is not JSON format
       if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
@@ -101,8 +109,8 @@ export async function generateContentWithDeepSeek(
       
       return content;
     } else {
-      console.error(`❌ Unexpected response format from DeepSeek:`, data);
-      throw new Error('Unexpected response format from DeepSeek API');
+      console.error(`❌ Unexpected response format from DeepSeek:`, JSON.stringify(data));
+      throw new Error('Unexpected response format from DeepSeek API - missing content in response');
     }
   } catch (error) {
     console.error(`💥 Error generating content with DeepSeek:`, error);

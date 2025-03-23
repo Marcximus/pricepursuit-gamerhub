@@ -5,6 +5,20 @@
 
 export function parseGeneratedContent(content: string, category: string) {
   console.log(`🔍 Parsing content for ${category} post type...`);
+  console.log(`🔍 Raw content length: ${content ? content.length : 0} characters`);
+  console.log(`🔍 Content starts with: "${content ? content.substring(0, 50) : 'EMPTY'}"...`);
+  
+  if (!content || content.trim().length === 0) {
+    console.error('❌ CRITICAL ERROR: Received empty content from AI service');
+    console.error('❌ Cannot parse empty content, returning error structure');
+    return {
+      title: `Error: Empty ${category} Post`,
+      content: `<h1>Error Generating Content</h1><p>Our AI service returned an empty response. Please try again later.</p>`,
+      excerpt: "Error: Empty response from AI service",
+      category,
+      tags: ['error']
+    };
+  }
   
   try {
     // Default values
@@ -22,6 +36,9 @@ export function parseGeneratedContent(content: string, category: string) {
       if (titleMatch && titleMatch[1]) {
         title = titleMatch[1].replace(/<[^>]*>/g, '').trim();
         console.log(`📝 Extracted title from HTML: "${title}"`);
+      } else {
+        console.warn(`⚠️ Could not extract title from HTML content`);
+        console.log(`⚠️ First 200 chars of content: ${content.substring(0, 200)}`);
       }
       
       // Generate excerpt from the first paragraph
@@ -30,6 +47,8 @@ export function parseGeneratedContent(content: string, category: string) {
         // Strip HTML tags and limit to 160 chars
         excerpt = excerptMatch[1].replace(/<[^>]*>/g, '').trim().substring(0, 160);
         console.log(`📋 Generated excerpt from first paragraph: "${excerpt.substring(0, 30)}..."`);
+      } else {
+        console.warn(`⚠️ Could not extract excerpt from HTML content`);
       }
       
       // Generate default tags based on title and content
@@ -38,6 +57,9 @@ export function parseGeneratedContent(content: string, category: string) {
       
       // Ensure proper HTML structure for Top10 posts
       processedContent = ensureProperHtmlStructure(content);
+      console.log(`📄 Final processed content length: ${processedContent.length} characters`);
+      console.log(`📄 Content has paragraphs: ${processedContent.includes('<p>')}`);
+      console.log(`📄 Content has headings: ${processedContent.includes('<h')}`);
     } else {
       // For other post types, handle as before
       // Handle potential JSON responses from the AI
@@ -49,6 +71,8 @@ export function parseGeneratedContent(content: string, category: string) {
           // If the parsed content has all the fields we need, use it directly
           if (jsonContent.title && jsonContent.content) {
             console.log('✅ Successfully parsed JSON content');
+            console.log(`📄 JSON content title: "${jsonContent.title}"`);
+            console.log(`📄 JSON content length: ${jsonContent.content.length} characters`);
             return {
               title: jsonContent.title,
               content: jsonContent.content,
@@ -59,6 +83,7 @@ export function parseGeneratedContent(content: string, category: string) {
           }
         } catch (jsonError) {
           console.log('⚠️ Failed to parse content as JSON, falling back to regex extraction');
+          console.error('⚠️ JSON parse error:', jsonError.message);
           // Continue with regex parsing if JSON parsing fails
         }
       }
@@ -121,10 +146,24 @@ export function parseGeneratedContent(content: string, category: string) {
       
       // Process main content - clean up any markdown or metadata
       processedContent = cleanupContent(content);
+      console.log(`📄 Content after cleanup: ${processedContent.length} characters`);
     }
     
     console.log(`✅ Content processing complete`);
-    console.log(`📊 Content length: ${processedContent.length} characters`);
+    console.log(`📊 Final content length: ${processedContent.length} characters`);
+    
+    if (processedContent.length === 0) {
+      console.error('❌ CRITICAL: Processed content is EMPTY after parsing!');
+      console.error('❌ Original content length was:', content.length);
+      // Return error content instead of empty content
+      return {
+        title: title || `Error in ${category} Post`,
+        content: `<h1>${title || 'Error Processing Content'}</h1><p>We encountered an error while processing the content. Please try again later.</p>`,
+        excerpt: excerpt || "Error processing content",
+        category,
+        tags
+      };
+    }
     
     return {
       title,
@@ -135,10 +174,11 @@ export function parseGeneratedContent(content: string, category: string) {
     };
   } catch (error) {
     console.error(`💥 Error parsing content:`, error);
+    console.error(`💥 Original content preview: "${content ? content.substring(0, 200) : 'EMPTY'}..."`);
     // Return a basic structure with error information
     return {
-      title: `New ${category} Post`,
-      content: `Error parsing AI content: ${error.message}\n\nOriginal content:\n${content}`,
+      title: `Error in ${category} Post`,
+      content: `<h1>Error Processing Content</h1><p>We encountered an error: ${error.message}</p><p>Please try again later.</p>`,
       excerpt: "There was an error generating this post's content.",
       category,
       tags: ['error']

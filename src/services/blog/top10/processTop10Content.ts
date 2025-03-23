@@ -13,7 +13,17 @@ import { addVideoEmbed, wrapTextInHtml } from './htmlGenerator';
 export async function processTop10Content(content: string, prompt: string): Promise<string> {
   console.log('🔄 Starting processTop10Content');
   console.log(`📝 Original prompt: "${prompt.substring(0, 100)}..."`);
-  console.log(`📄 Content length before processing: ${content.length} characters`);
+  console.log(`📄 Content length before processing: ${content ? content.length : 0} characters`);
+  
+  if (!content || content.trim().length === 0) {
+    console.error('❌ CRITICAL ERROR: Received empty content in processTop10Content');
+    toast({
+      title: 'Content Processing Error',
+      description: 'Received empty content from AI service. Please try again.',
+      variant: 'destructive',
+    });
+    return `<h1>${prompt}</h1><p>We encountered a problem generating this content. Please try again later.</p>`;
+  }
   
   try {
     // First, determine if content has proper HTML structure
@@ -21,6 +31,8 @@ export async function processTop10Content(content: string, prompt: string): Prom
                             (content.includes('<p>') && content.includes('</p>'));
     
     console.log(`🔍 Content has HTML structure: ${hasHtmlStructure}`);
+    console.log(`🔍 Content has h1 tags: ${content.includes('<h1>')}`);
+    console.log(`🔍 Content has p tags: ${content.includes('<p>')}`);
     
     // If content appears to be plain text, convert it to HTML
     if (!hasHtmlStructure) {
@@ -36,7 +48,9 @@ export async function processTop10Content(content: string, prompt: string): Prom
     }
     
     // Get products either from localStorage or by fetching them
+    console.log('🛒 Attempting to get product data...');
     const products = await getProducts(prompt);
+    console.log(`🛒 getProducts returned ${products?.length || 0} products`);
     
     // If we still don't have products, continue with the content as is
     if (!products || products.length === 0) {
@@ -47,22 +61,27 @@ export async function processTop10Content(content: string, prompt: string): Prom
         variant: 'default',
       });
       // At least fix HTML tags even without products
-      return fixHtmlTags(cleanupContent(content)); 
+      const fixedContent = fixHtmlTags(cleanupContent(content));
+      console.log(`📏 Content length after basic HTML fixing: ${fixedContent.length} characters`);
+      return fixedContent; 
     }
     
     console.log(`✅ Successfully fetched ${products.length} products from Amazon`);
     if (products.length > 0) {
       console.log(`🔍 First product: "${products[0]?.title?.substring(0, 30) || 'Unknown'}..."`);
       console.log(`First product has HTML content: ${!!products[0]?.htmlContent}`);
+      console.log(`First product ASIN: ${products[0]?.asin || 'Unknown'}`);
     }
     
     // First, clean up the content and fix basic HTML issues
     console.log('🧹 Cleaning up content structure');
     let processedContent = cleanupContent(content);
+    console.log(`📏 Content length after cleanup: ${processedContent.length} characters`);
     
     // Fix any malformed HTML tags from AI response
     console.log('🔧 Fixing HTML tags');
     processedContent = fixHtmlTags(processedContent);
+    console.log(`📏 Content length after fixing HTML tags: ${processedContent.length} characters`);
     
     // Replace the product data placeholders with actual data
     console.log('🔄 Replacing product data placeholders in content...');
@@ -71,12 +90,13 @@ export async function processTop10Content(content: string, prompt: string): Prom
       products
     );
     processedContent = updatedContent;
+    console.log(`📏 Content length after replacing placeholders: ${processedContent.length} characters`);
     
     // Add Humix video embed if not already present
     processedContent = addVideoEmbed(processedContent);
+    console.log(`📏 Content length after adding video embed: ${processedContent.length} characters`);
     
     console.log(`✅ Replaced ${replacementsCount} product placeholders in content`);
-    console.log(`📏 Content length after processing: ${processedContent.length} characters`);
     
     if (replacementsCount === 0) {
       console.warn('⚠️ No product placeholders were replaced in the content');
@@ -84,6 +104,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
       // If no placeholders were found, we'll check the content for any mentions of product data
       if (content.includes('[PRODUCT_DATA_')) {
         console.log('🔍 Found placeholder patterns but couldn\'t replace them');
+        console.log('🔍 Placeholder patterns sample:', content.match(/\[PRODUCT_DATA_[^\]]+\]/g)?.slice(0, 3));
       } else {
         console.warn('⚠️ No placeholder patterns found in content at all');
       }
@@ -92,6 +113,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
     // Final sanity check to make sure the HTML is valid - run the fix a second time
     // This is crucial for ensuring all content has proper HTML structure
     const finalContent = fixHtmlTags(processedContent);
+    console.log(`📏 Content length after final HTML fixing: ${finalContent.length} characters`);
     
     // Convert any remaining non-HTML text to paragraphs
     let enhancedContent = finalContent;
@@ -100,11 +122,17 @@ export async function processTop10Content(content: string, prompt: string): Prom
     if (!enhancedContent.includes('<p>')) {
       console.warn('⚠️ No paragraph tags found in processed content, attempting emergency fix');
       enhancedContent = wrapTextInHtml(enhancedContent, prompt);
+      console.log(`📏 Content after emergency paragraph wrapping: ${enhancedContent.length} characters`);
     }
     
     // Final log before returning
     console.log(`📤 Final content character count: ${enhancedContent.length}`);
     console.log(`📤 Final content has proper HTML: ${enhancedContent.includes('<h1>') && enhancedContent.includes('<p>')}`);
+    
+    if (enhancedContent.length === 0) {
+      console.error('❌ EMERGENCY: Final content is still empty! Returning fallback content');
+      return `<h1>${prompt}</h1><p>We encountered an issue while processing this content. Please try again later.</p>`;
+    }
     
     return enhancedContent;
   } catch (error) {
@@ -119,15 +147,24 @@ export async function processTop10Content(content: string, prompt: string): Prom
     
     // Even if we encounter an error, try to at least fix the HTML tags
     try {
+      console.log('🚑 Attempting emergency content recovery');
       // Attempt to wrap in HTML if the content seems to be plain text
+      if (!content || content.length === 0) {
+        console.error('❌ Content is completely empty, returning emergency placeholder');
+        return `<h1>${prompt}</h1><p>We encountered a problem generating this content. Please try again later.</p>`;
+      }
+      
       if (!content.includes('<h1>') && !content.includes('<p>')) {
+        console.log('🚑 No HTML tags found, wrapping content in basic HTML');
         return fixHtmlTags(wrapTextInHtml(content, prompt));
       }
+      
+      console.log('🚑 Adding basic HTML structure to existing partial content');
       return fixHtmlTags(content);
     } catch (fallbackError) {
       console.error('💥 Error in emergency fallback:', fallbackError);
       // If everything fails, return the content with basic HTML wrapping
-      return `<h1>${prompt}</h1><p>${content}</p>`;
+      return `<h1>${prompt}</h1><p>${content || 'Error generating content. Please try again.'}</p>`;
     }
   }
 }
