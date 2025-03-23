@@ -28,15 +28,11 @@ export async function callGenerateBlogEdgeFunction(
         requestPayload.products = requestPayload.products.slice(0, 10);
       }
       
-      // Reduce product data to essential fields only
+      // Reduce product data to essential fields only - keep it minimal
       requestPayload.products = requestPayload.products.map((product: any) => ({
         asin: product.asin,
-        title: product.title?.substring(0, 100) || 'Unknown Product', 
-        brand: product.brand,
-        price: product.price,
-        rating: product.rating,
-        ratings_total: product.ratings_total,
-        image_url: product.image_url || product.image
+        title: product.title?.substring(0, 50) || 'Unknown Product', // Drastically shorter titles
+        brand: product.brand
       }));
     }
     
@@ -50,7 +46,7 @@ export async function callGenerateBlogEdgeFunction(
       throw new Error('Failed to create request payload');
     }
     
-    // Here's the crucial part - Ensure we're explicitly setting content-type and sending JSON
+    // Ensure we're explicitly setting content-type and sending JSON
     console.log('📤 Calling Supabase Edge Function with payload size:', payloadJson.length);
     
     // Call the edge function with improved options and retry logic
@@ -65,12 +61,13 @@ export async function callGenerateBlogEdgeFunction(
           await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
         }
         
+        // IMPORTANT: Convert payload to stringified JSON explicitly
         const response = await supabase.functions.invoke('generate-blog-post', {
-          body: requestPayload,
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          method: 'POST'
+          body: requestPayload // Supabase SDK will handle the JSON stringification
         });
         
         console.log('📥 Edge function response received:', {
