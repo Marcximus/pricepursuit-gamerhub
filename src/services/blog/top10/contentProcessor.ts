@@ -4,7 +4,7 @@
  */
 import { cleanupContent } from './contentCleaner';
 import { fixHtmlTags } from './htmlFixer';
-import { replaceProductPlaceholders, removeDuplicateProductBlocks } from './productPlacer';
+import { replaceProductPlaceholders, removeDuplicateProductBlocks } from './product/productPlacer';
 
 /**
  * Clean up JSON formatting in content
