@@ -18,18 +18,5 @@ Format bullets as <ul class="my-4"><li>✅ [Feature]</li></ul>
 Keep your response focused and concise.
 `;
 
-  // If we have product data, include just the basic info
-  if (amazonProducts && amazonProducts.length > 0) {
-    top10SystemPrompt += `\nPRODUCT DATA:\nUse these ASINs for the product placeholders:\n`;
-
-    // Add just the ASINs and minimal title info
-    const productsToUse = amazonProducts.slice(0, 10);
-    for (let i = 0; i < productsToUse.length; i++) {
-      const product = productsToUse[i];
-      const shortTitle = product.title?.substring(0, 30) || 'Unknown Product';
-      top10SystemPrompt += `PRODUCT ${i + 1}: ${shortTitle}... (ASIN: ${product.asin || 'N/A'})\n`;
-    }
-  }
-
   return top10SystemPrompt;
 }
