@@ -29,13 +29,34 @@ serve(async (req) => {
 
     // Extract the request data
     console.log("📦 Extracting request data...");
+    
+    // Check for Content-Length header
+    const contentLength = req.headers.get('Content-Length');
+    console.log(`📏 Content-Length header: ${contentLength || 'Not provided'}`);
+    
+    if (contentLength === '0') {
+      console.error("📭 Empty request body received (Content-Length: 0)");
+      return new Response(
+        JSON.stringify({ error: "Empty request body received" }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    
     const requestText = await req.text();
     console.log(`📥 REQUEST DATA LENGTH: ${requestText.length} bytes`);
+    
+    if (!requestText || requestText.trim() === '') {
+      console.error("📭 Empty request body received after reading text");
+      return new Response(
+        JSON.stringify({ error: "Empty request body received" }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
     
     let requestData;
     try {
       requestData = JSON.parse(requestText);
-      console.log(`📝 User prompt: "${requestData.prompt.substring(0, 50)}${requestData.prompt.length > 50 ? '...' : ''}"`);
+      console.log(`📝 User prompt: "${requestData.prompt?.substring(0, 50)}${requestData.prompt?.length > 50 ? '...' : ''}"`);
       console.log(`🏷️ Selected category: ${requestData.category}`);
       console.log(`🔍 ASIN1: ${requestData.asin || 'None provided'}`);
       console.log(`🔍 ASIN2: ${requestData.asin2 || 'None provided'}`);

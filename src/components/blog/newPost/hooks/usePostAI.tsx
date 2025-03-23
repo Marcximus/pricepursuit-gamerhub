@@ -1,6 +1,7 @@
+
 import { useState } from 'react';
 import { toast } from '@/components/ui/use-toast';
-import { extractSearchParamsFromPrompt } from '@/services/blog/amazonProductService';
+import { extractSearchParamsFromPrompt, generateBlogPost } from '@/services/blog';
 
 export const usePostAI = (
   setTitle: (value: string) => void,
@@ -38,8 +39,6 @@ export const usePostAI = (
         const { title: extractedTitle } = extractSearchParamsFromPrompt(prompt);
         setTitle(extractedTitle);
       }
-      
-      const { generateBlogPost } = await import('@/services/blog');
       
       console.log(
         `Generating ${selectedCategory} blog post with prompt: ${prompt}` +

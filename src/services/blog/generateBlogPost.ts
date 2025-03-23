@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { GeneratedBlogContent, SearchParam } from './types';
-import { processTop10Content } from './processTop10Content';
+import { processTop10Content } from './top10';
 import { extractSearchParamsFromPrompt, fetchAmazonProducts } from './amazonProductService';
 
 export async function generateBlogPost(
@@ -66,14 +66,23 @@ export async function generateBlogPost(
 
     // Now call the Supabase function to generate the blog post
     console.log('🧠 Calling generate-blog-post edge function...');
+    
+    // Explicitly create the request body with JSON
+    const requestBody = {
+      prompt,
+      category,
+      asin,
+      asin2,
+      products: category === 'Top10' ? products : undefined
+    };
+    
+    console.log('📤 Request payload:', JSON.stringify(requestBody).substring(0, 100) + '...');
+    
     const response = await supabase.functions.invoke('generate-blog-post', {
-      body: {
-        prompt,
-        category,
-        asin,
-        asin2,
-        products: category === 'Top10' ? products : undefined // Pass the products to the edge function
-      },
+      body: requestBody,
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
 
     if (response.error) {
