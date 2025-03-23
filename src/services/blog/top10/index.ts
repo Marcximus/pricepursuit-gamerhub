@@ -3,9 +3,16 @@
  * Top10 blog post processing module
  */
 import { processTop10Content } from './processTop10Content';
-import { cleanupContent, fixHtmlTags, replaceProductPlaceholders } from './contentProcessor';
+import { cleanupContent, fixHtmlTags, replaceProductPlaceholders, removeDuplicateProductBlocks } from './contentProcessor';
 import { getProducts } from './productHandler';
-import { showErrorToast, formatAmazonUrl, generateStars, formatPrice, generateStarsHtml, generateAffiliateButtonHtml } from './utils';
+import { 
+  formatAmazonUrl, 
+  generateStarsHtml, 
+  formatPrice, 
+  showErrorToast,
+  generateAffiliateButtonHtml,
+  generateStars
+} from './utils';
 import { generateProductHtml, addVideoEmbed } from './htmlGenerator';
 
 export {
@@ -13,6 +20,7 @@ export {
   cleanupContent,
   fixHtmlTags,
   replaceProductPlaceholders,
+  removeDuplicateProductBlocks,
   getProducts,
   showErrorToast,
   formatAmazonUrl,

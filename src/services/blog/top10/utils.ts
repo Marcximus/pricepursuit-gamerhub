@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for Top10 blog posts
  */
@@ -125,4 +124,38 @@ export function generateStarsHtml(rating?: number | string, totalRatings?: numbe
   starsHtml += '</span></div>';
   
   return starsHtml;
+}
+
+/**
+ * Display an error toast notification
+ * @param title Error title
+ * @param message Error message
+ */
+export function showErrorToast(title: string, message: string): void {
+  console.error(`${title}: ${message}`);
+  // In a real implementation, this would show a toast
+  // We're just logging to console for now
+}
+
+/**
+ * Generate affiliate button HTML for Amazon products
+ * @param asin Amazon product ASIN
+ * @returns HTML for the affiliate button
+ */
+export function generateAffiliateButtonHtml(asin: string): string {
+  const url = formatAmazonUrl(asin);
+  return `
+    <a href="${url}" 
+       class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors" 
+       target="_blank" rel="nofollow noopener">
+      Check Price on Amazon
+    </a>
+  `;
+}
+
+/**
+ * Legacy function for backward compatibility - use generateStarsHtml instead
+ */
+export function generateStars(rating?: number | string): string {
+  return generateStarsHtml(rating);
 }

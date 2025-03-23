@@ -4,7 +4,14 @@
  */
 import { fetchAmazonProducts, extractSearchParamsFromPrompt } from '../amazonProductService';
 import { generateProductHtml } from './htmlGenerator';
-import { showErrorToast, formatAmazonUrl, generateStars, formatPrice, generateStarsHtml, generateAffiliateButtonHtml } from './utils';
+import { 
+  showErrorToast, 
+  formatAmazonUrl, 
+  generateStarsHtml, 
+  formatPrice, 
+  generateAffiliateButtonHtml,
+  generateStars
+} from './utils';
 
 // Get products from localStorage or fetch them
 export async function getProducts(prompt: string): Promise<any[]> {
