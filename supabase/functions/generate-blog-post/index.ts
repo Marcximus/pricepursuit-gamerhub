@@ -31,6 +31,7 @@ serve(async (req) => {
     console.log("📦 Extracting request data...");
     const requestText = await req.text();
     console.log(`📥 REQUEST DATA LENGTH: ${requestText.length} bytes`);
+    console.log(`📥 FULL REQUEST DATA: ${requestText}`);
     
     let requestData;
     try {
@@ -39,9 +40,13 @@ serve(async (req) => {
       console.log(`🏷️ Selected category: ${requestData.category}`);
       console.log(`🔍 ASIN1: ${requestData.asin || 'None provided'}`);
       console.log(`🔍 ASIN2: ${requestData.asin2 || 'None provided'}`);
+      if (requestData.products && Array.isArray(requestData.products)) {
+        console.log(`📦 Products count: ${requestData.products.length}`);
+        console.log(`📦 FULL PRODUCTS DATA: ${JSON.stringify(requestData.products)}`);
+      }
     } catch (parseError) {
       console.error("❌ Failed to parse request data:", parseError);
-      console.error("📄 Raw request text:", requestText.substring(0, 200) + "...");
+      console.error("📄 Raw request text:", requestText);
       throw new Error("Invalid request format: " + parseError.message);
     }
 
@@ -55,7 +60,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`🎯 Generating ${category} blog post with prompt: "${prompt.substring(0, 30)}..."`);
+    console.log(`🎯 Generating ${category} blog post with prompt: "${prompt}"`);
 
     // Variables to store product data
     let firstProductData = null;
@@ -72,18 +77,17 @@ serve(async (req) => {
           console.log(`✅ Found ${amazonProducts.length} pre-fetched products for Top10 post`);
           // Log first product to debug
           if (amazonProducts[0]) {
-            console.log(`📦 First product sample:`, {
-              title: amazonProducts[0].title?.substring(0, 30) + "...",
-              asin: amazonProducts[0].asin,
-              brand: amazonProducts[0].brand,
-              price: amazonProducts[0].price
-            });
+            console.log(`📦 First product sample FULL DATA:`, JSON.stringify(amazonProducts[0]));
+          } else {
+            console.log(`⚠️ First product is null or undefined`);
           }
         } else {
           console.log(`⚠️ No pre-fetched products found in request for Top10 post`);
+          console.log(`⚠️ Products data structure:`, JSON.stringify(products));
         }
       } catch (error) {
         logError(error, 'Error processing pre-fetched products');
+        console.error(`❌ FULL ERROR DETAIL: ${JSON.stringify(error)}`);
       }
     }
 
@@ -91,7 +95,7 @@ serve(async (req) => {
     if (category === 'Review' && asin) {
       console.log(`📦 Review post with ASIN ${asin}, fetching product data...`);
       firstProductData = await fetchProductData(asin, req.url, req.headers.get('Authorization'));
-      console.log(firstProductData ? `✅ Product data fetched successfully for review` : `❌ Failed to fetch product data for review`);
+      console.log(`✅ Product data fetched for review FULL DATA:`, JSON.stringify(firstProductData));
     }
     
     // If this is a comparison and has two ASINs, fetch both product data
@@ -99,18 +103,20 @@ serve(async (req) => {
       console.log(`🔄 Comparison post with ASINs ${asin} and ${asin2}, fetching both products...`);
       firstProductData = await fetchProductData(asin, req.url, req.headers.get('Authorization'));
       secondProductData = await fetchProductData(asin2, req.url, req.headers.get('Authorization'));
-      console.log(`✅ Product 1 fetch: ${firstProductData ? 'Success' : 'Failed'}`);
-      console.log(`✅ Product 2 fetch: ${secondProductData ? 'Success' : 'Failed'}`);
+      console.log(`✅ Product 1 FULL DATA:`, JSON.stringify(firstProductData));
+      console.log(`✅ Product 2 FULL DATA:`, JSON.stringify(secondProductData));
     }
     
     // Create system prompt based on category and product data if available
     console.log(`📝 Generating system prompt for ${category}...`);
     const systemPrompt = getSystemPrompt(category, firstProductData, secondProductData, amazonProducts);
     console.log(`📋 System prompt created (${systemPrompt.length} characters)`);
+    console.log(`📋 FULL SYSTEM PROMPT: ${systemPrompt}`);
     
     // Generate content using DeepSeek API
     try {
       const generatedContent = await generateContentWithDeepSeek(systemPrompt, prompt, DEEPSEEK_API_KEY);
+      console.log(`📄 FULL GENERATED CONTENT: ${generatedContent}`);
       
       // Parse the generated content
       console.log(`🔍 Parsing generated content...`);
@@ -120,6 +126,7 @@ serve(async (req) => {
       console.log(`📌 Tags: ${parsedContent.tags?.join(', ') || 'None'}`);
       console.log(`📏 Content length: ${parsedContent.content.length} characters`);
       console.log(`📎 Excerpt length: ${parsedContent.excerpt.length} characters`);
+      console.log(`📄 FULL PARSED CONTENT: ${JSON.stringify(parsedContent)}`);
       
       // Enhance the content with additional data based on category
       let enhancedContent = parsedContent;
@@ -140,10 +147,11 @@ serve(async (req) => {
       }
       
       console.log('🎉 Successfully generated blog content!');
+      console.log(`📄 FULL ENHANCED CONTENT: ${JSON.stringify(enhancedContent)}`);
       
       const finalResponse = JSON.stringify(enhancedContent);
       console.log(`📤 FINAL RESPONSE LENGTH: ${finalResponse.length} characters`);
-      console.log(`📤 FINAL RESPONSE PREVIEW: ${finalResponse.substring(0, 500)}...`);
+      console.log(`📤 FULL FINAL RESPONSE: ${finalResponse}`);
       
       return new Response(
         finalResponse,
@@ -151,10 +159,13 @@ serve(async (req) => {
       );
     } catch (deepseekError) {
       console.error("❌ DeepSeek API error:", deepseekError);
-      console.error("📄 System prompt used:", systemPrompt.substring(0, 200) + "...");
+      console.error("❌ FULL ERROR DETAIL:", JSON.stringify(deepseekError));
+      console.error("📄 System prompt used:", systemPrompt);
       throw new Error("Failed to generate content with DeepSeek: " + deepseekError.message);
     }
   } catch (error) {
+    console.error("💥 CRITICAL ERROR:", error);
+    console.error("💥 FULL ERROR DETAIL:", JSON.stringify(error));
     return createErrorResponse(error);
   }
 });

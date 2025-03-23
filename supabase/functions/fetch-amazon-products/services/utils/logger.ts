@@ -3,6 +3,7 @@
  * Logging utilities for product data
  */
 export function logProductData(sampleProduct: any) {
+  console.log("📊 FULL SAMPLE PRODUCT DATA:", JSON.stringify(sampleProduct));
   console.log("📊 RapidAPI product structure sample:", {
     hasRating: !!sampleProduct.rating,
     ratingType: typeof sampleProduct.rating,

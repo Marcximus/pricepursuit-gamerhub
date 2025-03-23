@@ -14,30 +14,13 @@ export async function generateContentWithDeepSeek(
     console.log(`📝 User prompt length: ${userPrompt.length} characters`);
     console.log(`🔑 API key validation: ${apiKey ? 'Key provided ✓' : 'Missing key ✗'}`);
     
+    // Log full system prompt for debugging
+    console.log(`📝 FULL SYSTEM PROMPT: ${systemPrompt}`);
+    console.log(`📝 FULL USER PROMPT: ${userPrompt}`);
+    
     if (!apiKey) {
       console.error('❌ MISSING API KEY: DeepSeek API key is not set or invalid');
       throw new Error('DeepSeek API key is missing or invalid');
-    }
-    
-    // Log prompt previews to help debug data passing
-    const systemPromptPreview = systemPrompt.substring(0, 500);
-    const userPromptPreview = userPrompt.substring(0, 500);
-    console.log(`📝 System prompt preview: ${systemPromptPreview}...`);
-    console.log(`📝 User prompt preview: ${userPromptPreview}...`);
-    
-    // Check if prompts contain product data
-    const hasProductData = systemPrompt.includes('product') || userPrompt.includes('product');
-    console.log(`🔍 Prompts contain product data: ${hasProductData ? 'Yes ✓' : 'No ✗'}`);
-    
-    // Log if prompt contains product specifications
-    const hasProductSpecs = systemPrompt.includes('specifications') || userPrompt.includes('specifications');
-    console.log(`🔍 Prompts contain product specifications: ${hasProductSpecs ? 'Yes ✓' : 'No ✗'}`);
-    
-    // Check for large data volume
-    const totalPromptSize = systemPrompt.length + userPrompt.length;
-    console.log(`📊 Total prompt size: ${totalPromptSize} characters`);
-    if (totalPromptSize > 100000) {
-      console.warn(`⚠️ Very large prompt size (${totalPromptSize} chars). This might affect DeepSeek's processing.`);
     }
     
     const payload = {
@@ -61,12 +44,7 @@ export async function generateContentWithDeepSeek(
     // Convert payload to JSON and log size
     const jsonPayload = JSON.stringify(payload);
     console.log(`📤 DEEPSEEK REQUEST PAYLOAD SIZE: ${jsonPayload.length} bytes`);
-    
-    // If the request is very large, log a more detailed preview
-    if (jsonPayload.length > 10000) {
-      console.log(`⚠️ Large payload, showing system prompt preview: ${systemPrompt.substring(0, 200)}...`);
-      console.log(`⚠️ User prompt preview: ${userPrompt.substring(0, 200)}...`);
-    }
+    console.log(`📤 FULL DEEPSEEK REQUEST PAYLOAD: ${jsonPayload}`);
     
     // Make the API request
     console.log(`🚀 Sending request to DeepSeek API...`);
@@ -91,7 +69,7 @@ export async function generateContentWithDeepSeek(
         const errorText = await response.text();
         errorDetails = errorText;
         console.error(`❌ DeepSeek API error: ${response.status} ${response.statusText}`);
-        console.error(`❌ Error details: ${errorText}`);
+        console.error(`❌ FULL ERROR RESPONSE: ${errorText}`);
       } catch (readError) {
         errorDetails = 'Could not read error response';
         console.error(`❌ Failed to read error response: ${readError}`);
@@ -104,18 +82,17 @@ export async function generateContentWithDeepSeek(
     let data;
     try {
       const rawText = await response.text();
-      console.log(`📥 Raw response from DeepSeek (first 500 chars): ${rawText.substring(0, 500)}...`);
-      console.log(`📥 Raw response from DeepSeek (last 500 chars): ...${rawText.substring(rawText.length - 500)}`);
+      console.log(`📥 FULL RAW RESPONSE FROM DEEPSEEK: ${rawText}`);
       
       try {
         data = JSON.parse(rawText);
         console.log(`✅ DeepSeek API JSON parsed successfully`);
+        console.log(`📥 FULL PARSED DEEPSEEK RESPONSE: ${JSON.stringify(data)}`);
       } catch (jsonError) {
         console.error(`❌ Error parsing API response as JSON: ${jsonError}`);
-        console.error(`❌ Raw response preview: ${rawText.substring(0, 1000)}...`);
+        console.error(`❌ Raw response preview: ${rawText}`);
         
         // If JSON parsing fails but we have content, return it directly
-        // This handles cases where the API returns valid content but not in JSON format
         if (rawText && rawText.length > 0 && (rawText.includes('<h1>') || rawText.includes('<p>'))) {
           console.log(`🔄 Returning raw text content as HTML seems to be present`);
           return rawText;
@@ -128,7 +105,7 @@ export async function generateContentWithDeepSeek(
       throw new Error(`Failed to read DeepSeek API response: ${textError.message}`);
     }
     
-    // Log a preview of the response
+    // Extract and return content
     if (data.choices && data.choices[0] && data.choices[0].message) {
       const content = data.choices[0].message.content;
       console.log(`✅ DeepSeek response content received: ${content ? content.length : 0} characters`);
@@ -138,15 +115,7 @@ export async function generateContentWithDeepSeek(
         throw new Error('DeepSeek API returned empty content');
       }
       
-      console.log(`📄 Content preview (first 100 chars): "${content.substring(0, 100)}..."`);
-      console.log(`📄 Content preview (last 100 chars): "...${content.substring(content.length - 100)}"`);
-      
-      // Emergency content validation - check if it's actually HTML content for blog posts
-      if (content.length > 100 && !content.includes('<h1>') && !content.includes('<p>') && 
-          !content.includes('<h2>') && !content.includes('<div>')) {
-        console.warn(`⚠️ Content doesn't appear to contain HTML tags. Adding emergency HTML wrapping...`);
-        return `<h1>Blog Post</h1><div>${content}</div>`;
-      }
+      console.log(`📄 FULL DEEPSEEK CONTENT: ${content}`);
       
       // Extra validation to ensure the content is not JSON format
       if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
@@ -157,30 +126,11 @@ export async function generateContentWithDeepSeek(
       return content;
     } else {
       console.error(`❌ Unexpected response format from DeepSeek:`, JSON.stringify(data));
-      
-      // Emergency fallback: if we have any data at all, try to extract content
-      if (data && typeof data === 'object') {
-        const possibleContentLocations = [
-          data.choices?.[0]?.message?.content,
-          data.choices?.[0]?.text,
-          data.content,
-          data.text,
-          data.result,
-          data.output
-        ];
-        
-        for (const possibleContent of possibleContentLocations) {
-          if (possibleContent && typeof possibleContent === 'string' && possibleContent.length > 0) {
-            console.log(`🆘 Found potential content in unexpected location: ${possibleContent.substring(0, 100)}...`);
-            return possibleContent;
-          }
-        }
-      }
-      
       throw new Error('Unexpected response format from DeepSeek API - missing content in response');
     }
   } catch (error) {
     console.error(`💥 Error generating content with DeepSeek:`, error);
+    console.error(`💥 Error stack:`, error instanceof Error ? error.stack : 'No stack available');
     throw new Error(`Failed to generate content: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

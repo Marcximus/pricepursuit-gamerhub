@@ -14,10 +14,12 @@ import { logProductData } from './utils/logger';
 export function processAmazonProducts(data: any) {
   if (!data.data?.products || !Array.isArray(data.data.products) || data.data.products.length === 0) {
     console.warn("⚠️ No products found in RapidAPI response or invalid format");
+    console.error("⚠️ FULL INVALID RAPIDAPI RESPONSE:", JSON.stringify(data));
     throw new Error("No products found in API response");
   }
   
   console.log(`✅ Received ${data.data?.products?.length || 0} products from RapidAPI`);
+  console.log(`📦 FULL RAPIDAPI RESPONSE: ${JSON.stringify(data)}`);
   
   // Log the structure of the first product to understand RapidAPI's response format
   if (data.data.products.length > 0) {
@@ -75,6 +77,7 @@ export function processAmazonProducts(data: any) {
   });
   
   console.log(`🏁 Returning ${products.length} products with complete data`);
+  console.log(`🏁 FULL PROCESSED PRODUCTS: ${JSON.stringify(products)}`);
   
   // Return all products, up to 15 max to ensure we have enough data
   return products.slice(0, 15);

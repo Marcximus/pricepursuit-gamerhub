@@ -59,7 +59,7 @@ export async function searchAmazonProducts(searchParams: SearchParams) {
     });
 
     console.log(`🔍 Making request to RapidAPI with URL: ${searchUrl.toString()}`);
-    console.log(`📤 RAPIDAPI REQUEST PARAMS: ${JSON.stringify(queryParams)}`);
+    console.log(`📤 FULL RAPIDAPI REQUEST PARAMS: ${JSON.stringify(queryParams)}`);
     
     // Make the request to RapidAPI with improved error handling
     const response = await fetch(searchUrl, {
@@ -70,35 +70,51 @@ export async function searchAmazonProducts(searchParams: SearchParams) {
       }
     });
 
+    console.log(`📥 RapidAPI response status: ${response.status}`);
+    console.log(`📥 RapidAPI response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`);
+
     // Check for non-JSON responses which could indicate API issues
     const contentType = response.headers.get('content-type');
     if (contentType && !contentType.includes('application/json')) {
       const errorText = await response.text();
       console.error(`❌ RapidAPI returned non-JSON response: ${contentType}`);
-      console.error(`❌ Response body: ${errorText.substring(0, 500)}...`);
+      console.error(`❌ FULL RESPONSE BODY: ${errorText}`);
       throw new Error(`RapidAPI returned non-JSON response (${response.status}): Content type: ${contentType}`);
     }
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`❌ RapidAPI error: ${response.status} - ${errorText}`);
+      console.error(`❌ FULL ERROR RESPONSE: ${errorText}`);
       throw new Error(`RapidAPI returned status ${response.status}: ${errorText}`);
     }
 
     let data;
     try {
-      data = await response.json();
-      console.log(`📥 RAPIDAPI RESPONSE RECEIVED - Status: ${response.status}`);
-      console.log(`📥 RAPIDAPI RESPONSE PREVIEW: ${JSON.stringify(data).substring(0, 500)}...`);
-      return data;
+      const responseText = await response.text();
+      console.log(`📥 FULL RAPIDAPI RESPONSE TEXT: ${responseText}`);
+      
+      try {
+        data = JSON.parse(responseText);
+        console.log(`📥 RAPIDAPI RESPONSE PARSED SUCCESSFULLY`);
+        return data;
+      } catch (jsonError) {
+        console.error("🔴 Error parsing RapidAPI response JSON:", jsonError);
+        console.error("🔴 FULL ERROR DETAIL:", JSON.stringify(jsonError));
+        throw new Error("Invalid JSON in RapidAPI response");
+      }
     } catch (error) {
-      console.error("🔴 Error parsing RapidAPI response JSON:", error);
-      throw new Error("Invalid JSON in RapidAPI response");
+      // Capture and re-throw the error with improved details
+      console.error(`💥 RapidAPI text extraction error: ${error.message || 'Unknown error'}`);
+      console.error(`⚠️ Error stack: ${error.stack || 'No stack trace available'}`);
+      console.error(`⚠️ FULL ERROR OBJECT: ${JSON.stringify(error)}`);
+      throw error;
     }
   } catch (error) {
     // Capture and re-throw the error with improved details
     console.error(`💥 RapidAPI service error: ${error.message || 'Unknown error'}`);
     console.error(`⚠️ Error stack: ${error.stack || 'No stack trace available'}`);
+    console.error(`⚠️ FULL ERROR OBJECT: ${JSON.stringify(error)}`);
     throw error; // Re-throw to be handled by the caller
   }
 }
