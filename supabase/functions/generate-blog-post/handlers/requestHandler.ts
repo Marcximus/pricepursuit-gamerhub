@@ -1,4 +1,3 @@
-
 /**
  * Request handler for blog post generation
  */
@@ -20,53 +19,97 @@ export async function extractRequestData(req: Request) {
     console.log(`📄 Request content-type: ${contentType}`);
     console.log(`📄 Request method: ${req.method}`);
     
+    // Try to clone the request to preserve the original for multiple read attempts
+    const clonedReq = req.clone();
+    
+    // First attempt: Try with arrayBuffer for maximum robustness
+    try {
+      const buffer = await clonedReq.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      
+      // Verify we actually have data
+      if (bytes.length === 0) {
+        console.error("❌ Request body is empty (0 bytes)");
+        throw new Error("Empty request body. Please ensure you're sending data.");
+      }
+      
+      console.log(`📥 Request body size: ${bytes.length} bytes`);
+      
+      // Convert ArrayBuffer to string
+      const decoder = new TextDecoder();
+      const requestText = decoder.decode(bytes);
+      
+      if (!requestText || requestText.trim() === '') {
+        console.error("❌ Decoded request body is empty");
+        throw new Error("Empty request body after decoding. Please check your request.");
+      }
+      
+      try {
+        const requestData = JSON.parse(requestText);
+        console.log(`📝 User prompt: "${requestData.prompt?.substring(0, 50)}${requestData.prompt?.length > 50 ? '...' : ''}"`);
+        console.log(`🏷️ Selected category: ${requestData.category}`);
+        
+        return requestData;
+      } catch (parseError) {
+        console.error("❌ Failed to parse request data from arrayBuffer:", parseError);
+        console.error("📄 Raw request text preview:", requestText.substring(0, 200) + "...");
+        throw new Error(`Failed to parse JSON from request: ${parseError.message}`);
+      }
+    } catch (bufferError) {
+      console.error("❌ ArrayBuffer approach failed:", bufferError);
+      // Continue to fallback methods
+    }
+    
+    // Fallback to standard JSON parsing
     if (contentType.includes('application/json')) {
       try {
-        // Try to directly clone and parse as JSON
-        const clonedReq = req.clone(); // Clone to preserve original
-        const requestData = await clonedReq.json();
+        // Clone again since we already consumed the original clone
+        const jsonReq = req.clone();
+        const requestData = await jsonReq.json();
         
         // Validate we have actual content
         if (!requestData) {
-          throw new Error("Empty request data");
+          throw new Error("Empty JSON data");
         }
         
         console.log(`📝 User prompt: "${requestData.prompt?.substring(0, 50)}${requestData.prompt?.length > 50 ? '...' : ''}"`);
         console.log(`🏷️ Selected category: ${requestData.category}`);
-        console.log(`🔍 ASIN1: ${requestData.asin || 'None provided'}`);
-        console.log(`🔍 ASIN2: ${requestData.asin2 || 'None provided'}`);
         
         return requestData;
       } catch (jsonError) {
-        console.error("❌ Failed to parse JSON directly, falling back to text extraction:", jsonError);
-        // Continue to fallback method
+        console.error("❌ Failed to parse JSON directly:", jsonError);
+        // Continue to final fallback method
       }
     }
     
-    // Fallback to text extraction method
-    const requestText = await req.text();
-    console.log(`📥 REQUEST DATA LENGTH: ${requestText.length} bytes`);
-    
-    if (!requestText || requestText.trim() === '') {
-      console.error("❌ Empty request body received");
-      throw new Error("Empty request body. Please ensure you're sending valid JSON data.");
-    }
-    
-    // Log a small preview of the received data for debugging
-    console.log(`📄 Request data preview: "${requestText.substring(0, 100)}${requestText.length > 100 ? '...' : ''}"`);
-    
+    // Final fallback to text extraction method
     try {
-      const requestData = JSON.parse(requestText);
-      console.log(`📝 User prompt: "${requestData.prompt?.substring(0, 50)}${requestData.prompt?.length > 50 ? '...' : ''}"`);
-      console.log(`🏷️ Selected category: ${requestData.category}`);
-      console.log(`🔍 ASIN1: ${requestData.asin || 'None provided'}`);
-      console.log(`🔍 ASIN2: ${requestData.asin2 || 'None provided'}`);
+      const textReq = req.clone();
+      const requestText = await textReq.text();
+      console.log(`📥 REQUEST DATA LENGTH: ${requestText.length} bytes`);
       
-      return requestData;
-    } catch (parseError) {
-      console.error("❌ Failed to parse request data:", parseError);
-      console.error("📄 Raw request text:", requestText.substring(0, 200) + "...");
-      throw new Error(`Failed to parse request data: ${parseError.message}`);
+      if (!requestText || requestText.trim() === '') {
+        console.error("❌ Empty request body received via text() method");
+        throw new Error("Empty request body. Please ensure you're sending valid JSON data.");
+      }
+      
+      // Log a small preview of the received data for debugging
+      console.log(`📄 Request data preview: "${requestText.substring(0, 100)}${requestText.length > 100 ? '...' : ''}"`);
+      
+      try {
+        const requestData = JSON.parse(requestText);
+        console.log(`📝 User prompt: "${requestData.prompt?.substring(0, 50)}${requestData.prompt?.length > 50 ? '...' : ''}"`);
+        console.log(`🏷️ Selected category: ${requestData.category}`);
+        
+        return requestData;
+      } catch (parseError) {
+        console.error("❌ Failed to parse request data:", parseError);
+        console.error("📄 Raw request text preview:", requestText.substring(0, 200) + "...");
+        throw new Error(`Failed to parse request data: ${parseError.message}`);
+      }
+    } catch (textError) {
+      console.error("❌ All extraction methods failed:", textError);
+      throw new Error(`Request data extraction failed: ${textError.message}`);
     }
   } catch (error) {
     logError(error, "Error extracting request data");

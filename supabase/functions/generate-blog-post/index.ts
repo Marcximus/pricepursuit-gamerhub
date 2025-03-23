@@ -31,20 +31,25 @@ serve(async (req) => {
     }
     console.log("🔑✅ DeepSeek API key validated");
 
-    // Log request info to debug empty body issue
+    // Debug request info
     console.log(`📥 Request method: ${req.method}`);
     console.log(`📥 Content-Type: ${req.headers.get('content-type')}`);
     console.log(`📥 Content-Length: ${req.headers.get('content-length')}`);
     
-    // Extract the request data with improved error handling
-    let requestData;
+    // Check if request body is empty based on Content-Length
+    const contentLength = req.headers.get('content-length');
+    if (contentLength === '0' || contentLength === null) {
+      console.error("❌ Content-Length is 0 or missing, potential empty request");
+      throw new Error("Empty request body received. Please check your request.");
+    }
+    
     try {
-      // More robust method to get the request data
-      requestData = await extractRequestData(req);
+      // Extract request data with more robust error handling
+      const requestData = await extractRequestData(req);
       
-      // Basic validation that we have data
+      // Throw clear error if data is missing
       if (!requestData) {
-        throw new Error("Empty request data received");
+        throw new Error("No data extracted from request");
       }
       
       console.log("📦 Request data extracted successfully");
