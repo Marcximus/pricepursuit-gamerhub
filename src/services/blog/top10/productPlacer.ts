@@ -1,3 +1,4 @@
+
 /**
  * Product placement utilities for Top10 blog posts
  */
@@ -54,6 +55,9 @@ export function replaceProductPlaceholders(
   
   // Remove any duplicate product blocks
   newContent = removeDuplicateProductBlocks(newContent);
+  
+  // Ensure product links match the heading content
+  newContent = ensureConsistentProductLinks(newContent, productsToUse);
   
   console.log(`✅ Product placeholder replacement complete: ${replacementsCount} replacements`);
   return { content: newContent, replacementsCount };
@@ -264,4 +268,82 @@ export function removeDuplicateProductBlocks(content: string): string {
   }
   
   return content;
+}
+
+/**
+ * Ensure product links in content match the heading titles
+ * This helps avoid mismatches between described products and linked ones
+ */
+function ensureConsistentProductLinks(content: string, products: any[]): string {
+  // Find all product sections with headings
+  const headingSections = content.match(/<h[23][^>]*>(.*?)<\/h[23]>/gi) || [];
+  console.log(`🔍 Found ${headingSections.length} product headings for consistency check`);
+  
+  if (headingSections.length === 0 || products.length === 0) {
+    return content;
+  }
+  
+  let newContent = content;
+  
+  // For each heading, find the product card that follows it
+  for (let i = 0; i < Math.min(headingSections.length, products.length); i++) {
+    const headingMatch = headingSections[i].match(/<h[23][^>]*>(.*?)<\/h[23]>/i);
+    if (!headingMatch || !headingMatch[1]) continue;
+    
+    // Extract the heading text and clean it
+    const headingText = headingMatch[1].trim();
+    
+    // Find the product that best matches this heading
+    let bestMatchIndex = i; // Default to the same position
+    let bestMatchScore = 0;
+    
+    for (let j = 0; j < products.length; j++) {
+      const product = products[j];
+      const productTitle = product.title || '';
+      
+      // Calculate simple match score based on common words
+      const headingWords = headingText.toLowerCase().split(/\s+/);
+      const productWords = productTitle.toLowerCase().split(/\s+/);
+      
+      let matchScore = 0;
+      for (const word of headingWords) {
+        if (word.length > 2 && productWords.includes(word)) {
+          matchScore++;
+        }
+      }
+      
+      if (matchScore > bestMatchScore) {
+        bestMatchScore = matchScore;
+        bestMatchIndex = j;
+      }
+    }
+    
+    // Use the best matching product for this section
+    const matchedProduct = products[bestMatchIndex];
+    
+    // Find the product card after this heading
+    const headingPos = newContent.indexOf(headingSections[i]);
+    if (headingPos === -1) continue;
+    
+    // Search for a product card in the next 2000 characters
+    const sectionEnd = Math.min(headingPos + 2000, newContent.length);
+    const sectionText = newContent.substring(headingPos, sectionEnd);
+    
+    // Find the product card in this section
+    const productCardMatch = sectionText.match(/<div class="product-card.*?<\/div>\s*<\/div>\s*<\/div>/s);
+    if (!productCardMatch) continue;
+    
+    // Extract the full product card HTML
+    const productCardHtml = productCardMatch[0];
+    
+    // Generate new product HTML for the matched product
+    const { generateProductHtml } = require('./generators/productGenerator');
+    const newProductHtml = generateProductHtml(matchedProduct, bestMatchIndex);
+    
+    // Replace the old product card with the new one that matches the heading
+    newContent = newContent.replace(productCardHtml, newProductHtml);
+    console.log(`✅ Updated product link for "${headingText}" to match described product`);
+  }
+  
+  return newContent;
 }

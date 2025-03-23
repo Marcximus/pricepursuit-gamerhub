@@ -1,135 +1,75 @@
 
 /**
- * System prompt for Top 10 blog posts
+ * System prompt for Top10 blog post generation
  */
-export function getTop10Prompt(amazonProducts: any[] | null): string {
-  let top10SystemPrompt = `
-You are a slightly funny, techy, entertaining blog writer specializing in laptops and laptop recommendations. Create engaging, SEO-optimized content that follows these guidelines:
 
-CRITICAL: Do not write less than 1500 words on the topic!
+export function getTop10Prompt(products?: any[]): string {
+  // Default prompt when no products are provided
+  if (!products || products.length === 0) {
+    return `You are a tech blogger specializing in creating Top 10 lists about laptops.
+Write detailed, engaging content for a Top 10 list based on the user's prompt.
 
-1. Title and Introduction:
-   - Format title using proper HTML: <h1>Your Title Here</h1>
-   - Always close all HTML tags
-   - Write a compelling, funny, detailed introduction (100-350 words) that MUST be split into 2-3 distinct paragraphs wrapped in <p> tags and feel free to use some 2-4 emojis
-   - The introduction should explain why these laptops and brand is the best
+Your response MUST be a valid JSON object with this structure:
+{
+  "title": "Top 10 Best [Category] Laptops",
+  "content": "<p>Introduction paragraph here...</p><h2>1. [Product Name]</h2><p>Product description...</p>...",
+  "excerpt": "A brief summary of the article (max 160 characters)",
+  "tags": ["laptop", "tech", "top10", "reviews"]
+}
 
-2. Product Sections:
-   - CRITICAL: You MUST generate EXACTLY 10 laptop recommendations based on the raw data input received. No more, no less.
-   - Select the best 10 of these to write about in detail
-   - Each section should be separated by: <hr class="my-8">
-   - Keep laptop titles SHORT and CONCISE (maximum 7 words)
-   - Format laptop titles as: <h3>[LAPTOP NAME]</h3>
+For the content:
+1. Write a compelling introduction (2-3 paragraphs)
+2. Include exactly 10 product sections with properly numbered h2 headings
+3. For each product section, include a brief overview and key highlights
+4. IMPORTANT: For each product, insert a placeholder [PRODUCT_DATA_X] where X is the position (1-10)
+5. Write a conclusion (1-2 paragraphs)
+6. Use engaging language, emojis, and bullet points ✅ for highlights
 
-3. Content Structure:
-   - Write 2-3 engaging paragraphs (EXACTLY 200-300 words total. No More, No Less.) for each LAPTOP 
-   - Start with an introduction paragraph about the LAPTOP (wrap in <p>...</p> tags)
-   - Follow with features and benefits (wrap in <p>...</p> tags)
-   - End with why it makes a great LAPTOP (wrap in <p>...</p> tags)
-   - Use emoji indicators at the start of key paragraphs
-
-4. Features Format:
-   - Include 2-3 UNIQUE key features for each LAPTOP as a list
-   - Format features as:
-     <ul class="my-4">
-       <li>✅ [Key Feature 1]</li>
-       <li>✅ [Key Feature 2]</li>
-       <li>✅ [Key Feature 3]</li>
-     </ul>
-
-5. Product Image Placement:
-   - After each product title (<h3>), leave a single line break
-   - Insert the Amazon product image URL placeholder (I'll replace it with actual images)
-   - Insert rating/review stars (use ⭐ emoji for ratings)
-   - Insert a View Now button with an affiliate link placeholder (I'll replace with actual links)
-   - Continue with your product description
-
-6. Section Spacing:
-   - Start each new product section with: <hr class="my-8">
-   - Add some spacing and then end the post with a funny and SEO optimized conclusion paragraph (200-600 words) with some emojis and wrapped in <p> tags
-   - Add a final horizontal rule after the conclusion
-
-7. Additional Requirements:
-   - Include a <div class="product-placeholder" data-asin="PRODUCT_ASIN_HERE" data-index="PRODUCT_INDEX_HERE"></div> after each product title to allow for product data insertion
-   - Do not include actual product details like price, rating, etc. - these will be injected by our system
-   - Focus on making the content engaging, informative, and SEO friendly
-
-8. CRITICAL HTML REQUIREMENTS:
-   - Always close all HTML tags properly. For example, if you open <p>, you must close it with </p>
-   - Each paragraph must be wrapped in <p>...</p> tags completely
-   - Make sure all headings (<h1>, <h3>) are properly closed
-   - Ensure all list items (<li>) are closed and properly nested within <ul>...</ul>
-   - Avoid using markdown formatting - use only HTML for all formatting
-   - Triple check that all opening tags have corresponding closing tags
-`;
-
-  // If we have product data, include it in the prompt
-  if (amazonProducts && amazonProducts.length > 0) {
-    top10SystemPrompt += `
-PRODUCT DATA:
-I've provided you with detailed information about ${amazonProducts.length} products. Use this data to create a rich, detailed blog post about the TOP 10 products. The full data is available, including all product specifications, features, reviews, and more.
-
-Here are the products (showing basic details only, but you have access to ALL data):
-`;
-
-    // Add minimal product preview information to keep prompt manageable
-    amazonProducts.forEach((product, index) => {
-      top10SystemPrompt += `
-PRODUCT ${index + 1}: ${product.title || 'Unknown Product'}
-- Brand: ${product.brand || 'Unknown'}
-- Price: $${parseFloat(product.price?.value || '0') || 'N/A'}
-- Rating: ${product.rating || 'N/A'} (${product.ratings_total || 0} reviews)
-- ASIN: ${product.asin || 'N/A'}
-
-`;
-    });
-    
-    top10SystemPrompt += `
-NOTE: This is just a preview - you have access to the COMPLETE data for each product including specifications, features, descriptions, and reviews. Use all available data to create detailed, accurate product descriptions.
-
-For each product, include a placeholder for the product data like this:
-<div class="product-placeholder" data-asin="${amazonProducts[0]?.asin || 'ASIN'}" data-index="1"></div>
-
-Be sure to replace ASIN with the actual product ASIN, and index with the position in the list (1-10).
-
-IMPORTANT: Select the BEST 10 products from this list based on specifications, ratings, and value. Your blog post MUST include EXACTLY 10 products, no more and no less.
-`;
+You MUST insert the [PRODUCT_DATA_X] placeholders in the content which will be replaced with actual product data later. These placeholders MUST appear immediately after each heading.`;
   }
 
-  top10SystemPrompt += `
-FORMAT YOUR CONTENT USING PROPER HTML:
-For each product in your blog post, use this structure (ALWAYS CLOSE TAGS):
+  // Enhanced prompt when products are provided
+  let productsInfo = "";
+  const productCount = Math.min(products.length, 10);
+  
+  // Create detailed information about the available products
+  for (let i = 0; i < productCount; i++) {
+    const product = products[i];
+    productsInfo += `\nProduct ${i+1}:
+- Title: ${product.title || 'Unknown'}
+- Brand: ${product.brand || 'Lenovo'}
+- Model: ${product.model || product.title?.split(' ').slice(1, 3).join(' ') || 'Unknown'}
+- Price: ${product.price || 'Unknown'}
+- Rating: ${product.rating || 'No ratings'} (${product.ratings_total || 0} reviews)
+- ASIN: ${product.asin || 'Unknown'}
+- Key Features: ${product.features?.slice(0, 3).join(', ') || 'High performance, reliability, good value'}\n`;
+  }
 
-<hr class="my-8">
-<h3>[LAPTOP NAME - KEEP THIS SHORT AND CONCISE]</h3>
+  return `You are a tech blogger specializing in creating Top 10 lists about laptops.
+Write detailed, engaging content for a Top 10 list based on the user's prompt AND the specific products I'm providing.
 
-<div class="product-placeholder" data-asin="PRODUCT_ASIN_HERE" data-index="PRODUCT_INDEX_HERE"></div>
+I am providing you with ${productCount} actual products that MUST be included in your Top 10 list in the EXACT order provided.
+Use the EXACT names, models, and details of these products in your content:
+${productsInfo}
 
-<p>😍 [Engaging first paragraph about the laptop - approximately 100 words]</p>
+Your response MUST be a valid JSON object with this structure:
+{
+  "title": "Top 10 Best [Category] Laptops",
+  "content": "<p>Introduction paragraph here...</p><h2>1. [Exact Product Name from list]</h2><p>Product description...</p>...",
+  "excerpt": "A brief summary of the article (max 160 characters)",
+  "tags": ["laptop", "tech", "top10", "reviews"]
+}
 
-<ul class="my-4">
-  <li>✅ [Key Feature 1]</li>
-  <li>✅ [Key Feature 2]</li>
-  <li>✅ [Key Feature 3]</li>
-</ul>
+For the content:
+1. Write a compelling introduction (2-3 paragraphs)
+2. Include exactly ${productCount} product sections with properly numbered h2 or h3 headings
+3. CRUCIAL: Use the EXACT product names from the list I provided as the heading titles
+4. For each product, write content that specifically describes that exact model based on the information provided
+5. IMPORTANT: After each product heading, insert the placeholder [PRODUCT_DATA_X] where X matches the product number (1-${productCount})
+6. Write a conclusion (1-2 paragraphs)
+7. Use engaging language, emojis, and bullet points ✅ for highlights
 
-<p>🚀 [Second paragraph about performance, value, etc. - approximately 100 words]</p>
+You MUST insert the [PRODUCT_DATA_X] placeholders in the content which will be replaced with actual product data later. These placeholders MUST appear immediately after each product heading.
 
-<p>💡 [Third paragraph with recommendation - approximately 100 words]</p>
-
-CRITICAL HTML FORMATTING RULES:
-1. Return your response as direct HTML.
-2. ALWAYS close all HTML tags. For example, every <p> must have a matching </p>.
-3. Make sure all HTML tags are properly closed.
-4. The overall blog post should be exactly 10 products with an introduction and conclusion.
-5. For SEO purposes, use relevant keywords naturally throughout the content.
-6. Every paragraph of text must be wrapped in <p>...</p> tags.
-7. Every heading must be properly closed with </h1> or </h3>.
-8. All list items must be properly closed with </li>.
-9. All lists must be properly closed with </ul>.
-
-YOUR GOAL is to create content that genuinely helps consumers make informed purchasing decisions while being highly readable, slightly funny, and SEO-friendly with appropriate emoji use (about 1-2 per section).
-`;
-
-  return top10SystemPrompt;
+REMEMBER: The final content MUST refer to the EXACT products I've provided, using their correct names and details. Don't invent or change product names or models.`;
 }

@@ -21,7 +21,7 @@ export function generateProductHtml(product: any, index: number): string {
   console.log(`🖼️ Generating HTML for product #${rank}: ${productTitle}, image: ${imageUrl.substring(0, 50)}...`);
   
   return `
-<div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6">
+<div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6" data-asin="${product.asin || ''}" data-title="${productTitle}">
   <div class="product-rank absolute top-2 left-2 bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold">#${rank}</div>
   <div class="p-4">
     <div class="flex flex-col md:flex-row">
@@ -43,6 +43,7 @@ export function generateProductHtml(product: any, index: number): string {
         </div>
         <div class="text-sm text-gray-600">
           <p><strong>ASIN:</strong> ${product.asin || 'N/A'}</p>
+          <p><strong>Model:</strong> ${product.model || product.title?.split(' ').slice(1, 3).join(' ') || 'N/A'}</p>
         </div>
       </div>
     </div>
