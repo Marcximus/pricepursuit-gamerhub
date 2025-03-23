@@ -23,13 +23,58 @@ export async function getProducts(prompt: string): Promise<any[]> {
       console.log(`Found ${products.length} products in localStorage`);
       if (products.length > 0) {
         console.log(`First product title: ${products[0]?.title || 'Unknown'}`);
-        console.log(`First product image URL: ${products[0]?.image_url || products[0]?.image || 'None'}`);
+        console.log(`First product has HTML content: ${!!products[0]?.htmlContent}`);
         
-        // Normalize product data
-        products = normalizeProductData(products);
+        // If htmlContent is missing, generate it now
+        if (!products[0]?.htmlContent) {
+          console.log('🔄 Generating missing HTML content for products...');
+          products = products.map((product, index) => {
+            if (!product.htmlContent) {
+              // Ensure product has title
+              if (!product.title && product.asin) {
+                product.title = `Lenovo Laptop (${product.asin})`;
+              }
+              
+              // Generate HTML content for the product
+              const stars = generateStars(product.rating);
+              const price = formatPrice(product.price);
+              const productUrl = formatAmazonUrl(product.asin);
+              
+              // Generate HTML content using the new utility functions if possible
+              if (typeof generateStarsHtml === 'function' && typeof generateAffiliateButtonHtml === 'function') {
+                product.htmlContent = `
+                  <div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6">
+                    <div class="p-4">
+                      <h3 class="text-xl font-semibold mb-2">${product.title}</h3>
+                      <div class="flex flex-col md:flex-row">
+                        <div class="md:w-1/3">
+                          <img src="${product.image_url || 'https://via.placeholder.com/300x300?text=No+Image'}" 
+                               alt="${product.title}" 
+                               class="w-full h-auto rounded-md" />
+                        </div>
+                        <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
+                          ${generateStarsHtml(product.rating, product.reviews_count)}
+                          <p class="text-lg font-bold mb-3">${price}</p>
+                          <div class="mb-4">${generateAffiliateButtonHtml(product.asin)}</div>
+                          <div class="text-sm text-gray-600">
+                            <p><strong>ASIN:</strong> ${product.asin}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              } else {
+                product.htmlContent = generateProductHtml(product, index + 1);
+              }
+              
+              console.log(`✅ Generated HTML content for product #${index + 1}`);
+            }
+            return product;
+          });
+        }
       }
-      
-      // Clear stored products to avoid reusing stale data
+      // Continue to clear the storage
       localStorage.removeItem('currentTop10Products');
     } catch (parseError) {
       console.error('Error parsing stored products:', parseError);
@@ -47,222 +92,67 @@ export async function getProducts(prompt: string): Promise<any[]> {
       products = await fetchAmazonProducts(extractedParams);
       console.log(`✅ fetchAmazonProducts returned ${products?.length || 0} products`);
       
-      // Normalize product data
-      products = normalizeProductData(products);
+      // Check if products are missing titles
+      if (products.length > 0) {
+        // Ensure all products have titles
+        products = products.map((product, index) => {
+          if (!product.title && product.asin) {
+            product.title = `Lenovo Laptop (${product.asin})`;
+          }
+          return product;
+        });
+      }
+      
+      // Check if htmlContent is missing and generate it if needed
+      if (products.length > 0 && !products[0]?.htmlContent) {
+        console.log('🔄 Generating missing HTML content for newly fetched products...');
+        products = products.map((product, index) => {
+          if (!product.htmlContent) {
+            // Generate HTML content for the product using new utility functions if possible
+            if (typeof generateStarsHtml === 'function' && typeof generateAffiliateButtonHtml === 'function') {
+              product.htmlContent = `
+                <div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6">
+                  <div class="p-4">
+                    <h3 class="text-xl font-semibold mb-2">${product.title}</h3>
+                    <div class="flex flex-col md:flex-row">
+                      <div class="md:w-1/3">
+                        <img src="${product.image_url || 'https://via.placeholder.com/300x300?text=No+Image'}" 
+                             alt="${product.title}" 
+                             class="w-full h-auto rounded-md" />
+                      </div>
+                      <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
+                        ${generateStarsHtml(product.rating, product.reviews_count)}
+                        <p class="text-lg font-bold mb-3">${formatPrice(product.price)}</p>
+                        <div class="mb-4">${generateAffiliateButtonHtml(product.asin)}</div>
+                        <div class="text-sm text-gray-600">
+                          <p><strong>ASIN:</strong> ${product.asin}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            } else {
+              // Fall back to the original method
+              const stars = generateStars(product.rating);
+              const price = formatPrice(product.price);
+              const productUrl = formatAmazonUrl(product.asin);
+              product.htmlContent = generateProductHtml(product, index + 1);
+            }
+            
+            console.log(`✅ Generated HTML content for product #${index + 1}`);
+          }
+          return product;
+        });
+      }
     } catch (callError) {
       console.error('💥 Exception during Amazon products fetch:', callError);
       showErrorToast(
         'Error calling product service',
         'Technical error while fetching products. Please try again.'
       );
-      
-      // Return empty array or generate fallback products
-      return generateFallbackProducts(10);
     }
-  }
-  
-  // If we still don't have products, generate fallbacks
-  if (!products || products.length === 0) {
-    console.warn('⚠️ No products found, generating fallback products');
-    return generateFallbackProducts(10);
   }
   
   return products;
-}
-
-// Normalize product data to ensure consistent structure
-function normalizeProductData(products: any[]): any[] {
-  return products.map((product, index) => {
-    // Ensure essential fields with better fallbacks
-    let title = product.title || '';
-    
-    // If title is missing or looks like a placeholder, create a better one
-    if (!title || title === 'Lenovo Laptop') {
-      title = `Lenovo ${getModelName(index)} Laptop`;
-    }
-    
-    // Enhanced price handling with better fallbacks
-    let price = null;
-    if (typeof product.price === 'number') {
-      price = product.price;
-    } else if (product.price?.value) {
-      price = parseFloat(product.price.value);
-    } else if (typeof product.price === 'string') {
-      const cleanPrice = product.price.replace(/[^\d.]/g, '');
-      price = parseFloat(cleanPrice) || null;
-    }
-    
-    // Better ASIN fallback
-    const asin = product.asin || `lenovo${index + 1}`;
-    
-    // Improved image URL handling with specific fallbacks
-    let imageUrl = null;
-    if (product.image_url) {
-      imageUrl = product.image_url;
-    } else if (product.image) {
-      imageUrl = product.image;
-    } else if (product.imageUrl) {
-      imageUrl = product.imageUrl;
-    } else {
-      // Create a better fallback image with the model name
-      const modelName = getModelName(index);
-      imageUrl = `https://via.placeholder.com/300x200?text=Lenovo+${modelName}`;
-    }
-    
-    // Generate features from description if not available
-    let features = [];
-    if (Array.isArray(product.feature_bullets) && product.feature_bullets.length > 0) {
-      features = product.feature_bullets;
-    } else if (Array.isArray(product.features) && product.features.length > 0) {
-      features = product.features;
-    } else {
-      // Generate some reasonable laptop features
-      features = generateFallbackFeatures(index);
-    }
-    
-    // Normalize product data
-    return {
-      ...product,
-      title,
-      price,
-      asin,
-      image_url: imageUrl,
-      image: imageUrl, // Set both image fields for compatibility
-      imageUrl: imageUrl, // Set all image fields for compatibility
-      ratings_total: product.ratings_total || product.reviews_total || null,
-      url: product.url || product.productUrl || formatAmazonUrl(asin),
-      productUrl: product.url || product.productUrl || formatAmazonUrl(asin),
-      feature_bullets: features.slice(0, 3),
-      features: features.slice(0, 3),
-      rank: index + 1,
-      // Update htmlContent based on the new normalized data
-      htmlContent: generateProductHtml({
-        title,
-        price,
-        asin,
-        image_url: imageUrl,
-        url: formatAmazonUrl(asin),
-        rating: product.rating || null,
-        ratings_total: product.ratings_total || product.reviews_total || null,
-        feature_bullets: features.slice(0, 3)
-      }, index + 1)
-    };
-  });
-}
-
-// Generate fallback model names for Lenovo laptops
-function getModelName(index: number): string {
-  const models = [
-    'ThinkPad X1 Carbon',
-    'Legion 5',
-    'IdeaPad Slim 7',
-    'Yoga 9i',
-    'ThinkBook 14',
-    'Legion 7',
-    'IdeaPad Gaming 3',
-    'ThinkPad E15',
-    'Yoga Slim 7',
-    'ThinkPad X13'
-  ];
-  
-  return models[index % models.length];
-}
-
-// Generate fallback products when we can't get real data
-function generateFallbackProducts(count: number): any[] {
-  const products = [];
-  
-  for (let i = 0; i < count; i++) {
-    const modelName = getModelName(i);
-    const price = 699 + (i * 100);
-    const asin = `lenovo${i + 1}`;
-    const features = generateFallbackFeatures(i);
-    
-    products.push({
-      title: `Lenovo ${modelName}`,
-      price: price,
-      asin: asin,
-      image_url: `https://via.placeholder.com/300x200?text=Lenovo+${modelName.replace(/\s/g, '+')}`,
-      image: `https://via.placeholder.com/300x200?text=Lenovo+${modelName.replace(/\s/g, '+')}`,
-      imageUrl: `https://via.placeholder.com/300x200?text=Lenovo+${modelName.replace(/\s/g, '+')}`,
-      rating: (3.5 + (i % 2) * 0.5),
-      ratings_total: 50 + (i * 10),
-      url: formatAmazonUrl(asin),
-      productUrl: formatAmazonUrl(asin),
-      feature_bullets: features,
-      features: features,
-      rank: i + 1,
-      // Generate HTML content for this fallback product
-      htmlContent: generateProductHtml({
-        title: `Lenovo ${modelName}`,
-        price: price,
-        asin: asin,
-        image_url: `https://via.placeholder.com/300x200?text=Lenovo+${modelName.replace(/\s/g, '+')}`,
-        url: formatAmazonUrl(asin),
-        rating: (3.5 + (i % 2) * 0.5),
-        ratings_total: 50 + (i * 10),
-        feature_bullets: features
-      }, i + 1)
-    });
-  }
-  
-  return products;
-}
-
-// Generate fallback features for a laptop
-function generateFallbackFeatures(index: number): string[] {
-  const featureSets = [
-    [
-      'Powerful Intel Core i7 processor',
-      '16GB RAM and 512GB SSD storage',
-      'Full HD 15.6-inch display'
-    ],
-    [
-      'AMD Ryzen 5 processor for multitasking',
-      '8GB RAM and 256GB SSD',
-      'Lightweight design at just 3.5 lbs'
-    ],
-    [
-      'Dedicated NVIDIA graphics for gaming',
-      'High-refresh 144Hz display',
-      'RGB keyboard with customizable lighting'
-    ],
-    [
-      'Ultra-portable design with all-day battery life',
-      'Fingerprint reader for secure login',
-      'Dolby Atmos audio system'
-    ],
-    [
-      'Convertible 2-in-1 design with touchscreen',
-      'Precision pen support for drawing and notes',
-      'Aluminum chassis with premium build quality'
-    ],
-    [
-      'Enterprise-grade security features',
-      'Military-grade durability certification',
-      'Rapid charging technology'
-    ],
-    [
-      '4K UHD display with HDR support',
-      'Thunderbolt 4 ports for high-speed connectivity',
-      'AI-enhanced webcam for video conferencing'
-    ],
-    [
-      'Energy-efficient processor for long battery life',
-      'Spill-resistant keyboard',
-      'Enhanced cooling system for sustained performance'
-    ],
-    [
-      'Backlit keyboard for low-light environments',
-      'Wi-Fi 6 for faster wireless connections',
-      'Windows 11 Pro pre-installed'
-    ],
-    [
-      'Dual storage options with HDD and SSD',
-      'Large precision touchpad',
-      'Facial recognition with Windows Hello'
-    ]
-  ];
-  
-  return featureSets[index % featureSets.length];
 }
