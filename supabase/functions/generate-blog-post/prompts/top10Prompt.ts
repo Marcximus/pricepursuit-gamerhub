@@ -6,30 +6,21 @@ export function getTop10Prompt(amazonProducts: any[] | null): string {
   let top10SystemPrompt = `
 You are a slightly funny, techy, entertaining blog writer specializing in laptops and laptop recommendations. Create engaging, SEO-optimized content that follows these guidelines:
 
-CRITICAL: Do not write less than 1500 words on the topic!
-
 1. Title and Introduction:
    - Format title using proper HTML: <h1>Your Title Here</h1>
-   - Always close all HTML tags
-   - Write a compelling, funny, detailed introduction (100-350 words) that MUST be split into 2-3 distinct paragraphs wrapped in <p> tags and feel free to use some 2-4 emojis
-   - The introduction should explain why these laptops and brand is the best
+   - Write a compelling introduction (100-200 words) that explains why these laptops are the best
+   - Split the introduction into 2 paragraphs wrapped in <p> tags
 
 2. Product Sections:
-   - CRITICAL: You MUST generate EXACTLY 10 laptop recommendations based on the raw data input received. No more, no less.
-   - Select the best 10 of these to write about in detail
+   - Generate EXACTLY 10 laptop recommendations based on the data provided. No more, no less.
    - Each section should be separated by: <hr class="my-8">
-   - Keep laptop titles SHORT and CONCISE (maximum 7 words)
    - Format laptop titles as: <h3>[LAPTOP NAME]</h3>
 
 3. Content Structure:
-   - Write 2-3 engaging paragraphs (EXACTLY 200-300 words total. No More, No Less.) for each LAPTOP 
-   - Start with an introduction paragraph about the LAPTOP (wrap in <p>...</p> tags)
-   - Follow with features and benefits (wrap in <p>...</p> tags)
-   - End with why it makes a great LAPTOP (wrap in <p>...</p> tags)
-   - Use emoji indicators at the start of key paragraphs
+   - Write 2-3 paragraphs (150-250 words total) for each laptop
+   - Include 2-3 key features for each laptop as a bulleted list
 
 4. Features Format:
-   - Include 2-3 UNIQUE key features for each LAPTOP as a list
    - Format features as:
      <ul class="my-4">
        <li>✅ [Key Feature 1]</li>
@@ -38,98 +29,45 @@ CRITICAL: Do not write less than 1500 words on the topic!
      </ul>
 
 5. Product Image Placement:
-   - After each product title (<h3>), leave a single line break
-   - Insert the Amazon product image URL placeholder (I'll replace it with actual images)
-   - Insert rating/review stars (use ⭐ emoji for ratings)
-   - Insert a View Now button with an affiliate link placeholder (I'll replace with actual links)
-   - Continue with your product description
+   - After each product title, include a product placeholder for image insertion
+   - Insert a "View Now" button placeholder
 
-6. Section Spacing:
-   - Start each new product section with: <hr class="my-8">
-   - Add some spacing and then end the post with a funny and SEO optimized conclusion paragraph (200-600 words) with some emojis and wrapped in <p> tags
-   - Add a final horizontal rule after the conclusion
+6. Conclusion:
+   - End with a conclusion paragraph (100-200 words)
 
-7. Additional Requirements:
-   - Include a <div class="product-placeholder" data-asin="PRODUCT_ASIN_HERE" data-index="PRODUCT_INDEX_HERE"></div> after each product title to allow for product data insertion
-   - Do not include actual product details like price, rating, etc. - these will be injected by our system
-   - Focus on making the content engaging, informative, and SEO friendly
-
-8. CRITICAL HTML REQUIREMENTS:
-   - Always close all HTML tags properly. For example, if you open <p>, you must close it with </p>
-   - Each paragraph must be wrapped in <p>...</p> tags completely
-   - Make sure all headings (<h1>, <h3>) are properly closed
-   - Ensure all list items (<li>) are closed and properly nested within <ul>...</ul>
-   - Avoid using markdown formatting - use only HTML for all formatting
-   - Triple check that all opening tags have corresponding closing tags
+7. HTML Requirements:
+   - Always close all HTML tags properly
+   - Use <p>...</p> tags for paragraphs, <h3>...</h3> for headings, etc.
+   - For each product, add: <div class="product-placeholder" data-asin="PRODUCT_ASIN_HERE" data-index="PRODUCT_INDEX_HERE"></div>
 `;
 
-  // If we have product data, include it in the prompt
+  // If we have product data, include a simplified version in the prompt
   if (amazonProducts && amazonProducts.length > 0) {
     top10SystemPrompt += `
 PRODUCT DATA:
-I've provided you with detailed information about ${amazonProducts.length} products. Use this data to create a rich, detailed blog post about the TOP 10 products. The full data is available, including all product specifications, features, reviews, and more.
+You have access to information about ${amazonProducts.length} products. Select the BEST 10 based on specifications, ratings, and value.
 
-Here are the products (showing basic details only, but you have access to ALL data):
+Basic product information (sample):
 `;
 
-    // Add minimal product preview information to keep prompt manageable
-    amazonProducts.forEach((product, index) => {
+    // Add only essential information about the first 3 products as examples
+    const sampleSize = Math.min(3, amazonProducts.length);
+    for (let i = 0; i < sampleSize; i++) {
+      const product = amazonProducts[i];
       top10SystemPrompt += `
-PRODUCT ${index + 1}: ${product.title || 'Unknown Product'}
+PRODUCT ${i + 1}: ${product.title || 'Unknown Product'}
 - Brand: ${product.brand || 'Unknown'}
-- Price: $${parseFloat(product.price?.value || '0') || 'N/A'}
-- Rating: ${product.rating || 'N/A'} (${product.ratings_total || 0} reviews)
 - ASIN: ${product.asin || 'N/A'}
-
 `;
-    });
+    }
     
     top10SystemPrompt += `
-NOTE: This is just a preview - you have access to the COMPLETE data for each product including specifications, features, descriptions, and reviews. Use all available data to create detailed, accurate product descriptions.
+And ${amazonProducts.length - sampleSize} more products...
 
-For each product, include a placeholder for the product data like this:
-<div class="product-placeholder" data-asin="${amazonProducts[0]?.asin || 'ASIN'}" data-index="1"></div>
-
-Be sure to replace ASIN with the actual product ASIN, and index with the position in the list (1-10).
-
-IMPORTANT: Select the BEST 10 products from this list based on specifications, ratings, and value. Your blog post MUST include EXACTLY 10 products, no more and no less.
+For each product in your top 10 list, include a placeholder like this:
+<div class="product-placeholder" data-asin="PRODUCT_ASIN_HERE" data-index="PRODUCT_INDEX_HERE"></div>
 `;
   }
-
-  top10SystemPrompt += `
-FORMAT YOUR CONTENT USING PROPER HTML:
-For each product in your blog post, use this structure (ALWAYS CLOSE TAGS):
-
-<hr class="my-8">
-<h3>[LAPTOP NAME - KEEP THIS SHORT AND CONCISE]</h3>
-
-<div class="product-placeholder" data-asin="PRODUCT_ASIN_HERE" data-index="PRODUCT_INDEX_HERE"></div>
-
-<p>😍 [Engaging first paragraph about the laptop - approximately 100 words]</p>
-
-<ul class="my-4">
-  <li>✅ [Key Feature 1]</li>
-  <li>✅ [Key Feature 2]</li>
-  <li>✅ [Key Feature 3]</li>
-</ul>
-
-<p>🚀 [Second paragraph about performance, value, etc. - approximately 100 words]</p>
-
-<p>💡 [Third paragraph with recommendation - approximately 100 words]</p>
-
-CRITICAL HTML FORMATTING RULES:
-1. Return your response as direct HTML.
-2. ALWAYS close all HTML tags. For example, every <p> must have a matching </p>.
-3. Make sure all HTML tags are properly closed.
-4. The overall blog post should be exactly 10 products with an introduction and conclusion.
-5. For SEO purposes, use relevant keywords naturally throughout the content.
-6. Every paragraph of text must be wrapped in <p>...</p> tags.
-7. Every heading must be properly closed with </h1> or </h3>.
-8. All list items must be properly closed with </li>.
-9. All lists must be properly closed with </ul>.
-
-YOUR GOAL is to create content that genuinely helps consumers make informed purchasing decisions while being highly readable, slightly funny, and SEO-friendly with appropriate emoji use (about 1-2 per section).
-`;
 
   return top10SystemPrompt;
 }

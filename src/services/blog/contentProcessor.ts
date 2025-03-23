@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { GeneratedBlogContent } from './types';
@@ -26,11 +25,38 @@ export async function callGenerateBlogEdgeFunction(
     console.log(`📤 Request payload: ${payloadJson.substring(0, 200)}...`);
     console.log(`📦 Request payload size: ${payloadJson.length} bytes`);
     
+    // Check for potentially problematic payload sizes
     if (payloadJson.length > 5000000) { // 5MB limit for Supabase functions
-      console.warn('⚠️ Request payload exceeds 5MB, may cause issues with edge function');
+      console.warn('⚠️ Request payload exceeds 5MB, reducing product data');
+      
+      // If we have products, trim them down to essential data only
+      if (requestPayload.products && Array.isArray(requestPayload.products)) {
+        console.log(`🔄 Trimming product data from ${requestPayload.products.length} products`);
+        
+        // Keep only essential fields for each product to reduce payload size
+        requestPayload.products = requestPayload.products.map((product: any) => ({
+          asin: product.asin,
+          title: product.title,
+          brand: product.brand,
+          price: product.price,
+          rating: product.rating,
+          ratings_total: product.ratings_total,
+          image_url: product.image_url || product.image
+        }));
+        
+        // Recreate the payload
+        const trimmedPayload = JSON.stringify(requestPayload);
+        console.log(`📦 Trimmed payload size: ${trimmedPayload.length} bytes`);
+        
+        if (trimmedPayload.length > 5000000) {
+          console.warn('⚠️ Payload still too large, reducing to 10 products maximum');
+          requestPayload.products = requestPayload.products.slice(0, 10);
+        }
+      }
+      
       toast({
         title: 'Large Request Warning',
-        description: 'Your content is very large. If generation fails, try a shorter prompt.',
+        description: 'Your content request is very large. Some product data has been trimmed for better performance.',
         variant: 'default',
       });
     }
@@ -43,35 +69,63 @@ export async function callGenerateBlogEdgeFunction(
     // Here's the crucial part - Ensure we're explicitly setting content-type and sending JSON
     console.log('📤 Calling Supabase Edge Function with payload size:', payloadJson.length);
     
-    // Call the edge function with improved options
-    const response = await supabase.functions.invoke('generate-blog-post', {
-      body: requestPayload,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      method: 'POST'
-    });
-
-    console.log('📥 Edge function response received:', {
-      status: response.error ? 'error' : 'success',
-      dataSize: response.data ? JSON.stringify(response.data).length : 0,
-      error: response.error
-    });
-
-    if (response.error) {
-      console.error('❌ Error generating blog post:', response.error);
-      // Return a fallback response with error information for debugging
-      return createErrorBlogContent(requestPayload.category, response.error.message || 'Unknown error');
+    // Call the edge function with improved options and retry logic
+    let retryCount = 0;
+    const maxRetries = 2;
+    
+    while (retryCount <= maxRetries) {
+      try {
+        // Add a delay for retries
+        if (retryCount > 0) {
+          console.log(`🔄 Retry attempt ${retryCount}/${maxRetries}`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        }
+        
+        const response = await supabase.functions.invoke('generate-blog-post', {
+          body: requestPayload,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          method: 'POST'
+        });
+        
+        console.log('📥 Edge function response received:', {
+          status: response.error ? 'error' : 'success',
+          dataSize: response.data ? JSON.stringify(response.data).length : 0,
+          error: response.error
+        });
+        
+        if (response.error) {
+          if (retryCount < maxRetries) {
+            retryCount++;
+            console.log(`⚠️ Retrying after error: ${response.error.message}`);
+            continue;
+          }
+          
+          console.error('❌ Error generating blog post after retries:', response.error);
+          return createErrorBlogContent(requestPayload.category, response.error.message || 'Unknown error');
+        }
+        
+        // Check if response.data exists and is valid
+        if (!response.data) {
+          console.error('❌ Empty response data from edge function');
+          return createErrorBlogContent(requestPayload.category, 'The blog generation service returned an empty response.');
+        }
+        
+        return response.data;
+      } catch (error) {
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log(`⚠️ Retrying after exception: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          continue;
+        }
+        
+        throw error; // Re-throw if we've exhausted retries
+      }
     }
-
-    // Check if response.data exists and is valid
-    if (!response.data) {
-      console.error('❌ Empty response data from edge function');
-      // Return a fallback response with error information
-      return createErrorBlogContent(requestPayload.category, 'The blog generation service returned an empty response.');
-    }
-
-    return response.data;
+    
+    // This should never be reached due to the while loop, but TypeScript needs a return
+    return createErrorBlogContent(requestPayload.category, 'Failed to generate content after retries');
   } catch (error) {
     console.error('💥 Error in Supabase function invoke:', error);
     toast({
@@ -130,7 +184,12 @@ export async function processGeneratedContent(
   // For Top 10 posts, process product data placeholders
   if (category === 'Top10' && data && data.content) {
     console.log('🔄 Processing Top10 content with product data...');
-    data.content = await processTop10Content(data.content, prompt);
+    try {
+      data.content = await processTop10Content(data.content, prompt);
+    } catch (processingError) {
+      console.error('❌ Error processing Top10 content:', processingError);
+      // Keep the content as is, just log the error
+    }
   }
 
   return data;
