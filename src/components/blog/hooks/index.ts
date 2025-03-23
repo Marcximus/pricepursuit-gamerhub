@@ -1,0 +1,2 @@
+
+export { useRelatedPosts } from './useRelatedPosts';
