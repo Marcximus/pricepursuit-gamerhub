@@ -55,6 +55,9 @@ export function generateProductHtml(product: any, index: number): string {
   // Calculate the proper product ranking (from #10 to #1)
   const rank = 10 - (index % 10);
   
+  // Format the title with the rank number in front
+  const rankedTitle = `#${rank} ${productTitle}`;
+  
   console.log(`🖼️ Generating HTML for product #${rank}: ${productTitle}, image: ${imageUrl.substring(0, 50)}...`);
   
   return `
@@ -64,12 +67,12 @@ export function generateProductHtml(product: any, index: number): string {
     <div class="flex flex-col md:flex-row">
       <div class="md:w-1/3 flex items-center justify-center">
         <img src="${imageUrl}" 
-             alt="${productTitle}" 
+             alt="${rankedTitle}" 
              class="w-full h-auto rounded-md object-contain max-h-48"
              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300&q=80'; this.classList.add('fallback-image');" />
       </div>
       <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
-        <h4 class="text-xl font-semibold mb-2">${productTitle}</h4>
+        <h4 class="text-xl font-semibold mb-2">${rankedTitle}</h4>
         ${generateStarsHtml(productRating, productRatingTotal)}
         <p class="text-lg font-bold mb-3">${productPrice}</p>
         <div class="mb-4">
