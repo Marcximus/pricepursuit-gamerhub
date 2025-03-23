@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for Top10 blog post processing
  */
@@ -7,7 +6,7 @@ import { toast } from '@/components/ui/use-toast';
 /**
  * Format a product price with a dollar sign and proper formatting
  */
-export function formatPrice(price: string | number | undefined): string {
+export function formatPrice(price: string | number | undefined | { value?: number | string, current?: number | string }): string {
   if (price === undefined || price === null || price === '') {
     return '$';
   }
