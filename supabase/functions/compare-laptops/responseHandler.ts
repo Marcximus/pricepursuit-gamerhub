@@ -28,7 +28,8 @@ export function parseComparisonResult(content: string): ComparisonResult {
         !parsedContent.analysis || 
         !parsedContent.advantages || 
         !parsedContent.recommendation || 
-        !parsedContent.valueForMoney) {
+        !parsedContent.valueForMoney ||
+        !parsedContent.specifications) {
       console.error('Missing required fields in DeepSeek response');
       console.error('Response structure:', Object.keys(parsedContent));
       throw new Error('Invalid response structure from DeepSeek');
@@ -52,6 +53,14 @@ export function parseComparisonResult(content: string): ComparisonResult {
         typeof parsedContent.valueForMoney.right !== 'string') {
       console.error('Invalid valueForMoney structure in DeepSeek response');
       throw new Error('Invalid valueForMoney structure in DeepSeek response');
+    }
+    
+    // Validate specifications structure
+    if (!parsedContent.specifications ||
+        !parsedContent.specifications.left ||
+        !parsedContent.specifications.right) {
+      console.error('Invalid specifications structure in DeepSeek response');
+      throw new Error('Invalid specifications structure in DeepSeek response');
     }
     
     // Handle empty advantages arrays (should have at least one item)
@@ -80,6 +89,52 @@ export function parseComparisonResult(content: string): ComparisonResult {
       valueForMoney: {
         left: 'Unable to assess value',
         right: 'Unable to assess value'
+      },
+      specifications: {
+        left: {
+          brand: 'Not specified',
+          model: 'Not specified',
+          price: 'Not specified',
+          os: 'Not specified',
+          releaseYear: 'Not specified',
+          processor: 'Not specified',
+          ram: 'Not specified',
+          storage: 'Not specified',
+          graphics: 'Not specified',
+          screenSize: 'Not specified',
+          screenResolution: 'Not specified',
+          refreshRate: 'Not specified',
+          weight: 'Not specified',
+          batteryLife: 'Not specified',
+          ports: 'Not specified',
+          rating: 'Not specified',
+          ratingCount: 'Not specified',
+          totalReviews: 'Not specified',
+          wilsonScore: 'Not specified',
+          benchmarkScore: 'Not specified'
+        },
+        right: {
+          brand: 'Not specified',
+          model: 'Not specified',
+          price: 'Not specified',
+          os: 'Not specified',
+          releaseYear: 'Not specified',
+          processor: 'Not specified',
+          ram: 'Not specified',
+          storage: 'Not specified',
+          graphics: 'Not specified',
+          screenSize: 'Not specified',
+          screenResolution: 'Not specified',
+          refreshRate: 'Not specified',
+          weight: 'Not specified',
+          batteryLife: 'Not specified',
+          ports: 'Not specified',
+          rating: 'Not specified',
+          ratingCount: 'Not specified',
+          totalReviews: 'Not specified',
+          wilsonScore: 'Not specified',
+          benchmarkScore: 'Not specified'
+        }
       }
     };
   }
