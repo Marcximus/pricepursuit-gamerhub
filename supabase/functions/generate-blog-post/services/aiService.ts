@@ -21,7 +21,7 @@ export async function generateContentWithDeepSeek(
     }
     
     // Truncate system prompt if it's too long to avoid API failures
-    const maxSystemPromptLength = 8000;
+    const maxSystemPromptLength = 128000; // Increased from 8000 to 128000
     let truncatedSystemPrompt = systemPrompt;
     if (systemPrompt.length > maxSystemPromptLength) {
       console.log(`⚠️ System prompt exceeds ${maxSystemPromptLength} characters, truncating...`);
