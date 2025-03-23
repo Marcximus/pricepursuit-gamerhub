@@ -13,7 +13,7 @@ import {
   generateAffiliateButtonHtml,
   generateStars
 } from './utils';
-import { generateProductHtml, addVideoEmbed } from './htmlGenerator';
+import { generateProductHtml, addVideoEmbed, wrapTextInHtml } from './htmlGenerator';
 
 export {
   processTop10Content,
@@ -29,5 +29,6 @@ export {
   generateStarsHtml,
   generateAffiliateButtonHtml,
   generateProductHtml,
-  addVideoEmbed
+  addVideoEmbed,
+  wrapTextInHtml
 };
