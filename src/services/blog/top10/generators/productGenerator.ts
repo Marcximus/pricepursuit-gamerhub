@@ -14,7 +14,7 @@ export function generateProductHtml(product: any, index: number): string {
   const productRatingTotal = product.ratings_total || 0;
   const productUrl = formatAmazonUrl(product.asin);
   
-  // Improved image URL handling with better fallbacks
+  // Enhanced image URL processing with better fallbacks
   let imageUrl = '';
   
   // Check all possible image properties with validation
@@ -28,8 +28,23 @@ export function generateProductHtml(product: any, index: number): string {
       if (typeof img === 'string' && img.startsWith('http')) {
         imageUrl = img;
         break;
+      } else if (typeof img === 'object' && img?.url && typeof img.url === 'string' && img.url.startsWith('http')) {
+        imageUrl = img.url;
+        break;
       }
     }
+  } else if (product.thumbnail && typeof product.thumbnail === 'string' && product.thumbnail.startsWith('http')) {
+    // Clean up thumbnail URLs to get higher quality images
+    if (product.thumbnail.includes('._S')) {
+      imageUrl = product.thumbnail.replace(/\._S[LX]\d+_/, '._SL500_');
+    } else {
+      imageUrl = product.thumbnail;
+    }
+  }
+  
+  // Process Amazon image URLs to improve quality
+  if (imageUrl && (imageUrl.includes('amazon.com') || imageUrl.includes('ssl-images-amazon.com'))) {
+    imageUrl = imageUrl.replace(/\._.*_\./, '.'); // Remove size constraints
   }
   
   // If no valid image was found, use a reliable placeholder
@@ -51,7 +66,7 @@ export function generateProductHtml(product: any, index: number): string {
         <img src="${imageUrl}" 
              alt="${productTitle}" 
              class="w-full h-auto rounded-md object-contain max-h-48"
-             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300&q=80';" />
+             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300&q=80'; this.classList.add('fallback-image');" />
       </div>
       <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
         <h4 class="text-xl font-semibold mb-2">${productTitle}</h4>

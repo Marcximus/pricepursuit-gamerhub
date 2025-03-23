@@ -13,8 +13,33 @@ const Image = React.forwardRef<HTMLImageElement, ImageProps>(
     const defaultFallback = '/placeholder.svg';
     const unsplashFallback = 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300&q=80';
 
+    // Normalize Amazon URLs to get a more reliable image
+    const normalizeImageUrl = (url: string | undefined): string => {
+      if (!url) return defaultFallback;
+      
+      // Skip already processed URLs
+      if (url.includes('unsplash.com') || url.startsWith('/')) {
+        return url;
+      }
+      
+      try {
+        // Handle Amazon images to get the highest quality version
+        if (url.includes('amazon.com') || url.includes('ssl-images-amazon.com')) {
+          // Remove sizing parameters for Amazon images to get higher quality
+          return url.replace(/\._.*_\./, '.'); // Remove size constraints like ._SL300_.
+        }
+        
+        return url;
+      } catch (e) {
+        console.error('Error normalizing image URL:', e);
+        return url;
+      }
+    };
+
+    const processedSrc = normalizeImageUrl(src);
+    
     const handleError = () => {
-      console.log(`Image error loading: ${src}`);
+      console.log(`Image error loading: ${processedSrc}`);
       setError(true);
     };
 
@@ -32,7 +57,7 @@ const Image = React.forwardRef<HTMLImageElement, ImageProps>(
         
         <img
           ref={ref}
-          src={error ? unsplashFallback : src || defaultFallback}
+          src={error ? unsplashFallback : processedSrc || defaultFallback}
           alt={alt || ''}
           width={width}
           height={height}

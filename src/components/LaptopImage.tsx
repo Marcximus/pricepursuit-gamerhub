@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
@@ -22,15 +22,34 @@ const LaptopImage: React.FC<LaptopImageProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-
-  // Use a placeholder image if no source is provided
-  const imageSrc = src || '/placeholder-laptop.png';
+  const [imageSrc, setImageSrc] = useState<string>('');
+  
+  useEffect(() => {
+    if (!src) {
+      setImageSrc('/placeholder-laptop.png');
+      return;
+    }
+    
+    // Process Amazon image URLs to get higher quality versions
+    let processedSrc = src;
+    
+    try {
+      if (src.includes('amazon.com') || src.includes('ssl-images-amazon.com')) {
+        // Remove sizing parameters for Amazon images
+        processedSrc = src.replace(/\._.*_\./, '.');
+      }
+    } catch (e) {
+      console.error('Error processing image URL:', e);
+    }
+    
+    setImageSrc(processedSrc);
+  }, [src]);
 
   return (
     <div className={cn("relative overflow-hidden", className)}>
-      {(isLoading || !src || hasError) && (
+      {(isLoading || !imageSrc || hasError) && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
-          {hasError || !src ? (
+          {hasError || !imageSrc ? (
             <div className="flex flex-col items-center justify-center text-center p-4">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -69,6 +88,13 @@ const LaptopImage: React.FC<LaptopImageProps> = ({
         onError={() => {
           setIsLoading(false);
           setHasError(true);
+          
+          // Try to load an Unsplash fallback on error
+          if (!imageSrc.includes('unsplash.com')) {
+            setImageSrc('https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200');
+            setIsLoading(true);
+            setHasError(false);
+          }
         }}
       />
     </div>
