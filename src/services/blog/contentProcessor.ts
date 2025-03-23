@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { GeneratedBlogContent } from './types';
@@ -21,47 +20,30 @@ export async function callGenerateBlogEdgeFunction(
       throw new Error('Category cannot be empty');
     }
     
+    // Reduce payload size for large requests
+    if (requestPayload.products && Array.isArray(requestPayload.products)) {
+      // Only keep essential fields and limit to 10 products max
+      if (requestPayload.products.length > 10) {
+        console.log(`⚠️ Limiting products to 10 maximum from ${requestPayload.products.length}`);
+        requestPayload.products = requestPayload.products.slice(0, 10);
+      }
+      
+      // Reduce product data to essential fields only
+      requestPayload.products = requestPayload.products.map((product: any) => ({
+        asin: product.asin,
+        title: product.title?.substring(0, 100) || 'Unknown Product', 
+        brand: product.brand,
+        price: product.price,
+        rating: product.rating,
+        ratings_total: product.ratings_total,
+        image_url: product.image_url || product.image
+      }));
+    }
+    
     // Let's add detailed debugging to track the request
     const payloadJson = JSON.stringify(requestPayload);
     console.log(`📤 Request payload: ${payloadJson.substring(0, 200)}...`);
     console.log(`📦 Request payload size: ${payloadJson.length} bytes`);
-    
-    // Check for potentially problematic payload sizes
-    if (payloadJson.length > 1000000) { // 1MB limit to be safe
-      console.warn('⚠️ Request payload exceeds 1MB, reducing product data');
-      
-      // If we have products, trim them down to essential data only
-      if (requestPayload.products && Array.isArray(requestPayload.products)) {
-        console.log(`🔄 Trimming product data from ${requestPayload.products.length} products`);
-        
-        // Keep only essential fields for each product to reduce payload size
-        requestPayload.products = requestPayload.products.map((product: any) => ({
-          asin: product.asin,
-          title: product.title?.substring(0, 100), // Limit title length
-          brand: product.brand,
-          price: product.price,
-          rating: product.rating,
-          ratings_total: product.ratings_total,
-          image_url: product.image_url || product.image
-        }));
-        
-        // Limit to 10 products maximum
-        if (requestPayload.products.length > 10) {
-          console.warn(`⚠️ Limiting products to 10 maximum`);
-          requestPayload.products = requestPayload.products.slice(0, 10);
-        }
-        
-        // Recreate the payload
-        const trimmedPayload = JSON.stringify(requestPayload);
-        console.log(`📦 Trimmed payload size: ${trimmedPayload.length} bytes`);
-      }
-      
-      toast({
-        title: 'Large Request Warning',
-        description: 'Your content request is very large. Some product data has been trimmed for better performance.',
-        variant: 'default',
-      });
-    }
     
     if (payloadJson.length === 0) {
       console.error('❌ ERROR: Request payload is empty!');

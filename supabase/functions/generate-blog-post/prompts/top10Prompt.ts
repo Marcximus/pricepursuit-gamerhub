@@ -4,41 +4,30 @@
  */
 export function getTop10Prompt(amazonProducts: any[] | null): string {
   let top10SystemPrompt = `
-You are a friendly, tech-savvy blog writer creating content about laptops. Create an SEO-optimized Top 10 list that follows these guidelines:
+You are a tech blog writer creating a Top 10 product list. Your task is to create a simple, SEO-optimized blog post with:
 
-1. Title and Introduction:
-   - Use properly formatted H1 title
-   - Include a brief, engaging introduction (100-150 words)
+1. A clear H1 title
+2. A brief introduction (75-100 words)
+3. 10 product listings with:
+   - H3 headings for each product
+   - 2-3 bullet points highlighting key advantages
+   - <div class="product-placeholder" data-asin="PRODUCT_ASIN" data-index="INDEX"></div> after each heading
+4. A short conclusion
 
-2. Product Listings:
-   - List EXACTLY 10 laptops with their key features
-   - Use H3 tags for each laptop name
-   - Separate each laptop with an <hr> tag
-   - Each laptop should have 2-3 bullet points highlighting key advantages
-   - Format bullets using <ul class="my-4"> and <li>✅ [Feature]</li> tags
-
-3. Include this after each laptop title:
-   <div class="product-placeholder" data-asin="PRODUCT_ASIN_HERE" data-index="PRODUCT_INDEX_HERE"></div>
-
-4. End with a brief conclusion paragraph
+Format bullets as <ul class="my-4"><li>✅ [Feature]</li></ul>
+Keep your response focused and concise.
 `;
 
-  // If we have product data, include a simplified version in the prompt
+  // If we have product data, include just the basic info
   if (amazonProducts && amazonProducts.length > 0) {
-    top10SystemPrompt += `
-PRODUCT DATA:
-You have access to information about ${amazonProducts.length} products. Select the BEST 10 based on specifications, ratings, and value.
+    top10SystemPrompt += `\nPRODUCT DATA:\nUse these ASINs for the product placeholders:\n`;
 
-Use these ASINs for the product placeholders:
-`;
-
-    // Add just the ASINs and titles for the first 10 products
-    const sampleSize = Math.min(10, amazonProducts.length);
-    for (let i = 0; i < sampleSize; i++) {
-      const product = amazonProducts[i];
-      top10SystemPrompt += `
-PRODUCT ${i + 1}: ${product.title?.substring(0, 50) || 'Unknown Product'} (ASIN: ${product.asin || 'N/A'})
-`;
+    // Add just the ASINs and minimal title info
+    const productsToUse = amazonProducts.slice(0, 10);
+    for (let i = 0; i < productsToUse.length; i++) {
+      const product = productsToUse[i];
+      const shortTitle = product.title?.substring(0, 30) || 'Unknown Product';
+      top10SystemPrompt += `PRODUCT ${i + 1}: ${shortTitle}... (ASIN: ${product.asin || 'N/A'})\n`;
     }
   }
 

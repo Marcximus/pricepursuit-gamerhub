@@ -34,108 +34,63 @@ serve(async (req) => {
     // Debug request info
     console.log(`📥 Request method: ${req.method}`);
     console.log(`📥 Content-Type: ${req.headers.get('content-type')}`);
-    console.log(`📥 Content-Length: ${req.headers.get('content-length')}`);
+    console.log(`📥 Content-Length: ${req.headers.get('content-length') || 'unknown'}`);
     
-    // Enhanced error checking for empty requests
-    const contentLength = req.headers.get('content-length');
-    if (!contentLength || contentLength === '0') {
-      console.error("❌ Content-Length is 0 or missing, potential empty request");
-      console.log("📝 All request headers:");
-      for (const [key, value] of req.headers.entries()) {
-        console.log(`  ${key}: ${value}`);
-      }
-      
-      // Instead of throwing an error, try to read the request body anyway
-      console.log("🔍 Attempting to read request body despite missing Content-Length...");
-      const bodyText = await req.text();
-      console.log(`📝 Request body length: ${bodyText.length} bytes`);
-      
-      if (bodyText.length === 0) {
-        throw new Error("Empty request body received. Please check your request.");
-      }
-      
-      // Try to parse the body
-      try {
-        const requestData = JSON.parse(bodyText);
-        console.log("📦 Successfully parsed request data");
-        
-        // Continue with processing the extracted data
-        validateRequestData(requestData);
-        
-        const { prompt, category, asin, asin2, products } = requestData;
-
-        // Fetch product data if needed
-        const { firstProductData, secondProductData, amazonProducts } = 
-          await fetchRequiredProductData(
-            category, 
-            asin, 
-            asin2, 
-            products, 
-            req.url, 
-            req.headers.get('Authorization')
-          );
-        
-        // Generate blog content
-        const blogContent = await generateBlogContent(
-          prompt,
-          category,
-          firstProductData,
-          secondProductData,
-          amazonProducts,
-          DEEPSEEK_API_KEY
-        );
-        
-        // Return the generated content
-        return createJsonResponse(blogContent);
-      } catch (parseError) {
-        console.error("💥 Error parsing request body:", parseError);
-        throw new Error(`Failed to parse request body: ${parseError.message}`);
-      }
-    }
-    
+    // Extract and validate request body
+    let requestData;
     try {
-      // Extract request data with more robust error handling
-      const requestData = await extractRequestData(req);
+      const requestBody = await req.text();
+      console.log(`📥 Request body size: ${requestBody.length} bytes`);
       
-      // Throw clear error if data is missing
-      if (!requestData) {
-        throw new Error("No data extracted from request");
+      if (!requestBody || requestBody.trim() === '') {
+        throw new Error("Empty request body received");
       }
       
-      console.log("📦 Request data extracted successfully");
-      
-      // Validate request data
-      validateRequestData(requestData);
-      
-      const { prompt, category, asin, asin2, products } = requestData;
-
-      // Fetch product data if needed
-      const { firstProductData, secondProductData, amazonProducts } = 
-        await fetchRequiredProductData(
-          category, 
-          asin, 
-          asin2, 
-          products, 
-          req.url, 
-          req.headers.get('Authorization')
-        );
-      
-      // Generate blog content
-      const blogContent = await generateBlogContent(
-        prompt,
-        category,
-        firstProductData,
-        secondProductData,
-        amazonProducts,
-        DEEPSEEK_API_KEY
-      );
-      
-      // Return the generated content
-      return createJsonResponse(blogContent);
-    } catch (processingError) {
-      console.error("💥 Error processing request:", processingError);
-      return createErrorResponse(processingError);
+      try {
+        requestData = JSON.parse(requestBody);
+        console.log("📦 Successfully parsed request data");
+      } catch (parseError) {
+        console.error(`❌ JSON parse error: ${parseError.message}`);
+        throw new Error(`Invalid JSON format: ${parseError.message}`);
+      }
+    } catch (bodyError) {
+      console.error(`❌ Request body error: ${bodyError.message}`);
+      throw new Error(`Failed to process request body: ${bodyError.message}`);
     }
+    
+    // Validate the request data
+    if (!requestData) {
+      throw new Error("No data extracted from request");
+    }
+    
+    console.log("📦 Request data extracted successfully");
+    validateRequestData(requestData);
+    
+    const { prompt, category, asin, asin2, products } = requestData;
+
+    // Fetch product data if needed
+    const { firstProductData, secondProductData, amazonProducts } = 
+      await fetchRequiredProductData(
+        category, 
+        asin, 
+        asin2, 
+        products, 
+        req.url, 
+        req.headers.get('Authorization')
+      );
+    
+    // Generate blog content
+    const blogContent = await generateBlogContent(
+      prompt,
+      category,
+      firstProductData,
+      secondProductData,
+      amazonProducts,
+      DEEPSEEK_API_KEY
+    );
+    
+    // Return the generated content
+    return createJsonResponse(blogContent);
   } catch (error) {
     console.error("💥 Global error catch:", error);
     return createErrorResponse(error);

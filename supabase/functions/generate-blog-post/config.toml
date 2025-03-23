@@ -2,5 +2,5 @@
 project_id = "kkebyebrhdpcwqnxhjcx"
 cpu_throttle = 900
 memory_throttle = 1024
-timeout_ms = 30000  # Increased from default to handle large requests
+timeout_ms = 120000  # 2 minutes to handle DeepSeek API calls
 verify_jwt = false

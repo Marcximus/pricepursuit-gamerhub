@@ -46,6 +46,12 @@ export async function extractRequestData(req: Request) {
       }
     } else if (contentType.includes('text/plain')) {
       const text = await req.text();
+      console.log(`📥 Plain text request body size: ${text.length} bytes`);
+      
+      if (text.trim() === '') {
+        throw new Error("Empty request body");
+      }
+      
       try {
         return JSON.parse(text);
       } catch {
@@ -62,8 +68,12 @@ export async function extractRequestData(req: Request) {
       // For unknown content types, try to parse as JSON
       try {
         const text = await req.text();
-        console.log(`📥 Raw request body (first 200 chars): ${text.substring(0, 200)}...`);
         console.log(`📥 Raw request body length: ${text.length} bytes`);
+        console.log(`📥 Raw request body (first 200 chars): ${text.substring(0, 200)}...`);
+        
+        if (!text || text.trim() === '') {
+          throw new Error("Empty request body");
+        }
         
         if (text.trim().startsWith('{') && text.trim().endsWith('}')) {
           return JSON.parse(text);
@@ -71,7 +81,7 @@ export async function extractRequestData(req: Request) {
         return { prompt: text };
       } catch (error) {
         console.error(`❌ Error parsing unknown content type: ${error.message}`);
-        throw new Error(`Unsupported content type: ${contentType}`);
+        throw new Error(`Unsupported content type or empty body: ${contentType}`);
       }
     }
   } catch (error) {
@@ -151,7 +161,8 @@ export async function fetchRequiredProductData(
     // If we have a Top10 category with products, use them directly
     if (category === 'Top10' && products && products.length > 0) {
       console.log(`✅ Using ${products.length} pre-fetched products for Top10 content`);
-      result.amazonProducts = products;
+      // Limit to 10 products to reduce payload size
+      result.amazonProducts = products.slice(0, 10);
       return result;
     }
     
