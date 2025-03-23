@@ -6,18 +6,28 @@ import type { ComparisonResult, LaptopSpecifications } from "./types.ts";
  */
 export function parseComparisonResult(content: string): ComparisonResult {
   try {
-    // Attempt to parse the content as JSON
+    // Clean the content string by removing invalid control characters
+    const cleanContent = content.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+    
+    // Attempt to parse the cleaned content as JSON
     let parsedContent: ComparisonResult;
     
     try {
-      parsedContent = JSON.parse(content);
+      parsedContent = JSON.parse(cleanContent);
     } catch (jsonError) {
       console.error('Invalid JSON format returned by DeepSeek');
+      console.error('JSON parse error:', jsonError.message);
+      console.error('Content snippet:', cleanContent.substring(0, 300) + '...');
       
       // Try to extract JSON object if surrounded by other text (fallback)
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        parsedContent = JSON.parse(jsonMatch[0]);
+        try {
+          parsedContent = JSON.parse(jsonMatch[0]);
+        } catch (extractError) {
+          console.error('Failed to parse extracted JSON:', extractError);
+          throw new Error('Failed to parse JSON from DeepSeek response');
+        }
       } else {
         throw new Error('Failed to parse JSON from DeepSeek response');
       }
@@ -95,7 +105,7 @@ export function parseComparisonResult(content: string): ComparisonResult {
     return parsedContent;
   } catch (error) {
     console.error('Error parsing comparison result:', error);
-    console.error('Raw content:', content);
+    console.error('Raw content:', content.substring(0, 500) + '...');
     
     // Return a fallback result
     return {

@@ -57,11 +57,13 @@ serve(async (req) => {
     const aiContent = deepseekData.choices[0]?.message?.content;
     if (!aiContent) {
       console.error('❌ No content in DeepSeek response');
+      console.error('DeepSeek response:', JSON.stringify(deepseekData));
       throw new Error('No content in DeepSeek response');
     }
 
     // Parse the response to ensure it's valid JSON
     try {
+      console.log('Parsing AI response...');
       const comparisonResult = parseComparisonResult(aiContent);
       
       // Return the comparison result
@@ -79,8 +81,8 @@ serve(async (req) => {
       );
     } catch (parseError) {
       console.error('❌ Error parsing DeepSeek response:', parseError);
-      console.error('📄 Raw content:', aiContent);
-      throw new Error('Invalid JSON response from DeepSeek');
+      console.error('📄 Raw content (first 500 chars):', aiContent.substring(0, 500));
+      throw new Error(`Invalid JSON response from DeepSeek: ${parseError.message}`);
     }
 
   } catch (error) {
@@ -88,7 +90,68 @@ serve(async (req) => {
     console.error('⏱️ Error occurred after:', (Date.now() - startTime) / 1000, "seconds");
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        fallbackResult: {
+          winner: 'tie',
+          analysis: 'Sorry, there was a problem comparing these laptops. The technical details could not be properly analyzed.',
+          advantages: {
+            left: ['Information unavailable'],
+            right: ['Information unavailable']
+          },
+          recommendation: 'We recommend trying again or selecting different laptops to compare.',
+          valueForMoney: {
+            left: 'Unable to assess value',
+            right: 'Unable to assess value'
+          },
+          specifications: {
+            left: {
+              brand: 'Not available',
+              model: 'Not available',
+              price: 'Not available',
+              os: 'Not available',
+              releaseYear: 'Not available',
+              processor: 'Not available',
+              ram: 'Not available',
+              storage: 'Not available',
+              graphics: 'Not available',
+              screenSize: 'Not available',
+              screenResolution: 'Not available',
+              refreshRate: 'Not available',
+              weight: 'Not available',
+              batteryLife: 'Not available',
+              ports: 'Not available',
+              rating: 'Not available',
+              ratingCount: 'Not available',
+              totalReviews: 'Not available',
+              wilsonScore: 'Not available',
+              benchmarkScore: 'Not available'
+            },
+            right: {
+              brand: 'Not available',
+              model: 'Not available',
+              price: 'Not available',
+              os: 'Not available',
+              releaseYear: 'Not available',
+              processor: 'Not available',
+              ram: 'Not available',
+              storage: 'Not available',
+              graphics: 'Not available',
+              screenSize: 'Not available',
+              screenResolution: 'Not available',
+              refreshRate: 'Not available',
+              weight: 'Not available',
+              batteryLife: 'Not available',
+              ports: 'Not available',
+              rating: 'Not available',
+              ratingCount: 'Not available',
+              totalReviews: 'Not available',
+              wilsonScore: 'Not available',
+              benchmarkScore: 'Not available'
+            }
+          }
+        }
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
