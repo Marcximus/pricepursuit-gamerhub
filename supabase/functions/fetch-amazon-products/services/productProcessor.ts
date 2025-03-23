@@ -91,12 +91,12 @@ function generateProductHTML(product: any, rank: number): string {
       <div class="product-rank">#${rank}</div>
       <div class="product-image">
         <a href="${escapeHtml(product.url)}" target="_blank" rel="nofollow noopener">
-          <img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.title)}" loading="lazy" />
+          <img src="${escapeHtml(product.imageUrl)}" alt="#${rank} ${escapeHtml(product.title)}" loading="lazy" />
         </a>
       </div>
       <div class="product-details">
         <h4 class="product-title">
-          <a href="${escapeHtml(product.url)}" target="_blank" rel="nofollow noopener">${escapeHtml(product.title)}</a>
+          <a href="${escapeHtml(product.url)}" target="_blank" rel="nofollow noopener">#${rank} ${escapeHtml(product.title)}</a>
         </h4>
         <div class="product-meta">
           <span class="product-price">${escapeHtml(formattedPrice)}</span>
@@ -111,7 +111,7 @@ function generateProductHTML(product: any, rank: number): string {
           </div>` : ''
         }
         <div class="product-cta">
-          <a href="${escapeHtml(product.url)}" class="check-price-btn" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
+          <a href="${escapeHtml(product.url)}" class="check-price-btn button-amazon bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded inline-block transition-colors duration-200" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
         </div>
       </div>
     </div>

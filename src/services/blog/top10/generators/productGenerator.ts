@@ -77,7 +77,7 @@ export function generateProductHtml(product: any, index: number): string {
         <p class="text-lg font-bold mb-3">${productPrice}</p>
         <div class="mb-4">
           <a href="${productUrl}" 
-             class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors" 
+             class="button-amazon inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded transition-colors duration-200" 
              target="_blank" rel="nofollow noopener">
             Check Price on Amazon
           </a>

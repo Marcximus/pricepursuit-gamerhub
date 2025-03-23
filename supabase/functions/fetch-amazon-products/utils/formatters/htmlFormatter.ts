@@ -46,7 +46,7 @@ export function generateHtmlContent(product: any, rank: number): string {
       <div class="product-details p-4 flex flex-col justify-between flex-grow">
         <div>
           <h3 class="product-title text-xl font-bold mb-2">
-            <a href="${escapeHtml(url)}" target="_blank" rel="nofollow noopener" class="text-blue-700 hover:text-blue-900">${escapeHtml(title)}</a>
+            <a href="${escapeHtml(url)}" target="_blank" rel="nofollow noopener" class="text-blue-700 hover:text-blue-900">#${rank} ${escapeHtml(title)}</a>
           </h3>
           <div class="product-meta flex flex-wrap items-center gap-2 mb-4">
             <span class="product-price text-lg font-bold text-green-600">${escapeHtml(price)}</span>
@@ -63,7 +63,7 @@ export function generateHtmlContent(product: any, rank: number): string {
           </div>` : ''}
         </div>
         <div class="product-cta mt-4">
-          <a href="${escapeHtml(url)}" class="check-price-btn inline-block bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-6 rounded-full transition-colors text-center" target="_blank" rel="nofollow noopener">
+          <a href="${escapeHtml(url)}" class="check-price-btn button-amazon inline-block bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-6 rounded-full transition-colors text-center" target="_blank" rel="nofollow noopener">
             View on Amazon
           </a>
         </div>
