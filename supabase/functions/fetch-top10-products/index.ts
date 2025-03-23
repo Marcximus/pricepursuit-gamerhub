@@ -1,7 +1,6 @@
 
 // Use newer Deno standard library and a specific version of supabase-js that doesn't have the dependency issue
 import { serve } from "std/http/server";
-import { Deno } from "https://deno.land/std@0.177.0/lib/mod.ts";
 import { getSupabaseClient, queryProducts } from "./services/database.ts";
 import { processProducts } from "./services/productProcessor.ts";
 import { formatProductsForDisplay } from "./services/productFormatter.ts";
