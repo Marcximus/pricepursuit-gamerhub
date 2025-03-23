@@ -15,6 +15,17 @@ export async function generateBlogPost(
     console.log(`🚀 Starting blog post generation for category: ${category}`);
     console.log(`📝 User prompt: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}"`);
     
+    // Verify category matches content type
+    // If the prompt seems like a Top10 list but category is different, show a warning
+    if (prompt.toLowerCase().includes('top 10') && category !== 'Top10') {
+      console.warn('⚠️ Prompt appears to be for a Top10 post, but selected category is:', category);
+      toast({
+        title: 'Category Mismatch Warning',
+        description: 'Your prompt seems to be for a Top10 list. Consider changing the category to "Top10".',
+        variant: 'default',
+      });
+    }
+    
     // For Top10 category, we need to fetch Amazon products first
     let products = [];
     if (category === 'Top10') {

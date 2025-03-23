@@ -13,6 +13,13 @@ export async function generateContentWithDeepSeek(
     console.log(`📝 System prompt length: ${systemPrompt.length} characters`);
     console.log(`📝 User prompt length: ${userPrompt.length} characters`);
     
+    // Check if the user prompt contains Top10 but category isn't matching
+    if (userPrompt.toLowerCase().includes('top 10') || 
+        userPrompt.toLowerCase().includes('top ten') || 
+        userPrompt.toLowerCase().includes('best laptops')) {
+      console.log(`📢 User prompt appears to be for a Top10 post, ensuring correct handling...`);
+    }
+    
     // Truncate system prompt if it's too long to avoid API failures
     const maxSystemPromptLength = 8000;
     let truncatedSystemPrompt = systemPrompt;
@@ -81,23 +88,24 @@ export async function generateContentWithDeepSeek(
       // Parse the response as JSON
       const data = await response.json();
       
-      // Log a preview of the response
-      if (data.choices && data.choices[0] && data.choices[0].message) {
-        const content = data.choices[0].message.content;
-        console.log(`✅ DeepSeek response received: ${content.length} characters`);
-        console.log(`📄 Content preview: "${content.substring(0, 100)}..."`);
-        
-        // Extra validation to ensure the content is not JSON format
-        if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
-          console.warn(`⚠️ Content appears to be in JSON format, will wrap in markdown code block for parsing safety`);
-          return "```json\n" + content + "\n```";
-        }
-        
-        return content;
-      } else {
-        console.error(`❌ Unexpected response format from DeepSeek:`, data);
-        throw new Error('Unexpected response format from DeepSeek API');
+      // Check for empty or malformed response
+      if (!data || !data.choices || !data.choices.length || !data.choices[0].message) {
+        console.error(`❌ Invalid or empty response from DeepSeek API:`, data);
+        throw new Error('Received an invalid or empty response from DeepSeek API');
       }
+      
+      // Log a preview of the response
+      const content = data.choices[0].message.content;
+      console.log(`✅ DeepSeek response received: ${content.length} characters`);
+      console.log(`📄 Content preview: "${content.substring(0, 100)}..."`);
+      
+      // Extra validation to ensure the content is not JSON format
+      if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
+        console.warn(`⚠️ Content appears to be in JSON format, will wrap in markdown code block for parsing safety`);
+        return "```json\n" + content + "\n```";
+      }
+      
+      return content;
     } catch (fetchError) {
       clearTimeout(timeoutId);
       

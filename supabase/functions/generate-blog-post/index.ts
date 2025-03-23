@@ -55,6 +55,16 @@ serve(async (req) => {
       );
     }
 
+    // Category validation - ensure we have a valid category
+    const validCategories = ['Review', 'Top10', 'Comparison', 'How-To'];
+    if (!validCategories.includes(category)) {
+      console.error(`❌ Invalid category: ${category}`);
+      return new Response(
+        JSON.stringify({ error: `Invalid category. Must be one of: ${validCategories.join(', ')}` }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
     console.log(`🎯 Generating ${category} blog post with prompt: "${prompt.substring(0, 30)}..."`);
 
     // Variables to store product data
@@ -62,7 +72,7 @@ serve(async (req) => {
     let secondProductData = null;
     let amazonProducts = null; // For Top10 posts
 
-    // For Top10 posts, check if products were pre-fetched and stored in the request
+    // For Top10, we need specific handling of the products
     if (category === 'Top10') {
       console.log(`🔍 Checking for pre-fetched Top10 products in request...`);
       try {
