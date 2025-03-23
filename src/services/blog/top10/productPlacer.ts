@@ -1,4 +1,3 @@
-
 /**
  * Product placement utilities for Top10 blog posts
  */
@@ -60,15 +59,15 @@ export function replaceProductPlaceholders(
   // Ensure product links match the heading content
   newContent = ensureConsistentProductLinks(newContent, productsToUse);
   
+  // Clean up duplicate titles and ranking numbers
+  newContent = cleanupDuplicateContent(newContent);
+  
   console.log(`✅ Product placeholder replacement complete: ${replacementsCount} replacements`);
   return { content: newContent, replacementsCount };
 }
 
 /**
  * Replace explicit product placeholders in content
- * @param content The content with placeholders
- * @param products Array of product data
- * @returns Updated content and replacement count
  */
 function replaceExplicitPlaceholders(
   content: string,
@@ -81,13 +80,13 @@ function replaceExplicitPlaceholders(
   const placeholders = [...newContent.matchAll(placeholderPattern)];
   console.log(`📍 Found ${placeholders.length} potential product placeholders`);
   
-  if (placeholders.length >= 5) {
+  if (placeholders.length >= 1) {
     // Replace explicit placeholders
     for (const match of placeholders) {
       const index = parseInt(match[1], 10) - 1;
       if (index >= 0 && index < products.length) {
         const product = products[index];
-        const productHtml = product.htmlContent || `<div>Product data missing for ${product.title || 'Unknown Product'}</div>`;
+        const productHtml = generateProductHtml(product, index);
         newContent = newContent.replace(match[0], productHtml);
         replacementsCount++;
       }
@@ -99,9 +98,6 @@ function replaceExplicitPlaceholders(
 
 /**
  * Insert products after headings in content
- * @param content The content with headings
- * @param products Array of product data
- * @returns Updated content and replacement count
  */
 function insertAfterHeadings(
   content: string,
@@ -158,9 +154,6 @@ function insertAfterHeadings(
 
 /**
  * Insert products at strategic points in content
- * @param content The content to update
- * @param products Array of product data
- * @returns Updated content and replacement count
  */
 function insertStrategically(
   content: string,
@@ -223,8 +216,6 @@ function insertStrategically(
 
 /**
  * Remove duplicate product blocks from content
- * @param content The content with potential duplicate products
- * @returns Content with duplicates removed
  */
 export function removeDuplicateProductBlocks(content: string): string {
   // Find all product blocks
@@ -273,7 +264,6 @@ export function removeDuplicateProductBlocks(content: string): string {
 
 /**
  * Ensure product links in content match the heading titles
- * This helps avoid mismatches between described products and linked ones
  */
 function ensureConsistentProductLinks(content: string, products: any[]): string {
   // Find all product sections with headings
@@ -347,4 +337,59 @@ function ensureConsistentProductLinks(content: string, products: any[]): string 
   }
   
   return newContent;
+}
+
+/**
+ * Clean up duplicate titles and ranking numbers in the content
+ * This addresses the issue of repeated product titles and duplicate rank numbers
+ */
+function cleanupDuplicateContent(content: string): string {
+  console.log('🧹 Cleaning up duplicate titles and ranking numbers');
+  
+  let cleanedContent = content;
+  
+  // Fix duplicate ranking numbers (#10, #9, etc.) that appear multiple times
+  const rankingPattern = /#(\d{1,2})\s+#\1/g;
+  cleanedContent = cleanedContent.replace(rankingPattern, '#$1');
+  
+  // Find product card blocks
+  const productBlockRegex = /<div class="product-card.*?Check Price on Amazon.*?<\/div>\s*<\/div>\s*<\/div>/gs;
+  const productBlocks = [...cleanedContent.matchAll(productBlockRegex)];
+  
+  for (const block of productBlocks) {
+    if (!block[0]) continue;
+    
+    // Extract the product title from this block
+    const titleMatch = block[0].match(/<h4 class="[^"]*product-title[^"]*">(.*?)<\/h4>/s);
+    if (titleMatch && titleMatch[1]) {
+      const title = titleMatch[1].trim();
+      
+      // Find if this title appears multiple times in nearby content
+      // Create a regex that will match repeated titles around this block
+      const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const titlePattern = new RegExp(`${escapedTitle}\\s*${escapedTitle}`, 'g');
+      
+      // Replace the duplicate titles with a single instance
+      const sectionStart = Math.max(0, cleanedContent.indexOf(block[0]) - 500);
+      const sectionEnd = Math.min(cleanedContent.length, cleanedContent.indexOf(block[0]) + block[0].length + 500);
+      const section = cleanedContent.substring(sectionStart, sectionEnd);
+      
+      if (titlePattern.test(section)) {
+        console.log(`✂️ Found duplicate title: "${title.substring(0, 30)}..."`);
+        const fixedSection = section.replace(titlePattern, title);
+        cleanedContent = cleanedContent.substring(0, sectionStart) + 
+                         fixedSection + 
+                         cleanedContent.substring(sectionEnd);
+      }
+    }
+  }
+  
+  // Clean up any JSON formatting artifacts that shouldn't be visible
+  cleanedContent = cleanedContent.replace(/```json\s*\{/g, '');
+  cleanedContent = cleanedContent.replace(/\}\s*```/g, '');
+  
+  // Remove extra blank lines
+  cleanedContent = cleanedContent.replace(/\n{3,}/g, '\n\n');
+  
+  return cleanedContent;
 }

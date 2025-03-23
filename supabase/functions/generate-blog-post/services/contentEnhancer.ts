@@ -1,4 +1,3 @@
-
 /**
  * Services for enhancing the generated content with product data
  */
@@ -76,39 +75,77 @@ export function enhanceTop10Content(parsedContent: any): any {
     // Simple placeholder insertion if none exist
     let contentWithPlaceholders = parsedContent.content;
     
-    // Find h3 headings that might represent product items
-    const headings = contentWithPlaceholders.match(/<h3[^>]*>.*?<\/h3>/gi) || [];
+    // Find h2 or h3 headings that might represent product items
+    // Look for both h2 and h3 to be more flexible with AI-generated content
+    const headings = contentWithPlaceholders.match(/<h[23][^>]*>.*?<\/h[23]>/gi) || [];
     
     // If we found enough headings, insert placeholders after them
     if (headings.length >= 5) {
       for (let i = 0; i < Math.min(headings.length, 10); i++) {
         const productNum = i + 1;
-        const placeholderTag = `<div class="product-data" data-product-id="${productNum}">[PRODUCT_DATA_${productNum}]</div>`;
+        // Create a simpler placeholder tag that won't get duplicated
+        const placeholderTag = `[PRODUCT_DATA_${productNum}]`;
         
         // Find the position of this heading
         const headingIndex = contentWithPlaceholders.indexOf(headings[i]);
         if (headingIndex !== -1) {
           const endOfHeading = headingIndex + headings[i].length;
           
-          // Insert after the heading
-          contentWithPlaceholders = 
-            contentWithPlaceholders.substring(0, endOfHeading) + 
-            '\n\n' + placeholderTag + '\n\n' + 
-            contentWithPlaceholders.substring(endOfHeading);
+          // Insert after the heading, but make sure we don't have text between heading and placeholder
+          const nextParagraphStart = contentWithPlaceholders.indexOf('<p>', endOfHeading);
+          
+          if (nextParagraphStart !== -1 && nextParagraphStart < endOfHeading + 50) {
+            // If there's a paragraph right after the heading, insert before it
+            contentWithPlaceholders = 
+              contentWithPlaceholders.substring(0, nextParagraphStart) + 
+              '\n' + placeholderTag + '\n\n' + 
+              contentWithPlaceholders.substring(nextParagraphStart);
+          } else {
+            // Otherwise insert right after the heading
+            contentWithPlaceholders = 
+              contentWithPlaceholders.substring(0, endOfHeading) + 
+              '\n' + placeholderTag + '\n' + 
+              contentWithPlaceholders.substring(endOfHeading);
+          }
         }
       }
       
       parsedContent.content = contentWithPlaceholders;
       console.log(`✅ Added product data placeholders after headings`);
     } else {
-      // If not enough headings, add placeholders at the end
-      let appendContent = '\n\n';
-      for (let i = 1; i <= 10; i++) {
-        appendContent += `<div class="product-data" data-product-id="${i}">[PRODUCT_DATA_${i}]</div>\n\n`;
-      }
+      // If not enough headings, try to find numbered items in content
+      const numberedItems = contentWithPlaceholders.match(/(\d+)\.\s+([^\n]+)/g) || [];
       
-      parsedContent.content += appendContent;
-      console.log(`✅ Added product data placeholders at the end of content`);
+      if (numberedItems.length >= 5) {
+        for (let i = 0; i < Math.min(numberedItems.length, 10); i++) {
+          const productNum = i + 1;
+          const placeholderTag = `[PRODUCT_DATA_${productNum}]`;
+          
+          // Find position of this numbered item
+          const itemIndex = contentWithPlaceholders.indexOf(numberedItems[i]);
+          if (itemIndex !== -1) {
+            const endOfItem = itemIndex + numberedItems[i].length;
+            
+            // Insert after the numbered item
+            contentWithPlaceholders = 
+              contentWithPlaceholders.substring(0, endOfItem) + 
+              '\n\n' + placeholderTag + '\n\n' + 
+              contentWithPlaceholders.substring(endOfItem);
+          }
+        }
+        
+        parsedContent.content = contentWithPlaceholders;
+        console.log(`✅ Added product data placeholders after numbered items`);
+      } else {
+        // If no structure found, add placeholders at the end
+        let appendContent = '\n\n';
+        for (let i = 1; i <= 10; i++) {
+          appendContent += `[PRODUCT_DATA_${i}]\n\n`;
+        }
+        
+        parsedContent.content += appendContent;
+        console.log(`✅ Added product data placeholders at the end of content`);
+      }
     }
   } else {
     console.log(`✅ Content already contains product data placeholders`);
