@@ -1,5 +1,5 @@
 
-import { corsHeaders } from "../_shared/cors.ts";
+import { corsHeaders } from "../../_shared/cors.ts";
 
 /**
  * Extract request data with better error handling for large payloads

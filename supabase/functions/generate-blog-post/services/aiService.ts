@@ -26,7 +26,7 @@ export async function generateContentWithDeepSeek(
     
     // Ensure system prompt is within acceptable size limits
     // If too large, truncate it to avoid API errors
-    const MAX_SYSTEM_PROMPT_LENGTH = 100000; // Limiting to 100K chars to be safe
+    const MAX_SYSTEM_PROMPT_LENGTH = 128000; // Increased from 100K to 128K chars to maximize content
     const truncatedSystemPrompt = systemPrompt.length > MAX_SYSTEM_PROMPT_LENGTH
       ? systemPrompt.substring(0, MAX_SYSTEM_PROMPT_LENGTH) + "... [TRUNCATED DUE TO LENGTH]"
       : systemPrompt;
