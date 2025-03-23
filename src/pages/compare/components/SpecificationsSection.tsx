@@ -43,7 +43,7 @@ const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({
     return `${benchmarkScore}/100`;
   };
   
-  // Compare scores for highlighting
+  // Compare scores for highlighting (where higher is better)
   const compareScores = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
     if (a === 'Not available' || b === 'Not available') return 'unknown';
     
@@ -56,6 +56,45 @@ const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({
       
       if (aValue > bValue) return 'better';
       if (aValue < bValue) return 'worse';
+      return 'equal';
+    }
+    
+    return 'unknown';
+  };
+  
+  // Compare scores for highlighting (where lower is better)
+  const compareInverseScores = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
+    if (a === 'Not available' || b === 'Not available') return 'unknown';
+    
+    const aMatch = a.match(/^(\d+(?:\.\d+)?)/);
+    const bMatch = b.match(/^(\d+(?:\.\d+)?)/);
+    
+    if (aMatch && bMatch) {
+      const aValue = parseFloat(aMatch[1]);
+      const bValue = parseFloat(bMatch[1]);
+      
+      if (aValue < bValue) return 'better';  // Lower is better
+      if (aValue > bValue) return 'worse';   // Higher is worse
+      return 'equal';
+    }
+    
+    return 'unknown';
+  };
+
+  // Compare prices (lower is better)
+  const comparePrices = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
+    if (a === 'Not available' || b === 'Not available') return 'unknown';
+    
+    // Extract numeric value from price string (e.g., "$1,299.99")
+    const aMatch = a.match(/[\\$£€]?\s?(\d+(?:,\d+)*(?:\.\d+)?)/);
+    const bMatch = b.match(/[\\$£€]?\s?(\d+(?:,\d+)*(?:\.\d+)?)/);
+    
+    if (aMatch && bMatch) {
+      const aValue = parseFloat(aMatch[1].replace(/,/g, ''));
+      const bValue = parseFloat(bMatch[1].replace(/,/g, ''));
+      
+      if (aValue < bValue) return 'better';  // Lower price is better
+      if (aValue > bValue) return 'worse';   // Higher price is worse
       return 'equal';
     }
     
@@ -77,7 +116,8 @@ const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({
     { 
       title: 'Price', 
       leftValue: leftSpecs?.price || 'Not available', 
-      rightValue: rightSpecs?.price || 'Not available' 
+      rightValue: rightSpecs?.price || 'Not available',
+      compare: comparePrices
     },
     { 
       title: 'Operating System', 
@@ -87,7 +127,8 @@ const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({
     { 
       title: 'Release Year', 
       leftValue: leftSpecs?.releaseYear || 'Not available', 
-      rightValue: rightSpecs?.releaseYear || 'Not available' 
+      rightValue: rightSpecs?.releaseYear || 'Not available',
+      compare: compareScores
     },
     { 
       title: 'Processor', 
@@ -97,12 +138,14 @@ const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({
     { 
       title: 'RAM', 
       leftValue: leftSpecs?.ram || 'Not available', 
-      rightValue: rightSpecs?.ram || 'Not available' 
+      rightValue: rightSpecs?.ram || 'Not available',
+      compare: compareScores
     },
     { 
       title: 'Storage', 
       leftValue: leftSpecs?.storage || 'Not available', 
-      rightValue: rightSpecs?.storage || 'Not available' 
+      rightValue: rightSpecs?.storage || 'Not available',
+      compare: compareScores
     },
     { 
       title: 'Graphics', 
@@ -112,27 +155,32 @@ const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({
     { 
       title: 'Screen Size', 
       leftValue: leftSpecs?.screenSize || 'Not available', 
-      rightValue: rightSpecs?.screenSize || 'Not available' 
+      rightValue: rightSpecs?.screenSize || 'Not available',
+      compare: compareScores
     },
     { 
       title: 'Screen Resolution', 
       leftValue: leftSpecs?.screenResolution || 'Not available', 
-      rightValue: rightSpecs?.screenResolution || 'Not available' 
+      rightValue: rightSpecs?.screenResolution || 'Not available',
+      compare: compareScores
     },
     { 
       title: 'Refresh Rate', 
       leftValue: leftSpecs?.refreshRate || 'Not available', 
-      rightValue: rightSpecs?.refreshRate || 'Not available' 
+      rightValue: rightSpecs?.refreshRate || 'Not available',
+      compare: compareScores
     },
     { 
       title: 'Weight', 
       leftValue: leftSpecs?.weight || 'Not available', 
-      rightValue: rightSpecs?.weight || 'Not available' 
+      rightValue: rightSpecs?.weight || 'Not available',
+      compare: compareInverseScores
     },
     { 
       title: 'Battery Life', 
       leftValue: leftSpecs?.batteryLife || 'Not available', 
-      rightValue: rightSpecs?.batteryLife || 'Not available' 
+      rightValue: rightSpecs?.batteryLife || 'Not available',
+      compare: compareScores
     },
     { 
       title: 'Ports', 
