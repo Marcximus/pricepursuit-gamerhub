@@ -2,6 +2,7 @@
 /**
  * Product placement utilities for Top10 blog posts
  */
+import { generateProductHtml } from './generators/productGenerator';
 
 /**
  * Replace product placeholders with actual product HTML
@@ -337,7 +338,7 @@ function ensureConsistentProductLinks(content: string, products: any[]): string 
     const productCardHtml = productCardMatch[0];
     
     // Generate new product HTML for the matched product
-    const { generateProductHtml } = require('./generators/productGenerator');
+    // Use the imported function instead of require
     const newProductHtml = generateProductHtml(matchedProduct, bestMatchIndex);
     
     // Replace the old product card with the new one that matches the heading
