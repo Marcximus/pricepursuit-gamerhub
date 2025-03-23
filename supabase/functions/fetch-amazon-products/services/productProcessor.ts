@@ -1,12 +1,11 @@
-
 /**
  * Main processor for Amazon products
  */
-import { extractPrice } from './extractors/priceExtractor';
-import { extractRating } from './extractors/ratingExtractor';
-import { extractReviewCount } from './extractors/reviewCountExtractor';
-import { generateProductHTML } from './generators/htmlGenerator';
-import { logProductData, safeStringify } from './utils/logger';
+import { extractPrice } from './extractors/priceExtractor.ts';
+import { extractRating } from './extractors/ratingExtractor.ts';
+import { extractReviewCount } from './extractors/reviewCountExtractor.ts';
+import { generateProductHTML } from './generators/htmlGenerator.ts';
+import { logProductData, safeStringify } from './utils/logger.ts';
 
 /**
  * Process Amazon products from RapidAPI response
