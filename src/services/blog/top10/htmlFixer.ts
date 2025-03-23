@@ -1,4 +1,3 @@
-
 /**
  * HTML fixing utilities for Top10 blog posts
  */
@@ -16,11 +15,11 @@ export function fixHtmlTags(content: string): string {
   
   let fixedContent = content;
   
-  // Fix JSON formatting artifacts
+  // Remove JSON formatting artifacts
   fixedContent = fixedContent.replace(/```json\s*\{/g, '');
   fixedContent = fixedContent.replace(/\}\s*```/g, '');
   
-  // Remove any raw JSON at the start of the content
+  // Remove any raw JSON at the start or end of the content
   if (fixedContent.trim().startsWith('{') && fixedContent.includes('"content":')) {
     try {
       const jsonMatch = fixedContent.match(/\{.*"content":\s*"(.+?)"\s*\}/s);
@@ -36,6 +35,19 @@ export function fixHtmlTags(content: string): string {
     }
   }
   
+  // Fix duplicate title issues, where the blog title is repeated multiple times
+  const titlePattern = /<h1[^>]*>(.*?)<\/h1>/gi;
+  const titles = [...fixedContent.matchAll(titlePattern)];
+  if (titles.length > 1) {
+    console.log(`⚠️ Found ${titles.length} h1 titles, keeping only the first one`);
+    // Keep only the first title
+    const firstTitle = titles[0][0];
+    // Replace all other titles with empty string
+    for (let i = 1; i < titles.length; i++) {
+      fixedContent = fixedContent.replace(titles[i][0], '');
+    }
+  }
+  
   // Fix heading tags (h1, h2, h3)
   fixedContent = fixedContent.replace(/<h1([^>]*)>([^<]*?)(?=<(?!\/h1>))/g, '<h1$1>$2</h1>');
   fixedContent = fixedContent.replace(/<h2([^>]*)>([^<]*?)(?=<(?!\/h2>))/g, '<h2$1>$2</h2>');
@@ -46,6 +58,7 @@ export function fixHtmlTags(content: string): string {
   
   // Fix unordered list tags
   fixedContent = fixedContent.replace(/<ul([^>]*)>([^<]*?)(?=<(?!\/ul>))/g, '<ul$1>');
+  fixedContent = fixedContent.replace(/<\/ul>([^<]*?)(?=<)/g, '</ul>\n\n');
   
   // Fix list items
   fixedContent = fixedContent.replace(/<li>([^<]*?)(?=<(?!\/li>))/g, '<li>$1</li>');
@@ -69,6 +82,39 @@ export function fixHtmlTags(content: string): string {
   
   // Fix double product data placeholders
   fixedContent = fixedContent.replace(/\[PRODUCT_DATA_(\d+)\]\s*\[PRODUCT_DATA_\1\]/g, '[PRODUCT_DATA_$1]');
+  
+  // Fix duplicate sections with same product
+  const productSectionRegex = /(<h3[^>]*>.*?<\/h3>.*?product-card.*?Check Price on Amazon.*?)(\1)/gs;
+  fixedContent = fixedContent.replace(productSectionRegex, '$1');
+  
+  // Remove duplicate H3 headings with same text that appear in sequence
+  const duplicateH3Regex = /(<h3[^>]*>)(.*?)<\/h3>(\s*)<h3[^>]*>\2<\/h3>/g;
+  fixedContent = fixedContent.replace(duplicateH3Regex, '$1$2</h3>');
+  
+  // Ensure there are no repeated product entries with the same title
+  const productEntries = [...fixedContent.matchAll(/<h3[^>]*>(.*?)<\/h3>/g)];
+  const seenTitles = new Set();
+  const duplicateTitlePositions = [];
+  
+  for (const entry of productEntries) {
+    const title = entry[1].trim();
+    const position = entry.index;
+    if (position !== undefined) {
+      if (seenTitles.has(title)) {
+        duplicateTitlePositions.push(position);
+      } else {
+        seenTitles.add(title);
+      }
+    }
+  }
+  
+  // Remove sections with duplicate titles (from end to start to avoid index shifting)
+  duplicateTitlePositions.sort((a, b) => b - a);
+  for (const position of duplicateTitlePositions) {
+    const nextHeadingPos = fixedContent.indexOf('<h3', position + 1);
+    const sectionEnd = nextHeadingPos > -1 ? nextHeadingPos : fixedContent.length;
+    fixedContent = fixedContent.substring(0, position) + fixedContent.substring(sectionEnd);
+  }
   
   // Remove extra blank lines
   fixedContent = fixedContent.replace(/\n{3,}/g, '\n\n');

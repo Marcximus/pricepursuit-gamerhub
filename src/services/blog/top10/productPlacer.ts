@@ -1,3 +1,4 @@
+
 /**
  * Product placement utilities for Top10 blog posts
  */
@@ -25,10 +26,12 @@ export function replaceProductPlaceholders(
   
   // Limit to 10 products for Top10 lists
   const productsToUse = products.slice(0, 10);
-  console.log(`🔢 Will use exactly 10 products for the Top10 list`);
+  console.log(`🔢 Will use exactly ${productsToUse.length} products for the Top10 list`);
+  
+  // First, remove any raw JSON that might be in the content
+  let newContent = removeJsonFormatting(content);
   
   // Different strategies for finding placeholders
-  let newContent = content;
   let replacementsCount = 0;
   
   // Strategy 1: Look for explicit placeholders like [PRODUCT_DATA_1]
@@ -38,12 +41,14 @@ export function replaceProductPlaceholders(
   
   // If Strategy 1 didn't find enough placeholders, try Strategy 2
   if (replacementsCount < 5) {
+    console.log(`⚠️ Only found ${replacementsCount} explicit placeholders, trying heading strategy`);
     const headingResult = insertAfterHeadings(newContent, productsToUse);
     newContent = headingResult.content;
     replacementsCount = headingResult.replacementsCount;
     
     // If Strategy 2 didn't work, try Strategy 3
     if (replacementsCount < 5) {
+      console.log(`⚠️ Still only ${replacementsCount} placeholders found, trying strategic placement`);
       const fallbackResult = insertStrategically(newContent, productsToUse);
       newContent = fallbackResult.content;
       replacementsCount = fallbackResult.replacementsCount;
@@ -52,6 +57,9 @@ export function replaceProductPlaceholders(
   
   // Remove any remaining product placeholders
   newContent = newContent.replace(/\[PRODUCT_DATA_\d+\]/g, '');
+  
+  // Fix numbering in product headings and descriptions
+  newContent = fixProductNumbering(newContent);
   
   // Remove any duplicate product blocks
   newContent = removeDuplicateProductBlocks(newContent);
@@ -64,6 +72,80 @@ export function replaceProductPlaceholders(
   
   console.log(`✅ Product placeholder replacement complete: ${replacementsCount} replacements`);
   return { content: newContent, replacementsCount };
+}
+
+/**
+ * Remove any JSON formatting that might be in the content
+ */
+function removeJsonFormatting(content: string): string {
+  // Remove JSON formatting at the beginning of the content
+  let cleaned = content.replace(/^\s*```json\s*\{/g, '');
+  cleaned = cleaned.replace(/\}\s*```\s*$/g, '');
+  
+  // Remove full JSON objects if they appear in the text
+  if (cleaned.includes('"title":') && cleaned.includes('"content":')) {
+    try {
+      // Try to extract just the content part from the JSON
+      const contentMatch = cleaned.match(/"content"\s*:\s*"((?:\\"|[^"])*?)"/);
+      if (contentMatch && contentMatch[1]) {
+        // Replace escaped quotes and newlines
+        cleaned = contentMatch[1]
+          .replace(/\\"/g, '"')
+          .replace(/\\n/g, '\n')
+          .replace(/\\\\/g, '\\');
+      }
+    } catch (e) {
+      console.warn('⚠️ Error extracting content from JSON:', e);
+    }
+  }
+  
+  return cleaned;
+}
+
+/**
+ * Fix numbering in product headings and descriptions
+ */
+function fixProductNumbering(content: string): string {
+  let newContent = content;
+  
+  // Find all headings that look like product headings (#10, #9, etc.)
+  const headingPattern = /<h[23][^>]*>\s*#?\d+\s+/g;
+  const headings = [...newContent.matchAll(headingPattern)];
+  
+  if (headings.length > 0) {
+    // Sort headings by position to ensure we process them in order
+    headings.sort((a, b) => (a.index || 0) - (b.index || 0));
+    
+    // Create a mapping for what each heading's rank should be
+    const correctRanks = new Map();
+    for (let i = 0; i < headings.length; i++) {
+      // In a top-10 list, the first product should be #1, and the last should be #10
+      const correctRank = headings.length - i;
+      const currentHeading = headings[i][0];
+      
+      // Extract the current rank number
+      const currentRankMatch = currentHeading.match(/#?(\d+)/);
+      if (currentRankMatch && currentRankMatch[1]) {
+        const currentRank = parseInt(currentRankMatch[1], 10);
+        correctRanks.set(currentRank, correctRank);
+      }
+    }
+    
+    // Replace all instances of the incorrect rank with the correct rank
+    for (const [oldRank, newRank] of correctRanks.entries()) {
+      // Replace in headings
+      const rankPattern = new RegExp(`<h[23][^>]*>\\s*#?${oldRank}\\s+`, 'g');
+      newContent = newContent.replace(rankPattern, (match) => {
+        return match.replace(`#${oldRank}`, `#${newRank}`).replace(` ${oldRank} `, ` ${newRank} `);
+      });
+      
+      // Replace in product blocks
+      const productRankPattern = new RegExp(`<div class="product-rank">#${oldRank}</div>`, 'g');
+      newContent = newContent.replace(productRankPattern, `<div class="product-rank">#${newRank}</div>`);
+    }
+  }
+  
+  return newContent;
 }
 
 /**
@@ -86,7 +168,9 @@ function replaceExplicitPlaceholders(
       const index = parseInt(match[1], 10) - 1;
       if (index >= 0 && index < products.length) {
         const product = products[index];
-        const productHtml = generateProductHtml(product, index);
+        // Proper rank for this product: #10 for first, counting down to #1 for last
+        const rank = products.length - index;
+        const productHtml = generateProductHtml(product, rank);
         newContent = newContent.replace(match[0], productHtml);
         replacementsCount++;
       }

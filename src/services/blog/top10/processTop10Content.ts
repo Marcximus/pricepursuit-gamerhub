@@ -4,7 +4,7 @@
  */
 import { toast } from '@/components/ui/use-toast';
 import { getProducts } from './productHandler';
-import { cleanupContent, fixHtmlTags, replaceProductPlaceholders } from './contentProcessor';
+import { cleanupContent, fixHtmlTags, replaceProductPlaceholders, removeJsonFormatting } from './contentProcessor';
 import { addVideoEmbed, wrapTextInHtml } from './htmlGenerator';
 
 /**
@@ -29,29 +29,34 @@ export async function processTop10Content(content: string, prompt: string): Prom
   }
   
   try {
+    // First, remove any JSON formatting that might be causing issues
+    let processedContent = removeJsonFormatting(content);
+    console.log(`📏 Content after JSON cleanup: ${processedContent.length} characters`);
+    
     // Log key markers for debugging content structure
-    console.log(`🔍 Content contains <h1> tags: ${content.includes('<h1>')}`);
-    console.log(`🔍 Content contains <h2> tags: ${content.includes('<h2>')}`);
-    console.log(`🔍 Content contains <p> tags: ${content.includes('<p>')}`);
-    console.log(`🔍 Content contains [PRODUCT_DATA_ markers: ${content.includes('[PRODUCT_DATA_')}`);
+    console.log(`🔍 Content contains <h1> tags: ${processedContent.includes('<h1>')}`);
+    console.log(`🔍 Content contains <h2> tags: ${processedContent.includes('<h2>')}`);
+    console.log(`🔍 Content contains <p> tags: ${processedContent.includes('<p>')}`);
+    console.log(`🔍 Content contains [PRODUCT_DATA_ markers: ${processedContent.includes('[PRODUCT_DATA_')}`);
     
     // First, determine if content has proper HTML structure
-    const hasHtmlStructure = content.includes('<h1>') || content.includes('<h2>') || content.includes('<h3>') || 
-                            (content.includes('<p>') && content.includes('</p>'));
+    const hasHtmlStructure = processedContent.includes('<h1>') || processedContent.includes('<h2>') || 
+                            processedContent.includes('<h3>') || 
+                            (processedContent.includes('<p>') && processedContent.includes('</p>'));
     
     console.log(`🔍 Content has HTML structure: ${hasHtmlStructure}`);
     
     // If content appears to be plain text, convert it to HTML
     if (!hasHtmlStructure) {
       console.warn('⚠️ Content appears to be plain text, converting to HTML structure');
-      content = wrapTextInHtml(content, prompt);
-      console.log(`📏 Content after wrapping in HTML: ${content.length} characters`);
+      processedContent = wrapTextInHtml(processedContent, prompt);
+      console.log(`📏 Content after wrapping in HTML: ${processedContent.length} characters`);
     }
     
     // Basic HTML sanity check - add missing header tags if needed
-    if (!content.includes('<h1>')) {
+    if (!processedContent.includes('<h1>')) {
       console.warn('⚠️ Content is missing H1 tag, adding title');
-      content = `<h1>${prompt}</h1>\n\n${content}`;
+      processedContent = `<h1 class="text-center mb-8">${prompt}</h1>\n\n${processedContent}`;
     }
     
     // Get products either from localStorage or by fetching them
@@ -86,7 +91,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
     
     // First, clean up the content and fix basic HTML issues
     console.log('🧹 Cleaning up content structure');
-    let processedContent = cleanupContent(content);
+    processedContent = cleanupContent(processedContent);
     console.log(`📏 Content length after cleanup: ${processedContent.length} characters`);
     
     // Fix any malformed HTML tags from AI response

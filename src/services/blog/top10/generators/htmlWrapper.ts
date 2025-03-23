@@ -15,11 +15,24 @@ export function wrapTextInHtml(content: string, title: string): string {
   
   console.log('🔄 Converting plain text to HTML structure');
   
+  // Remove any JSON formatting if present
+  let cleanedContent = content;
+  if (content.includes('"title"') && content.includes('"content"')) {
+    try {
+      const jsonObj = JSON.parse(content);
+      if (jsonObj.content) {
+        cleanedContent = jsonObj.content;
+      }
+    } catch (e) {
+      console.warn('⚠️ Failed to parse JSON content:', e);
+    }
+  }
+  
   // Add title as H1 if not present
-  let htmlContent = `<h1>${title || 'Top 10 Best Lenovo Laptops'}</h1>\n\n`;
+  let htmlContent = `<h1 class="text-center mb-8">${title || 'Top 10 Best Lenovo Laptops'}</h1>\n\n`;
   
   // Process paragraphs
-  const paragraphs = content.split(/\n\s*\n/);
+  const paragraphs = cleanedContent.split(/\n\s*\n/);
   paragraphs.forEach((para, index) => {
     // Skip empty paragraphs
     if (!para.trim()) return;
@@ -41,7 +54,21 @@ export function wrapTextInHtml(content: string, title: string): string {
       }
     }
     
-    // Check if this looks like a heading (short, ends with no period)
+    // Check if this looks like a product heading (#1: Lenovo ThinkPad X1)
+    if (/^#?\d+[\.:]\s*.+/m.test(para)) {
+      const rankMatch = para.match(/^#?(\d+)[\.:]\s*(.+)/m);
+      if (rankMatch) {
+        const rank = rankMatch[1];
+        const productName = rankMatch[2].trim();
+        htmlContent += `<h3>#${rank} ${productName}</h3>\n\n`;
+        
+        // Add a placeholder for the product data
+        htmlContent += `[PRODUCT_DATA_${rank}]\n\n`;
+        return;
+      }
+    }
+    
+    // Check if this looks like a simple heading (short, ends with no period)
     if (para.length < 80 && !para.trim().endsWith('.') && !para.includes('\n')) {
       // Is this a model name (like "Lenovo ThinkPad X1")?
       if (/Lenovo\s+[\w\s]+(Pro|Slim|Book|X\d|Yoga|Flex|Legion|ThinkPad|IdeaPad)/i.test(para)) {
