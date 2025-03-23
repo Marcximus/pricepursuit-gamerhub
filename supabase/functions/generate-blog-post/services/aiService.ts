@@ -13,6 +13,21 @@ export async function generateContentWithDeepSeek(
     console.log(`📝 System prompt length: ${systemPrompt.length} characters`);
     console.log(`📝 User prompt length: ${userPrompt.length} characters`);
     
+    // Validate and truncate prompts if they exceed limits
+    // Increased system prompt limit from 8000 to 128000 characters
+    const maxSystemPromptLength = 128000;
+    const maxUserPromptLength = 8000;
+    
+    if (systemPrompt.length > maxSystemPromptLength) {
+      console.warn(`⚠️ System prompt exceeds ${maxSystemPromptLength} characters, truncating...`);
+      systemPrompt = systemPrompt.substring(0, maxSystemPromptLength);
+    }
+    
+    if (userPrompt.length > maxUserPromptLength) {
+      console.warn(`⚠️ User prompt exceeds ${maxUserPromptLength} characters, truncating...`);
+      userPrompt = userPrompt.substring(0, maxUserPromptLength);
+    }
+    
     const payload = {
       model: "deepseek-chat",
       messages: [
