@@ -1,41 +1,22 @@
 
 import React from "react";
-import { ChevronsUp, ChevronsDown, ExternalLink } from "lucide-react";
 
 interface SpecificationValueProps {
   value: string;
-  status: 'better' | 'worse' | 'equal' | 'unknown';
-  affiliateUrl: string;
-  theme?: 'left' | 'right';
+  comparison?: 'better' | 'worse' | 'equal' | 'unknown';
 }
 
-const SpecificationValue: React.FC<SpecificationValueProps> = ({ 
-  value, 
-  status, 
-  affiliateUrl,
-  theme = 'left'
-}) => {
-  const themeClass = theme === 'left' ? 'hover:text-sky-600' : 'hover:text-amber-600';
+const SpecificationValue: React.FC<SpecificationValueProps> = ({ value, comparison }) => {
+  // Function to determine the CSS class for the value based on comparison
+  const getValueClass = () => {
+    if (comparison === 'better') return 'text-green-600 font-medium';
+    if (comparison === 'worse') return 'text-red-500';
+    return '';
+  };
   
   return (
-    <div className="col-span-2 text-left">
-      <a 
-        href={affiliateUrl} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className={`inline-flex items-center gap-1 ${themeClass} transition-colors group`}
-      >
-        {status === 'better' && <ChevronsUp className="w-4 h-4 text-green-600" />}
-        {status === 'worse' && <ChevronsDown className="w-4 h-4 text-red-600" />}
-        <span className={
-          status === 'better' 
-            ? 'text-green-700 font-medium' 
-            : status === 'worse' 
-              ? 'text-red-600 font-medium' 
-              : ''
-        }>{value}</span>
-        <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />
-      </a>
+    <div className={`col-span-2 ${getValueClass()}`}>
+      {value || 'Not available'}
     </div>
   );
 };

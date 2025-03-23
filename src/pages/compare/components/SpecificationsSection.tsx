@@ -6,6 +6,7 @@ import type { Product } from "@/types/product";
 import type { ComparisonResult } from "../types";
 import { ClipboardList } from "lucide-react";
 import { formatLaptopDisplayTitle } from "../utils/titleFormatter";
+import { SpecificationTitle } from "./specification";
 
 interface SpecificationsSectionProps {
   laptopLeft: Product | null;
@@ -147,12 +148,15 @@ const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({
           </div>
         </div>
         {specRows.map((specRow, index) => (
-          <SpecificationItem 
-            key={index} 
-            section={specRow} 
-            laptopLeftId={laptopLeft?.asin} 
-            laptopRightId={laptopRight?.asin}
-          />
+          <div key={index} className="grid grid-cols-7 p-4 hover:bg-gray-50 transition-colors">
+            <SpecificationTitle title={specRow.title} />
+            <div className="col-span-2">
+              {specRow.leftValue || 'Not available'}
+            </div>
+            <div className="col-span-2">
+              {specRow.rightValue || 'Not available'}
+            </div>
+          </div>
         ))}
       </div>
     </Card>
