@@ -115,7 +115,13 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
               
               <AnalysisSection isLoading={isLoading} error={error} comparisonResult={comparisonResult} laptopLeft={laptopLeft} laptopRight={laptopRight} />
               
-              <SpecificationsSection laptopLeft={laptopLeft} laptopRight={laptopRight} />
+              {comparisonResult && (
+                <SpecificationsSection 
+                  laptopLeft={laptopLeft} 
+                  laptopRight={laptopRight} 
+                  comparisonResult={comparisonResult} 
+                />
+              )}
             </>}
         </div>
       </main>
