@@ -1,14 +1,11 @@
 
 import React from "react";
 import { Card } from "@/components/ui/card";
-import SpecificationItem from "./SpecificationItem";
 import type { Product } from "@/types/product";
 import type { ComparisonResult } from "../types";
 import { ClipboardList } from "lucide-react";
 import { formatLaptopDisplayTitle } from "../utils/titleFormatter";
-import { SpecificationTitle } from "./specification";
-import { SpecificationValue } from "./specification";
-import { calculateBenchmarkScore } from "../utils/benchmarkCalculator";
+import { SpecificationsTable, useSpecifications } from "./specification";
 
 interface SpecificationsSectionProps {
   laptopLeft: Product | null;
@@ -23,201 +20,12 @@ const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({
 }) => {
   if (!laptopLeft || !laptopRight || !comparisonResult) return null;
   
-  const leftSpecs = comparisonResult.specifications?.left;
-  const rightSpecs = comparisonResult.specifications?.right;
+  // Use the hook to get specification rows
+  const specRows = useSpecifications(laptopLeft, laptopRight, comparisonResult);
   
-  // Calculate Wilson Score
-  const formatWilsonScore = (score: number | null | undefined): string => {
-    if (score === null || score === undefined || isNaN(Number(score))) return 'Not available';
-    return `${Number(score).toFixed(2)}/5`;
-  };
-
-  // Calculate Benchmark Score
-  const calculateAndFormatBenchmarkScore = (laptop: Product | null): string => {
-    if (!laptop) return 'Not available';
-    
-    // Use the benchmark calculation utility
-    const benchmarkScore = calculateBenchmarkScore(laptop);
-    if (benchmarkScore === 0) return 'Not available';
-    
-    return `${benchmarkScore}/100`;
-  };
-  
-  // Compare scores for highlighting (where higher is better)
-  const compareScores = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
-    if (a === 'Not available' || b === 'Not available') return 'unknown';
-    
-    const aMatch = a.match(/^(\d+(?:\.\d+)?)/);
-    const bMatch = b.match(/^(\d+(?:\.\d+)?)/);
-    
-    if (aMatch && bMatch) {
-      const aValue = parseFloat(aMatch[1]);
-      const bValue = parseFloat(bMatch[1]);
-      
-      if (aValue > bValue) return 'better';
-      if (aValue < bValue) return 'worse';
-      return 'equal';
-    }
-    
-    return 'unknown';
-  };
-  
-  // Compare scores for highlighting (where lower is better)
-  const compareInverseScores = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
-    if (a === 'Not available' || b === 'Not available') return 'unknown';
-    
-    const aMatch = a.match(/^(\d+(?:\.\d+)?)/);
-    const bMatch = b.match(/^(\d+(?:\.\d+)?)/);
-    
-    if (aMatch && bMatch) {
-      const aValue = parseFloat(aMatch[1]);
-      const bValue = parseFloat(bMatch[1]);
-      
-      if (aValue < bValue) return 'better';  // Lower is better
-      if (aValue > bValue) return 'worse';   // Higher is worse
-      return 'equal';
-    }
-    
-    return 'unknown';
-  };
-
-  // Compare prices (lower is better)
-  const comparePrices = (a: string, b: string): 'better' | 'worse' | 'equal' | 'unknown' => {
-    if (a === 'Not available' || b === 'Not available') return 'unknown';
-    
-    // Extract numeric value from price string (e.g., "$1,299.99")
-    const aMatch = a.match(/[\\$£€]?\s?(\d+(?:,\d+)*(?:\.\d+)?)/);
-    const bMatch = b.match(/[\\$£€]?\s?(\d+(?:,\d+)*(?:\.\d+)?)/);
-    
-    if (aMatch && bMatch) {
-      const aValue = parseFloat(aMatch[1].replace(/,/g, ''));
-      const bValue = parseFloat(bMatch[1].replace(/,/g, ''));
-      
-      if (aValue < bValue) return 'better';  // Lower price is better
-      if (aValue > bValue) return 'worse';   // Higher price is worse
-      return 'equal';
-    }
-    
-    return 'unknown';
-  };
-  
-  // Create specification rows from the AI-provided specifications
-  const specRows = [
-    { 
-      title: 'Brand', 
-      leftValue: leftSpecs?.brand || 'Not available', 
-      rightValue: rightSpecs?.brand || 'Not available' 
-    },
-    { 
-      title: 'Model', 
-      leftValue: leftSpecs?.model || 'Not available', 
-      rightValue: rightSpecs?.model || 'Not available' 
-    },
-    { 
-      title: 'Price', 
-      leftValue: leftSpecs?.price || 'Not available', 
-      rightValue: rightSpecs?.price || 'Not available',
-      compare: comparePrices
-    },
-    { 
-      title: 'Operating System', 
-      leftValue: leftSpecs?.os || 'Not available', 
-      rightValue: rightSpecs?.os || 'Not available' 
-    },
-    { 
-      title: 'Release Year', 
-      leftValue: leftSpecs?.releaseYear || 'Not available', 
-      rightValue: rightSpecs?.releaseYear || 'Not available',
-      compare: compareScores
-    },
-    { 
-      title: 'Processor', 
-      leftValue: leftSpecs?.processor || 'Not available', 
-      rightValue: rightSpecs?.processor || 'Not available' 
-    },
-    { 
-      title: 'RAM', 
-      leftValue: leftSpecs?.ram || 'Not available', 
-      rightValue: rightSpecs?.ram || 'Not available',
-      compare: compareScores
-    },
-    { 
-      title: 'Storage', 
-      leftValue: leftSpecs?.storage || 'Not available', 
-      rightValue: rightSpecs?.storage || 'Not available',
-      compare: compareScores
-    },
-    { 
-      title: 'Graphics', 
-      leftValue: leftSpecs?.graphics || 'Not available', 
-      rightValue: rightSpecs?.graphics || 'Not available' 
-    },
-    { 
-      title: 'Screen Size', 
-      leftValue: leftSpecs?.screenSize || 'Not available', 
-      rightValue: rightSpecs?.screenSize || 'Not available',
-      compare: compareScores
-    },
-    { 
-      title: 'Screen Resolution', 
-      leftValue: leftSpecs?.screenResolution || 'Not available', 
-      rightValue: rightSpecs?.screenResolution || 'Not available',
-      compare: compareScores
-    },
-    { 
-      title: 'Refresh Rate', 
-      leftValue: leftSpecs?.refreshRate || 'Not available', 
-      rightValue: rightSpecs?.refreshRate || 'Not available',
-      compare: compareScores
-    },
-    { 
-      title: 'Weight', 
-      leftValue: leftSpecs?.weight || 'Not available', 
-      rightValue: rightSpecs?.weight || 'Not available',
-      compare: compareInverseScores
-    },
-    { 
-      title: 'Battery Life', 
-      leftValue: leftSpecs?.batteryLife || 'Not available', 
-      rightValue: rightSpecs?.batteryLife || 'Not available',
-      compare: compareScores
-    },
-    { 
-      title: 'Ports', 
-      leftValue: leftSpecs?.ports || 'Not available', 
-      rightValue: rightSpecs?.ports || 'Not available' 
-    },
-    { 
-      title: 'Rating', 
-      leftValue: leftSpecs?.rating || 'Not available', 
-      rightValue: rightSpecs?.rating || 'Not available',
-      compare: compareScores
-    },
-    { 
-      title: 'Rating Count', 
-      leftValue: leftSpecs?.ratingCount || 'Not available', 
-      rightValue: rightSpecs?.ratingCount || 'Not available',
-      compare: compareScores
-    },
-    { 
-      title: 'Total Reviews', 
-      leftValue: leftSpecs?.totalReviews || 'Not available', 
-      rightValue: rightSpecs?.totalReviews || 'Not available',
-      compare: compareScores
-    },
-    { 
-      title: 'Wilson Score', 
-      leftValue: formatWilsonScore(laptopLeft.wilson_score), 
-      rightValue: formatWilsonScore(laptopRight.wilson_score),
-      compare: compareScores
-    },
-    { 
-      title: 'Benchmark Score', 
-      leftValue: calculateAndFormatBenchmarkScore(laptopLeft), 
-      rightValue: calculateAndFormatBenchmarkScore(laptopRight),
-      compare: compareScores
-    }
-  ];
+  // Format laptop titles for display
+  const leftLaptopTitle = formatLaptopDisplayTitle(laptopLeft);
+  const rightLaptopTitle = formatLaptopDisplayTitle(laptopRight);
   
   return (
     <Card>
@@ -228,30 +36,11 @@ const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({
         </h2>
       </div>
       
-      <div className="divide-y">
-        <div className="grid grid-cols-7 p-4 bg-slate-50 font-medium">
-          <div className="col-span-3 text-left">Specification</div>
-          <div className="col-span-2 text-left text-sky-700">
-            {formatLaptopDisplayTitle(laptopLeft)}
-          </div>
-          <div className="col-span-2 text-left text-amber-700">
-            {formatLaptopDisplayTitle(laptopRight)}
-          </div>
-        </div>
-        {specRows.map((specRow, index) => (
-          <div key={index} className="grid grid-cols-7 p-4 hover:bg-gray-50 transition-colors">
-            <SpecificationTitle title={specRow.title} />
-            <SpecificationValue 
-              value={specRow.leftValue} 
-              comparison={specRow.compare ? specRow.compare(specRow.leftValue, specRow.rightValue) : undefined} 
-            />
-            <SpecificationValue 
-              value={specRow.rightValue} 
-              comparison={specRow.compare ? specRow.compare(specRow.rightValue, specRow.leftValue) : undefined} 
-            />
-          </div>
-        ))}
-      </div>
+      <SpecificationsTable 
+        specRows={specRows} 
+        leftLaptopTitle={leftLaptopTitle} 
+        rightLaptopTitle={rightLaptopTitle} 
+      />
     </Card>
   );
 };
