@@ -29,13 +29,39 @@ serve(async (req) => {
 
     // Extract the request data
     console.log("📦 Extracting request data...");
-    const requestText = await req.text();
-    console.log(`📥 REQUEST DATA LENGTH: ${requestText.length} bytes`);
     
-    if (!requestText || requestText.trim() === '') {
-      console.error("❌ Empty request body received");
+    // Check content length header for early error detection
+    const contentLength = req.headers.get('content-length');
+    console.log(`📏 Content-Length header: ${contentLength || 'not provided'}`);
+    
+    if (contentLength === '0') {
+      console.error("❌ Content-Length is 0, request body is empty");
       return new Response(
-        JSON.stringify({ error: "Empty request body" }),
+        JSON.stringify({ error: "Empty request body. Content-Length is 0." }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    
+    // Extract request data with additional safeguards
+    let requestText;
+    try {
+      requestText = await req.text();
+      console.log(`📥 REQUEST DATA LENGTH: ${requestText.length} bytes`);
+      
+      if (!requestText || requestText.trim() === '') {
+        console.error("❌ Empty request body received");
+        return new Response(
+          JSON.stringify({ error: "Empty request body. Please ensure you're sending valid JSON data." }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+      
+      // Log a small preview of the received data for debugging
+      console.log(`📄 Request data preview: "${requestText.substring(0, 100)}${requestText.length > 100 ? '...' : ''}"`);
+    } catch (readError) {
+      console.error("❌ Error reading request body:", readError);
+      return new Response(
+        JSON.stringify({ error: `Failed to read request body: ${readError.message}` }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
@@ -58,10 +84,19 @@ serve(async (req) => {
 
     const { prompt, category, asin, asin2, products } = requestData;
 
-    if (!prompt || !category) {
-      console.error("❌ Missing required parameters", { prompt: !!prompt, category: !!category });
+    // Input validation with clear error responses
+    if (!prompt) {
+      console.error("❌ Missing prompt parameter");
       return new Response(
-        JSON.stringify({ error: "Prompt and category are required" }),
+        JSON.stringify({ error: "Prompt is required" }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    
+    if (!category) {
+      console.error("❌ Missing category parameter");
+      return new Response(
+        JSON.stringify({ error: "Category is required" }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }

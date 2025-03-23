@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { extractSearchParamsFromPrompt } from '@/services/blog/amazonProductService';
@@ -27,6 +28,15 @@ export const usePostAI = (
       toast({
         title: "Prompt required",
         description: "Please enter a prompt to generate content.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!selectedCategory) {
+      toast({
+        title: "Category required",
+        description: "Please select a content category.",
         variant: "destructive",
       });
       return;

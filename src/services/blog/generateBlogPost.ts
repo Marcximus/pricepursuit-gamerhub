@@ -79,20 +79,30 @@ export async function generateBlogPost(
     console.log('🧠 Calling generate-blog-post edge function...');
     
     try {
-      // Create a request payload and validate it's valid JSON
+      // Validate inputs - ensure we're not sending empty data
+      if (!prompt || prompt.trim() === '') {
+        throw new Error('Prompt cannot be empty');
+      }
+      
+      if (!category || category.trim() === '') {
+        throw new Error('Category cannot be empty');
+      }
+      
+      // Create a request payload and stringify it properly
       const requestPayload = {
         prompt,
         category,
-        asin,
-        asin2,
-        products: category === 'Top10' ? products : undefined
+        asin: asin || null,
+        asin2: asin2 || null,
+        products: category === 'Top10' ? products : []
       };
       
-      // Log payload size to help diagnose potential issues
-      const payloadSize = JSON.stringify(requestPayload).length;
-      console.log(`📦 Request payload size: ${payloadSize} bytes`);
+      // Let's add detailed debugging to track the request
+      const payloadJson = JSON.stringify(requestPayload);
+      console.log(`📤 Request payload: ${payloadJson.substring(0, 200)}...`);
+      console.log(`📦 Request payload size: ${payloadJson.length} bytes`);
       
-      if (payloadSize > 5000000) { // 5MB limit for Supabase functions
+      if (payloadJson.length > 5000000) { // 5MB limit for Supabase functions
         console.warn('⚠️ Request payload exceeds 5MB, may cause issues with edge function');
         toast({
           title: 'Large Request Warning',
@@ -101,9 +111,14 @@ export async function generateBlogPost(
         });
       }
       
+      if (payloadJson.length === 0) {
+        console.error('❌ ERROR: Request payload is empty!');
+        throw new Error('Failed to create request payload');
+      }
+      
+      // Explicitly set content-type and use the stringified JSON in the body
       const response = await supabase.functions.invoke('generate-blog-post', {
         body: requestPayload,
-        // Add a longer timeout for the function call - this is important!
         headers: {
           'Content-Type': 'application/json',
         }
