@@ -1,5 +1,6 @@
 
-# Config file for the generate-blog-post edge function
-# This file is used to configure the edge function
 project_id = "kkebyebrhdpcwqnxhjcx"
-import_map = "../import_map.json"
+cpu_throttle = 900
+memory_throttle = 1024
+timeout_ms = 30000  # Increased from default to handle large requests
+verify_jwt = false

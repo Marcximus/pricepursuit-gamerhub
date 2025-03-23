@@ -62,6 +62,9 @@ export async function extractRequestData(req: Request) {
       // For unknown content types, try to parse as JSON
       try {
         const text = await req.text();
+        console.log(`📥 Raw request body (first 200 chars): ${text.substring(0, 200)}...`);
+        console.log(`📥 Raw request body length: ${text.length} bytes`);
+        
         if (text.trim().startsWith('{') && text.trim().endsWith('}')) {
           return JSON.parse(text);
         }

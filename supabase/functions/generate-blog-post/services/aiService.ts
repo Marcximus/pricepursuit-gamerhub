@@ -62,7 +62,7 @@ export async function generateContentWithDeepSeek(
     
     // Make the request to DeepSeek API with proper headers and timeout
     let controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout (increased from 60s)
     
     try {
       // Make the request to DeepSeek API with proper headers
@@ -117,7 +117,7 @@ export async function generateContentWithDeepSeek(
       return generatedContent;
     } catch (fetchError) {
       if (fetchError.name === 'AbortError') {
-        console.error("❌ DeepSeek API request timed out after 60 seconds");
+        console.error("❌ DeepSeek API request timed out after 120 seconds");
         throw new Error("Request to DeepSeek API timed out. Please try again later.");
       }
       throw fetchError;

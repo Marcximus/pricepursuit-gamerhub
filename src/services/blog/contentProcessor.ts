@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { GeneratedBlogContent } from './types';
@@ -26,8 +27,8 @@ export async function callGenerateBlogEdgeFunction(
     console.log(`📦 Request payload size: ${payloadJson.length} bytes`);
     
     // Check for potentially problematic payload sizes
-    if (payloadJson.length > 5000000) { // 5MB limit for Supabase functions
-      console.warn('⚠️ Request payload exceeds 5MB, reducing product data');
+    if (payloadJson.length > 1000000) { // 1MB limit to be safe
+      console.warn('⚠️ Request payload exceeds 1MB, reducing product data');
       
       // If we have products, trim them down to essential data only
       if (requestPayload.products && Array.isArray(requestPayload.products)) {
@@ -36,7 +37,7 @@ export async function callGenerateBlogEdgeFunction(
         // Keep only essential fields for each product to reduce payload size
         requestPayload.products = requestPayload.products.map((product: any) => ({
           asin: product.asin,
-          title: product.title,
+          title: product.title?.substring(0, 100), // Limit title length
           brand: product.brand,
           price: product.price,
           rating: product.rating,
@@ -44,14 +45,15 @@ export async function callGenerateBlogEdgeFunction(
           image_url: product.image_url || product.image
         }));
         
+        // Limit to 10 products maximum
+        if (requestPayload.products.length > 10) {
+          console.warn(`⚠️ Limiting products to 10 maximum`);
+          requestPayload.products = requestPayload.products.slice(0, 10);
+        }
+        
         // Recreate the payload
         const trimmedPayload = JSON.stringify(requestPayload);
         console.log(`📦 Trimmed payload size: ${trimmedPayload.length} bytes`);
-        
-        if (trimmedPayload.length > 5000000) {
-          console.warn('⚠️ Payload still too large, reducing to 10 products maximum');
-          requestPayload.products = requestPayload.products.slice(0, 10);
-        }
       }
       
       toast({

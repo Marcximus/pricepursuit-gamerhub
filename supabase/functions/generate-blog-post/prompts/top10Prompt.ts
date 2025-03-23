@@ -4,41 +4,23 @@
  */
 export function getTop10Prompt(amazonProducts: any[] | null): string {
   let top10SystemPrompt = `
-You are a slightly funny, techy, entertaining blog writer specializing in laptops and laptop recommendations. Create engaging, SEO-optimized content that follows these guidelines:
+You are a friendly, tech-savvy blog writer creating content about laptops. Create an SEO-optimized Top 10 list that follows these guidelines:
 
 1. Title and Introduction:
-   - Format title using proper HTML: <h1>Your Title Here</h1>
-   - Write a compelling introduction (100-200 words) that explains why these laptops are the best
-   - Split the introduction into 2 paragraphs wrapped in <p> tags
+   - Use properly formatted H1 title
+   - Include a brief, engaging introduction (100-150 words)
 
-2. Product Sections:
-   - Generate EXACTLY 10 laptop recommendations based on the data provided. No more, no less.
-   - Each section should be separated by: <hr class="my-8">
-   - Format laptop titles as: <h3>[LAPTOP NAME]</h3>
+2. Product Listings:
+   - List EXACTLY 10 laptops with their key features
+   - Use H3 tags for each laptop name
+   - Separate each laptop with an <hr> tag
+   - Each laptop should have 2-3 bullet points highlighting key advantages
+   - Format bullets using <ul class="my-4"> and <li>✅ [Feature]</li> tags
 
-3. Content Structure:
-   - Write 2-3 paragraphs (150-250 words total) for each laptop
-   - Include 2-3 key features for each laptop as a bulleted list
+3. Include this after each laptop title:
+   <div class="product-placeholder" data-asin="PRODUCT_ASIN_HERE" data-index="PRODUCT_INDEX_HERE"></div>
 
-4. Features Format:
-   - Format features as:
-     <ul class="my-4">
-       <li>✅ [Key Feature 1]</li>
-       <li>✅ [Key Feature 2]</li>
-       <li>✅ [Key Feature 3]</li>
-     </ul>
-
-5. Product Image Placement:
-   - After each product title, include a product placeholder for image insertion
-   - Insert a "View Now" button placeholder
-
-6. Conclusion:
-   - End with a conclusion paragraph (100-200 words)
-
-7. HTML Requirements:
-   - Always close all HTML tags properly
-   - Use <p>...</p> tags for paragraphs, <h3>...</h3> for headings, etc.
-   - For each product, add: <div class="product-placeholder" data-asin="PRODUCT_ASIN_HERE" data-index="PRODUCT_INDEX_HERE"></div>
+4. End with a brief conclusion paragraph
 `;
 
   // If we have product data, include a simplified version in the prompt
@@ -47,26 +29,17 @@ You are a slightly funny, techy, entertaining blog writer specializing in laptop
 PRODUCT DATA:
 You have access to information about ${amazonProducts.length} products. Select the BEST 10 based on specifications, ratings, and value.
 
-Basic product information (sample):
+Use these ASINs for the product placeholders:
 `;
 
-    // Add only essential information about the first 3 products as examples
-    const sampleSize = Math.min(3, amazonProducts.length);
+    // Add just the ASINs and titles for the first 10 products
+    const sampleSize = Math.min(10, amazonProducts.length);
     for (let i = 0; i < sampleSize; i++) {
       const product = amazonProducts[i];
       top10SystemPrompt += `
-PRODUCT ${i + 1}: ${product.title || 'Unknown Product'}
-- Brand: ${product.brand || 'Unknown'}
-- ASIN: ${product.asin || 'N/A'}
+PRODUCT ${i + 1}: ${product.title?.substring(0, 50) || 'Unknown Product'} (ASIN: ${product.asin || 'N/A'})
 `;
     }
-    
-    top10SystemPrompt += `
-And ${amazonProducts.length - sampleSize} more products...
-
-For each product in your top 10 list, include a placeholder like this:
-<div class="product-placeholder" data-asin="PRODUCT_ASIN_HERE" data-index="PRODUCT_INDEX_HERE"></div>
-`;
   }
 
   return top10SystemPrompt;
