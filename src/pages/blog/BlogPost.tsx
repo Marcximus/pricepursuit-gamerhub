@@ -1,10 +1,10 @@
 
 import { useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { useBlog } from '@/contexts/blog';
 import Navigation from '@/components/Navigation';
-import { Button } from '@/components/ui/button';
 import { BlogSEO } from '@/components/blog/BlogSEO';
+import BlogNotFound from './BlogNotFound';
 import { 
   BlogPostHeader, 
   BlogPostContent, 
@@ -17,7 +17,6 @@ import {
 const BlogPost = () => {
   const { category, slug } = useParams<{ category: string; slug: string }>();
   const { getPostBySlug } = useBlog();
-  const navigate = useNavigate();
   const location = useLocation();
   
   const post = category && slug ? getPostBySlug(slug, category) : undefined;
@@ -48,16 +47,7 @@ const BlogPost = () => {
   }
 
   if (!post) {
-    return (
-      <div className="min-h-screen">
-        <Navigation />
-        <div className="pt-20 container mx-auto px-4 mt-10 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Post Not Found</h1>
-          <p className="text-gray-600 mb-8">The blog post you're looking for doesn't exist or has been removed.</p>
-          <Button onClick={() => navigate('/blog')}>Back to Blog</Button>
-        </div>
-      </div>
-    );
+    return <BlogNotFound />;
   }
 
   // Process content
