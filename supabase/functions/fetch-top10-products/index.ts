@@ -1,7 +1,8 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+// Use newer Deno standard library and a specific version of supabase-js that doesn't have the dependency issue
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.21.0";
+import { Deno } from "https://deno.land/std@0.177.0/lib/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,9 +35,21 @@ serve(async (req) => {
     // Extract the request data
     console.log("📦 Extracting request data...");
     const requestText = await req.text();
-    console.log(`📥 REQUEST DATA: ${requestText}`);
+    console.log(`📥 REQUEST DATA LENGTH: ${requestText.length} characters`);
     
-    const requestJson = JSON.parse(requestText);
+    if (requestText.length === 0) {
+      throw new Error("Empty request body");
+    }
+    
+    let requestJson;
+    try {
+      requestJson = JSON.parse(requestText);
+    } catch (parseError) {
+      console.error("❌ Error parsing request JSON:", parseError);
+      console.error("❌ REQUEST TEXT SAMPLE:", requestText.substring(0, 500));
+      throw new Error("Invalid JSON in request body");
+    }
+    
     const { searchParams, count = 10 } = requestJson;
     
     console.log(`🔍 Request parameters: count=${count}, searchParams:`, JSON.stringify(searchParams).substring(0, 200));
@@ -109,18 +122,23 @@ serve(async (req) => {
 
       // Execute the query
       console.log(`🔍 Executing database query for parameter set #${index + 1}`);
-      console.log(`📤 QUERY: ${JSON.stringify(query)}`);
       
       const { data, error } = await query;
       
       if (error) {
         console.error(`❌ Error querying database for set #${index + 1}:`, error);
+        console.error(`❌ FULL ERROR:`, JSON.stringify(error));
         continue;
       }
       
       if (data && data.length > 0) {
         console.log(`✅ Found ${data.length} products for parameter set #${index + 1}`);
-        console.log(`📥 QUERY RESULTS: ${JSON.stringify(data.slice(0, 2)).substring(0, 500)}...`);
+        console.log(`📥 QUERY RESULTS SAMPLE:`, JSON.stringify(data[0] ? {
+          title: data[0].title,
+          asin: data[0].asin,
+          price: data[0].current_price,
+          brand: data[0].brand
+        } : {}, null, 2));
         results.push(...data);
       } else {
         console.warn(`⚠️ No products found for parameter set #${index + 1}`);
@@ -211,7 +229,11 @@ serve(async (req) => {
     console.log(`📏 HTML content sample length: ${formattedProducts[0]?.htmlContent.length || 0} characters`);
     
     const finalResponse = { products: formattedProducts };
-    console.log(`📤 FINAL RESPONSE PREVIEW: ${JSON.stringify(finalResponse).substring(0, 500)}...`);
+    console.log(`📤 FINAL RESPONSE PREVIEW: ${JSON.stringify({
+      productCount: formattedProducts.length,
+      firstProductTitle: formattedProducts[0]?.title.substring(0, 50) + '...',
+      firstProductSpecs: formattedProducts[0]?.specs
+    }, null, 2)}`);
     console.log(`🏁 fetch-top10-products function completed successfully`);
     
     return new Response(
@@ -223,8 +245,25 @@ serve(async (req) => {
     console.error(`⚠️ Error message: ${error.message || 'Unknown error'}`);
     console.error(`⚠️ Error stack: ${error.stack || 'No stack trace available'}`);
     
+    // Log memory usage
+    try {
+      const memoryUsage = Deno.memoryUsage();
+      console.error('⚠️ Memory usage:', {
+        rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
+        heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
+        heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
+        external: `${Math.round(memoryUsage.external / 1024 / 1024)}MB`
+      });
+    } catch (memError) {
+      console.error('⚠️ Could not log memory usage:', memError);
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message || 'An unexpected error occurred' }),
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred',
+        timestamp: new Date().toISOString(),
+        success: false
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
