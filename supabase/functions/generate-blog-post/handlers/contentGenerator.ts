@@ -5,7 +5,11 @@
 import { getSystemPrompt } from "../promptManager.ts";
 import { parseGeneratedContent } from "../parsers/index.ts";
 import { generateContentWithDeepSeek } from "../services/aiService.ts";
-import { enhanceReviewContent, enhanceComparisonContent, enhanceTop10Content } from "../services/contentEnhancer.ts";
+import { 
+  enhanceReviewContent, 
+  enhanceComparisonContent, 
+  enhanceTop10Content 
+} from "../services/enhancers/index.ts";
 
 /**
  * Generates and processes blog content
