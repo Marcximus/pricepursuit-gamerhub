@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { GeneratedBlogContent, SearchParam } from './types';
-import { processTop10Content } from './processTop10Content';
+import { processTop10Content } from './top10';
 import { extractSearchParamsFromPrompt, fetchAmazonProducts } from './amazonProductService';
 
 export async function generateBlogPost(
@@ -64,67 +64,82 @@ export async function generateBlogPost(
       }
     }
 
-    // Now call the Supabase function to generate the blog post
+    // Now call the Supabase function to generate the blog post with explicit timeout
     console.log('🧠 Calling generate-blog-post edge function...');
-    const response = await supabase.functions.invoke('generate-blog-post', {
-      body: {
-        prompt,
-        category,
-        asin,
-        asin2,
-        products: category === 'Top10' ? products : undefined // Pass the products to the edge function
-      },
-    });
-
-    if (response.error) {
-      console.error('❌ Error generating blog post:', response.error);
-      throw new Error(response.error.message || 'Failed to generate blog post');
-    }
-
-    // Check if response.data exists and is valid
-    if (!response.data) {
-      console.error('❌ Empty response data from edge function');
-      throw new Error('Empty response from edge function');
-    }
-
-    console.log('✅ Blog post generated successfully');
-    console.log('🔄 Processing generated content...');
-    console.log('📦 Response data type:', typeof response.data);
     
-    let data: GeneratedBlogContent;
-    
-    // Handle parsing for both string and object response formats
-    if (typeof response.data === 'string') {
-      try {
-        // Try to parse as JSON if it's a string
-        console.log('🔍 Trying to parse string response as JSON');
-        data = JSON.parse(response.data);
-      } catch (parseError) {
-        console.error('❌ JSON parse error:', parseError);
-        console.error('📄 Raw response data preview:', response.data.substring(0, 200) + '...');
-        
-        // Create a basic structure with error information
-        data = {
-          title: `New ${category} Post`,
-          content: `Error parsing AI content: ${parseError.message}\n\nOriginal content:\n${response.data}`,
-          excerpt: "There was an error generating this post's content.",
+    try {
+      const response = await supabase.functions.invoke('generate-blog-post', {
+        body: {
+          prompt,
           category,
-          tags: ['error']
-        };
+          asin,
+          asin2,
+          products: category === 'Top10' ? products : undefined // Pass the products to the edge function
+        },
+        // Add a longer timeout for the function call - this is important!
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.error) {
+        console.error('❌ Error generating blog post:', response.error);
+        throw new Error(response.error.message || 'Failed to generate blog post');
       }
-    } else {
-      // If it's already an object, use it directly
-      console.log('🔍 Response is already an object, using directly');
-      data = response.data as GeneratedBlogContent;
-    }
 
-    // For Top 10 posts, process product data placeholders
-    if (category === 'Top10' && data && data.content) {
-      console.log('🔄 Processing Top10 content with product data...');
-      data.content = await processTop10Content(data.content, prompt);
-    }
+      // Check if response.data exists and is valid
+      if (!response.data) {
+        console.error('❌ Empty response data from edge function');
+        throw new Error('Empty response from edge function');
+      }
 
-    return data;
+      console.log('✅ Blog post generated successfully');
+      console.log('🔄 Processing generated content...');
+      console.log('📦 Response data type:', typeof response.data);
+      
+      let data: GeneratedBlogContent;
+      
+      // Handle parsing for both string and object response formats
+      if (typeof response.data === 'string') {
+        try {
+          // Try to parse as JSON if it's a string
+          console.log('🔍 Trying to parse string response as JSON');
+          data = JSON.parse(response.data);
+        } catch (parseError) {
+          console.error('❌ JSON parse error:', parseError);
+          console.error('📄 Raw response data preview:', response.data.substring(0, 200) + '...');
+          
+          // Create a basic structure with error information
+          data = {
+            title: `New ${category} Post`,
+            content: `Error parsing AI content: ${parseError.message}\n\nOriginal content:\n${response.data}`,
+            excerpt: "There was an error generating this post's content.",
+            category,
+            tags: ['error']
+          };
+        }
+      } else {
+        // If it's already an object, use it directly
+        console.log('🔍 Response is already an object, using directly');
+        data = response.data as GeneratedBlogContent;
+      }
+
+      // For Top 10 posts, process product data placeholders
+      if (category === 'Top10' && data && data.content) {
+        console.log('🔄 Processing Top10 content with product data...');
+        data.content = await processTop10Content(data.content, prompt);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('💥 Error in Supabase function invoke:', error);
+      toast({
+        title: 'Edge Function Error',
+        description: 'The blog generation service is currently unavailable. Please try again later.',
+        variant: 'destructive',
+      });
+      throw error; // Re-throw to be caught by the outer try/catch
+    }
   } catch (error) {
     console.error('💥 Error in generateBlogPost:', error);
     toast({

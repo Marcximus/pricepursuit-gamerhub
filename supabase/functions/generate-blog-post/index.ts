@@ -14,7 +14,7 @@ const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
 serve(async (req) => {
   console.log("🚀 generate-blog-post function started!");
   
-  // Handle CORS preflight request
+  // Handle CORS preflight request - THIS IS CRITICAL
   if (req.method === 'OPTIONS') {
     console.log("⚙️ Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
@@ -35,7 +35,7 @@ serve(async (req) => {
     let requestData;
     try {
       requestData = JSON.parse(requestText);
-      console.log(`📝 User prompt: "${requestData.prompt.substring(0, 50)}${requestData.prompt.length > 50 ? '...' : ''}"`);
+      console.log(`📝 User prompt: "${requestData.prompt?.substring(0, 50)}${requestData.prompt?.length > 50 ? '...' : ''}"`);
       console.log(`🏷️ Selected category: ${requestData.category}`);
       console.log(`🔍 ASIN1: ${requestData.asin || 'None provided'}`);
       console.log(`🔍 ASIN2: ${requestData.asin2 || 'None provided'}`);
