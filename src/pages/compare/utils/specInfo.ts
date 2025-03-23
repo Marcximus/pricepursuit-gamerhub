@@ -102,6 +102,7 @@ export const getSpecInfo = (title: string) => {
         tooltip: "Available connection ports such as USB, HDMI, Thunderbolt, etc. More variety and quantity typically offer better connectivity options."
       };
     case "os":
+    case "operating system":
       return {
         emoji: "💻",
         tooltip: "Operating system that comes pre-installed on the laptop."

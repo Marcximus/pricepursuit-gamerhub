@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { SpecificationTitle } from './SpecificationTitle';
-import { SpecificationValue } from './SpecificationValue';
+import SpecificationTitle from './SpecificationTitle';
+import SpecificationValue from './SpecificationValue';
 
 interface SpecRow {
   title: string;
