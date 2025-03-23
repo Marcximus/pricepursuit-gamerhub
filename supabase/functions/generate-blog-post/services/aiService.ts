@@ -12,6 +12,12 @@ export async function generateContentWithDeepSeek(
     console.log(`🔄 Preparing DeepSeek API request...`);
     console.log(`📝 System prompt length: ${systemPrompt.length} characters`);
     console.log(`📝 User prompt length: ${userPrompt.length} characters`);
+    console.log(`🔑 API key validation: ${apiKey ? 'Key provided ✓' : 'Missing key ✗'}`);
+    
+    if (!apiKey) {
+      console.error('❌ MISSING API KEY: DeepSeek API key is not set or invalid');
+      throw new Error('DeepSeek API key is missing or invalid');
+    }
     
     const payload = {
       model: "deepseek-chat",
@@ -26,10 +32,8 @@ export async function generateContentWithDeepSeek(
         }
       ],
       temperature: 0.7,
-      // Removing max_tokens limit to allow for full response
       top_p: 1,
       stream: false,
-      // Added a stop sequence to ensure we don't get any unexpected format tokens
       stop: ["```json", "```JSON"]
     };
     
@@ -58,14 +62,30 @@ export async function generateContentWithDeepSeek(
     
     // Check for non-200 response
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ DeepSeek API error: ${response.status} ${response.statusText}`);
-      console.error(`❌ Error details: ${errorText}`);
-      throw new Error(`DeepSeek API error: ${response.status} ${response.statusText}. Details: ${errorText}`);
+      let errorDetails = '';
+      try {
+        const errorText = await response.text();
+        errorDetails = errorText;
+        console.error(`❌ DeepSeek API error: ${response.status} ${response.statusText}`);
+        console.error(`❌ Error details: ${errorText}`);
+      } catch (readError) {
+        errorDetails = 'Could not read error response';
+        console.error(`❌ Failed to read error response: ${readError}`);
+      }
+      
+      throw new Error(`DeepSeek API error: ${response.status} ${response.statusText}. Details: ${errorDetails}`);
     }
     
     // Parse the response as JSON
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error(`❌ Error parsing API response as JSON: ${jsonError}`);
+      const rawText = await response.text();
+      console.error(`❌ Raw response: ${rawText.substring(0, 500)}...`);
+      throw new Error(`Failed to parse DeepSeek API response: ${jsonError.message}`);
+    }
     
     // Log a preview of the response
     if (data.choices && data.choices[0] && data.choices[0].message) {

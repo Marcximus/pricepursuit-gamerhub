@@ -3,3 +3,7 @@
 # This file is used to configure the edge function
 project_id = "kkebyebrhdpcwqnxhjcx"
 import_map = "../import_map.json"
+
+# Increase the timeout for this function to handle larger requests
+timeout_seconds = 60
+

@@ -1,22 +1,62 @@
 
 /**
- * Utility functions for Top10 content processing
+ * Utility functions for Top10 blog post processing
  */
 import { toast } from '@/components/ui/use-toast';
 
-// HTML escape function to prevent XSS
-export function escapeHtml(unsafe: string | number | undefined): string {
-  if (unsafe === undefined || unsafe === null) return '';
-  const str = String(unsafe);
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+/**
+ * Format a product price with a dollar sign and proper formatting
+ */
+export function formatPrice(price: string | number | undefined): string {
+  if (price === undefined || price === null || price === '') {
+    return '$';
+  }
+  
+  // Handle string prices
+  if (typeof price === 'string') {
+    // If string already has a dollar sign, return it
+    if (price.includes('$')) {
+      return price;
+    }
+    // Try to convert to a number
+    const numPrice = parseFloat(price);
+    if (isNaN(numPrice)) {
+      return '$';
+    }
+    return `$${numPrice.toFixed(2)}`;
+  }
+  
+  // Handle numeric prices
+  if (typeof price === 'number') {
+    return `$${price.toFixed(2)}`;
+  }
+  
+  // Handle objects that might have a value property
+  if (typeof price === 'object' && price !== null) {
+    if ('value' in price && typeof price.value !== 'undefined') {
+      return formatPrice(price.value);
+    }
+    if ('current' in price && typeof price.current !== 'undefined') {
+      return formatPrice(price.current);
+    }
+  }
+  
+  return '$';
 }
 
-// Show error toast with consistent formatting
+/**
+ * Format an Amazon product URL with affiliate tag
+ */
+export function formatAmazonUrl(asin: string): string {
+  if (!asin) {
+    return 'https://amazon.com?tag=with-laptop-discount-20';
+  }
+  return `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
+}
+
+/**
+ * Show an error toast message
+ */
 export function showErrorToast(title: string, message: string): void {
   toast({
     title,
@@ -25,90 +65,86 @@ export function showErrorToast(title: string, message: string): void {
   });
 }
 
-// Extract model name from a laptop title
-export function extractModelName(title: string): string {
-  if (!title) return '';
-  
-  // Common patterns for model numbers
-  const patterns = [
-    /\b(Legion|IdeaPad|ThinkPad|Yoga|ThinkBook)\s+([A-Za-z0-9]+(?:[-\s][A-Za-z0-9]+)*)/i,
-    /\b[A-Z][0-9]{1,2}(?:[-\s][A-Za-z0-9]+)*/i,
-    /\b(?:Model|Gaming)\s+([A-Za-z0-9]+(?:[-\s][A-Za-z0-9]+)*)/i
-  ];
-  
-  for (const pattern of patterns) {
-    const match = title.match(pattern);
-    if (match) {
-      return match[0].trim();
-    }
-  }
-  
-  return '';
-}
-
-// Format price with currency symbol if necessary
-export function formatPrice(price: any): string {
-  if (!price) return 'Price not available';
-  
-  // Handle different price formats
-  if (typeof price === 'number') {
-    return `$${price.toFixed(2)}`;
-  } else if (typeof price === 'string') {
-    return price.includes('$') ? price : `$${price}`;
-  } else if (typeof price === 'object' && price.value) {
-    const value = parseFloat(price.value);
-    return isNaN(value) ? 'Price not available' : `$${value.toFixed(2)}`;
-  }
-  
-  return 'Price not available';
-}
-
-// Generate stars for ratings
+/**
+ * Generate star rating HTML string
+ */
 export function generateStars(rating: number | string | undefined): string {
-  if (rating === undefined || rating === null) return '';
+  if (!rating) {
+    return '★★★★★';
+  }
   
-  const numericRating = typeof rating === 'string' ? parseFloat(rating) : rating;
-  if (isNaN(numericRating)) return '';
+  const numRating = typeof rating === 'string' ? parseFloat(rating) : rating;
+  if (isNaN(numRating)) {
+    return '★★★★★';
+  }
   
-  const fullStars = Math.floor(numericRating);
-  const halfStar = numericRating % 1 >= 0.5 ? 1 : 0;
-  const emptyStars = 5 - fullStars - halfStar;
+  const fullStars = Math.floor(numRating);
+  const halfStar = numRating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
   
-  return '⭐'.repeat(fullStars) + (halfStar ? '½' : '') + '☆'.repeat(emptyStars);
+  return '★'.repeat(fullStars) + (halfStar ? '½' : '') + '☆'.repeat(emptyStars);
 }
 
-// Format an Amazon product URL with affiliate tag
-export function formatAmazonUrl(asin: string | undefined): string {
-  if (!asin) return '#';
-  return `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
+/**
+ * Generate HTML for star ratings with review count
+ */
+export function generateStarsHtml(rating: number | string | undefined, reviewCount: number | string | undefined): string {
+  const numRating = typeof rating === 'string' ? parseFloat(rating) : (typeof rating === 'number' ? rating : 0);
+  const numReviews = typeof reviewCount === 'string' ? parseInt(reviewCount, 10) : (typeof reviewCount === 'number' ? reviewCount : 0);
+  
+  if (isNaN(numRating) || numRating === 0) {
+    return '<div class="flex items-center mb-2"><span class="text-gray-600">No ratings</span></div>';
+  }
+  
+  // Generate the filled and empty stars
+  const totalStars = 5;
+  const filledStars = Math.floor(numRating);
+  const hasHalfStar = numRating % 1 >= 0.5;
+  const emptyStars = totalStars - filledStars - (hasHalfStar ? 1 : 0);
+  
+  // Create the HTML
+  let starsHtml = '<div class="flex items-center mb-2">';
+  starsHtml += '<div class="flex mr-1">';
+  
+  // Add filled stars
+  for (let i = 0; i < filledStars; i++) {
+    starsHtml += '<svg class="w-4 h-4 text-yellow-500 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>';
+  }
+  
+  // Add half star if needed
+  if (hasHalfStar) {
+    starsHtml += '<svg class="w-4 h-4 text-yellow-500 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="url(#half-star)"></path><defs><linearGradient id="half-star" x1="0" x2="100%" y1="0" y2="0"><stop offset="50%" stop-color="currentColor"></stop><stop offset="50%" stop-color="transparent" stop-opacity="1"></stop></linearGradient></defs></svg>';
+  }
+  
+  // Add empty stars
+  for (let i = 0; i < emptyStars; i++) {
+    starsHtml += '<svg class="w-4 h-4 text-gray-300 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>';
+  }
+  
+  starsHtml += '</div>';
+  
+  // Add the rating text
+  starsHtml += `<span class="text-gray-600 text-sm">${numRating.toFixed(1)} out of 5`;
+  
+  // Add review count if available
+  if (numReviews > 0) {
+    starsHtml += ` (${numReviews.toLocaleString()} reviews)`;
+  }
+  
+  starsHtml += '</span></div>';
+  
+  return starsHtml;
 }
 
-// Generate HTML for stars display based on rating
-export function generateStarsHtml(rating: number | string | undefined, totalReviews?: number): string {
-  if (rating === undefined || rating === null) return '';
-  
-  const numericRating = typeof rating === 'string' ? parseFloat(rating) : rating;
-  if (isNaN(numericRating)) return '';
-  
-  const reviewCount = totalReviews ? ` (${totalReviews.toLocaleString()})` : '';
-  
-  return `<div class="flex items-center text-amber-500 mb-3">
-    <span class="text-lg font-medium mr-1">${numericRating.toFixed(1)}</span>
-    <div class="flex">
-      ${'⭐'.repeat(Math.floor(numericRating))}
-      ${numericRating % 1 >= 0.5 ? '⭐' : ''}
-    </div>
-    <span class="text-gray-500 ml-1">${reviewCount}</span>
-  </div>`;
-}
-
-// Generate affiliate button HTML
-export function generateAffiliateButtonHtml(asin: string | undefined, buttonText: string = 'View on Amazon'): string {
-  if (!asin) return '';
-  
-  const url = formatAmazonUrl(asin);
-  
-  return `<a href="${url}" target="_blank" rel="nofollow noopener" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors">
-    ${buttonText}
-  </a>`;
+/**
+ * Generate HTML for the Amazon affiliate button
+ */
+export function generateAffiliateButtonHtml(asin: string): string {
+  return `
+    <a href="${formatAmazonUrl(asin)}" 
+       class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors" 
+       target="_blank" rel="nofollow noopener">
+      Check Price on Amazon
+    </a>
+  `;
 }
