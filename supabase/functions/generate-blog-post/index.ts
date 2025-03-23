@@ -40,6 +40,11 @@ serve(async (req) => {
     const contentLength = req.headers.get('content-length');
     if (contentLength === '0' || contentLength === null) {
       console.error("❌ Content-Length is 0 or missing, potential empty request");
+      // Add detailed debugging
+      console.log("📝 All request headers:");
+      for (const [key, value] of req.headers.entries()) {
+        console.log(`  ${key}: ${value}`);
+      }
       throw new Error("Empty request body received. Please check your request.");
     }
     

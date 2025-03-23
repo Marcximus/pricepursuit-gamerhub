@@ -40,12 +40,22 @@ export async function callGenerateBlogEdgeFunction(
       throw new Error('Failed to create request payload');
     }
     
-    // Call the edge function
+    // Here's the crucial part - Ensure we're explicitly setting content-type and sending JSON
+    console.log('📤 Calling Supabase Edge Function with payload size:', payloadJson.length);
+    
+    // Call the edge function with improved options
     const response = await supabase.functions.invoke('generate-blog-post', {
       body: requestPayload,
       headers: {
         'Content-Type': 'application/json',
-      }
+      },
+      method: 'POST'
+    });
+
+    console.log('📥 Edge function response received:', {
+      status: response.error ? 'error' : 'success',
+      dataSize: response.data ? JSON.stringify(response.data).length : 0,
+      error: response.error
     });
 
     if (response.error) {

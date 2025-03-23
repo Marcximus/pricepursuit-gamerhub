@@ -1,3 +1,4 @@
+
 /**
  * Request handler for blog post generation
  */
@@ -18,6 +19,22 @@ export async function extractRequestData(req: Request) {
     // Log request details for debugging
     console.log(`📄 Request content-type: ${contentType}`);
     console.log(`📄 Request method: ${req.method}`);
+    
+    // Enhanced HTTP headers logging
+    console.log("📝 All request headers:");
+    for (const [key, value] of req.headers.entries()) {
+      console.log(`  ${key}: ${value}`);
+    }
+    
+    // Check content-length specifically
+    const contentLength = req.headers.get('content-length');
+    console.log(`📏 Content-Length header: ${contentLength || 'not present'}`);
+    
+    if (contentLength === '0' || contentLength === null) {
+      console.error("❌ Content-Length is 0 or missing - THIS IS THE PROBLEM");
+      console.error("❌ The client is likely not sending a proper request body");
+      throw new Error("Empty request body received. Please check client code is sending a proper POST with body.");
+    }
     
     // Try to clone the request to preserve the original for multiple read attempts
     const clonedReq = req.clone();
