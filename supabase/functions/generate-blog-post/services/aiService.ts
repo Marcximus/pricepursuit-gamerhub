@@ -1,33 +1,30 @@
 
 /**
- * Service to handle AI content generation using DeepSeek API
+ * Service for generating content with AI
  */
+import { logError } from "../utils/errorHandler.ts";
 
+/**
+ * Generate content using DeepSeek API
+ */
 export async function generateContentWithDeepSeek(
-  systemPrompt: string,
-  userPrompt: string,
+  systemPrompt: string, 
+  userPrompt: string, 
   apiKey: string
-): Promise<string> {
+) {
   try {
-    console.log(`🔄 Preparing DeepSeek API request...`);
+    console.log("🤖 Calling DeepSeek API...");
     console.log(`📝 System prompt length: ${systemPrompt.length} characters`);
     console.log(`📝 User prompt length: ${userPrompt.length} characters`);
     
-    // Validate and truncate prompts if they exceed limits
-    // Increased system prompt limit from 8000 to 128000 characters
-    const maxSystemPromptLength = 128000;
-    const maxUserPromptLength = 8000;
-    
-    if (systemPrompt.length > maxSystemPromptLength) {
-      console.warn(`⚠️ System prompt exceeds ${maxSystemPromptLength} characters, truncating...`);
-      systemPrompt = systemPrompt.substring(0, maxSystemPromptLength);
+    if (!apiKey || apiKey.trim() === '') {
+      throw new Error("Missing DeepSeek API key");
     }
     
-    if (userPrompt.length > maxUserPromptLength) {
-      console.warn(`⚠️ User prompt exceeds ${maxUserPromptLength} characters, truncating...`);
-      userPrompt = userPrompt.substring(0, maxUserPromptLength);
-    }
+    // DeepSeek API endpoint
+    const apiUrl = "https://api.deepseek.com/v1/chat/completions";
     
+    // Prepare the request
     const payload = {
       model: "deepseek-chat",
       messages: [
@@ -41,66 +38,65 @@ export async function generateContentWithDeepSeek(
         }
       ],
       temperature: 0.7,
-      // Removing max_tokens limit to allow for full response
-      top_p: 1,
-      stream: false,
-      // Added a stop sequence to ensure we don't get any unexpected format tokens
-      stop: ["```json", "```JSON"]
+      max_tokens: 4000
     };
     
-    // Convert payload to JSON and log size
-    const jsonPayload = JSON.stringify(payload);
-    console.log(`📤 DEEPSEEK REQUEST PAYLOAD SIZE: ${jsonPayload.length} bytes`);
-    
-    // If the request is very large, log a more detailed preview
-    if (jsonPayload.length > 10000) {
-      console.log(`⚠️ Large payload, showing system prompt preview: ${systemPrompt.substring(0, 200)}...`);
-      console.log(`⚠️ User prompt preview: ${userPrompt.substring(0, 200)}...`);
-    }
-    
-    // Make the API request
-    console.log(`🚀 Sending request to DeepSeek API...`);
-    const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+    // Make the request to DeepSeek API with proper headers
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`
       },
-      body: jsonPayload
+      body: JSON.stringify(payload)
     });
     
-    console.log(`📥 DeepSeek API response status: ${response.status}`);
+    // Log the response status
+    console.log(`🔄 DeepSeek API response status: ${response.status}`);
     
-    // Check for non-200 response
+    // Handle possible error responses
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ DeepSeek API error: ${response.status} ${response.statusText}`);
-      console.error(`❌ Error details: ${errorText}`);
-      throw new Error(`DeepSeek API error: ${response.status} ${response.statusText}. Details: ${errorText}`);
+      const errorData = await response.text();
+      console.error(`❌ DeepSeek API error (${response.status}): ${errorData}`);
+      
+      if (response.status === 401) {
+        throw new Error("DeepSeek API key is invalid or expired. Please check your API key.");
+      } else {
+        throw new Error(`DeepSeek API error: ${response.status} - ${errorData}`);
+      }
     }
     
-    // Parse the response as JSON
+    // Process the successful response
     const data = await response.json();
     
-    // Log a preview of the response
-    if (data.choices && data.choices[0] && data.choices[0].message) {
-      const content = data.choices[0].message.content;
-      console.log(`✅ DeepSeek response received: ${content.length} characters`);
-      console.log(`📄 Content preview: "${content.substring(0, 100)}..."`);
-      
-      // Extra validation to ensure the content is not JSON format
-      if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
-        console.warn(`⚠️ Content appears to be in JSON format, will wrap in markdown code block for parsing safety`);
-        return "```json\n" + content + "\n```";
-      }
-      
-      return content;
-    } else {
-      console.error(`❌ Unexpected response format from DeepSeek:`, data);
-      throw new Error('Unexpected response format from DeepSeek API');
+    if (!data.choices || data.choices.length === 0) {
+      console.error("❌ No content generated by DeepSeek");
+      return "Error: Unable to generate content. Please try again later.";
     }
+    
+    const generatedContent = data.choices[0].message.content;
+    console.log(`✅ Content generated successfully (${generatedContent.length} characters)`);
+    
+    return generatedContent;
   } catch (error) {
-    console.error(`💥 Error generating content with DeepSeek:`, error);
-    throw new Error(`Failed to generate content: ${error instanceof Error ? error.message : String(error)}`);
+    // Improve error handling to provide better error messages
+    let errorMessage = "Failed to generate content with DeepSeek.";
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      
+      // Add more specific error messages
+      if (errorMessage.includes("fetch failed")) {
+        errorMessage = "Network error when connecting to DeepSeek. Please check your internet connection.";
+      } else if (errorMessage.includes("timeout")) {
+        errorMessage = "Request to DeepSeek timed out. The service might be experiencing high load.";
+      }
+    }
+    
+    logError(error, "Error calling DeepSeek API");
+    console.error(`❌ DeepSeek API error: ${errorMessage}`);
+    
+    // Return a formatted error message that can be used in the blog post
+    return `# Error Generating Content\n\nThere was a problem connecting to our AI service: ${errorMessage}\n\nPlease try again later.`;
   }
 }
