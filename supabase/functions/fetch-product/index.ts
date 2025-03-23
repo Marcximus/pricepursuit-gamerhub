@@ -1,7 +1,7 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
+import { createClient } from '@supabase/supabase-js'
+import { serve } from "std/http/server"
 import { corsHeaders } from '../_shared/cors.ts'
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
 
 /**
  * Safely stringify objects without circular reference issues
