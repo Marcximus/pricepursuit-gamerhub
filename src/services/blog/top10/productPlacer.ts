@@ -1,8 +1,8 @@
-
 /**
  * Product placement utilities for Top10 blog posts
  */
 import { generateProductHtml } from './generators/productGenerator';
+import { removeJsonFormatting } from './contentProcessor';
 
 /**
  * Replace product placeholders with actual product HTML
@@ -72,34 +72,6 @@ export function replaceProductPlaceholders(
   
   console.log(`✅ Product placeholder replacement complete: ${replacementsCount} replacements`);
   return { content: newContent, replacementsCount };
-}
-
-/**
- * Remove any JSON formatting that might be in the content
- */
-function removeJsonFormatting(content: string): string {
-  // Remove JSON formatting at the beginning of the content
-  let cleaned = content.replace(/^\s*```json\s*\{/g, '');
-  cleaned = cleaned.replace(/\}\s*```\s*$/g, '');
-  
-  // Remove full JSON objects if they appear in the text
-  if (cleaned.includes('"title":') && cleaned.includes('"content":')) {
-    try {
-      // Try to extract just the content part from the JSON
-      const contentMatch = cleaned.match(/"content"\s*:\s*"((?:\\"|[^"])*?)"/);
-      if (contentMatch && contentMatch[1]) {
-        // Replace escaped quotes and newlines
-        cleaned = contentMatch[1]
-          .replace(/\\"/g, '"')
-          .replace(/\\n/g, '\n')
-          .replace(/\\\\/g, '\\');
-      }
-    } catch (e) {
-      console.warn('⚠️ Error extracting content from JSON:', e);
-    }
-  }
-  
-  return cleaned;
 }
 
 /**

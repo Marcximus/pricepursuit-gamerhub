@@ -48,6 +48,6 @@ export {
   cleanupContent,
   fixHtmlTags,
   replaceProductPlaceholders,
-  removeDuplicateProductBlocks,
-  removeJsonFormatting
+  removeDuplicateProductBlocks
+  // removeJsonFormatting is already exported directly above
 };
