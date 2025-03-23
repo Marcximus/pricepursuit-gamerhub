@@ -5,7 +5,7 @@
 import { toast } from '@/components/ui/use-toast';
 import { getProducts } from './productHandler';
 import { cleanupContent, fixHtmlTags, replaceProductPlaceholders } from './contentProcessor';
-import { addVideoEmbed } from './htmlGenerator';
+import { addVideoEmbed, wrapTextInHtml } from './htmlGenerator';
 
 /**
  * Process a Top10 blog post content by inserting product data and enhancing the content
@@ -16,13 +16,20 @@ export async function processTop10Content(content: string, prompt: string): Prom
   console.log(`📄 Content length before processing: ${content.length} characters`);
   
   try {
-    // Basic HTML sanity check - add missing html tags if needed
-    if (!content.includes('<h1>') && !content.includes('<h2>') && !content.includes('<h3>')) {
-      console.warn('⚠️ Content appears to be missing HTML formatting, applying basic structure');
-      content = `<h1>${prompt}</h1>\n\n${content}`
-        .replace(/\n\n/g, '</p>\n\n<p>')
-        .replace(/^<p>/, '')
-        .replace(/<\/p>$/, '');
+    // First, determine if content has proper HTML structure
+    const hasHtmlStructure = content.includes('<h1>') || content.includes('<h2>') || content.includes('<h3>') || 
+                            (content.includes('<p>') && content.includes('</p>'));
+    
+    // If content appears to be plain text, convert it to HTML
+    if (!hasHtmlStructure) {
+      console.warn('⚠️ Content appears to be plain text, converting to HTML structure');
+      content = wrapTextInHtml(content, prompt);
+    }
+    
+    // Basic HTML sanity check - add missing header tags if needed
+    if (!content.includes('<h1>')) {
+      console.warn('⚠️ Content is missing H1 tag, adding title');
+      content = `<h1>${prompt}</h1>\n\n${content}`;
     }
     
     // Get products either from localStorage or by fetching them
@@ -36,7 +43,8 @@ export async function processTop10Content(content: string, prompt: string): Prom
         description: 'We couldn\'t find any products matching your criteria for the Top 10 post',
         variant: 'default',
       });
-      return fixHtmlTags(content); // At least fix HTML tags even without products
+      // At least fix HTML tags even without products
+      return fixHtmlTags(cleanupContent(content)); 
     }
     
     console.log(`✅ Successfully fetched ${products.length} products from Amazon`);
@@ -45,7 +53,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
       console.log(`First product has HTML content: ${!!products[0]?.htmlContent}`);
     }
     
-    // First, clean up the content
+    // First, clean up the content and fix basic HTML issues
     let processedContent = cleanupContent(content);
     
     // Fix any malformed HTML tags from AI response
@@ -76,7 +84,10 @@ export async function processTop10Content(content: string, prompt: string): Prom
       }
     }
     
-    return processedContent;
+    // Final sanity check to make sure the HTML is valid
+    const finalContent = fixHtmlTags(processedContent);
+    
+    return finalContent;
   } catch (error) {
     console.error('💥 Error in processTop10Content:', error);
     console.error('💥 Error details:', error instanceof Error ? error.message : String(error));

@@ -84,3 +84,57 @@ export function addVideoEmbed(content: string): string {
   // Fallback: insert at the end
   return content + videoEmbed;
 }
+
+/**
+ * Wrap plain text in appropriate HTML tags
+ * This is crucial for formatting unstructured content from AI
+ */
+export function wrapTextInHtml(content: string, title: string): string {
+  // If content already has HTML structure, return as is
+  if (content.includes('<h1>') || content.includes('<h2>') || content.includes('<p>')) {
+    return content;
+  }
+  
+  console.log('🔄 Converting plain text to HTML structure');
+  
+  // Add title as H1 if not present
+  let htmlContent = `<h1>${title || 'Top 10 Best Lenovo Laptops'}</h1>\n\n`;
+  
+  // Process paragraphs
+  const paragraphs = content.split(/\n\s*\n/);
+  paragraphs.forEach((para, index) => {
+    // Skip empty paragraphs
+    if (!para.trim()) return;
+    
+    // Check if this looks like a heading (short, ends with no period)
+    if (para.length < 60 && !para.trim().endsWith('.') && !para.includes('\n')) {
+      // This is likely a heading - check if it's a numbered item or a model name
+      if (/^\d+\.|\bLenovo\b/.test(para)) {
+        htmlContent += `<h3>${para.trim()}</h3>\n\n`;
+      } else {
+        htmlContent += `<h2>${para.trim()}</h2>\n\n`;
+      }
+    } 
+    // Check if it's a bullet point list
+    else if (para.includes('✅') || para.includes('•') || para.includes('-')) {
+      const items = para.split(/\n/).filter(item => item.trim());
+      if (items.length > 1) {
+        htmlContent += '<ul class="my-4">\n';
+        items.forEach(item => {
+          // Clean up bullet points
+          const cleanItem = item.replace(/^[•✅-]\s*/, '').trim();
+          htmlContent += `  <li>${cleanItem}</li>\n`;
+        });
+        htmlContent += '</ul>\n\n';
+      } else {
+        htmlContent += `<p>${para.trim()}</p>\n\n`;
+      }
+    } 
+    // Regular paragraph
+    else {
+      htmlContent += `<p>${para.trim()}</p>\n\n`;
+    }
+  });
+  
+  return htmlContent;
+}

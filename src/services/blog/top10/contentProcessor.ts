@@ -14,7 +14,11 @@ export function cleanupContent(content: string): string {
     .replace(/<p><p>/g, '<p>')
     .replace(/<\/p><\/p>/g, '</p>')
     .replace(/<h1><h1>/g, '<h1>')
-    .replace(/<\/h1><\/h1>/g, '</h1>');
+    .replace(/<\/h1><\/h1>/g, '</h1>')
+    .replace(/<h3><h3>/g, '<h3>')
+    .replace(/<\/h3><\/h3>/g, '</h3>')
+    .replace(/<h2><h2>/g, '<h2>')
+    .replace(/<\/h2><\/h2>/g, '</h2>');
   
   // Fix empty heading tags
   cleaned = cleaned.replace(/<h1>\s*<\/h1>/g, '<h1>Top 10 Best Lenovo Laptops</h1>');
@@ -25,6 +29,42 @@ export function cleanupContent(content: string): string {
   
   // Ensure emoji separated from text
   cleaned = cleaned.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])\s*([A-Za-z])/g, '$1 $2');
+  
+  // Convert plain text bullet points to HTML lists
+  const bulletPointRegex = /^[•✅-]\s+(.+)$/gm;
+  if (bulletPointRegex.test(cleaned)) {
+    let inList = false;
+    const lines = cleaned.split('\n');
+    let result = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const isBullet = /^[•✅-]\s+/.test(line);
+      
+      if (isBullet) {
+        if (!inList) {
+          result.push('<ul class="my-4">');
+          inList = true;
+        }
+        
+        const cleanLine = line.replace(/^[•✅-]\s+/, '');
+        result.push(`  <li>${cleanLine}</li>`);
+      } else {
+        if (inList) {
+          result.push('</ul>');
+          inList = false;
+        }
+        
+        result.push(line);
+      }
+    }
+    
+    if (inList) {
+      result.push('</ul>');
+    }
+    
+    cleaned = result.join('\n');
+  }
   
   console.log('✅ Content cleaned successfully');
   return cleaned;
@@ -38,8 +78,12 @@ export function fixHtmlTags(content: string): string {
   
   let fixed = content;
   
-  // Make sure headers and paragraphs are properly formatted
-  fixed = fixed.replace(/^((?!<h1>|<p>).+)$/gm, '<p>$1</p>');
+  // Make sure text is wrapped in proper tags
+  // First, find all text nodes that aren't inside a tag
+  fixed = fixed.replace(/^((?!<h1>|<h2>|<h3>|<p>|<ul>|<li>|<div>).+)$/gm, '<p>$1</p>');
+  
+  // Make sure headings have proper spacing
+  fixed = fixed.replace(/<(h[1-6])>\s*(.+?)\s*<\/(h[1-6])>/g, '<$1>$2</$3>\n\n');
   
   // Fix unclosed tags
   const commonTags = ['p', 'h1', 'h2', 'h3', 'h4', 'ul', 'li', 'div', 'span'];
@@ -64,9 +108,18 @@ export function fixHtmlTags(content: string): string {
   fixed = fixed.replace(/&lt;[^&]*&gt;/g, '');
   
   // Add proper spacing between sections
+  fixed = fixed.replace(/<\/h1>\s*/g, '</h1>\n\n');
+  fixed = fixed.replace(/<\/h2>\s*/g, '</h2>\n\n');
   fixed = fixed.replace(/<\/h3>\s*(<div)/g, '</h3>\n\n$1');
   fixed = fixed.replace(/<\/h3>\s*([^<\n])/g, '</h3>\n\n<p>$1</p>');
+  fixed = fixed.replace(/<\/p>\s*/g, '</p>\n\n');
   fixed = fixed.replace(/<\/ul>\s*([^<\n])/g, '</ul>\n\n<p>$1</p>');
+  
+  // Ensure proper newlines between elements
+  fixed = fixed.replace(/>\s*</g, '>\n<');
+  
+  // Finally, clean up any excessive newlines
+  fixed = fixed.replace(/\n{3,}/g, '\n\n');
   
   console.log('✅ HTML tags fixed successfully');
   return fixed;
