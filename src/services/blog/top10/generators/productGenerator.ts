@@ -13,7 +13,9 @@ export function generateProductHtml(product: any, index: number): string {
   const productPrice = formatPrice(product.price);
   const productRating = product.rating || 0;
   const productRatingTotal = product.ratings_total || 0;
-  const productUrl = formatAmazonUrl(product.asin);
+  const productAsin = product.asin || '';
+  const affiliateTag = 'with-laptop-discount-20';
+  const productUrl = `https://amazon.com/dp/${productAsin}?tag=${affiliateTag}`;
   
   // Enhanced image URL processing with better fallbacks
   let imageUrl = '';
@@ -86,7 +88,7 @@ export function generateProductHtml(product: any, index: number): string {
           <a href="${productUrl}" 
              class="button-amazon inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded transition-colors duration-200" 
              target="_blank" rel="nofollow noopener">
-            Check Price on Amazon
+            View Now on Amazon
           </a>
         </div>
         <div class="text-sm text-gray-600">

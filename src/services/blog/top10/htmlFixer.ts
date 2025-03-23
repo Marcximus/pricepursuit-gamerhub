@@ -36,20 +36,16 @@ export function fixHtmlTags(content: string): string {
     }
   }
   
-  // Ensure h1 tags are properly formatted
+  // Fix heading tags (h1, h2, h3)
   fixedContent = fixedContent.replace(/<h1([^>]*)>([^<]*?)(?=<(?!\/h1>))/g, '<h1$1>$2</h1>');
-  
-  // Ensure h2 tags are properly formatted
   fixedContent = fixedContent.replace(/<h2([^>]*)>([^<]*?)(?=<(?!\/h2>))/g, '<h2$1>$2</h2>');
-  
-  // Ensure h3 tags are properly formatted
   fixedContent = fixedContent.replace(/<h3([^>]*)>([^<]*?)(?=<(?!\/h3>))/g, '<h3$1>$2</h3>');
   
   // Fix paragraph tags
   fixedContent = fixedContent.replace(/<p>([^<]*?)(?=<(?!\/p>))/g, '<p>$1</p>');
   
   // Fix unordered list tags
-  fixedContent = fixedContent.replace(/<ul>([^<]*?)(?=<(?!\/ul>))/g, '<ul>');
+  fixedContent = fixedContent.replace(/<ul([^>]*)>([^<]*?)(?=<(?!\/ul>))/g, '<ul$1>');
   
   // Fix list items
   fixedContent = fixedContent.replace(/<li>([^<]*?)(?=<(?!\/li>))/g, '<li>$1</li>');
@@ -57,12 +53,22 @@ export function fixHtmlTags(content: string): string {
   // Remove duplicate content markers e.g. #10 #10
   fixedContent = fixedContent.replace(/#(\d{1,2})\s+#\1/g, '#$1');
   
+  // Fix duplicate product titles or headings
+  const headingRegex = /(<h[23][^>]*>)([^<]+)<\/h[23]>\s*\1\2<\/h[23]>/g;
+  fixedContent = fixedContent.replace(headingRegex, '$1$2</h3>');
+  
   // Fix unclosed product card divs
   fixedContent = fixedContent.replace(/<div class="product-card[^>]*>((?:(?!<\/div>).)*?)(?=<div class="product-card)/gs, 
                                     match => match + '</div></div></div>');
   
   // Fix any empty div containers that were broken by AI-generated content
   fixedContent = fixedContent.replace(/<div[^>]*>\s*<\/div[^>]*>\s*<\/div[^>]*>\s*<\/div[^>]*>/g, '</div></div></div>');
+  
+  // Ensure horizontal rules have proper spacing
+  fixedContent = fixedContent.replace(/<hr class="my-8">\s*<hr class="my-8">/g, '<hr class="my-8">');
+  
+  // Fix double product data placeholders
+  fixedContent = fixedContent.replace(/\[PRODUCT_DATA_(\d+)\]\s*\[PRODUCT_DATA_\1\]/g, '[PRODUCT_DATA_$1]');
   
   // Remove extra blank lines
   fixedContent = fixedContent.replace(/\n{3,}/g, '\n\n');
