@@ -7,6 +7,9 @@ import type { ComparisonResult } from "../types";
 import { ClipboardList } from "lucide-react";
 import { formatLaptopDisplayTitle } from "../utils/titleFormatter";
 import { SpecificationTitle } from "./specification";
+import SpecificationValue from "./specification/SpecificationValue";
+import { calculateBenchmarkScore } from "../utils/benchmark";
+import { getSpecInfo } from "../utils/specInfo";
 
 interface SpecificationsSectionProps {
   laptopLeft: Product | null;
@@ -23,6 +26,36 @@ const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({
   
   const leftSpecs = comparisonResult.specifications?.left;
   const rightSpecs = comparisonResult.specifications?.right;
+  
+  // Calculate benchmark scores if not available
+  const calculateBenchmarkForLaptop = (laptop: Product): string => {
+    if (!laptop) return 'Not available';
+    return `${Math.round(calculateBenchmarkScore(laptop) || 0)}/100`;
+  };
+
+  // Format Wilson Score to display as a value out of 5
+  const formatWilsonScore = (score: number | null | undefined): string => {
+    if (score === null || score === undefined || isNaN(Number(score))) return 'Not available';
+    return `${Number(score).toFixed(2)}/5`;
+  };
+
+  // Compare scores for determining better/worse/equal status
+  const compareScores = (left: string, right: string): 'better' | 'worse' | 'equal' | 'unknown' => {
+    if (left === 'Not available' || right === 'Not available') return 'unknown';
+    
+    const [leftValue, leftMax] = left.split('/').map(Number);
+    const [rightValue, rightMax] = right.split('/').map(Number);
+    
+    if (isNaN(leftValue) || isNaN(rightValue)) return 'unknown';
+    
+    // Normalize to same scale if maximums are different
+    const normalizedLeft = leftValue / leftMax;
+    const normalizedRight = rightValue / rightMax;
+    
+    if (normalizedLeft > normalizedRight) return 'better';
+    if (normalizedLeft < normalizedRight) return 'worse';
+    return 'equal';
+  };
   
   // Create specification rows from the AI-provided specifications
   const specRows = [
@@ -118,13 +151,15 @@ const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({
     },
     { 
       title: 'Wilson Score', 
-      leftValue: leftSpecs?.wilsonScore || 'Not available', 
-      rightValue: rightSpecs?.wilsonScore || 'Not available' 
+      leftValue: formatWilsonScore(laptopLeft.wilson_score), 
+      rightValue: formatWilsonScore(laptopRight.wilson_score),
+      compare: compareScores
     },
     { 
       title: 'Benchmark Score', 
-      leftValue: leftSpecs?.benchmarkScore || 'Not available', 
-      rightValue: rightSpecs?.benchmarkScore || 'Not available' 
+      leftValue: leftSpecs?.benchmarkScore || calculateBenchmarkForLaptop(laptopLeft),
+      rightValue: rightSpecs?.benchmarkScore || calculateBenchmarkForLaptop(laptopRight),
+      compare: compareScores
     }
   ];
   
@@ -150,12 +185,14 @@ const SpecificationsSection: React.FC<SpecificationsSectionProps> = ({
         {specRows.map((specRow, index) => (
           <div key={index} className="grid grid-cols-7 p-4 hover:bg-gray-50 transition-colors">
             <SpecificationTitle title={specRow.title} />
-            <div className="col-span-2">
-              {specRow.leftValue || 'Not available'}
-            </div>
-            <div className="col-span-2">
-              {specRow.rightValue || 'Not available'}
-            </div>
+            <SpecificationValue 
+              value={specRow.leftValue} 
+              comparison={specRow.compare ? specRow.compare(specRow.leftValue, specRow.rightValue) : undefined} 
+            />
+            <SpecificationValue 
+              value={specRow.rightValue} 
+              comparison={specRow.compare ? specRow.compare(specRow.rightValue, specRow.leftValue) : undefined} 
+            />
           </div>
         ))}
       </div>
