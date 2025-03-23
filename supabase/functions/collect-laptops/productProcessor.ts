@@ -1,5 +1,5 @@
 
-import { insertOrUpdateProducts } from "./databaseService.ts";
+import { insertOrUpdateProducts } from "./services/database/index.ts";
 import { validateAndFilterProducts } from "./processors/productValidator.ts";
 import { transformProductData } from "./processors/dataTransformer.ts";
 import { createInitialStats, updateStatsFromDbResults, ProcessingStats } from "./processors/statsTracker.ts";
