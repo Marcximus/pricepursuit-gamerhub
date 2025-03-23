@@ -114,28 +114,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
       
       if (replacementsCount === 0 && !hasEmbeddedProducts) {
         console.warn('⚠️ No product placeholders were replaced in the content');
-        console.warn('⚠️ Attempting to inject products at the end of the content');
-        
-        // If no placeholders were found and no embedded products, append products to the end
-        let productHtml = '<h2>Top Products</h2><div class="product-grid">';
-        products.forEach((product, index) => {
-          if (product.htmlContent) {
-            productHtml += product.htmlContent;
-          }
-        });
-        productHtml += '</div>';
-        
-        // Append products before the last paragraph or at the end
-        const lastParagraphIndex = processedContent.lastIndexOf('</p>');
-        if (lastParagraphIndex > 0) {
-          processedContent = processedContent.substring(0, lastParagraphIndex + 4) + 
-                          productHtml + 
-                          processedContent.substring(lastParagraphIndex + 4);
-        } else {
-          processedContent += productHtml;
-        }
-        
-        console.log('✅ Appended product HTML to the content');
+        throw new Error('DeepSeek did not include product placeholders or embed products directly in the HTML');
       }
     } else {
       console.log('✅ Content already has embedded product data, skipping placeholder replacement');
@@ -150,26 +129,22 @@ export async function processTop10Content(content: string, prompt: string): Prom
     const finalContent = fixHtmlTags(processedContent);
     console.log(`📏 Content length after final HTML fixing: ${finalContent.length} characters`);
     
-    // Convert any remaining non-HTML text to paragraphs
-    let enhancedContent = finalContent;
-    
     // If there are no paragraph tags, something went wrong with the HTML processing
-    if (!enhancedContent.includes('<p>')) {
-      console.warn('⚠️ No paragraph tags found in processed content, attempting emergency fix');
-      enhancedContent = wrapTextInHtml(enhancedContent, prompt);
-      console.log(`📏 Content after emergency paragraph wrapping: ${enhancedContent.length} characters`);
+    if (!finalContent.includes('<p>')) {
+      console.warn('⚠️ No paragraph tags found in processed content, this indicates a major issue');
+      throw new Error('Generated content has no paragraph tags - invalid HTML structure');
     }
     
     // Final log before returning
-    console.log(`📤 Final content character count: ${enhancedContent.length}`);
-    console.log(`📤 Final content has proper HTML: ${enhancedContent.includes('<h1>') && enhancedContent.includes('<p>')}`);
+    console.log(`📤 Final content character count: ${finalContent.length}`);
+    console.log(`📤 Final content has proper HTML: ${finalContent.includes('<h1>') && finalContent.includes('<p>')}`);
     
-    if (enhancedContent.length === 0) {
+    if (finalContent.length === 0) {
       console.error('❌ EMERGENCY: Final content is still empty!');
       throw new Error('Content processing resulted in empty content');
     }
     
-    return enhancedContent;
+    return finalContent;
   } catch (error) {
     console.error('💥 Error in processTop10Content:', error);
     console.error('💥 Error details:', error instanceof Error ? error.message : String(error));

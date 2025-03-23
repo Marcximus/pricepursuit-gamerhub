@@ -229,6 +229,7 @@ export async function generateBlogPost(
       description: error instanceof Error ? error.message : 'Failed to generate blog post',
       variant: 'destructive',
     });
-    return null;
+    
+    return null; // Return null to indicate failure
   }
 }

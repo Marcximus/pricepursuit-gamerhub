@@ -12,9 +12,9 @@ import { logProductData } from './utils/logger';
  * Process Amazon products from RapidAPI response
  */
 export function processAmazonProducts(data: any) {
-  if (!data.data?.products || !Array.isArray(data.data.products)) {
+  if (!data.data?.products || !Array.isArray(data.data.products) || data.data.products.length === 0) {
     console.warn("⚠️ No products found in RapidAPI response or invalid format");
-    return [];
+    throw new Error("No products found in API response");
   }
   
   console.log(`✅ Received ${data.data?.products?.length || 0} products from RapidAPI`);
