@@ -4,7 +4,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { getComparison } from "./deepseekService.ts";
 import { parseComparisonResult } from "./responseHandler.ts";
-import { Product, ComparisonResult } from "./types.ts";
+import { fetchProductData } from "./oxylabsService.ts";
+import type { Product, ComparisonResult } from "./types.ts";
 
 const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')!;
 
@@ -20,21 +21,37 @@ serve(async (req) => {
 
   try {
     console.log("📦 Extracting request data...");
-    const { laptopLeft, laptopRight } = await req.json();
+    const { leftAsin, rightAsin } = await req.json();
     
-    if (!laptopLeft || !laptopRight) {
-      console.error("❌ Missing laptop data!");
-      throw new Error('Missing laptop data for comparison');
+    if (!leftAsin || !rightAsin) {
+      console.error("❌ Missing laptop ASINs!");
+      throw new Error('Missing laptop ASINs for comparison');
     }
     
-    console.log("🔍 Comparing laptops:", {
-      left: `${laptopLeft.brand} ${laptopLeft.model} (ID: ${laptopLeft.id})`,
-      right: `${laptopRight.brand} ${laptopRight.model} (ID: ${laptopRight.id})`
+    console.log("🔍 Comparing laptops with ASINs:", {
+      left: leftAsin,
+      right: rightAsin
     });
 
-    // Call DeepSeek API for the comparison
+    // Fetch fresh data from Oxylabs for both ASINs
+    console.log("🔎 Fetching fresh data from Oxylabs...");
+    const [leftLaptopData, rightLaptopData] = await Promise.all([
+      fetchProductData(leftAsin),
+      fetchProductData(rightAsin)
+    ]);
+    
+    if (!leftLaptopData || !rightLaptopData) {
+      console.error("❌ Failed to fetch product data from Oxylabs");
+      throw new Error('Failed to fetch product data');
+    }
+    
+    console.log("✅ Successfully fetched product data from Oxylabs");
+    console.log("📝 Left laptop title:", leftLaptopData.results[0].content.title);
+    console.log("📝 Right laptop title:", rightLaptopData.results[0].content.title);
+
+    // Call DeepSeek API for the comparison with raw Oxylabs data
     console.log("🤖 Calling DeepSeek API...");
-    const deepseekData = await getComparison(laptopLeft, laptopRight, DEEPSEEK_API_KEY);
+    const deepseekData = await getComparison(leftLaptopData, rightLaptopData, DEEPSEEK_API_KEY);
     
     // Extract the content from the DeepSeek response
     const aiContent = deepseekData.choices[0]?.message?.content;
