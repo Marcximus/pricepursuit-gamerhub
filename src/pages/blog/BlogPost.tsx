@@ -72,7 +72,16 @@ const BlogPost = () => {
       
       headers.forEach((header, index) => {
         if (index < additionalImages.length) {
-          const imageHtml = `<div class="my-4"><img src="${additionalImages[index]}" alt="List item ${index + 1}" class="rounded-lg w-full" /></div>`;
+          const imgSrc = additionalImages[index];
+          const imageHtml = `<div class="my-4">
+            <img 
+              src="${imgSrc}" 
+              alt="List item ${index + 1}" 
+              class="rounded-lg w-full" 
+              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
+            />
+          </div>`;
+          
           modifiedContent = modifiedContent.replace(
             header,
             `${header}${imageHtml}`
@@ -94,7 +103,15 @@ const BlogPost = () => {
         );
         
         if (targetParagraphIndex >= 0 && paragraphs[targetParagraphIndex]) {
-          const imageHtml = `<div class="my-4"><img src="${img}" alt="Image ${index + 1}" class="rounded-lg w-full" /></div>`;
+          const imageHtml = `<div class="my-4">
+            <img 
+              src="${img}" 
+              alt="Image ${index + 1}" 
+              class="rounded-lg w-full" 
+              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
+            />
+          </div>`;
+          
           modifiedContent = modifiedContent.replace(
             paragraphs[targetParagraphIndex],
             `${paragraphs[targetParagraphIndex]}${imageHtml}`
@@ -151,6 +168,12 @@ const BlogPost = () => {
 
   const fixedContent = fixTopTenHtmlIfNeeded(post.content, post.category);
   const processedContent = injectAdditionalImages(fixedContent, post.additional_images || []);
+  
+  // Replace img tags to add onerror fallback handler
+  const contentWithFallbacks = processedContent.replace(
+    /<img([^>]*)>/g, 
+    '<img$1 onerror="this.onerror=null; this.src=\'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200\';">'
+  );
 
   return (
     <div className="min-h-screen pb-16">
@@ -198,13 +221,18 @@ const BlogPost = () => {
                   src={post.image_url} 
                   alt={post.title} 
                   className="w-full h-auto rounded-lg shadow-md"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=1200&h=630';
+                  }}
                 />
               </div>
             )}
             
             <div 
               className="prose prose-lg max-w-none" 
-              dangerouslySetInnerHTML={{ __html: processedContent }}
+              dangerouslySetInnerHTML={{ __html: contentWithFallbacks }}
             />
             
             <RelatedPosts currentPostId={post.id} currentCategory={category} />

@@ -13,7 +13,29 @@ export function generateProductHtml(product: any, index: number): string {
   const productRating = product.rating || 0;
   const productRatingTotal = product.ratings_total || 0;
   const productUrl = formatAmazonUrl(product.asin);
-  const imageUrl = product.image_url || product.image || 'https://via.placeholder.com/300x200?text=Lenovo+' + encodeURIComponent(productTitle.substring(0, 20));
+  
+  // Improved image URL handling with better fallbacks
+  let imageUrl = '';
+  
+  // Check all possible image properties with validation
+  if (product.image_url && typeof product.image_url === 'string' && product.image_url.startsWith('http')) {
+    imageUrl = product.image_url;
+  } else if (product.image && typeof product.image === 'string' && product.image.startsWith('http')) {
+    imageUrl = product.image;
+  } else if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+    // Find the first valid image URL in the images array
+    for (const img of product.images) {
+      if (typeof img === 'string' && img.startsWith('http')) {
+        imageUrl = img;
+        break;
+      }
+    }
+  }
+  
+  // If no valid image was found, use a reliable placeholder
+  if (!imageUrl) {
+    imageUrl = `https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300&q=80`;
+  }
   
   // Calculate the proper product ranking (from #10 to #1)
   const rank = 10 - (index % 10);
@@ -28,7 +50,8 @@ export function generateProductHtml(product: any, index: number): string {
       <div class="md:w-1/3 flex items-center justify-center">
         <img src="${imageUrl}" 
              alt="${productTitle}" 
-             class="w-full h-auto rounded-md object-contain max-h-48" />
+             class="w-full h-auto rounded-md object-contain max-h-48"
+             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300&q=80';" />
       </div>
       <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
         <h4 class="text-xl font-semibold mb-2">${productTitle}</h4>
