@@ -8,7 +8,7 @@ import { processAmazonProducts } from "./services/productProcessor.ts";
 serve(async (req) => {
   console.log("🚀 fetch-amazon-products function started!");
   
-  // Handle CORS preflight request
+  // Handle CORS preflight request - this is crucial for browser requests
   const corsResponse = handleCorsPreflightRequest(req);
   if (corsResponse) return corsResponse;
 
@@ -43,12 +43,14 @@ serve(async (req) => {
       const products = processAmazonProducts(data);
       console.log("✅ Products processed, returning", products.length, "products");
 
+      // Always return with CORS headers
       return new Response(
         JSON.stringify({ products: products }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } catch (apiError) {
       console.error('💥 Error from RapidAPI service:', apiError);
+      // Always return with CORS headers even for errors
       return new Response(
         JSON.stringify({ 
           error: apiError.message || 'Error fetching product data from RapidAPI',
@@ -61,6 +63,7 @@ serve(async (req) => {
     console.error('💥 Error fetching Amazon products:', error);
     console.error(`⚠️ Error message: ${error.message || 'Unknown error'}`);
     
+    // Always return with CORS headers even for unexpected errors
     return new Response(
       JSON.stringify({ 
         error: error.message || 'An unexpected error occurred', 

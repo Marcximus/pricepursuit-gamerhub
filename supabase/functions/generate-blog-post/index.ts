@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { corsHeaders } from "../_shared/cors.ts";
@@ -17,7 +16,10 @@ serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     console.log("⚙️ Handling CORS preflight request");
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders, 
+      status: 204 // Use 204 No Content for OPTIONS requests
+    });
   }
 
   try {
