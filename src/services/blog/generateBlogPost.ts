@@ -33,9 +33,10 @@ export async function generateBlogPost(
           console.warn('⚠️ No products were fetched from Amazon API');
           toast({
             title: 'Product Fetching Warning',
-            description: 'No products were found. The blog post may be less specific without product data.',
-            variant: 'default',
+            description: 'No products were found. Cannot proceed without product data.',
+            variant: 'destructive',
           });
+          throw new Error('No products found for the specified query');
         } else {
           // Store products in local storage for use after content generation
           console.log('💾 Storing fetched products in localStorage for later use');
@@ -51,9 +52,10 @@ export async function generateBlogPost(
         console.error('❌ Error fetching Amazon products:', error);
         toast({
           title: 'Product Fetching Error',
-          description: 'Could not fetch product data. The blog post will be generated with limited information.',
+          description: 'Could not fetch product data. Cannot proceed with blog generation.',
           variant: 'destructive',
         });
+        throw new Error('Failed to fetch product data: ' + (error instanceof Error ? error.message : 'Unknown error'));
       }
     }
 
@@ -61,7 +63,7 @@ export async function generateBlogPost(
     if (category === 'Top10') {
       console.log(`📊 Proceeding with ${products?.length || 0} products for Top10 post`);
       if (!products || products.length === 0) {
-        console.warn('⚠️ No products available, blog quality may be affected');
+        throw new Error('Cannot generate Top10 post without product data');
       }
     }
 
@@ -175,8 +177,8 @@ export async function generateBlogPost(
         console.error('📄 Raw response data preview:', 
           response.data.substring(0, Math.min(200, response.data.length)) + '...');
         
-        // Create a basic structure with error information but still usable content
-        data = createFallbackContent(category, prompt, parseError, response.data, products);
+        // Fail explicitly rather than using fallback content
+        throw new Error('Failed to parse AI response: ' + parseError.message);
       }
     } else {
       // If it's already an object, use it directly
@@ -191,8 +193,8 @@ export async function generateBlogPost(
       console.error('❌ CRITICAL ERROR: Content is empty after API call');
       console.error('❌ Response data structure:', JSON.stringify(response.data, null, 2).substring(0, 500) + '...');
       
-      // Replace with fallback content
-      data = createFallbackContent(category, prompt, new Error('Empty content from API'), null, products);
+      // Fail with a clear error instead of using fallback content
+      throw new Error('API returned empty content');
     }
     
     // Add a short preview of the content for debugging
@@ -212,9 +214,8 @@ export async function generateBlogPost(
       console.log(`🔄 Content length change after processing: ${beforeProcessingLength} → ${data.content.length} characters`);
       
       if (data.content.length === 0) {
-        console.error('❌ EMERGENCY: Content is empty after Top10 processing!');
-        // Use fallback content
-        data.content = `<h1>${data.title || prompt}</h1><p>We encountered an error while processing this content. Please try again later.</p>`;
+        console.error('❌ CRITICAL ERROR: Content is empty after Top10 processing!');
+        throw new Error('Content processing resulted in empty content');
       }
     }
 
@@ -230,59 +231,4 @@ export async function generateBlogPost(
     });
     return null;
   }
-}
-
-/**
- * Create fallback content when API fails
- */
-function createFallbackContent(
-  category: string, 
-  prompt: string, 
-  error?: Error,
-  rawResponse?: string,
-  products?: any[]
-): GeneratedBlogContent {
-  console.log('⚠️ Creating fallback content due to error:', error?.message);
-  
-  // Extract title from prompt
-  let title = '';
-  if (category === 'Top10') {
-    title = prompt.trim();
-    if (!title.toLowerCase().startsWith('top')) {
-      title = 'Top 10 ' + title;
-    }
-  } else {
-    title = `New ${category} Post: ${prompt.substring(0, 30)}...`;
-  }
-  
-  // Create a basic introduction
-  let content = `
-  <h1>${title}</h1>
-  <p>Are you on the hunt for a laptop that combines power, style, and reliability? Look no further than Lenovo! 🚀 Known for their innovative designs and cutting-edge technology, Lenovo laptops are the Swiss Army knives of the tech world. Whether you're a student, a professional, or a gamer, Lenovo has something for everyone. From sleek ultrabooks to powerhouse gaming rigs, Lenovo laptops are designed to meet your every need. 😎</p>
-  
-  <p>But with so many options out there, how do you choose the perfect Lenovo laptop? Don't worry, we've got you covered! We've scoured the market, read countless reviews, and even talked to a few tech wizards to bring you the top 10 best Lenovo laptops available today. So sit back, relax, and let us guide you through the world of Lenovo laptops. 🖥️✨</p>
-  
-  <p>Ready to find your next tech companion? Let's dive into the top 10 Lenovo laptops that are making waves in 2023. Whether you're looking for portability, performance, or just a great deal, we've got something for everyone. Let's get started! 🎉</p>
-  
-  <h3>Lenovo ThinkPad X1 Carbon</h3>
-  `;
-  
-  // For debugging purposes, add the error information at the bottom of the post
-  if (error) {
-    content += `
-    <div class="hidden">
-      <p>Error details: ${error.message}</p>
-      <p>Error stack: ${error.stack}</p>
-      <p>Raw response excerpt: ${rawResponse?.substring(0, 200) || 'None'}</p>
-    </div>
-    `;
-  }
-  
-  return {
-    title,
-    content,
-    excerpt: `Discover the best Lenovo laptops on the market today. From powerful workstations to lightweight ultrabooks, we've rounded up the top options for every need and budget.`,
-    category,
-    tags: ['Lenovo', 'laptops', 'reviews', 'technology', 'computers']
-  };
 }

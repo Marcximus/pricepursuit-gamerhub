@@ -25,7 +25,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
       description: 'Received empty content from AI service. Please try again.',
       variant: 'destructive',
     });
-    return `<h1>${prompt}</h1><p>We encountered a problem generating this content. Please try again later.</p>`;
+    throw new Error('Empty content received from AI service');
   }
   
   try {
@@ -75,21 +75,13 @@ export async function processTop10Content(content: string, prompt: string): Prom
       console.log(`📊 Products with ASIN: ${productsWithAsin}/${products.length}`);
       console.log(`📊 Products with title: ${productsWithTitle}/${products.length}`);
     } else {
-      console.warn('⚠️ No Amazon products found, proceeding with original content');
-    }
-    
-    // If we still don't have products, continue with the content as is
-    if (!products || products.length === 0) {
-      console.warn('⚠️ No Amazon products found, proceeding with original content');
+      console.error('⚠️ No Amazon products found, cannot proceed without products');
       toast({
         title: 'No products found',
         description: 'We couldn\'t find any products matching your criteria for the Top 10 post',
-        variant: 'default',
+        variant: 'destructive',
       });
-      // At least fix HTML tags even without products
-      const fixedContent = fixHtmlTags(cleanupContent(content));
-      console.log(`📏 Content length after basic HTML fixing: ${fixedContent.length} characters`);
-      return fixedContent; 
+      throw new Error('No product data available for processing Top10 content');
     }
     
     // First, clean up the content and fix basic HTML issues
@@ -173,8 +165,8 @@ export async function processTop10Content(content: string, prompt: string): Prom
     console.log(`📤 Final content has proper HTML: ${enhancedContent.includes('<h1>') && enhancedContent.includes('<p>')}`);
     
     if (enhancedContent.length === 0) {
-      console.error('❌ EMERGENCY: Final content is still empty! Returning fallback content');
-      return `<h1>${prompt}</h1><p>We encountered an issue while processing this content. Please try again later.</p>`;
+      console.error('❌ EMERGENCY: Final content is still empty!');
+      throw new Error('Content processing resulted in empty content');
     }
     
     return enhancedContent;
@@ -188,26 +180,6 @@ export async function processTop10Content(content: string, prompt: string): Prom
       variant: 'destructive',
     });
     
-    // Even if we encounter an error, try to at least fix the HTML tags
-    try {
-      console.log('🚑 Attempting emergency content recovery');
-      // Attempt to wrap in HTML if the content seems to be plain text
-      if (!content || content.length === 0) {
-        console.error('❌ Content is completely empty, returning emergency placeholder');
-        return `<h1>${prompt}</h1><p>We encountered a problem generating this content. Please try again later.</p>`;
-      }
-      
-      if (!content.includes('<h1>') && !content.includes('<p>')) {
-        console.log('🚑 No HTML tags found, wrapping content in basic HTML');
-        return fixHtmlTags(wrapTextInHtml(content, prompt));
-      }
-      
-      console.log('🚑 Adding basic HTML structure to existing partial content');
-      return fixHtmlTags(content);
-    } catch (fallbackError) {
-      console.error('💥 Error in emergency fallback:', fallbackError);
-      // If everything fails, return the content with basic HTML wrapping
-      return `<h1>${prompt}</h1><p>${content || 'Error generating content. Please try again.'}</p>`;
-    }
+    throw error; // Rethrow the error instead of providing fallback content
   }
 }

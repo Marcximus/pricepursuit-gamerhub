@@ -19,10 +19,11 @@ export function createErrorResponse(error: unknown): Response {
   const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
   console.error(`💥 Returning error response: ${errorMessage}`);
 
-  // Create a more detailed error object for debugging
+  // Create a detailed error object for debugging - no fallback content
   const errorDetails = {
     error: errorMessage,
     timestamp: new Date().toISOString(),
+    success: false,
     details: error instanceof Error ? {
       name: error.name,
       stack: error.stack?.split('\n').slice(0, 3).join('\n') // Include just the top of the stack

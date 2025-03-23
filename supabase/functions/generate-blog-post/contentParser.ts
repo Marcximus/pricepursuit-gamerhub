@@ -10,14 +10,7 @@ export function parseGeneratedContent(content: string, category: string) {
   
   if (!content || content.trim().length === 0) {
     console.error('❌ CRITICAL ERROR: Received empty content from AI service');
-    console.error('❌ Cannot parse empty content, returning error structure');
-    return {
-      title: `Error: Empty ${category} Post`,
-      content: `<h1>Error Generating Content</h1><p>Our AI service returned an empty response. Please try again later.</p>`,
-      excerpt: "Error: Empty response from AI service",
-      category,
-      tags: ['error']
-    };
+    throw new Error('Empty content received from AI service');
   }
   
   try {
@@ -155,14 +148,7 @@ export function parseGeneratedContent(content: string, category: string) {
     if (processedContent.length === 0) {
       console.error('❌ CRITICAL: Processed content is EMPTY after parsing!');
       console.error('❌ Original content length was:', content.length);
-      // Return error content instead of empty content
-      return {
-        title: title || `Error in ${category} Post`,
-        content: `<h1>${title || 'Error Processing Content'}</h1><p>We encountered an error while processing the content. Please try again later.</p>`,
-        excerpt: excerpt || "Error processing content",
-        category,
-        tags
-      };
+      throw new Error('Content processing resulted in empty content');
     }
     
     return {
@@ -175,14 +161,7 @@ export function parseGeneratedContent(content: string, category: string) {
   } catch (error) {
     console.error(`💥 Error parsing content:`, error);
     console.error(`💥 Original content preview: "${content ? content.substring(0, 200) : 'EMPTY'}..."`);
-    // Return a basic structure with error information
-    return {
-      title: `Error in ${category} Post`,
-      content: `<h1>Error Processing Content</h1><p>We encountered an error: ${error.message}</p><p>Please try again later.</p>`,
-      excerpt: "There was an error generating this post's content.",
-      category,
-      tags: ['error']
-    };
+    throw error; // Throw the error instead of returning fallback content
   }
 }
 
@@ -284,4 +263,3 @@ function generateTagsFromContent(title: string, content: string, category: strin
   // Limit to 10 unique tags
   return [...new Set(tags)].slice(0, 10);
 }
-
