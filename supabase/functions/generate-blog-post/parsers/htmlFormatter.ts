@@ -42,9 +42,9 @@ export function ensureProperHtmlStructure(content: string): string {
       }
     }
     
-    // Fix specific Top10 post issues
+    // Fix specific Top10 post issues - ensure placeholder structure
     if (processedContent.includes('Top 10') || processedContent.includes('Best Laptops')) {
-      // Ensure product placeholders exist
+      // Check if product placeholders exist
       const productPlaceholderCount = (processedContent.match(/product-placeholder/g) || []).length;
       const productDataCount = (processedContent.match(/product-data/g) || []).length;
       
