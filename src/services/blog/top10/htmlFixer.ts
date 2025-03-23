@@ -1,3 +1,4 @@
+
 /**
  * HTML fixing utilities for Top10 blog posts
  */
@@ -90,6 +91,14 @@ export function fixHtmlTags(content: string): string {
   // Remove duplicate H3 headings with same text that appear in sequence
   const duplicateH3Regex = /(<h3[^>]*>)(.*?)<\/h3>(\s*)<h3[^>]*>\2<\/h3>/g;
   fixedContent = fixedContent.replace(duplicateH3Regex, '$1$2</h3>');
+  
+  // Remove redundant product title lines that follow an h3 with the same content
+  const redundantTitleRegex = /(<h3[^>]*>)(.*?)<\/h3>(\s*)(\2)/g;
+  fixedContent = fixedContent.replace(redundantTitleRegex, '$1$2</h3>');
+  
+  // Clean up full product details in plaintext that appear after the heading
+  const productDetailsRegex = /(<h3[^>]*>.*?<\/h3>)(\s*)(.*?\|.*?\|.*?)\s+(<div class="product-card)/g;
+  fixedContent = fixedContent.replace(productDetailsRegex, '$1$2$4');
   
   // Ensure there are no repeated product entries with the same title
   const productEntries = [...fixedContent.matchAll(/<h3[^>]*>(.*?)<\/h3>/g)];

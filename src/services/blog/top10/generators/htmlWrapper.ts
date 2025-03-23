@@ -60,7 +60,9 @@ export function wrapTextInHtml(content: string, title: string): string {
       if (rankMatch) {
         const rank = rankMatch[1];
         const productName = rankMatch[2].trim();
-        htmlContent += `<h3>#${rank} ${productName}</h3>\n\n`;
+        // Only include the product name in the heading, not the full specs
+        const simplifiedName = productName.split('|')[0].trim();
+        htmlContent += `<h3>#${rank} ${simplifiedName}</h3>\n\n`;
         
         // Add a placeholder for the product data
         htmlContent += `[PRODUCT_DATA_${rank}]\n\n`;
@@ -76,7 +78,9 @@ export function wrapTextInHtml(content: string, title: string): string {
       } 
       // Is this a numbered heading like "#1: Lenovo ThinkPad"?
       else if (/^#?\d+[\.:]\s*/.test(para) || /^[A-Z][a-z]+\s+\d+:/.test(para)) {
-        htmlContent += `<h3>${para.trim()}</h3>\n\n`;
+        // Extract just the basic product name without full specs
+        const basicName = para.split('|')[0].trim();
+        htmlContent += `<h3>${basicName}</h3>\n\n`;
       }
       // General subheading
       else if (index > 0 && para.length < 50) {
