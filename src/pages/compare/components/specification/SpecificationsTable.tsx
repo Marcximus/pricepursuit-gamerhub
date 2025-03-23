@@ -3,7 +3,7 @@ import React from 'react';
 import SpecificationTitle from './SpecificationTitle';
 import SpecificationValue from './SpecificationValue';
 
-interface SpecRow {
+export interface SpecRow {
   title: string;
   leftValue: string;
   rightValue: string;
