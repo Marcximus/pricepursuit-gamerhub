@@ -1,5 +1,5 @@
 
-import type { ComparisonResult } from "./types.ts";
+import type { ComparisonResult, LaptopSpecifications } from "./types.ts";
 
 /**
  * Parse and validate the comparison result from DeepSeek
@@ -63,6 +63,35 @@ export function parseComparisonResult(content: string): ComparisonResult {
       parsedContent.advantages.right = ['No specific advantages found'];
     }
     
+    // Check for specifications and create default if missing
+    if (!parsedContent.specifications) {
+      console.warn('Specifications missing from DeepSeek response, creating default structure');
+      parsedContent.specifications = {
+        left: createDefaultSpecifications(),
+        right: createDefaultSpecifications()
+      };
+    } else {
+      // Validate specifications structure
+      if (!parsedContent.specifications.left || !parsedContent.specifications.right) {
+        console.warn('Incomplete specifications structure in DeepSeek response');
+        
+        // Create default specs if either is missing
+        if (!parsedContent.specifications.left) {
+          parsedContent.specifications.left = createDefaultSpecifications();
+        }
+        
+        if (!parsedContent.specifications.right) {
+          parsedContent.specifications.right = createDefaultSpecifications();
+        }
+      }
+      
+      // Ensure all specification fields exist for left laptop
+      parsedContent.specifications.left = ensureAllSpecFields(parsedContent.specifications.left);
+      
+      // Ensure all specification fields exist for right laptop
+      parsedContent.specifications.right = ensureAllSpecFields(parsedContent.specifications.right);
+    }
+    
     return parsedContent;
   } catch (error) {
     console.error('Error parsing comparison result:', error);
@@ -80,7 +109,52 @@ export function parseComparisonResult(content: string): ComparisonResult {
       valueForMoney: {
         left: 'Unable to assess value',
         right: 'Unable to assess value'
+      },
+      specifications: {
+        left: createDefaultSpecifications(),
+        right: createDefaultSpecifications()
       }
     };
   }
+}
+
+/**
+ * Creates a default specifications object with "Not available" values
+ */
+function createDefaultSpecifications(): LaptopSpecifications {
+  return {
+    brand: 'Not available',
+    model: 'Not available',
+    price: 'Not available',
+    os: 'Not available',
+    releaseYear: 'Not available',
+    processor: 'Not available',
+    ram: 'Not available',
+    storage: 'Not available',
+    graphics: 'Not available',
+    screenSize: 'Not available',
+    screenResolution: 'Not available',
+    refreshRate: 'Not available',
+    weight: 'Not available',
+    batteryLife: 'Not available',
+    ports: 'Not available',
+    rating: 'Not available',
+    ratingCount: 'Not available',
+    totalReviews: 'Not available',
+    wilsonScore: 'Not available',
+    benchmarkScore: 'Not available'
+  };
+}
+
+/**
+ * Ensures all specification fields exist, filling in "Not available" for missing ones
+ */
+function ensureAllSpecFields(specs: any): LaptopSpecifications {
+  const defaultSpecs = createDefaultSpecifications();
+  
+  // Merge the provided specs with the default specs
+  return {
+    ...defaultSpecs,
+    ...specs
+  };
 }

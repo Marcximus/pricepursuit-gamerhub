@@ -1,25 +1,21 @@
 
-import React from "react";
-import { SpecificationTitle, SpecificationValue } from "./specification";
-import { getAffiliateUrl } from "../utils/affiliateLink";
-import { getComparisonStatus } from "../utils/comparisonHelpers";
-import type { ComparisonSection } from "../types";
+import React, { useState } from "react";
+import { ChevronDown, ChevronUp, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-// Helper to remove redundant processor prefixes
-const cleanProcessorDisplay = (value: string): string => {
-  if (typeof value !== 'string') return value;
-  
-  // Fix for the Intel Core repetition issue
-  const cleanedValue = value
-    .replace(/(Intel\s+Core\s+)+/gi, 'Intel Core ')
-    .replace(/(AMD\s+Ryzen\s+)+/gi, 'AMD Ryzen ')
-    .replace(/(Apple\s+M[123]\s+)+/gi, 'Apple M$1 ');
-    
-  return cleanedValue;
-};
+interface SectionProps {
+  title: string;
+  leftValue: string;
+  rightValue: string;
+  compare?: (a: string, b: string) => 'better' | 'worse' | 'equal' | 'unknown';
+  specInfo?: {
+    icon?: string;
+    explanation?: string;
+  };
+}
 
 interface SpecificationItemProps {
-  section: ComparisonSection;
+  section: SectionProps;
   laptopLeftId?: string;
   laptopRightId?: string;
 }
@@ -29,41 +25,58 @@ const SpecificationItem: React.FC<SpecificationItemProps> = ({
   laptopLeftId, 
   laptopRightId 
 }) => {
-  // Determine better/worse indicators using the utility function
-  const { leftStatus, rightStatus } = getComparisonStatus(
-    section.leftValue, 
-    section.rightValue, 
-    section.compare
-  );
+  const [isExpanded, setIsExpanded] = useState(false);
   
-  // Create affiliate URLs for both laptops
-  const leftAffiliateUrl = getAffiliateUrl(laptopLeftId);
-  const rightAffiliateUrl = getAffiliateUrl(laptopRightId);
+  // Determine which value is better if there's a comparison function
+  const compareValues = () => {
+    if (!section.compare) return { left: 'unknown', right: 'unknown' };
+    
+    const leftComparison = section.compare(section.leftValue, section.rightValue);
+    
+    // Return the appropriate comparison for each side
+    return {
+      left: leftComparison,
+      right: leftComparison === 'better' ? 'worse' : leftComparison === 'worse' ? 'better' : leftComparison
+    };
+  };
   
-  // Clean up processor display if this is a processor section
-  const leftValue = section.title === "Processor" ? cleanProcessorDisplay(section.leftValue) : section.leftValue;
-  const rightValue = section.title === "Processor" ? cleanProcessorDisplay(section.rightValue) : section.rightValue;
+  const comparison = compareValues();
+  
+  // Function to determine the CSS class for the value based on comparison
+  const getValueClass = (side: 'left' | 'right') => {
+    if (comparison[side] === 'better') return 'text-green-600 font-medium';
+    if (comparison[side] === 'worse') return 'text-red-500';
+    return '';
+  };
   
   return (
-    <div className="grid grid-cols-7 px-4 py-3 hover:bg-slate-50 transition-colors">
-      {/* Specification title */}
-      <SpecificationTitle title={section.title} />
+    <div className="grid grid-cols-7 p-4 hover:bg-gray-50 transition-colors">
+      <div className="col-span-3 flex items-center">
+        <div className="flex items-center gap-2">
+          {section.title}
+          
+          {section.specInfo && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-gray-400" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs">{section.specInfo.explanation}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
+      </div>
       
-      {/* Left laptop value */}
-      <SpecificationValue 
-        value={leftValue} 
-        status={leftStatus} 
-        affiliateUrl={leftAffiliateUrl}
-        theme="left"
-      />
+      <div className={`col-span-2 ${getValueClass('left')}`}>
+        {section.leftValue || 'Not available'}
+      </div>
       
-      {/* Right laptop value */}
-      <SpecificationValue 
-        value={rightValue} 
-        status={rightStatus} 
-        affiliateUrl={rightAffiliateUrl}
-        theme="right"
-      />
+      <div className={`col-span-2 ${getValueClass('right')}`}>
+        {section.rightValue || 'Not available'}
+      </div>
     </div>
   );
 };

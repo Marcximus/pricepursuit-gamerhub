@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useComparison } from "@/contexts/ComparisonContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/types/product";
+import type { LaptopSpecifications } from "../types";
 
 export type ComparisonResult = {
   winner: 'left' | 'right' | 'tie';
@@ -16,6 +17,10 @@ export type ComparisonResult = {
   valueForMoney: {
     left: string;
     right: string;
+  };
+  specifications: {
+    left: LaptopSpecifications;
+    right: LaptopSpecifications;
   };
 };
 

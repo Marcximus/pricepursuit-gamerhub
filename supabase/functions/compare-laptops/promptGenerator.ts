@@ -27,6 +27,52 @@ Your output must be structured EXACTLY as valid JSON in the following format:
   "valueForMoney": {
     "left": "Value assessment for left laptop",
     "right": "Value assessment for right laptop"
+  },
+  "specifications": {
+    "left": {
+      "brand": "string",
+      "model": "string",
+      "price": "string",
+      "os": "string",
+      "releaseYear": "string",
+      "processor": "string",
+      "ram": "string",
+      "storage": "string",
+      "graphics": "string",
+      "screenSize": "string",
+      "screenResolution": "string",
+      "refreshRate": "string",
+      "weight": "string",
+      "batteryLife": "string",
+      "ports": "string",
+      "rating": "string",
+      "ratingCount": "string",
+      "totalReviews": "string",
+      "wilsonScore": "string",
+      "benchmarkScore": "string"
+    },
+    "right": {
+      "brand": "string",
+      "model": "string",
+      "price": "string",
+      "os": "string",
+      "releaseYear": "string",
+      "processor": "string",
+      "ram": "string",
+      "storage": "string",
+      "graphics": "string",
+      "screenSize": "string",
+      "screenResolution": "string",
+      "refreshRate": "string",
+      "weight": "string",
+      "batteryLife": "string",
+      "ports": "string",
+      "rating": "string",
+      "ratingCount": "string",
+      "totalReviews": "string",
+      "wilsonScore": "string",
+      "benchmarkScore": "string"
+    }
   }
 }
 
@@ -34,7 +80,8 @@ IMPORTANT:
 - Your analysis MUST use multiple paragraphs with line breaks for readability
 - Include 1-2 subtle humorous comments or analogies in your analysis
 - Keep your technical assessment accurate and helpful despite the humor
-- Return ONLY valid JSON that follows the exact structure above (no markdown, no additional text)`;
+- Return ONLY valid JSON that follows the exact structure above (no markdown, no additional text)
+- The specifications section MUST include all the fields listed, use "Not available" if information is missing`;
 }
 
 // Create the comparison prompt with all available product details
@@ -78,5 +125,9 @@ RIGHT LAPTOP (${laptopRight.id}):
 - Benchmark Score: ${laptopRight.benchmark_score || 'Not specified'}
 - Wilson Score: ${laptopRight.wilson_score || 'Not specified'}
 
-Based on the specifications above, provide a comprehensive comparison. Include which laptop is better overall, which one provides better value for money, and what are the specific advantages of each. Remember to use multiple paragraphs for readability and include some witty observations that don't compromise the technical accuracy of your analysis.`;
+Based on the specifications above, provide a comprehensive comparison. Include which laptop is better overall, which one provides better value for money, and what are the specific advantages of each. 
+
+Also, extract and organize the detailed specifications for both laptops, filling in any missing information you can reasonably infer from the data provided. Return these in the "specifications" section of your response JSON using the exact structure required. For any information that's completely unavailable, use "Not available".
+
+Remember to use multiple paragraphs for readability and include some witty observations that don't compromise the technical accuracy of your analysis.`;
 }
