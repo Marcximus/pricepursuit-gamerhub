@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
-import { GeneratedBlogContent, SearchParam } from './types';
+import { GeneratedBlogContent } from './types';
 import { processTop10Content } from './top10';
 import { extractSearchParamsFromPrompt, fetchAmazonProducts } from './amazonProductService';
 
@@ -210,7 +210,10 @@ export async function generateBlogPost(
     if (category === 'Top10' && data && data.content) {
       console.log('🔄 Processing Top10 content with product data...');
       const beforeProcessingLength = data.content.length;
+      
+      // Use the imported function directly instead of dynamic import
       data.content = await processTop10Content(data.content, prompt);
+      
       console.log(`🔄 Content length change after processing: ${beforeProcessingLength} → ${data.content.length} characters`);
       
       if (data.content.length === 0) {

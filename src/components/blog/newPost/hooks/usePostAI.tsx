@@ -1,6 +1,8 @@
+
 import { useState } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { extractSearchParamsFromPrompt } from '@/services/blog/amazonProductService';
+import { generateBlogPost } from '@/services/blog'; // Import directly
 
 export const usePostAI = (
   setTitle: (value: string) => void,
@@ -39,14 +41,13 @@ export const usePostAI = (
         setTitle(extractedTitle);
       }
       
-      const { generateBlogPost } = await import('@/services/blog');
-      
       console.log(
         `Generating ${selectedCategory} blog post with prompt: ${prompt}` +
         `${asin ? `, ASIN1: ${asin}` : ''}` +
         `${asin2 ? `, ASIN2: ${asin2}` : ''}`
       );
       
+      // Use directly imported function instead of dynamic import
       const generatedContent = await generateBlogPost(
         prompt, 
         selectedCategory, 
