@@ -8,6 +8,7 @@ import { formatPrice, formatAmazonUrl, generateStarsHtml } from '../utils';
  * Generate HTML for a product card
  */
 export function generateProductHtml(product: any, index: number): string {
+  // Use product title as the primary source of information, with better fallbacks
   const productTitle = product.title || 'Lenovo Laptop';
   const productPrice = formatPrice(product.price);
   const productRating = product.rating || 0;
@@ -61,6 +62,13 @@ export function generateProductHtml(product: any, index: number): string {
   // Generate star rating HTML
   const starsHtml = generateStarsHtml(productRating, productRatingTotal);
   
+  // Extract model information from title or use a cleaner fallback
+  // This fixes the "Lenovo Laptop" text under the image
+  const modelInfo = product.model || 
+                    (productTitle && productTitle.includes(' ') ? 
+                    productTitle.split(' ').slice(1, 3).join(' ') : 
+                    productTitle);
+  
   console.log(`🖼️ Generating HTML for product #${rank}: ${productTitle}, image: ${imageUrl.substring(0, 50)}...`);
   console.log(`⭐ Rating: ${productRating || 'N/A'}, Reviews: ${productRatingTotal || 'N/A'}`);
   
@@ -88,7 +96,7 @@ export function generateProductHtml(product: any, index: number): string {
         </div>
         <div class="text-sm text-gray-600">
           <p><strong>ASIN:</strong> ${product.asin || 'N/A'}</p>
-          <p><strong>Model:</strong> ${product.model || product.title?.split(' ').slice(1, 3).join(' ') || 'N/A'}</p>
+          <p><strong>Model:</strong> ${modelInfo}</p>
         </div>
       </div>
     </div>
