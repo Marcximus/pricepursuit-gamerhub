@@ -1,6 +1,6 @@
 
 import { corsHeaders } from "../utils/corsHelpers.ts";
-import { safeStringify, logRequestOrResponse } from "./utils/logger.ts";
+import { safeStringify } from "./utils/logger.ts";
 
 export type SearchParams = {
   query: string;
@@ -77,14 +77,13 @@ export async function searchAmazonProducts(searchParams: SearchParams) {
       });
       
       // Log request details
-      logRequestOrResponse(request, "REQUEST");
+      console.log(`📤 REQUEST URL: ${request.url}`);
+      console.log(`📤 REQUEST METHOD: ${request.method}`);
       
       const response = await fetch(request);
       clearTimeout(timeoutId);
       
       // Log response details
-      logRequestOrResponse(response, "RESPONSE");
-      
       console.log(`📥 RapidAPI response status: ${response.status}`);
 
       // Check for non-JSON responses which could indicate API issues

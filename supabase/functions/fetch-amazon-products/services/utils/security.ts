@@ -1,13 +1,16 @@
 
 /**
- * Security utilities for HTML generation
+ * Security utilities for sanitizing HTML content
  */
 
 /**
- * Simple HTML escape function to prevent XSS in product data
+ * Escapes HTML special characters to prevent XSS attacks
  */
-export function escapeHtml(unsafe: string | number | undefined): string {
-  if (unsafe === undefined || unsafe === null) return '';
+export function escapeHtml(unsafe: string | number | null | undefined): string {
+  if (unsafe === null || unsafe === undefined) {
+    return '';
+  }
+  
   const str = String(unsafe);
   return str
     .replace(/&/g, "&amp;")
