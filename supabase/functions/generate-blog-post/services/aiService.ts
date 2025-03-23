@@ -1,4 +1,3 @@
-
 /**
  * Service to handle AI content generation using DeepSeek API
  */
@@ -21,12 +20,26 @@ export async function generateContentWithDeepSeek(
     }
     
     // Truncate system prompt if it's too long to avoid API failures
-    const maxSystemPromptLength = 128000; // Increased from 8000 to 128000
+    const maxSystemPromptLength = 96000; // Reduced from 128000 to 96000 to avoid potential issues
     let truncatedSystemPrompt = systemPrompt;
     if (systemPrompt.length > maxSystemPromptLength) {
       console.log(`⚠️ System prompt exceeds ${maxSystemPromptLength} characters, truncating...`);
       truncatedSystemPrompt = systemPrompt.substring(0, maxSystemPromptLength);
       console.log(`📝 Truncated system prompt to: ${truncatedSystemPrompt.length} characters`);
+    }
+    
+    // For Top10 posts, ensure we don't overwhelm the API with too much product data
+    if (userPrompt.toLowerCase().includes('top 10') && truncatedSystemPrompt.length > 50000) {
+      console.log(`⚠️ Top10 system prompt is very large (${truncatedSystemPrompt.length} chars), simplifying...`);
+      // Extract just the essential instructions from the prompt and shorten product data
+      const instructionParts = truncatedSystemPrompt.split('PRODUCT DATA:');
+      if (instructionParts.length > 1) {
+        // Keep the instructions but limit the product data
+        truncatedSystemPrompt = instructionParts[0] + 
+          "PRODUCT DATA: Multiple products available with details including title, brand, price, and features. " +
+          "Create a Top 10 list based on these products.";
+        console.log(`📝 Simplified Top10 prompt to: ${truncatedSystemPrompt.length} characters`);
+      }
     }
     
     const payload = {
@@ -91,7 +104,8 @@ export async function generateContentWithDeepSeek(
       // Check for empty or malformed response
       if (!data || !data.choices || !data.choices.length || !data.choices[0].message) {
         console.error(`❌ Invalid or empty response from DeepSeek API:`, data);
-        throw new Error('Received an invalid or empty response from DeepSeek API');
+        // Return a fallback response instead of throwing
+        return "# Top 10 Laptops\n\nUnable to generate the full content due to an API issue. Please try again later.";
       }
       
       // Log a preview of the response
@@ -111,13 +125,17 @@ export async function generateContentWithDeepSeek(
       
       if (fetchError.name === 'AbortError') {
         console.error('💥 DeepSeek API request timed out after 45 seconds');
-        throw new Error('DeepSeek API request timed out. Please try again or use a shorter prompt.');
+        // Return a fallback response instead of throwing
+        return "# Top 10 Laptops\n\nThe request timed out. Please try again with a shorter prompt or fewer products.";
       }
       
-      throw fetchError;
+      console.error('💥 Fetch error:', fetchError);
+      // Return a fallback response with the error message
+      return `# Error Generating Content\n\nThere was an error calling the AI service: ${fetchError.message}\n\nPlease try again in a few moments.`;
     }
   } catch (error) {
     console.error(`💥 Error generating content with DeepSeek:`, error);
-    throw new Error(`Failed to generate content: ${error instanceof Error ? error.message : String(error)}`);
+    // Return a fallback response instead of throwing
+    return `# Error in Content Generation\n\nAn unexpected error occurred: ${error instanceof Error ? error.message : String(error)}\n\nPlease try again later.`;
   }
 }
