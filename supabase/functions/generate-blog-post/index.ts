@@ -11,6 +11,7 @@ import {
 } from "./handlers/requestHandler.ts";
 import { generateBlogContent } from "./handlers/contentGenerator.ts";
 
+// Get the DeepSeek API key from environment variables
 const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
 
 serve(async (req) => {
@@ -23,9 +24,10 @@ serve(async (req) => {
   }
 
   try {
+    // Validate that we have the required API key
     if (!DEEPSEEK_API_KEY) {
       console.error("🔑❌ ERROR: DEEPSEEK_API_KEY is not set");
-      throw new Error("DEEPSEEK_API_KEY is not set");
+      throw new Error("DEEPSEEK_API_KEY is not set. Please configure this secret in the Supabase dashboard.");
     }
     console.log("🔑✅ DeepSeek API key validated");
 
