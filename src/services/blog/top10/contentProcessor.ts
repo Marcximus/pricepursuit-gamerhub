@@ -1,3 +1,4 @@
+
 /**
  * Content processing utilities for Top10 blog posts
  */
@@ -18,6 +19,13 @@ export function cleanupContent(content: string): string {
   // Fix empty heading tags
   cleaned = cleaned.replace(/<h1>\s*<\/h1>/g, '<h1>Top 10 Best Lenovo Laptops</h1>');
   
+  // Ensure proper paragraph formatting
+  cleaned = cleaned.replace(/(<\/p>)([^<>\n])/g, '$1\n\n$2');
+  cleaned = cleaned.replace(/([^<>\n])(<h[1-6])/g, '$1\n\n$2');
+  
+  // Ensure emoji separated from text
+  cleaned = cleaned.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])\s*([A-Za-z])/g, '$1 $2');
+  
   console.log('✅ Content cleaned successfully');
   return cleaned;
 }
@@ -30,8 +38,11 @@ export function fixHtmlTags(content: string): string {
   
   let fixed = content;
   
+  // Make sure headers and paragraphs are properly formatted
+  fixed = fixed.replace(/^((?!<h1>|<p>).+)$/gm, '<p>$1</p>');
+  
   // Fix unclosed tags
-  const commonTags = ['p', 'h1', 'h2', 'h3', 'ul', 'li', 'div', 'span'];
+  const commonTags = ['p', 'h1', 'h2', 'h3', 'h4', 'ul', 'li', 'div', 'span'];
   commonTags.forEach(tag => {
     // Count opening and closing tags
     const openCount = (fixed.match(new RegExp(`<${tag}[^>]*>`, 'g')) || []).length;
@@ -51,6 +62,11 @@ export function fixHtmlTags(content: string): string {
   
   // Remove any visible HTML tags in text
   fixed = fixed.replace(/&lt;[^&]*&gt;/g, '');
+  
+  // Add proper spacing between sections
+  fixed = fixed.replace(/<\/h3>\s*(<div)/g, '</h3>\n\n$1');
+  fixed = fixed.replace(/<\/h3>\s*([^<\n])/g, '</h3>\n\n<p>$1</p>');
+  fixed = fixed.replace(/<\/ul>\s*([^<\n])/g, '</ul>\n\n<p>$1</p>');
   
   console.log('✅ HTML tags fixed successfully');
   return fixed;

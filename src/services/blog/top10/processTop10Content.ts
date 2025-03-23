@@ -16,6 +16,15 @@ export async function processTop10Content(content: string, prompt: string): Prom
   console.log(`📄 Content length before processing: ${content.length} characters`);
   
   try {
+    // Basic HTML sanity check - add missing html tags if needed
+    if (!content.includes('<h1>') && !content.includes('<h2>') && !content.includes('<h3>')) {
+      console.warn('⚠️ Content appears to be missing HTML formatting, applying basic structure');
+      content = `<h1>${prompt}</h1>\n\n${content}`
+        .replace(/\n\n/g, '</p>\n\n<p>')
+        .replace(/^<p>/, '')
+        .replace(/<\/p>$/, '');
+    }
+    
     // Get products either from localStorage or by fetching them
     const products = await getProducts(prompt);
     

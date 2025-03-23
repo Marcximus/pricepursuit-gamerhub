@@ -14,11 +14,14 @@ export function generateProductHtml(product: any, index: number): string {
   const productUrl = formatAmazonUrl(product.asin);
   const imageUrl = product.image_url || product.image || 'https://via.placeholder.com/300x200?text=Lenovo+' + encodeURIComponent(productTitle.substring(0, 20));
   
-  console.log(`🖼️ Generating HTML for product #${index}: ${productTitle}, image: ${imageUrl.substring(0, 50)}...`);
+  // Calculate the proper product ranking (from #10 to #1)
+  const rank = 10 - (index % 10);
+  
+  console.log(`🖼️ Generating HTML for product #${rank}: ${productTitle}, image: ${imageUrl.substring(0, 50)}...`);
   
   return `
 <div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6">
-  <div class="product-rank absolute top-2 left-2 bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold">#${11 - index}</div>
+  <div class="product-rank absolute top-2 left-2 bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold">#${rank}</div>
   <div class="p-4">
     <div class="flex flex-col md:flex-row">
       <div class="md:w-1/3 flex items-center justify-center">
