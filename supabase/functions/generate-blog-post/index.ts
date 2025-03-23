@@ -32,6 +32,14 @@ serve(async (req) => {
     const requestText = await req.text();
     console.log(`📥 REQUEST DATA LENGTH: ${requestText.length} bytes`);
     
+    if (!requestText || requestText.trim() === '') {
+      console.error("❌ Empty request body received");
+      return new Response(
+        JSON.stringify({ error: "Empty request body" }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    
     let requestData;
     try {
       requestData = JSON.parse(requestText);
@@ -42,7 +50,10 @@ serve(async (req) => {
     } catch (parseError) {
       console.error("❌ Failed to parse request data:", parseError);
       console.error("📄 Raw request text:", requestText.substring(0, 200) + "...");
-      throw new Error("Invalid request format: " + parseError.message);
+      return new Response(
+        JSON.stringify({ error: `Failed to parse request data: ${parseError.message}` }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
 
     const { prompt, category, asin, asin2, products } = requestData;

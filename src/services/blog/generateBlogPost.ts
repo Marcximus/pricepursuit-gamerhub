@@ -79,14 +79,30 @@ export async function generateBlogPost(
     console.log('🧠 Calling generate-blog-post edge function...');
     
     try {
+      // Create a request payload and validate it's valid JSON
+      const requestPayload = {
+        prompt,
+        category,
+        asin,
+        asin2,
+        products: category === 'Top10' ? products : undefined
+      };
+      
+      // Log payload size to help diagnose potential issues
+      const payloadSize = JSON.stringify(requestPayload).length;
+      console.log(`📦 Request payload size: ${payloadSize} bytes`);
+      
+      if (payloadSize > 5000000) { // 5MB limit for Supabase functions
+        console.warn('⚠️ Request payload exceeds 5MB, may cause issues with edge function');
+        toast({
+          title: 'Large Request Warning',
+          description: 'Your content is very large. If generation fails, try a shorter prompt.',
+          variant: 'default',
+        });
+      }
+      
       const response = await supabase.functions.invoke('generate-blog-post', {
-        body: {
-          prompt,
-          category,
-          asin,
-          asin2,
-          products: category === 'Top10' ? products : undefined // Pass the products to the edge function
-        },
+        body: requestPayload,
         // Add a longer timeout for the function call - this is important!
         headers: {
           'Content-Type': 'application/json',
