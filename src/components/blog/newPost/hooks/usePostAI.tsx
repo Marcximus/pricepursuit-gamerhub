@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { extractSearchParamsFromPrompt } from '@/services/blog/amazonProductService';
@@ -33,15 +32,6 @@ export const usePostAI = (
       return;
     }
     
-    if (!selectedCategory) {
-      toast({
-        title: "Category required",
-        description: "Please select a content category.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setIsGenerating(true);
     try {
       if (selectedCategory === 'Top10') {
@@ -49,18 +39,10 @@ export const usePostAI = (
         setTitle(extractedTitle);
       }
       
-      // Log the parameters before generating content
-      console.log('Generating blog post with parameters:', {
-        prompt: prompt.substring(0, 100) + (prompt.length > 100 ? '...' : ''),
-        category: selectedCategory,
-        asin: asin || undefined,
-        asin2: asin2 || undefined
-      });
-      
       const { generateBlogPost } = await import('@/services/blog');
       
       console.log(
-        `Generating ${selectedCategory} blog post with prompt: ${prompt.substring(0, 50)}...` +
+        `Generating ${selectedCategory} blog post with prompt: ${prompt}` +
         `${asin ? `, ASIN1: ${asin}` : ''}` +
         `${asin2 ? `, ASIN2: ${asin2}` : ''}`
       );
