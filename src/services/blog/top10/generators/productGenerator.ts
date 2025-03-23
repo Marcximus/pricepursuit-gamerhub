@@ -10,7 +10,8 @@ import { formatPrice, formatAmazonUrl, generateStarsHtml } from '../utils';
 export function generateProductHtml(product: any, index: number): string {
   const productTitle = product.title || 'Lenovo Laptop';
   const productPrice = formatPrice(product.price);
-  const productRating = product.rating ? `${product.rating}/5 - ${product.ratings_total || 0} reviews` : 'No ratings';
+  const productRating = product.rating || 0;
+  const productRatingTotal = product.ratings_total || 0;
   const productUrl = formatAmazonUrl(product.asin);
   const imageUrl = product.image_url || product.image || 'https://via.placeholder.com/300x200?text=Lenovo+' + encodeURIComponent(productTitle.substring(0, 20));
   
@@ -31,7 +32,7 @@ export function generateProductHtml(product: any, index: number): string {
       </div>
       <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
         <h4 class="text-xl font-semibold mb-2">${productTitle}</h4>
-        ${generateStarsHtml(product.rating, product.ratings_total)}
+        ${generateStarsHtml(productRating, productRatingTotal)}
         <p class="text-lg font-bold mb-3">${productPrice}</p>
         <div class="mb-4">
           <a href="${productUrl}" 
