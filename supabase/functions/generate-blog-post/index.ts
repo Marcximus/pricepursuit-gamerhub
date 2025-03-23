@@ -35,8 +35,17 @@ serve(async (req) => {
     console.log(`📥 Content-Length: ${req.headers.get('content-length')}`);
     
     // Extract the request data with improved error handling
+    let requestData;
     try {
-      const requestData = await extractRequestData(req);
+      // More robust method to get the request data
+      requestData = await extractRequestData(req);
+      
+      // Basic validation that we have data
+      if (!requestData) {
+        throw new Error("Empty request data received");
+      }
+      
+      console.log("📦 Request data extracted successfully");
       
       // Validate request data
       validateRequestData(requestData);
