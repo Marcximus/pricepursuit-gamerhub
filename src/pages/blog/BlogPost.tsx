@@ -11,7 +11,8 @@ import {
   BlogPostFooter,
   fixTopTenHtmlIfNeeded,
   injectAdditionalImages,
-  addImageFallbacks
+  addImageFallbacks,
+  improveContentSpacing
 } from '@/components/blog/post';
 
 const BlogPost = () => {
@@ -52,8 +53,10 @@ const BlogPost = () => {
 
   // Process content
   const fixedContent = fixTopTenHtmlIfNeeded(post.content, post.category);
-  const processedContent = injectAdditionalImages(fixedContent, post.additional_images, post.category);
-  const contentWithFallbacks = addImageFallbacks(processedContent);
+  const contentWithImages = injectAdditionalImages(fixedContent, post.additional_images, post.category);
+  const contentWithFallbacks = addImageFallbacks(contentWithImages);
+  // Apply improved spacing
+  const enhancedContent = improveContentSpacing(contentWithFallbacks);
 
   return (
     <div className="min-h-screen pb-16">
@@ -66,7 +69,7 @@ const BlogPost = () => {
           <article>
             <BlogPostHeader post={post} category={category} />
             
-            <BlogPostContent post={post} content={contentWithFallbacks} />
+            <BlogPostContent post={post} content={enhancedContent} />
             
             <BlogPostFooter postId={post.id} category={category} />
           </article>

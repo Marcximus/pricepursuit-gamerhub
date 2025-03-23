@@ -20,6 +20,10 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
         .prose ul.my-4 { margin: 1rem 0; padding-left: 1.5rem; }
         .prose ul.my-4 li { margin-bottom: 0.5rem; list-style-type: none; position: relative; padding-left: 1.5rem; }
         .prose ul.my-4 li:before { content: "✅"; position: absolute; left: 0; }
+        .prose p { margin-bottom: 1.25rem; }
+        .prose p + p { margin-top: 1.25rem; }
+        .prose p:has(+ ul) { margin-bottom: 0.75rem; }
+        .prose p:has(emoji-prefix) { margin-top: 1.5rem; margin-bottom: 1.5rem; }
       `;
       document.head.appendChild(styleElement);
     }
