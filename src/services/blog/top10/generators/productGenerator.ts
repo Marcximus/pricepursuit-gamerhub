@@ -122,7 +122,7 @@ function extractProcessor(title: string): string | null {
   const intelMatch = title.match(/Intel\s+(?:Core\s+)?(?:i[3579]|Celeron|Pentium)[^\s,]*/i);
   const amdMatch = title.match(/AMD\s+Ryzen\s+[3579][^\s,]*/i);
   const mediaMatch = title.match(/MediaTek\s+[^\s,]*/i);
-  return intelMatch || amdMatch || mediaMatch || null;
+  return intelMatch ? intelMatch[0] : (amdMatch ? amdMatch[0] : (mediaMatch ? mediaMatch[0] : null));
 }
 
 function extractRam(title: string): string | null {
@@ -140,5 +140,5 @@ function extractGraphics(title: string): string | null {
   const nvidiaMatch = title.match(/(?:NVIDIA|GeForce)\s+[^\s,]*/i);
   const amdMatch = title.match(/Radeon\s+[^\s,]*/i);
   const intelMatch = title.match(/Intel\s+(?:UHD|Iris|HD)\s+Graphics[^\s,]*/i);
-  return nvidiaMatch || amdMatch || intelMatch || null;
+  return nvidiaMatch ? nvidiaMatch[0] : (amdMatch ? amdMatch[0] : (intelMatch ? intelMatch[0] : null));
 }
