@@ -1,4 +1,3 @@
-
 /**
  * Content processing utilities for blog posts
  */
@@ -87,12 +86,6 @@ export function improveContentSpacing(content: string): string {
     '<p emoji-prefix="true">$1</p>'
   );
   
-  // Ensure proper spacing after lists
-  enhancedContent = enhancedContent.replace(
-    /(<\/ul>)(<p>)/g,
-    '$1\n$2'
-  );
-  
   // Fix common spacing issues
   enhancedContent = enhancedContent
     // Add space after period if missing
@@ -111,12 +104,6 @@ export function improveContentSpacing(content: string): string {
       // Keep only the first few words for the title
       return `<h3>${shortTitle}</h3>`;
     }
-  );
-  
-  // Add margin after bullet point lists
-  enhancedContent = enhancedContent.replace(
-    /(<\/ul>)(?!\s*<\/div>|\s*<div|\s*<h[1-6]|\s*<p)/g,
-    '$1\n<div class="mb-4"></div>'
   );
   
   return enhancedContent;
