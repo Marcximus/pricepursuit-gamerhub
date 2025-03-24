@@ -67,11 +67,12 @@ export function generateProductHtml(product: any, index: number): string {
   // Generate star rating HTML
   const starsHtml = generateStarsHtml(productRating, productRatingTotal);
   
-  // Extract model information from title or use a cleaner fallback
-  const modelInfo = product.model || 
-                    (productTitle && productTitle.includes(' ') ? 
-                    productTitle.split(' ').slice(1, 3).join(' ') : 
-                    shortTitle);
+  // Extract key specs for display
+  const screenSize = product.screen_size || extractScreenSize(productTitle);
+  const processor = product.processor || extractProcessor(productTitle);
+  const ram = product.ram || extractRam(productTitle);
+  const storage = product.storage || extractStorage(productTitle);
+  const graphics = product.graphics || extractGraphics(productTitle);
   
   console.log(`🖼️ Generating HTML for product #${rank}: ${shortTitle}`);
   
@@ -97,9 +98,12 @@ export function generateProductHtml(product: any, index: number): string {
             View Now on Amazon
           </a>
         </div>
-        <div class="text-sm text-gray-600">
-          <p><strong>ASIN:</strong> ${product.asin || 'N/A'}</p>
-          <p><strong>Model:</strong> ${modelInfo}</p>
+        <div class="text-sm text-gray-600 specs-info">
+          ${screenSize ? `<p><strong>Display:</strong> ${screenSize}</p>` : ''}
+          ${processor ? `<p><strong>CPU:</strong> ${processor}</p>` : ''}
+          ${ram ? `<p><strong>RAM:</strong> ${ram}</p>` : ''}
+          ${storage ? `<p><strong>Storage:</strong> ${storage}</p>` : ''}
+          ${graphics ? `<p><strong>Graphics:</strong> ${graphics}</p>` : ''}
         </div>
       </div>
     </div>
@@ -108,3 +112,33 @@ export function generateProductHtml(product: any, index: number): string {
   `;
 }
 
+// Helper functions to extract specs from title when not available in product data
+function extractScreenSize(title: string): string | null {
+  const match = title.match(/(\d+\.?\d?)["\s-](?:inch|display)/i);
+  return match ? `${match[1]}"` : null;
+}
+
+function extractProcessor(title: string): string | null {
+  const intelMatch = title.match(/Intel\s+(?:Core\s+)?(?:i[3579]|Celeron|Pentium)[^\s,]*/i);
+  const amdMatch = title.match(/AMD\s+Ryzen\s+[3579][^\s,]*/i);
+  const mediaMatch = title.match(/MediaTek\s+[^\s,]*/i);
+  return intelMatch || amdMatch || mediaMatch || null;
+}
+
+function extractRam(title: string): string | null {
+  const match = title.match(/(\d+)(?:\s*GB|\s*G)\s+(?:DDR\d+\s+)?(?:RAM|Memory)/i);
+  return match ? `${match[1]}GB` : null;
+}
+
+function extractStorage(title: string): string | null {
+  const tbMatch = title.match(/(\d+)(?:\s*TB)\s+(?:SSD|HDD|Storage|PCIe)/i);
+  const gbMatch = title.match(/(\d+)(?:\s*GB)\s+(?:SSD|HDD|Storage|eMMC|PCIe)/i);
+  return tbMatch ? `${tbMatch[1]}TB` : (gbMatch ? `${gbMatch[1]}GB` : null);
+}
+
+function extractGraphics(title: string): string | null {
+  const nvidiaMatch = title.match(/(?:NVIDIA|GeForce)\s+[^\s,]*/i);
+  const amdMatch = title.match(/Radeon\s+[^\s,]*/i);
+  const intelMatch = title.match(/Intel\s+(?:UHD|Iris|HD)\s+Graphics[^\s,]*/i);
+  return nvidiaMatch || amdMatch || intelMatch || null;
+}

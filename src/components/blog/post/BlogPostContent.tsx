@@ -43,6 +43,11 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
         /* Make product cards stand out better */
         .product-card { margin: 2.5rem 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .product-card .product-title { font-size: 1.25rem; line-height: 1.4; }
+        
+        /* Style for product specifications */
+        .specs-info { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem; }
+        .specs-info p { margin: 0.25rem 0; line-height: 1.4; }
+        .specs-info strong { color: #4B5563; }
       `;
       document.head.appendChild(styleElement);
     }
