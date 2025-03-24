@@ -19,46 +19,45 @@ export function addVideoEmbed(content: string): string {
 </div>
 `;
   
-  // First try to find conclusion section with various heading formats
+  // First look for conclusion section with various heading formats
   const conclusionRegex = /<h[1-6][^>]*>\s*(?:conclusion|summary|final thoughts|wrapping up|in conclusion|to sum up)/i;
   const conclusionMatch = content.match(conclusionRegex);
   
   if (conclusionMatch && conclusionMatch.index !== undefined) {
-    // Insert video just before the conclusion
-    console.log('✅ Inserting video before conclusion section');
-    return content.substring(0, conclusionMatch.index) + videoEmbed + content.substring(conclusionMatch.index);
-  }
-  
-  // If no conclusion section is found, try to put it before the last heading
-  // This works well for posts that don't have an explicit conclusion section
-  const headings = [...content.matchAll(/<h[1-6][^>]*>/gi)];
-  if (headings.length > 1) {
-    // Get the last or second-to-last heading (to avoid putting it before "Related Posts" or similar)
-    const lastHeadingIndex = headings[headings.length - 1].index;
-    const secondLastHeadingIndex = headings.length > 2 ? headings[headings.length - 2].index : lastHeadingIndex;
+    // Find the end of the conclusion section
+    const startIndex = conclusionMatch.index;
+    let endIndex = content.length;
     
-    // Choose the appropriate position
-    const insertIndex = secondLastHeadingIndex !== undefined ? secondLastHeadingIndex : lastHeadingIndex;
+    // Look for the next heading after conclusion, if any
+    const nextHeadingMatch = content.slice(startIndex + conclusionMatch[0].length).match(/<h[1-6][^>]*>/i);
+    if (nextHeadingMatch && nextHeadingMatch.index !== undefined) {
+      endIndex = startIndex + conclusionMatch[0].length + nextHeadingMatch.index;
+    } else {
+      // If no next heading, find the last paragraph in conclusion
+      const paragraphs = [...content.slice(startIndex).matchAll(/<\/p>/gi)];
+      if (paragraphs.length > 0) {
+        const lastParagraph = paragraphs[paragraphs.length - 1];
+        if (lastParagraph.index !== undefined) {
+          endIndex = startIndex + lastParagraph.index + 4; // 4 for '</p>'
+        }
+      }
+    }
     
-    if (insertIndex !== undefined) {
-      console.log('✅ Inserting video before the last main section');
-      return content.substring(0, insertIndex) + videoEmbed + content.substring(insertIndex);
-    }
+    // Insert video after the conclusion section
+    console.log('✅ Inserting video after conclusion section');
+    return content.substring(0, endIndex) + videoEmbed + content.substring(endIndex);
   }
   
-  // If no good position is found in the structure, insert near the end
-  // Find the last paragraph tag
-  const paragraphs = [...content.matchAll(/<\/p>/gi)];
-  if (paragraphs.length > 0) {
-    const lastParagraphIndex = paragraphs[paragraphs.length - 1].index;
-    if (lastParagraphIndex !== undefined) {
-      const endOfLastParagraph = lastParagraphIndex + 4; // Length of '</p>'
-      console.log('✅ Inserting video after the last paragraph');
-      return content.substring(0, endOfLastParagraph) + videoEmbed + content.substring(endOfLastParagraph);
-    }
+  // If no conclusion section is found, try to put it at the end of the content
+  // Look for the last paragraph or div
+  const lastElementMatch = content.match(/(<\/p>|<\/div>)[^<]*$/i);
+  if (lastElementMatch && lastElementMatch.index !== undefined) {
+    const insertPosition = lastElementMatch.index + lastElementMatch[0].length;
+    console.log('✅ No conclusion found, adding video at the end of content');
+    return content.substring(0, insertPosition) + videoEmbed + content.substring(insertPosition);
   }
   
-  // Final fallback: insert at the end
+  // Final fallback: append at the end
   console.log('⚠️ No ideal position found, appending video at the end');
   return content + videoEmbed;
 }
