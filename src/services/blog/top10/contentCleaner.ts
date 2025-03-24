@@ -41,6 +41,12 @@ export function cleanupContent(content: string): string {
   // Ensure paragraphs are properly wrapped
   cleaned = ensureParagraphWrapping(cleaned);
   
+  // Add spacing between lists and following paragraphs
+  cleaned = cleaned.replace(/<\/ul>\s*<p>/g, '</ul>\n\n<p>');
+  
+  // Fix spacing after feature bullets - this is key for the issue reported
+  cleaned = cleaned.replace(/<\/li>\s*<\/ul>\s*([A-Z])/g, '</li>\n</ul>\n\n<p>$1');
+  
   console.log('✅ Content cleaned successfully');
   return cleaned;
 }
@@ -73,6 +79,12 @@ function processBulletPoints(content: string): string {
         if (inList) {
           result.push('</ul>');
           inList = false;
+          
+          // Add an extra line break if the next line starts with a capital letter
+          // This improves spacing after bullet points
+          if (line.match(/^[A-Z]/)) {
+            result.push('');
+          }
         }
         
         result.push(line);
