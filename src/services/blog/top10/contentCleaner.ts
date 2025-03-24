@@ -1,4 +1,3 @@
-
 /**
  * Content cleaning utilities for Top10 blog posts
  */
