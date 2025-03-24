@@ -10,12 +10,6 @@ import { formatPrice, formatAmazonUrl, generateStarsHtml } from '../utils';
 export function generateProductHtml(product: any, index: number): string {
   // Use product title as the primary source of information, with better fallbacks
   const productTitle = product.title || 'Lenovo Laptop';
-  
-  // Create a shorter, cleaner title by truncating long product names
-  // This removes the long Amazon-style product description titles
-  const cleanTitle = productTitle.split(',')[0].trim();
-  const shortTitle = cleanTitle.length > 50 ? cleanTitle.substring(0, 50) + '...' : cleanTitle;
-  
   const productPrice = formatPrice(product.price);
   const productRating = product.rating || 0;
   const productRatingTotal = product.ratings_total || 0;
@@ -71,9 +65,9 @@ export function generateProductHtml(product: any, index: number): string {
   const modelInfo = product.model || 
                     (productTitle && productTitle.includes(' ') ? 
                     productTitle.split(' ').slice(1, 3).join(' ') : 
-                    shortTitle);
+                    productTitle);
   
-  console.log(`🖼️ Generating HTML for product #${rank}: ${shortTitle}`);
+  console.log(`🖼️ Generating HTML for product #${rank}: ${productTitle.substring(0, 50)}...`);
   
   return `
 <div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6" data-asin="${product.asin || ''}" data-rank="${rank}">
@@ -82,12 +76,12 @@ export function generateProductHtml(product: any, index: number): string {
     <div class="flex flex-col md:flex-row">
       <div class="md:w-1/3 flex items-center justify-center">
         <img src="${imageUrl}" 
-             alt="${shortTitle}" 
+             alt="${productTitle}" 
              class="w-full h-auto rounded-md object-contain max-h-48"
              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300&q=80'; this.classList.add('fallback-image');" />
       </div>
       <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
-        <h4 class="text-xl font-semibold mb-2 product-title">${shortTitle}</h4>
+        <h4 class="text-xl font-semibold mb-2 product-title">${productTitle}</h4>
         ${starsHtml}
         <p class="text-lg font-bold mb-3">${productPrice}</p>
         <div class="mb-4">
@@ -107,4 +101,3 @@ export function generateProductHtml(product: any, index: number): string {
 </div>
   `;
 }
-

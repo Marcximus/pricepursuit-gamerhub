@@ -24,22 +24,6 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
         .prose p + p { margin-top: 1.25rem; }
         .prose p:has(+ ul) { margin-bottom: 0.75rem; }
         .prose p:has(emoji-prefix) { margin-top: 1.5rem; margin-bottom: 1.5rem; }
-        
-        /* Improved paragraph spacing */
-        .prose p { margin: 1.5rem 0; line-height: 1.7; }
-        .prose p:first-of-type { margin-top: 0; }
-        
-        /* Special styling for emoji-prefixed paragraphs */
-        .prose p:has(emoji-prefix), 
-        .prose p[emoji-prefix],
-        .prose p:first-child:not(:empty) { margin-top: 2rem; margin-bottom: 1.5rem; }
-        
-        /* Fix for paragraphs starting with emojis */
-        .prose p:first-letter { margin-right: 0.1em; }
-        
-        /* Make product cards stand out better */
-        .product-card { margin: 2.5rem 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .product-card .product-title { font-size: 1.25rem; line-height: 1.4; }
       `;
       document.head.appendChild(styleElement);
     }
