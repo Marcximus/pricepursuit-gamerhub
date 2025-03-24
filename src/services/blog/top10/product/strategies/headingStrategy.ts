@@ -1,61 +1,71 @@
 
 /**
- * Strategy for inserting products after headings in content
+ * Strategy for inserting products after headings in Top10 blog posts
  */
 import { generateProductHtml } from '../../generators/productGenerator';
 
 /**
- * Insert products after headings in content
+ * Insert products after headings in the content
+ * @param content The content with headings
+ * @param products Array of product data
+ * @returns Updated content with product HTML and replacement count
  */
 export function insertAfterHeadings(
   content: string,
   products: any[]
 ): { content: string; replacementsCount: number } {
-  let newContent = content;
-  let replacementsCount = 0;
+  console.log('🔍 Looking for headings to insert products after...');
   
-  console.log(`⚠️ Didn't find enough placeholders, will attempt to insert products after headings`);
-  
-  // Look for h3 headings which likely represent products
-  const headings = newContent.match(/<h3[^>]*>.*?<\/h3>/gi) || [];
-  
-  if (headings.length >= 5) {
-    // Insert products after headings
-    for (let i = 0; i < Math.min(headings.length, products.length); i++) {
-      const product = products[i];
-      const productHtml = product.htmlContent || `<div>Product data missing for ${product.title || 'Unknown Product'}</div>`;
-      
-      // Replace any duplicate "#10" with the correct index
-      const correctedHtml = productHtml.replace(/#10/g, `#${10 - i}`);
-      
-      // Find position of this heading
-      const headingPos = newContent.indexOf(headings[i]);
-      if (headingPos !== -1) {
-        const insertPos = headingPos + headings[i].length;
-        
-        // First remove any existing product blocks that might already be there
-        // This prevents duplicates when regenerating
-        const nextHeadingPos = (i < headings.length - 1) ? 
-          newContent.indexOf(headings[i+1]) : newContent.length;
-        
-        // Check if there's already a product card in this section
-        const sectionContent = newContent.substring(insertPos, nextHeadingPos);
-        const hasProductCard = sectionContent.includes('product-card') || 
-                             sectionContent.includes('Check Price on Amazon');
-        
-        if (hasProductCard) {
-          console.log(`⚠️ Product card already exists after heading ${i+1}, skipping insertion`);
-        } else {
-          // Insert after heading with some spacing
-          newContent = 
-            newContent.substring(0, insertPos) + 
-            '\n\n' + correctedHtml + '\n\n' + 
-            newContent.substring(insertPos);
-          replacementsCount++;
-        }
-      }
-    }
+  // If no products are available, return the original content
+  if (!products || products.length === 0) {
+    console.warn('⚠️ No products available for heading insertion');
+    return { content, replacementsCount: 0 };
   }
   
+  // Find all H3 headings in the content
+  const headingRegex = /<h3>(.*?)<\/h3>/g;
+  let newContent = content;
+  let replacementsCount = 0;
+  let match;
+  
+  // Store each match and then process them
+  const matches = [];
+  while ((match = headingRegex.exec(content)) !== null) {
+    // Skip if heading already has a product card after it
+    const nextContent = content.substring(match.index + match[0].length, match.index + match[0].length + 200);
+    if (nextContent.includes('product-card')) {
+      continue;
+    }
+    
+    matches.push({
+      fullMatch: match[0],
+      headingContent: match[1],
+      index: match.index
+    });
+  }
+  
+  console.log(`🔍 Found ${matches.length} headings without products`);
+  
+  // Process each heading
+  matches.forEach((match, index) => {
+    // Skip if we're out of products
+    if (index >= products.length) {
+      return;
+    }
+    
+    // Generate the product HTML
+    const productHtml = generateProductHtml(products[index], index);
+    
+    // Replace the heading with the heading + product HTML
+    newContent = newContent.replace(
+      match.fullMatch,
+      `${match.fullMatch}\n${productHtml}`
+    );
+    
+    replacementsCount++;
+    console.log(`✅ Inserted product after heading: ${match.headingContent.substring(0, 30)}...`);
+  });
+  
+  console.log(`✅ Inserted ${replacementsCount} products after headings`);
   return { content: newContent, replacementsCount };
 }

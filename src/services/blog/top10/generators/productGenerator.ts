@@ -5,11 +5,118 @@
 import { formatPrice, formatAmazonUrl, generateStarsHtml } from '../utils';
 
 /**
+ * Extract processor information from product title
+ */
+function extractProcessor(title: string): string {
+  const processorPatterns = [
+    /Intel\s+Core\s+i[3579]-\d{4,5}[A-Z]*/i,
+    /Intel\s+Core\s+i[3579]\s+\d{4,5}[A-Z]*/i,
+    /Intel\s+Celeron\s+[A-Z0-9-]+/i,
+    /MediaTek\s+[A-Z0-9-]+/i,
+    /Ryzen\s+\d+\s+[A-Z0-9-]+/i,
+    /AMD\s+Ryzen\s+\d+\s+[A-Z0-9-]+/i,
+    /AMD\s+[A-Z][A-Z0-9-]+/i,
+    /\d+-core\s+processor/i,
+    /\d+-Core\s+[A-Z0-9]+\s+Processor/i,
+  ];
+
+  for (const pattern of processorPatterns) {
+    const match = title.match(pattern);
+    if (match) {
+      return match[0]; // Return the matched string, not the RegExpMatchArray
+    }
+  }
+
+  return "Not specified";
+}
+
+/**
+ * Extract graphics information from product title
+ */
+function extractGraphics(title: string): string {
+  const graphicsPatterns = [
+    /NVIDIA\s+GeForce\s+[A-Z0-9\s]+/i,
+    /GeForce\s+[A-Z0-9\s]+/i,
+    /Intel\s+UHD\s+Graphics\s*\d*/i,
+    /Intel\s+Iris\s+[A-Za-z]+\s*Graphics/i,
+    /AMD\s+Radeon\s+[A-Z0-9\s]+/i,
+    /Radeon\s+[A-Z0-9\s]+/i,
+    /PowerVR\s+[A-Z0-9]+/i,
+    /Integrated\s+Graphics/i,
+  ];
+
+  for (const pattern of graphicsPatterns) {
+    const match = title.match(pattern);
+    if (match) {
+      return match[0]; // Return the matched string, not the RegExpMatchArray
+    }
+  }
+
+  return "Integrated Graphics";
+}
+
+/**
+ * Extract RAM information from product title
+ */
+function extractRam(title: string): string {
+  const ramMatch = title.match(/(\d+)\s*GB\s+RAM/i);
+  return ramMatch ? `${ramMatch[1]}GB RAM` : "RAM not specified";
+}
+
+/**
+ * Extract storage information from product title
+ */
+function extractStorage(title: string): string {
+  const storagePatterns = [
+    /(\d+)\s*TB\s+(?:SSD|HDD|PCIe|NVMe)/i,
+    /(\d+)\s*GB\s+(?:SSD|HDD|PCIe|NVMe)/i,
+    /(\d+)\s*TB\s+(?:storage|drive)/i,
+    /(\d+)\s*GB\s+(?:storage|drive)/i,
+    /(\d+)\s*TB/i,
+    /(\d+)\s*GB\s+eMMC/i,
+  ];
+
+  for (const pattern of storagePatterns) {
+    const match = title.match(pattern);
+    if (match) {
+      return match[0];
+    }
+  }
+
+  return "Storage not specified";
+}
+
+/**
+ * Extract screen size information from product title
+ */
+function extractScreenSize(title: string): string {
+  const screenMatch = title.match(/(\d+\.?\d*)[\-"]\s*(?:inch|display|HD|FHD|UHD|screen)/i);
+  if (screenMatch) {
+    return `${screenMatch[1]}" Display`;
+  }
+  
+  // Try another pattern just looking for dimensions
+  const dimensionMatch = title.match(/(\d+\.?\d*)["]/i);
+  if (dimensionMatch) {
+    return `${dimensionMatch[1]}" Display`;
+  }
+  
+  return "Screen size not specified";
+}
+
+/**
  * Generate HTML for a product card
  */
 export function generateProductHtml(product: any, index: number): string {
-  // Use product title as the primary source of information, with better fallbacks
-  const productTitle = product.title || 'Lenovo Laptop';
+  // Use a cleaner product title - just the model name or a simplified version
+  const modelName = product.model || 
+                    (product.title && product.title.includes(' ') ? 
+                    product.title.split(' ').slice(0, 3).join(' ') : 
+                    'Lenovo Laptop');
+                    
+  // Create a clean title without excessive details
+  const productTitle = `Lenovo ${modelName}`.replace(/Lenovo Lenovo/i, 'Lenovo');
+  
   const productPrice = formatPrice(product.price);
   const productRating = product.rating || 0;
   const productRatingTotal = product.ratings_total || 0;
@@ -61,11 +168,13 @@ export function generateProductHtml(product: any, index: number): string {
   // Generate star rating HTML
   const starsHtml = generateStarsHtml(productRating, productRatingTotal);
   
-  // Extract model information from title or use a cleaner fallback
-  const modelInfo = product.model || 
-                    (productTitle && productTitle.includes(' ') ? 
-                    productTitle.split(' ').slice(1, 3).join(' ') : 
-                    productTitle);
+  // Extract key specs from the title
+  const fullTitle = product.title || '';
+  const screenSize = extractScreenSize(fullTitle);
+  const processor = extractProcessor(fullTitle);
+  const ram = extractRam(fullTitle);
+  const storage = extractStorage(fullTitle);
+  const graphics = extractGraphics(fullTitle);
   
   console.log(`🖼️ Generating HTML for product #${rank}: ${productTitle.substring(0, 50)}...`);
   
@@ -91,9 +200,12 @@ export function generateProductHtml(product: any, index: number): string {
             View Now on Amazon
           </a>
         </div>
-        <div class="text-sm text-gray-600">
-          <p><strong>ASIN:</strong> ${product.asin || 'N/A'}</p>
-          <p><strong>Model:</strong> ${modelInfo}</p>
+        <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-sm text-gray-600">
+          <p><strong>Display:</strong> ${screenSize}</p>
+          <p><strong>Processor:</strong> ${processor}</p>
+          <p><strong>Memory:</strong> ${ram}</p>
+          <p><strong>Storage:</strong> ${storage}</p>
+          <p><strong>Graphics:</strong> ${graphics}</p>
         </div>
       </div>
     </div>
