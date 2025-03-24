@@ -21,18 +21,36 @@ export function insertStrategically(
   if (firstHeadingPos > 0) {
     // Check if there's already product content
     const hasProductBlocks = newContent.includes('product-card') || 
-                          newContent.includes('Check Price on Amazon');
+                          newContent.includes('View Now on Amazon');
     
     if (!hasProductBlocks) {
       // Insert products between headings or at the end
       for (let i = 0; i < products.length; i++) {
         const product = products[i];
-        // Make sure the HTML has the correct ranking
-        const productHtml = (product.htmlContent || '')
-          .replace(/#10/g, `#${10 - i}`);
+        
+        // Generate product HTML with appropriate rank
+        const rank = products.length - i;
+        const productHtml = generateProductHtml(product, rank);
         
         // Find the right position for this product
-        const headingMatch = newContent.match(new RegExp(`<h3[^>]*>[^<]*?${product.title || 'Lenovo'}[^<]*?<\/h3>`, 'i'));
+        const title = product.title || '';
+        const modelInfo = product.model || '';
+        const titleWords = [
+          ...title.split(' ').slice(0, 3),
+          ...(modelInfo ? modelInfo.split(' ') : [])
+        ];
+        
+        // Create a regex pattern that looks for headings containing any of the first few words from title/model
+        const titleWordsRegex = titleWords
+          .filter(word => word.length > 3)  // Only use meaningful words
+          .map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))  // Escape regex special chars
+          .join('|');
+        
+        const headingPattern = titleWordsRegex ? 
+          new RegExp(`<h3[^>]*>(?:[^<]*?(?:${titleWordsRegex})[^<]*?)<\/h3>`, 'i') :
+          null;
+        
+        const headingMatch = headingPattern ? newContent.match(headingPattern) : null;
         
         if (headingMatch && headingMatch.index !== undefined) {
           // Insert after its corresponding heading
@@ -44,7 +62,7 @@ export function insertStrategically(
           const sectionContent = newContent.substring(insertPos, sectionEnd);
           
           if (!sectionContent.includes('product-card') && 
-              !sectionContent.includes('Check Price on Amazon')) {
+              !sectionContent.includes('View Now on Amazon')) {
             // Insert after heading with spacing
             newContent = 
               newContent.substring(0, insertPos) + 

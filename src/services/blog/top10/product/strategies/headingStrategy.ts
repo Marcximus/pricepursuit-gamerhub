@@ -23,10 +23,10 @@ export function insertAfterHeadings(
     // Insert products after headings
     for (let i = 0; i < Math.min(headings.length, products.length); i++) {
       const product = products[i];
-      const productHtml = product.htmlContent || `<div>Product data missing for ${product.title || 'Unknown Product'}</div>`;
       
-      // Replace any duplicate "#10" with the correct index
-      const correctedHtml = productHtml.replace(/#10/g, `#${10 - i}`);
+      // Generate product HTML with appropriate rank
+      const rank = products.length - i;
+      const productHtml = generateProductHtml(product, rank);
       
       // Find position of this heading
       const headingPos = newContent.indexOf(headings[i]);
@@ -49,7 +49,7 @@ export function insertAfterHeadings(
           // Insert after heading with some spacing
           newContent = 
             newContent.substring(0, insertPos) + 
-            '\n\n' + correctedHtml + '\n\n' + 
+            '\n\n' + productHtml + '\n\n' + 
             newContent.substring(insertPos);
           replacementsCount++;
         }
