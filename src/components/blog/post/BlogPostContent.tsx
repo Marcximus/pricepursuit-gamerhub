@@ -17,7 +17,7 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
         .prose h1 { font-size: 2.5rem; line-height: 1.2; margin-bottom: 1.5rem; text-align: center; }
         .prose h3 { font-size: 1.75rem; line-height: 1.3; margin-top: 2rem; margin-bottom: 1rem; color: #2563eb; }
         .prose hr { margin: 2rem 0; }
-        .prose ul.my-4 { margin: 1rem 0; padding-left: 1.5rem; }
+        .prose ul.my-4 { margin: 1rem 0; padding-left: 1.5rem; margin-bottom: 1.75rem; }
         .prose ul.my-4 li { margin-bottom: 0.5rem; list-style-type: none; position: relative; padding-left: 1.5rem; }
         .prose ul.my-4 li:before { content: "✅"; position: absolute; left: 0; }
         .prose p { margin-bottom: 1.25rem; }
@@ -36,6 +36,9 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
         
         /* Fix for paragraphs starting with emojis */
         .prose p:first-letter { margin-right: 0.1em; }
+        
+        /* Ensure proper spacing after lists */
+        .prose ul + p { margin-top: 1.75rem; }
         
         /* Make product cards stand out better */
         .product-card { margin: 2.5rem 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
