@@ -1,131 +1,124 @@
 /**
- * Main product placement functionality for Top10 blog posts
+ * Product placement utilities for Top10 blog posts
  */
 import { generateProductHtml } from '../generators/productGenerator';
-import { removeJsonFormatting } from '../contentProcessor';
-import { replaceExplicitPlaceholders } from './strategies/explicitPlaceholders';
-import { insertAfterHeadings } from './strategies/headingStrategy';
-import { insertStrategically } from './strategies/strategicPlacement';
-import { 
-  fixProductNumbering,
-  cleanupDuplicateContent,
-  ensureConsistentProductLinks
-} from './utils/productContentUtils';
 
 /**
  * Replace product placeholders with actual product HTML
- * @param content The content with placeholders
- * @param products Array of product data
- * @returns Updated content with product HTML and replacement count
  */
-export function replaceProductPlaceholders(
-  content: string,
-  products: any[]
-): { content: string; replacementsCount: number } {
-  console.log('🔄 Replacing product placeholders in content...');
-  
-  // Ensure we have products to work with
-  if (!products || products.length === 0) {
-    console.warn('⚠️ No products available for replacement');
+export function replaceProductPlaceholders(content: string, products: any[]): { content: string, replacementsCount: number } {
+  if (!content || !products || products.length === 0) {
+    console.warn('⚠️ Cannot replace product placeholders - missing content or products');
     return { content, replacementsCount: 0 };
   }
   
-  console.log(`🔄 Processing ${products.length} products for Top10 content`);
-  
-  // Limit to 10 products for Top10 lists
-  const productsToUse = products.slice(0, 10);
-  console.log(`🔢 Will use exactly ${productsToUse.length} products for the Top10 list`);
-  
-  // First, remove any raw JSON that might be in the content
-  let newContent = removeJsonFormatting(content);
-  
-  // Different strategies for finding placeholders
   let replacementsCount = 0;
+  let updatedContent = content;
   
-  // Strategy 1: Look for explicit placeholders like [PRODUCT_DATA_1]
-  const replacementResult = replaceExplicitPlaceholders(newContent, productsToUse);
-  newContent = replacementResult.content;
-  replacementsCount = replacementResult.replacementsCount;
+  // Process standard [PRODUCT_DATA_X] placeholders
+  const placeholderPattern = /\[PRODUCT_DATA_(\d+)\]/g;
+  let match;
   
-  // If Strategy 1 didn't find enough placeholders, try Strategy 2
-  if (replacementsCount < 5) {
-    console.log(`⚠️ Only found ${replacementsCount} explicit placeholders, trying heading strategy`);
-    const headingResult = insertAfterHeadings(newContent, productsToUse);
-    newContent = headingResult.content;
-    replacementsCount = headingResult.replacementsCount;
+  while ((match = placeholderPattern.exec(content)) !== null) {
+    const fullMatch = match[0];
+    const position = parseInt(match[1], 10);
     
-    // If Strategy 2 didn't work, try Strategy 3
-    if (replacementsCount < 5) {
-      console.log(`⚠️ Still only ${replacementsCount} placeholders found, trying strategic placement`);
-      const fallbackResult = insertStrategically(newContent, productsToUse);
-      newContent = fallbackResult.content;
-      replacementsCount = fallbackResult.replacementsCount;
+    // Adjust for zero-based array
+    const productIndex = position - 1;
+    
+    if (products[productIndex]) {
+      const product = products[productIndex];
+      
+      // If the product already has generated HTML content, use it
+      if (product.htmlContent) {
+        updatedContent = updatedContent.replace(fullMatch, product.htmlContent);
+      } else {
+        // Otherwise generate the HTML
+        try {
+          const productHtml = generateProductHtml(product, productIndex);
+          updatedContent = updatedContent.replace(fullMatch, productHtml);
+        } catch (error) {
+          console.error(`⚠️ Error generating HTML for product at position ${position}:`, error);
+          // Replace with a simple placeholder if generation fails
+          updatedContent = updatedContent.replace(fullMatch, `<div class="error-product-card">Product data could not be loaded</div>`);
+        }
+      }
+      
+      replacementsCount++;
+    } else {
+      console.warn(`⚠️ No product data available for position ${position}`);
+      // Replace with message if product not found
+      updatedContent = updatedContent.replace(fullMatch, `<div class="missing-product-card">Product ${position} not available</div>`);
     }
   }
   
-  // Remove any remaining product placeholders
-  newContent = newContent.replace(/\[PRODUCT_DATA_\d+\]/g, '');
+  // If no replacements were made but we have products, try to add them after each H3
+  if (replacementsCount === 0 && updatedContent.includes('<h3>')) {
+    console.log('⚠️ No product placeholders found, trying to add products after each H3 tag');
+    
+    // Don't modify the original content until we're sure about all replacements
+    let tempContent = updatedContent;
+    let h3Matches = [...tempContent.matchAll(/<h3[^>]*>(.*?)<\/h3>/g)];
+    
+    if (h3Matches.length > 0) {
+      for (let i = 0; i < Math.min(h3Matches.length, products.length); i++) {
+        const h3Match = h3Matches[i];
+        const h3EndTag = h3Match.index + h3Match[0].length;
+        
+        // Generate product HTML
+        const productHtml = generateProductHtml(products[i], i);
+        
+        // Insert product HTML after the </h3> tag
+        tempContent = tempContent.substring(0, h3EndTag) + 
+                      productHtml + 
+                      tempContent.substring(h3EndTag);
+        
+        // Adjust indices of subsequent matches due to inserted content
+        for (let j = i + 1; j < h3Matches.length; j++) {
+          h3Matches[j].index += productHtml.length;
+        }
+        
+        replacementsCount++;
+      }
+      
+      updatedContent = tempContent;
+    }
+  }
   
-  // Fix numbering in product headings and descriptions
-  newContent = fixProductNumbering(newContent);
-  
-  // Remove any duplicate product blocks
-  newContent = removeDuplicateProductBlocks(newContent);
-  
-  // Ensure product links match the heading content
-  newContent = ensureConsistentProductLinks(newContent, productsToUse);
-  
-  // Clean up duplicate titles and ranking numbers
-  newContent = cleanupDuplicateContent(newContent);
-  
-  console.log(`✅ Product placeholder replacement complete: ${replacementsCount} replacements`);
-  return { content: newContent, replacementsCount };
+  console.log(`📊 Replaced ${replacementsCount} product placeholders in content`);
+  return { content: updatedContent, replacementsCount };
 }
 
 /**
- * Remove duplicate product blocks from content
+ * Remove duplicate product blocks that might have been added by mistake
  */
 export function removeDuplicateProductBlocks(content: string): string {
-  // Find all product blocks
-  const productBlockRegex = /<div class="product-card.*?Check Price on Amazon.*?<\/div>\s*<\/div>\s*<\/div>/gs;
-  const productBlocks = [...content.matchAll(productBlockRegex)];
+  if (!content) return content;
   
-  console.log(`🔍 Found ${productBlocks.length} product blocks in content`);
+  // Look for duplicate product-card divs
+  const productCardPattern = /<div\s+class="product-card"[^>]*>[\s\S]*?<\/div>\s*<\/div>/g;
+  const productCards = [...content.matchAll(productCardPattern)];
   
-  // If we have more than 10 product blocks, there are likely duplicates
-  if (productBlocks.length > 10) {
-    console.log(`⚠️ Detected ${productBlocks.length} product blocks - removing duplicates`);
+  // Check for duplicates based on ASIN
+  const productAsins = new Set();
+  let cleanedContent = content;
+  
+  for (const match of productCards) {
+    const asinMatch = match[0].match(/data-asin="([^"]+)"/);
     
-    // Build a new content string keeping track of which blocks we've seen
-    let newContent = content;
-    const seenBlocks = new Set();
-    let duplicatesRemoved = 0;
-    
-    // Process from the end to avoid index shifting issues
-    for (let i = productBlocks.length - 1; i >= 0; i--) {
-      const block = productBlocks[i];
-      if (!block || !block[0] || block.index === undefined) continue;
+    if (asinMatch && asinMatch[1]) {
+      const asin = asinMatch[1];
       
-      // Extract ASIN or some unique identifier
-      const asinMatch = block[0].match(/data-asin="([^"]+)"/);
-      const asin = asinMatch ? asinMatch[1] : '';
-      
-      // Check if this is a duplicate product
-      const blockFingerprint = `${asin}-${i % 10}`; // Use position in top 10 as part of fingerprint
-      
-      if (seenBlocks.has(blockFingerprint)) {
-        // Remove this duplicate block
-        newContent = newContent.substring(0, block.index) + 
-                    newContent.substring(block.index + block[0].length);
-        duplicatesRemoved++;
+      if (productAsins.has(asin)) {
+        // This is a duplicate, remove it
+        cleanedContent = cleanedContent.replace(match[0], '');
+        console.log(`🧹 Removed duplicate product card with ASIN: ${asin}`);
       } else {
-        seenBlocks.add(blockFingerprint);
+        // First occurrence, add to set
+        productAsins.add(asin);
       }
     }
-    
-    console.log(`✂️ Removed ${duplicatesRemoved} duplicate product blocks`);
-    return newContent;
   }
   
-  return content;
+  return cleanedContent;
 }

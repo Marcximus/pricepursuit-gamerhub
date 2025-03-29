@@ -1,4 +1,3 @@
-
 /**
  * Main processor for Top10 content
  */
@@ -60,10 +59,40 @@ export async function processTop10Content(content: string, prompt: string): Prom
       processedContent = `<h1 class="text-center mb-8">${prompt}</h1>\n\n${processedContent}`;
     }
     
+    // Extract product specs from the content if they exist
+    let productSpecs = [];
+    try {
+      // Try to parse the content as JSON to extract product specs
+      if (content.includes('"products":')) {
+        const match = content.match(/"products"\s*:\s*(\[[\s\S]*?\])/);
+        if (match && match[1]) {
+          const productsJson = match[1].replace(/\/\/.*$/gm, ''); // Remove comments
+          productSpecs = JSON.parse(productsJson);
+          console.log(`✅ Successfully extracted product specs for ${productSpecs.length} products`);
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ Could not extract product specs from content:', e);
+    }
+    
     // Get products either from localStorage or by fetching them
     console.log('🛒 Attempting to get product data...');
     const products = await getProducts(prompt);
     console.log(`🛒 getProducts returned ${products?.length || 0} products`);
+    
+    // If we have productSpecs from the AI response, merge them with the products data
+    if (productSpecs.length > 0 && products && products.length > 0) {
+      for (let i = 0; i < Math.min(productSpecs.length, products.length); i++) {
+        // Ensure product specs are converted to the format expected by generateProductHtml
+        products[i].cpu = productSpecs[i].cpu || products[i].processor || '';
+        products[i].ram = productSpecs[i].ram || products[i].ram || '';
+        products[i].graphics = productSpecs[i].graphics || products[i].graphics || '';
+        products[i].storage = productSpecs[i].storage || products[i].storage || '';
+        products[i].screen = productSpecs[i].screen || products[i].screen_size || '';
+        products[i].battery = productSpecs[i].battery || products[i].battery_life || '';
+      }
+      console.log('✅ Successfully merged product specs with product data');
+    }
     
     // If we have products, log some info about the first product
     if (products && products.length > 0) {

@@ -1,6 +1,7 @@
 
 import { useEffect } from 'react';
 import { BlogPost } from '@/contexts/blog';
+import { removeJsonFormatting } from '@/services/blog/top10/contentProcessor';
 
 interface BlogPostContentProps {
   post: BlogPost;
@@ -8,30 +9,8 @@ interface BlogPostContentProps {
 }
 
 export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
-  // Clean up any leftover JSON formatting in the content
-  const cleanContent = content
-    // Remove JSON syntax markers
-    .replace(/```json\s*\{/g, '')
-    .replace(/\}\s*```/g, '')
-    // Remove title field
-    .replace(/"title"\s*:\s*".*?",?/g, '')
-    // Remove content field markers
-    .replace(/"content"\s*:\s*"/g, '')
-    // Remove excerpt field
-    .replace(/,?\s*"excerpt"\s*:\s*".*?",?/g, '')
-    // Remove tags field
-    .replace(/,?\s*"tags"\s*:\s*\[.*?\],?/g, '')
-    // Remove trailing quotation marks
-    .replace(/"\s*$/g, '')
-    // Remove any other JSON syntax that might be visible
-    .replace(/^{/g, '')
-    .replace(/}$/g, '')
-    // Remove trailing commas and quotes that might be visible
-    .replace(/,\s*"(?:excerpt|tags)":/g, '')
-    .replace(/,\s*$/g, '')
-    // Clean up any double quotes that might be visible around text
-    .replace(/^"/, '')
-    .replace(/"$/, '');
+  // Use the separate removeJsonFormatting function to ensure consistent cleanup
+  const cleanContent = removeJsonFormatting(content);
 
   useEffect(() => {
     // Add styling for Top10 list items if not already present
@@ -49,10 +28,54 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
         .prose p + p { margin-top: 1.25rem; }
         .prose p:has(+ ul) { margin-bottom: 0.75rem; }
         .prose p:has(emoji-prefix) { margin-top: 1.5rem; margin-bottom: 1.5rem; }
-        .product-card { position: relative; }
-        .product-card .specs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
-        .product-card .specs-grid div { padding: 0.25rem; }
-        .product-card .product-rank { z-index: 10; }
+        
+        /* Enhanced product card styling */
+        .product-card { 
+          position: relative; 
+          transition: all 0.3s ease;
+          border-radius: 0.5rem;
+          overflow: hidden;
+        }
+        .product-card:hover { 
+          transform: translateY(-5px);
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .product-card .specs-grid { 
+          display: grid; 
+          grid-template-columns: repeat(2, 1fr); 
+          gap: 0.5rem; 
+          background-color: #f9fafb; 
+          padding: 0.75rem;
+          border-radius: 0.375rem;
+          border: 1px solid #e5e7eb;
+        }
+        .product-card .specs-grid div { 
+          padding: 0.25rem; 
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .product-card .specs-grid .font-medium {
+          color: #4b5563;
+          margin-right: 0.25rem;
+        }
+        .product-card .product-rank { 
+          z-index: 10; 
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .product-card img {
+          transition: transform 0.3s ease;
+        }
+        .product-card:hover img {
+          transform: scale(1.05);
+        }
+        .product-card .button-amazon {
+          transition: all 0.2s ease;
+        }
+        .product-card .button-amazon:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
       `;
       document.head.appendChild(styleElement);
     }
