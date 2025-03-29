@@ -19,7 +19,7 @@ export const formatProductsForDisplay = (topProducts: any[]) => {
     console.log(`📊 Product #${index + 1} specs count: ${specs.length}`);
     
     return {
-      rank: index + 1,
+      rank: index + 1, // Changed to 1-based index for proper ranking
       id: product.id,
       asin: product.asin,
       title: product.title,
@@ -32,7 +32,7 @@ export const formatProductsForDisplay = (topProducts: any[]) => {
       ratingCount: product.rating_count,
       imageUrl: product.image_url,
       productUrl: product.product_url,
-      htmlContent: generateProductHtml(product, specs, index + 1)
+      htmlContent: generateProductHtml(product, specs, index + 1) // Pass the 1-based index
     };
   });
 };

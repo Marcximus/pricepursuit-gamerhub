@@ -79,7 +79,7 @@ export function generateHtmlContent(product: any, rank: number): string {
   return `
     <div class="product-card flex flex-col md:flex-row overflow-hidden rounded-lg shadow-lg border border-gray-200 my-8 hover:shadow-xl transition-shadow bg-white" data-asin="${escapeHtml(asin)}" data-rank="${rank}">
       <div class="relative product-image w-full md:w-1/3 flex-shrink-0">
-        <span class="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded font-bold text-sm product-rank">#${rank}</span>
+        <span class="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded-full font-bold text-sm product-rank">#${rank}</span>
         <a href="${escapeHtml(url)}" target="_blank" rel="nofollow noopener">
           <img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" class="w-full h-64 object-contain p-4" loading="lazy" />
         </a>

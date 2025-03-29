@@ -1,3 +1,4 @@
+
 /**
  * Product placement utilities for Top10 blog posts
  */
@@ -65,7 +66,7 @@ export function replaceProductPlaceholders(content: string, products: any[]): { 
         const h3Match = h3Matches[i];
         const h3EndTag = h3Match.index + h3Match[0].length;
         
-        // Generate product HTML
+        // Generate product HTML - with proper product ranking
         const productHtml = generateProductHtml(products[i], i);
         
         // Insert product HTML after the </h3> tag

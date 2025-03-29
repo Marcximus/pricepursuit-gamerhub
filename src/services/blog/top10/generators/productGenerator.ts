@@ -62,8 +62,8 @@ export function generateProductHtml(product: any, index: number): string {
     imageUrl = `https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300&q=80`;
   }
   
-  // Calculate the proper product ranking (from #10 to #1)
-  const rank = 10 - (index % 10);
+  // Use the index + 1 directly as the rank (from #1 to #10)
+  const rank = index + 1;
   
   // Generate star rating HTML
   const starsHtml = generateStarsHtml(productRating, productRatingTotal);
