@@ -270,6 +270,8 @@ function generateTagsFromContent(title: string, content: string, category: strin
  * Remove JSON formatting from content
  */
 function removeJsonFormatting(content: string): string {
+  console.log(`🧹 Removing JSON formatting from content...`);
+  
   // Remove JSON markers and extract actual content if needed
   let cleanedContent = content;
   
@@ -281,10 +283,12 @@ function removeJsonFormatting(content: string): string {
   if (cleanedContent.trim().startsWith('{') && 
       (cleanedContent.includes('"content":') || cleanedContent.includes('"title":'))) {
     try {
+      console.log(`🔍 Content appears to be JSON, attempting to parse`);
       const jsonObj = JSON.parse(cleanedContent);
       if (jsonObj.content) {
         // We found a content field, use that as the actual content
         cleanedContent = jsonObj.content;
+        console.log(`✅ Successfully extracted content from JSON`);
       }
     } catch (e) {
       console.warn('⚠️ Error parsing potential JSON content:', e);
@@ -297,16 +301,33 @@ function removeJsonFormatting(content: string): string {
           .replace(/\\"/g, '"')
           .replace(/\\n/g, '\n')
           .replace(/\\\\/g, '\\');
+        console.log(`✅ Extracted content using regex fallback`);
       }
     }
   }
   
   // Clean up any remaining JSON properties in the content
-  cleanedContent = cleanedContent.replace(/"title"\s*:\s*".*?",?/g, '');
-  cleanedContent = cleanedContent.replace(/"content"\s*:\s*"/g, '');
-  cleanedContent = cleanedContent.replace(/,?\s*"excerpt"\s*:\s*".*?",?/g, '');
-  cleanedContent = cleanedContent.replace(/,?\s*"tags"\s*:\s*\[.*?\],?/g, '');
-  cleanedContent = cleanedContent.replace(/"\s*$/g, '');
+  cleanedContent = cleanedContent
+    // Remove title field
+    .replace(/"title"\s*:\s*".*?",?/g, '')
+    // Remove content field markers
+    .replace(/"content"\s*:\s*"/g, '')
+    // Remove excerpt field
+    .replace(/,?\s*"excerpt"\s*:\s*".*?",?/g, '')
+    // Remove tags field
+    .replace(/,?\s*"tags"\s*:\s*\[.*?\],?/g, '')
+    // Remove trailing quotation marks
+    .replace(/"\s*$/g, '')
+    // Remove any other JSON syntax that might be visible
+    .replace(/^{/g, '')
+    .replace(/}$/g, '')
+    // Remove trailing commas and quotes that might be visible
+    .replace(/,\s*"(?:excerpt|tags)":/g, '')
+    .replace(/,\s*$/g, '')
+    // Clean up any double quotes that might be visible around text
+    .replace(/^"/, '')
+    .replace(/"$/, '');
   
+  console.log(`✅ JSON formatting removed successfully`);
   return cleanedContent;
 }

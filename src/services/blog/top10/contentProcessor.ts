@@ -42,13 +42,26 @@ export function removeJsonFormatting(content: string): string {
   }
   
   // Clean up any remaining JSON properties in the content
-  cleanedContent = cleanedContent.replace(/"title"\s*:\s*".*?",?/g, '');
-  cleanedContent = cleanedContent.replace(/"content"\s*:\s*"/g, '');
-  cleanedContent = cleanedContent.replace(/"excerpt"\s*:\s*".*?",?/g, '');
-  cleanedContent = cleanedContent.replace(/"tags"\s*:\s*\[.*?\],?/g, '');
-  cleanedContent = cleanedContent.replace(/,\s*"excerpt"\s*:\s*".*?"/g, '');
-  cleanedContent = cleanedContent.replace(/,\s*"tags"\s*:\s*\[.*?\]/g, '');
-  cleanedContent = cleanedContent.replace(/"\s*$/g, '');
+  cleanedContent = cleanedContent
+    // Remove title field
+    .replace(/"title"\s*:\s*".*?",?/g, '')
+    // Remove content field markers
+    .replace(/"content"\s*:\s*"/g, '')
+    // Remove excerpt field
+    .replace(/,?\s*"excerpt"\s*:\s*".*?",?/g, '')
+    // Remove tags field
+    .replace(/,?\s*"tags"\s*:\s*\[.*?\],?/g, '')
+    // Remove trailing quotation marks
+    .replace(/"\s*$/g, '')
+    // Remove any other JSON syntax that might be visible
+    .replace(/^{/g, '')
+    .replace(/}$/g, '')
+    // Remove trailing commas and quotes that might be visible
+    .replace(/,\s*"(?:excerpt|tags)":/g, '')
+    .replace(/,\s*$/g, '')
+    // Clean up any double quotes that might be visible around text
+    .replace(/^"/, '')
+    .replace(/"$/, '');
   
   return cleanedContent;
 }

@@ -69,11 +69,20 @@ export function generateProductHtml(product: any, index: number): string {
   const starsHtml = generateStarsHtml(productRating, productRatingTotal);
   
   // Extract key specifications for display
-  const screenSize = extractScreenSize(product.title || '');
-  const processor = extractProcessor(product.title || '');
-  const ram = extractRam(product.title || '');
-  const storage = extractStorage(product.title || '');
-  const graphics = extractGraphics(product.title || '');
+  let screenSize = extractSpecification(product, 'screen_size') || extractScreenSize(product.title || '');
+  let processor = extractSpecification(product, 'processor') || extractProcessor(product.title || '');
+  let ram = extractSpecification(product, 'ram') || extractRam(product.title || '');
+  let storage = extractSpecification(product, 'storage') || extractStorage(product.title || '');
+  let graphics = extractSpecification(product, 'graphics') || extractGraphics(product.title || '');
+  let batteryLife = extractSpecification(product, 'battery_life') || '';
+  
+  // Ensure we have placeholders for missing specs
+  screenSize = screenSize || 'N/A';
+  processor = processor || 'N/A';
+  ram = ram || 'N/A';
+  storage = storage || 'N/A';
+  graphics = graphics || 'N/A';
+  batteryLife = batteryLife || 'N/A';
   
   console.log(`🖼️ Generating HTML for product #${rank}: ${simplifiedTitle}`);
   
@@ -93,11 +102,12 @@ export function generateProductHtml(product: any, index: number): string {
         ${starsHtml}
         <p class="text-lg font-bold mb-3">${productPrice}</p>
         <div class="specs-grid grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
-          ${screenSize ? `<div><span class="font-medium">Display:</span> ${screenSize}</div>` : ''}
-          ${processor ? `<div><span class="font-medium">CPU:</span> ${processor}</div>` : ''}
-          ${ram ? `<div><span class="font-medium">RAM:</span> ${ram}</div>` : ''}
-          ${storage ? `<div><span class="font-medium">Storage:</span> ${storage}</div>` : ''}
-          ${graphics ? `<div><span class="font-medium">Graphics:</span> ${graphics}</div>` : ''}
+          <div><span class="font-medium">Display:</span> ${screenSize}</div>
+          <div><span class="font-medium">CPU:</span> ${processor}</div>
+          <div><span class="font-medium">RAM:</span> ${ram}</div>
+          <div><span class="font-medium">Storage:</span> ${storage}</div>
+          <div><span class="font-medium">Graphics:</span> ${graphics}</div>
+          <div><span class="font-medium">Battery:</span> ${batteryLife}</div>
         </div>
         <div class="mb-4">
           <a href="${productUrl}" 
@@ -111,6 +121,20 @@ export function generateProductHtml(product: any, index: number): string {
   </div>
 </div>
   `;
+}
+
+/**
+ * Extract specification from product object directly
+ */
+function extractSpecification(product: any, specName: string): string | null {
+  if (product && product[specName] && 
+      typeof product[specName] === 'string' && 
+      product[specName].length > 0 &&
+      product[specName] !== 'undefined' &&
+      product[specName] !== 'null') {
+    return product[specName];
+  }
+  return null;
 }
 
 /**
