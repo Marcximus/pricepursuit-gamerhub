@@ -41,6 +41,15 @@ export function removeJsonFormatting(content: string): string {
     }
   }
   
+  // Clean up any remaining JSON properties in the content
+  cleanedContent = cleanedContent.replace(/"title"\s*:\s*".*?",?/g, '');
+  cleanedContent = cleanedContent.replace(/"content"\s*:\s*"/g, '');
+  cleanedContent = cleanedContent.replace(/"excerpt"\s*:\s*".*?",?/g, '');
+  cleanedContent = cleanedContent.replace(/"tags"\s*:\s*\[.*?\],?/g, '');
+  cleanedContent = cleanedContent.replace(/,\s*"excerpt"\s*:\s*".*?"/g, '');
+  cleanedContent = cleanedContent.replace(/,\s*"tags"\s*:\s*\[.*?\]/g, '');
+  cleanedContent = cleanedContent.replace(/"\s*$/g, '');
+  
   return cleanedContent;
 }
 

@@ -1,4 +1,3 @@
-
 /**
  * This file handles parsing AI-generated content into structured blog post data
  */
@@ -24,18 +23,21 @@ export function parseGeneratedContent(content: string, category: string) {
     if (category === 'Top10') {
       console.log('📄 Processing Top10 content as direct HTML...');
       
+      // Clean up any JSON formatting first
+      processedContent = removeJsonFormatting(content);
+      
       // Extract title from h1 tags
-      const titleMatch = content.match(/<h1[^>]*>(.*?)<\/h1>/i);
+      const titleMatch = processedContent.match(/<h1[^>]*>(.*?)<\/h1>/i);
       if (titleMatch && titleMatch[1]) {
         title = titleMatch[1].replace(/<[^>]*>/g, '').trim();
         console.log(`📝 Extracted title from HTML: "${title}"`);
       } else {
         console.warn(`⚠️ Could not extract title from HTML content`);
-        console.log(`⚠️ First 200 chars of content: ${content.substring(0, 200)}`);
+        console.log(`⚠️ First 200 chars of content: ${processedContent.substring(0, 200)}`);
       }
       
       // Generate excerpt from the first paragraph
-      const excerptMatch = content.match(/<p>(.*?)<\/p>/i);
+      const excerptMatch = processedContent.match(/<p>(.*?)<\/p>/i);
       if (excerptMatch && excerptMatch[1]) {
         // Strip HTML tags and limit to 160 chars
         excerpt = excerptMatch[1].replace(/<[^>]*>/g, '').trim().substring(0, 160);
@@ -45,11 +47,11 @@ export function parseGeneratedContent(content: string, category: string) {
       }
       
       // Generate default tags based on title and content
-      tags = generateTagsFromContent(title, content, category);
+      tags = generateTagsFromContent(title, processedContent, category);
       console.log(`🏷️ Generated default tags: ${tags.join(', ')}`);
       
       // Ensure proper HTML structure for Top10 posts
-      processedContent = ensureProperHtmlStructure(content);
+      processedContent = ensureProperHtmlStructure(processedContent);
       console.log(`📄 Final processed content length: ${processedContent.length} characters`);
       console.log(`📄 Content has paragraphs: ${processedContent.includes('<p>')}`);
       console.log(`📄 Content has headings: ${processedContent.includes('<h')}`);
@@ -262,4 +264,49 @@ function generateTagsFromContent(title: string, content: string, category: strin
   
   // Limit to 10 unique tags
   return [...new Set(tags)].slice(0, 10);
+}
+
+/**
+ * Remove JSON formatting from content
+ */
+function removeJsonFormatting(content: string): string {
+  // Remove JSON markers and extract actual content if needed
+  let cleanedContent = content;
+  
+  // Remove ```json blocks
+  cleanedContent = cleanedContent.replace(/```json\s*\{/g, '');
+  cleanedContent = cleanedContent.replace(/\}\s*```/g, '');
+  
+  // If content looks like a JSON object, try to extract the real content
+  if (cleanedContent.trim().startsWith('{') && 
+      (cleanedContent.includes('"content":') || cleanedContent.includes('"title":'))) {
+    try {
+      const jsonObj = JSON.parse(cleanedContent);
+      if (jsonObj.content) {
+        // We found a content field, use that as the actual content
+        cleanedContent = jsonObj.content;
+      }
+    } catch (e) {
+      console.warn('⚠️ Error parsing potential JSON content:', e);
+      
+      // Fallback: try to extract content using regex if JSON parsing fails
+      const contentMatch = cleanedContent.match(/"content"\s*:\s*"((?:\\"|[^"])*?)"/);
+      if (contentMatch && contentMatch[1]) {
+        // Replace escaped quotes and newlines
+        cleanedContent = contentMatch[1]
+          .replace(/\\"/g, '"')
+          .replace(/\\n/g, '\n')
+          .replace(/\\\\/g, '\\');
+      }
+    }
+  }
+  
+  // Clean up any remaining JSON properties in the content
+  cleanedContent = cleanedContent.replace(/"title"\s*:\s*".*?",?/g, '');
+  cleanedContent = cleanedContent.replace(/"content"\s*:\s*"/g, '');
+  cleanedContent = cleanedContent.replace(/,?\s*"excerpt"\s*:\s*".*?",?/g, '');
+  cleanedContent = cleanedContent.replace(/,?\s*"tags"\s*:\s*\[.*?\],?/g, '');
+  cleanedContent = cleanedContent.replace(/"\s*$/g, '');
+  
+  return cleanedContent;
 }

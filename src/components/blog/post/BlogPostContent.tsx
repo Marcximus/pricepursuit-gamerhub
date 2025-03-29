@@ -8,6 +8,14 @@ interface BlogPostContentProps {
 }
 
 export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
+  // Clean up any leftover JSON formatting in the content
+  const cleanContent = content
+    .replace(/"title"\s*:\s*".*?",?/g, '')
+    .replace(/"content"\s*:\s*"/g, '')
+    .replace(/,?\s*"excerpt"\s*:\s*".*?",?/g, '')
+    .replace(/,?\s*"tags"\s*:\s*\[.*?\],?/g, '')
+    .replace(/"\s*$/g, '');
+
   useEffect(() => {
     // Add styling for Top10 list items if not already present
     if (post.category === 'Top10' && !document.getElementById('top10-blog-styles')) {
@@ -40,7 +48,7 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
   return (
     <div 
       className="prose prose-lg max-w-none" 
-      dangerouslySetInnerHTML={{ __html: content }}
+      dangerouslySetInnerHTML={{ __html: cleanContent }}
     />
   );
 };
