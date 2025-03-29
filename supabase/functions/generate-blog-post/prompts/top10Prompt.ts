@@ -1,3 +1,4 @@
+
 /**
  * System prompt for Top10 blog post generation
  */
@@ -60,12 +61,48 @@ IMPORTANT: You MUST insert the [PRODUCT_DATA_X] placeholders in the content whic
   let productsInfo = "";
   const productCount = Math.min(products.length, 10);
   
+  // Function to extract brand from title if not explicitly provided
+  const extractBrandFromTitle = (title: string): string => {
+    if (!title) return 'Unknown';
+    
+    // Common laptop brands to look for in titles
+    const commonBrands = [
+      'MSI', 'Lenovo', 'HP', 'Dell', 'ASUS', 'Acer', 'Apple', 'Samsung', 
+      'Microsoft', 'LG', 'Razer', 'Toshiba', 'Gigabyte', 'Alienware'
+    ];
+    
+    // Check if any brand appears at the start of the title
+    for (const brand of commonBrands) {
+      if (title.toLowerCase().startsWith(brand.toLowerCase())) {
+        return brand;
+      }
+    }
+    
+    // Alternatively, look for brand anywhere in the title
+    for (const brand of commonBrands) {
+      if (title.toLowerCase().includes(brand.toLowerCase())) {
+        return brand;
+      }
+    }
+    
+    // Default to first word if it's more than 2 characters
+    const firstWord = title.split(' ')[0];
+    if (firstWord && firstWord.length > 2) {
+      return firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
+    }
+    
+    return 'Unknown Brand';
+  };
+  
   // Create detailed information about the available products
   for (let i = 0; i < productCount; i++) {
     const product = products[i];
+    // Smart brand detection: use product.brand if available, otherwise extract from title
+    const brand = product.brand || extractBrandFromTitle(product.title);
+    
     productsInfo += `\nProduct ${i+1}:
 - Title: ${product.title || 'Unknown'}
-- Brand: ${product.brand || 'MSI'}
+- Brand: ${brand}
 - Model: ${product.model || product.title?.split(' ').slice(1, 3).join(' ') || 'Unknown'}
 - Price: ${product.price || 'Unknown'}
 - Rating: ${product.rating || 'No ratings'} (${product.ratings_total || 0} reviews)

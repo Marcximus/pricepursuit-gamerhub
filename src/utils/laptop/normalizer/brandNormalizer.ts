@@ -1,4 +1,3 @@
-
 // Known laptop brands with proper capitalization
 const BRAND_CORRECTIONS: {[key: string]: string} = {
   'apple': 'Apple',
