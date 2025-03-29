@@ -14,21 +14,26 @@ export async function generateContentWithDeepSeek(
     console.log(`📝 User prompt length: ${userPrompt.length} characters`);
     console.log(`🔑 API key validation: ${apiKey ? 'Key provided ✓' : 'Missing key ✗'}`);
     
-    // Log full system prompt for debugging
-    console.log(`📝 FULL SYSTEM PROMPT: ${systemPrompt}`);
-    console.log(`📝 FULL USER PROMPT: ${userPrompt}`);
+    // Log first 200 chars of prompts for debugging
+    console.log(`📝 System prompt preview: ${systemPrompt.substring(0, 200)}...`);
+    console.log(`📝 User prompt preview: ${userPrompt.substring(0, 200)}...`);
     
     if (!apiKey) {
       console.error('❌ MISSING API KEY: DeepSeek API key is not set or invalid');
       throw new Error('DeepSeek API key is missing or invalid');
     }
     
+    // Simplify the prompt to reduce complexity and potential formatting issues
+    const simplifiedSystemPrompt = systemPrompt
+      .replace(/\n\n+/g, '\n\n')  // Remove excessive newlines
+      .replace(/\s{2,}/g, ' ');   // Remove excessive spaces
+    
     const payload = {
       model: "deepseek-chat",
       messages: [
         {
           role: "system",
-          content: systemPrompt
+          content: simplifiedSystemPrompt
         },
         {
           role: "user",
@@ -36,15 +41,14 @@ export async function generateContentWithDeepSeek(
         }
       ],
       temperature: 0.7,
+      max_tokens: 4000,  // Explicitly set max tokens
       top_p: 1,
-      stream: false,
-      stop: ["```json", "```JSON"]
+      stream: false
     };
     
     // Convert payload to JSON and log size
     const jsonPayload = JSON.stringify(payload);
     console.log(`📤 DEEPSEEK REQUEST PAYLOAD SIZE: ${jsonPayload.length} bytes`);
-    console.log(`📤 FULL DEEPSEEK REQUEST PAYLOAD: ${jsonPayload}`);
     
     // Make the API request
     console.log(`🚀 Sending request to DeepSeek API...`);
@@ -90,7 +94,7 @@ export async function generateContentWithDeepSeek(
         console.log(`📥 FULL PARSED DEEPSEEK RESPONSE: ${JSON.stringify(data)}`);
       } catch (jsonError) {
         console.error(`❌ Error parsing API response as JSON: ${jsonError}`);
-        console.error(`❌ Raw response preview: ${rawText}`);
+        console.error(`❌ Raw response preview: ${rawText.substring(0, 300)}...`);
         
         // If JSON parsing fails but we have content, return it directly
         if (rawText && rawText.length > 0 && (rawText.includes('<h1>') || rawText.includes('<p>'))) {
@@ -112,6 +116,36 @@ export async function generateContentWithDeepSeek(
       
       if (!content || content.length === 0) {
         console.error(`❌ DeepSeek returned EMPTY content! Response structure:`, JSON.stringify(data));
+        // Create a simpler default request to test if it's the complexity of our prompt causing issues
+        console.log(`🔄 Attempting simplified test request to diagnose API issues...`);
+        
+        const testPayload = JSON.stringify({
+          model: "deepseek-chat",
+          messages: [
+            { role: "system", content: "You are a helpful assistant." },
+            { role: "user", content: `Create a blog post about ${userPrompt}` }
+          ],
+          temperature: 0.5
+        });
+        
+        const testResponse = await fetch("https://api.deepseek.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+          },
+          body: testPayload
+        });
+        
+        console.log(`📊 Test response status: ${testResponse.status}`);
+        const testData = await testResponse.json();
+        console.log(`📊 Test response data:`, JSON.stringify(testData));
+        
+        // Log API usage for debugging
+        if (data.usage) {
+          console.log(`📊 API Usage stats:`, JSON.stringify(data.usage));
+        }
+        
         throw new Error('DeepSeek API returned empty content');
       }
       
