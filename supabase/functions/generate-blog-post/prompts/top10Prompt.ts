@@ -1,4 +1,3 @@
-
 /**
  * System prompt for Top10 blog post generation
  */
@@ -66,7 +65,7 @@ IMPORTANT: You MUST insert the [PRODUCT_DATA_X] placeholders in the content whic
     const product = products[i];
     productsInfo += `\nProduct ${i+1}:
 - Title: ${product.title || 'Unknown'}
-- Brand: ${product.brand || 'Lenovo'}
+- Brand: ${product.brand || 'MSI'}
 - Model: ${product.model || product.title?.split(' ').slice(1, 3).join(' ') || 'Unknown'}
 - Price: ${product.price || 'Unknown'}
 - Rating: ${product.rating || 'No ratings'} (${product.ratings_total || 0} reviews)
