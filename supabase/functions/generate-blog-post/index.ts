@@ -12,13 +12,14 @@ const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
 
 serve(async (req) => {
   console.log("🚀 generate-blog-post function started!");
+  console.log(`🕒 Timestamp: ${new Date().toISOString()}`);
   
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     console.log("⚙️ Handling CORS preflight request");
     return new Response(null, { 
       headers: corsHeaders, 
-      status: 204 // Use 204 No Content for OPTIONS requests
+      status: 204 
     });
   }
 
@@ -33,18 +34,27 @@ serve(async (req) => {
     console.log("📦 Extracting request data...");
     const requestText = await req.text();
     console.log(`📥 REQUEST DATA LENGTH: ${requestText.length} bytes`);
-    console.log(`📥 FULL REQUEST DATA: ${requestText}`);
+    console.log(`📥 REQUEST METHOD: ${req.method}`);
+    console.log(`📥 REQUEST HEADERS: ${JSON.stringify(Object.fromEntries(req.headers.entries()))}`);
     
     let requestData;
     try {
       requestData = JSON.parse(requestText);
-      console.log(`📝 User prompt: "${requestData.prompt.substring(0, 50)}${requestData.prompt.length > 50 ? '...' : ''}"`);
-      console.log(`🏷️ Selected category: ${requestData.category}`);
-      console.log(`🔍 ASIN1: ${requestData.asin || 'None provided'}`);
-      console.log(`🔍 ASIN2: ${requestData.asin2 || 'None provided'}`);
+      console.log(`📝 USER PROMPT DETAILS:`);
+      console.log(`   - Prompt: "${requestData.prompt?.substring(0, 50)}${requestData.prompt?.length > 50 ? '...' : ''}"`);
+      console.log(`   - Category: ${requestData.category}`);
+      console.log(`   - ASIN1: ${requestData.asin || 'None provided'}`);
+      console.log(`   - ASIN2: ${requestData.asin2 || 'None provided'}`);
+      
       if (requestData.products && Array.isArray(requestData.products)) {
-        console.log(`📦 Products count: ${requestData.products.length}`);
-        console.log(`📦 FULL PRODUCTS DATA: ${JSON.stringify(requestData.products)}`);
+        console.log(`📦 PRODUCTS ANALYSIS:`);
+        console.log(`   - Total Products: ${requestData.products.length}`);
+        requestData.products.forEach((product, index) => {
+          console.log(`   - Product ${index + 1}:`);
+          console.log(`     * Title: ${product.title?.substring(0, 50)}${product.title?.length > 50 ? '...' : ''}`);
+          console.log(`     * Brand: ${product.brand || 'Unknown'}`);
+          console.log(`     * ASIN: ${product.asin || 'N/A'}`);
+        });
       }
     } catch (parseError) {
       console.error("❌ Failed to parse request data:", parseError);
@@ -55,14 +65,18 @@ serve(async (req) => {
     const { prompt, category, asin, asin2, products } = requestData;
 
     if (!prompt || !category) {
-      console.error("❌ Missing required parameters", { prompt: !!prompt, category: !!category });
+      console.error("❌ VALIDATION ERROR: Missing required parameters", { 
+        prompt: !!prompt, 
+        category: !!category 
+      });
       return new Response(
         JSON.stringify({ error: "Prompt and category are required" }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
-    console.log(`🎯 Generating ${category} blog post with prompt: "${prompt}"`);
+    console.log(`🎯 Generating ${category} blog post`);
+    console.log(`📊 PERFORMANCE TRACKING: Started at ${Date.now()}`);
 
     // Variables to store product data
     let firstProductData = null;
@@ -166,8 +180,8 @@ serve(async (req) => {
       throw new Error("Failed to generate content with DeepSeek: " + deepseekError.message);
     }
   } catch (error) {
-    console.error("💥 CRITICAL ERROR:", error);
-    console.error("💥 FULL ERROR DETAIL:", JSON.stringify(error));
+    console.error("💥 CRITICAL ERROR IN GENERATE-BLOG-POST:", error);
+    console.error("💥 ERROR DETAILS:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
     return createErrorResponse(error);
   }
 });

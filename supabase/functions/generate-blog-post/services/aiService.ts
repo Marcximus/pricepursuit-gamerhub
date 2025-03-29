@@ -1,4 +1,3 @@
-
 /**
  * Service to handle AI content generation using DeepSeek API
  */
@@ -8,6 +7,15 @@ export async function generateContentWithDeepSeek(
   userPrompt: string,
   apiKey: string
 ): Promise<string> {
+  console.log(`🔍 DETAILED API REQUEST LOGGING`);
+  console.log(`📏 Prompt Lengths:`);
+  console.log(`   - System Prompt: ${systemPrompt.length} characters`);
+  console.log(`   - User Prompt: ${userPrompt.length} characters`);
+  
+  console.log(`🔍 Prompt Preview:`);
+  console.log(`   - System Prompt (first 200 chars): ${systemPrompt.substring(0, 200)}...`);
+  console.log(`   - User Prompt (first 200 chars): ${userPrompt.substring(0, 200)}...`);
+
   try {
     console.log(`🔄 Preparing DeepSeek API request...`);
     console.log(`📝 System prompt length: ${systemPrompt.length} characters`);
