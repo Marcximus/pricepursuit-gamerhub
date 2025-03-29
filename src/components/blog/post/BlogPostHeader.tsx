@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ChevronLeft } from 'lucide-react';
@@ -11,6 +10,9 @@ interface BlogPostHeaderProps {
 }
 
 export const BlogPostHeader = ({ post, category }: BlogPostHeaderProps) => {
+  // Limit tags to 3-4 and keep the most relevant ones
+  const displayTags = post.tags?.slice(0, 4) || [];
+
   return (
     <>
       <div className="mb-6">
@@ -26,15 +28,11 @@ export const BlogPostHeader = ({ post, category }: BlogPostHeaderProps) => {
         <h1 className="text-4xl font-bold text-gray-900 mb-4">{post.title}</h1>
         <div className="flex items-center text-gray-500 text-sm">
           <span>By {post.author}</span>
-          <span className="mx-2">•</span>
-          <time dateTime={post.created_at}>
-            {format(new Date(post.created_at), 'MMMM d, yyyy')}
-          </time>
-          {post.tags && post.tags.length > 0 && (
+          {displayTags.length > 0 && (
             <>
               <span className="mx-2">•</span>
               <div className="flex flex-wrap gap-2">
-                {post.tags.map((tag, index) => (
+                {displayTags.map((tag, index) => (
                   <span key={index} className="text-xs bg-gray-100 px-2 py-1 rounded-full">
                     {tag}
                   </span>
