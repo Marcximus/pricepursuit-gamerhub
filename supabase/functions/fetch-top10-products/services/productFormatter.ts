@@ -51,7 +51,7 @@ const generateProductHtml = (product: any, specs: string[], rank: number): strin
         <img src="${product.image_url}" alt="${product.title}" class="rounded-lg w-full">
       </div>
       <div class="product-info">
-        <h3 class="text-xl font-semibold">${product.title}</h3>
+        <h3 class="text-xl font-semibold text-green-800">${product.title}</h3>
         <div class="specs text-sm text-gray-600 my-2">
           ${specs.join(' | ')}
         </div>
@@ -62,7 +62,7 @@ const generateProductHtml = (product: any, specs: string[], rank: number): strin
             <span class="rating-text ml-1">${product.rating ? product.rating.toFixed(1) : '-'}/5</span>
           </div>
         </div>
-        <a href="${product.product_url}" target="_blank" rel="noopener noreferrer" class="btn-view mt-2 block text-center bg-gaming-600 text-white py-2 px-4 rounded-md">View on Amazon</a>
+        <a href="${product.product_url}" target="_blank" rel="noopener noreferrer" class="btn-view mt-2 block text-center bg-green-600 text-white py-2 px-4 rounded-md">View on Amazon</a>
       </div>
     </div>
   `;

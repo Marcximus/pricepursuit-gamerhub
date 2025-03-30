@@ -62,6 +62,7 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
         .product-card .product-rank { 
           z-index: 10; 
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          background-color: #16a34a; /* Ensure green color for ranking badge */
         }
         .product-card img {
           transition: transform 0.3s ease;
@@ -75,6 +76,9 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
         .product-card .button-amazon:hover {
           transform: translateY(-2px);
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .product-card .product-title {
+          color: #166534; /* Ensuring green color for titles */
         }
       `;
       document.head.appendChild(styleElement);
