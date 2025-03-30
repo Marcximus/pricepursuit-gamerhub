@@ -1,3 +1,4 @@
+
 /**
  * Product HTML generation utilities for Top10 blog posts
  */
@@ -103,7 +104,7 @@ export function generateProductHtml(product: any, index: number): string {
         </div>
         <div class="mb-4">
           <a href="${productUrl}" 
-             class="button-amazon inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded transition-colors duration-200" 
+             class="button-amazon inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition-colors duration-200" 
              target="_blank" rel="nofollow noopener">
             View Now on Amazon
           </a>

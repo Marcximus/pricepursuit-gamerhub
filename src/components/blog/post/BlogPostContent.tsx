@@ -77,8 +77,19 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
           transform: translateY(-2px);
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-        .product-card .product-title {
-          color: #166534; /* Ensuring green color for titles */
+        /* High specificity selectors to override any other styles */
+        .product-card .product-title,
+        .product-card h3,
+        .product-card h4,
+        .product-card .text-xl,
+        .product-info h3 {
+          color: #166534 !important; /* Green color for titles with !important to override other styles */
+        }
+        /* Ensure all Amazon buttons are green */
+        .product-card .btn-view,
+        .button-amazon,
+        .check-price-btn {
+          background-color: #16a34a !important;
         }
       `;
       document.head.appendChild(styleElement);
