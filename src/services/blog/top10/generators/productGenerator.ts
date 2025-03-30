@@ -85,15 +85,23 @@ export function generateProductHtml(product: any, index: number): string {
   <div class="p-4">
     <div class="flex flex-col md:flex-row">
       <div class="md:w-1/3 flex items-center justify-center">
-        <img src="${imageUrl}" 
-             alt="${simplifiedTitle}" 
-             class="w-full h-auto rounded-md object-contain max-h-48"
-             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300&q=80'; this.classList.add('fallback-image');" />
+        <a href="${productUrl}" class="relative block w-full h-full" target="_blank" rel="nofollow noopener">
+          <img src="${imageUrl}" 
+               alt="${simplifiedTitle}" 
+               class="w-full h-auto rounded-md object-contain max-h-48 transition-transform duration-200 hover:scale-105"
+               onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300&q=80'; this.classList.add('fallback-image');" />
+        </a>
       </div>
       <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
-        <h4 class="text-xl font-semibold mb-2 product-title text-green-800">${simplifiedTitle}</h4>
-        ${starsHtml}
-        <p class="text-lg font-bold mb-3">${productPrice}</p>
+        <h4 class="text-xl font-semibold mb-2 product-title text-green-800">
+          <a href="${productUrl}" class="hover:underline cursor-pointer" target="_blank" rel="nofollow noopener">${simplifiedTitle}</a>
+        </h4>
+        <a href="${productUrl}" class="inline-block mb-2" target="_blank" rel="nofollow noopener">
+          ${starsHtml}
+        </a>
+        <a href="${productUrl}" class="text-lg font-bold mb-3 inline-block hover:text-green-700" target="_blank" rel="nofollow noopener">
+          ${productPrice}
+        </a>
         <div class="specs-grid grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
           <div><span class="font-medium">CPU:</span> ${processor}</div>
           <div><span class="font-medium">RAM:</span> ${ram}</div>
