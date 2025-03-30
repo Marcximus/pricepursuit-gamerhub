@@ -93,6 +93,42 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
             (link as HTMLElement).style.pointerEvents = 'auto';
           }
         });
+        
+        // Make sure product title is clickable if it doesn't have a link already
+        const productTitle = card.querySelector('.product-title');
+        if (productTitle && !productTitle.querySelector('a')) {
+          const buttonLink = card.querySelector('.button-link') as HTMLAnchorElement;
+          if (buttonLink) {
+            const titleLink = document.createElement('a');
+            titleLink.href = buttonLink.href;
+            titleLink.target = '_blank';
+            titleLink.rel = 'nofollow noopener';
+            titleLink.className = 'product-link title-link';
+            
+            // Move the title's inner content to the link
+            while (productTitle.firstChild) {
+              titleLink.appendChild(productTitle.firstChild);
+            }
+            productTitle.appendChild(titleLink);
+          }
+        }
+        
+        // Ensure image is wrapped in a link
+        const productImage = card.querySelector('img:not(.fallback-image)');
+        const imageWrapper = productImage?.parentElement;
+        if (productImage && imageWrapper && !imageWrapper.tagName.toLowerCase() === 'a') {
+          const buttonLink = card.querySelector('.button-link') as HTMLAnchorElement;
+          if (buttonLink) {
+            const imageLink = document.createElement('a');
+            imageLink.href = buttonLink.href;
+            imageLink.target = '_blank';
+            imageLink.rel = 'nofollow noopener';
+            imageLink.className = 'product-link image-link block';
+            
+            imageWrapper.insertBefore(imageLink, productImage);
+            imageLink.appendChild(productImage);
+          }
+        }
       });
     };
 
@@ -128,13 +164,13 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
     };
 
     if (contentRef.current) {
-      contentRef.current.addEventListener('click', handleContainerClick);
+      contentRef.current.addEventListener('click', handleContainerClick as EventListener);
     }
 
     return () => {
       observer.disconnect();
       if (contentRef.current) {
-        contentRef.current.removeEventListener('click', handleContainerClick);
+        contentRef.current.removeEventListener('click', handleContainerClick as EventListener);
       }
     };
   }, [content]);
