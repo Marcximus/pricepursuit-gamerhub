@@ -1,4 +1,3 @@
-
 /**
  * System prompt for Top10 blog post generation
  */
@@ -55,6 +54,11 @@ CRITICAL: Do not write less than 1500 words on the topic!
    - Start each new product section with: <hr class="my-8">
    - Add some spacing and then end the post with a funny and SEO optimized conclusion paragraph (200-600 words) with some emojis and wrapped in <p> tags
    - Add a final horizontal rule after the conclusion
+
+8. Excerpt:
+   - CRITICAL: You MUST provide a concise, engaging excerpt (max 160 characters) that summarizes the article
+   - This excerpt will be used for social sharing and SEO purposes
+   - Make it compelling and include relevant keywords
 
 Your response MUST be a valid JSON object with this structure:
 {
@@ -198,6 +202,11 @@ CRITICAL: Do not write less than 1500 words on the topic!
    - Start each new product section with: <hr class="my-8">
    - Add some spacing and then end the post with a funny and SEO optimized conclusion paragraph (200-600 words) with some emojis and wrapped in <p> tags
    - Add a final horizontal rule after the conclusion
+
+8. Excerpt:
+   - CRITICAL: You MUST provide a concise, engaging excerpt (max 160 characters) that summarizes the article
+   - This excerpt will be used for social sharing and SEO purposes
+   - Make it compelling and include relevant keywords
 
 Use the EXACT names, models, and details of these products in your content:
 ${productsInfo}
