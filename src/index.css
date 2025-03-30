@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -211,3 +210,10 @@
   background-color: #d97706 !important;
 }
 
+/* New styles for blog post images */
+.prose img {
+  max-width: 75%; /* Reduce image size to 75% of original width */
+  height: auto; /* Maintain aspect ratio */
+  margin: 1rem auto; /* Center the image with vertical margins */
+  display: block; /* Ensure the image can be centered */
+}
