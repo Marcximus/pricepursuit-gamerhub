@@ -4,8 +4,13 @@
  */
 import { toast } from '@/components/ui/use-toast';
 import { getProducts } from './productHandler';
-import { cleanupContent, fixHtmlTags, removeJsonFormatting, extractProductSpecs } from './contentProcessor';
-import { replaceProductPlaceholders } from './product/productPlacer';
+import { 
+  cleanupContent, 
+  fixHtmlTags, 
+  removeJsonFormatting, 
+  extractProductSpecs 
+} from './contentProcessor';
+import { replaceProductPlaceholders, removeDuplicateProductBlocks } from './product/productPlacer';
 import { addVideoEmbed, wrapTextInHtml } from './htmlGenerator';
 
 /**
