@@ -1,3 +1,4 @@
+
 /**
  * HTML fixing utilities for Top10 blog posts
  */
@@ -5,8 +6,6 @@
 /**
  * Fix common HTML issues in blog post content
  */
-import { fixHtmlTags } from './htmlWrapper';
-
 export function fixHtmlTags(content: string): string {
   console.log('🔧 Fixing HTML tags in content');
   
