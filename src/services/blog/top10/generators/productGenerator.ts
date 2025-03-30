@@ -1,11 +1,6 @@
 
-/**
- * Generate HTML for product cards in Top10 blog posts
- */
+import React from 'react';
 
-/**
- * Generate HTML for a product card
- */
 export function generateProductHtml(product: any, position: number): string {
   if (!product) {
     console.warn('⚠️ No product data provided to generateProductHtml');
