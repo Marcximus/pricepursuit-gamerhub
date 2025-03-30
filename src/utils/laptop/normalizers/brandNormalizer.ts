@@ -11,7 +11,7 @@ const BRAND_PATTERNS: {[key: string]: RegExp[]} = {
   'Samsung': [/\bsamsung\b/i, /\bgalaxy book\b/i, /\bodyssey\b/i],
   'Microsoft': [/\bmicrosoft\b/i, /\bsurface\b/i],
   'Razer': [/\brazer\b/i, /\bblade\b/i],
-  'Alienware': [/\balienware\b/i],
+  'Alienware': [/\balienware\b/i, /\balien\s*ware\b/i, /\balien\b/i],
   'LG': [/\blg\b/i, /\bgram\b/i],
   'Gigabyte': [/\bgigabyte\b/i, /\baero\b/i],
   'Huawei': [/\bhuawei\b/i, /\bmatebook\b/i],
@@ -36,6 +36,8 @@ const BRAND_CORRECTIONS: {[key: string]: string} = {
   'huawei': 'Huawei',
   'xiaomi': 'Xiaomi',
   'alienware': 'Alienware',
+  'alien ware': 'Alienware',
+  'alien': 'Alienware',
   'vaio': 'VAIO',
   'fsjun': 'FSJUN',
   'jumper': 'Jumper',
@@ -60,6 +62,11 @@ export const normalizeBrand = (brand: string, title?: string): string => {
       return 'Apple';
     }
     
+    // Special check for Alienware which often appears with spaces or in different forms
+    if (/alien\s*ware|alienware/i.test(titleLower)) {
+      return 'Alienware';
+    }
+    
     // Check other brand patterns
     for (const [brandName, patterns] of Object.entries(BRAND_PATTERNS)) {
       for (const pattern of patterns) {
@@ -73,8 +80,15 @@ export const normalizeBrand = (brand: string, title?: string): string => {
   // If no brand found in title, try the stored brand
   if (brand) {
     const normalizedBrand = brand.toLowerCase().trim();
+    
+    // Direct lookup in our corrections dictionary
     if (BRAND_CORRECTIONS[normalizedBrand]) {
       return BRAND_CORRECTIONS[normalizedBrand];
+    }
+    
+    // Check for partial matches like "Alien" -> "Alienware"
+    if (normalizedBrand.includes('alien')) {
+      return 'Alienware';
     }
     
     // Detect known brands in the stored brand string

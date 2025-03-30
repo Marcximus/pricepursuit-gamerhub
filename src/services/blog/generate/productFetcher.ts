@@ -14,6 +14,18 @@ export async function fetchProductsForTop10(prompt: string): Promise<any[]> {
   const extractedParams = extractSearchParamsFromPrompt(prompt);
   console.log('📊 Extracted parameters:', extractedParams);
   
+  // Validate that we have a specific brand in the title if it appears to be a brand-specific post
+  const isBrandSpecificPost = /top\s+10\s+best\s+(\w+)\s+laptops/i.test(prompt);
+  if (isBrandSpecificPost && !extractedParams.searchParams.brand) {
+    // Try to extract brand directly from the prompt title pattern
+    const brandMatch = prompt.match(/top\s+10\s+best\s+(\w+)\s+laptops/i);
+    if (brandMatch && brandMatch[1]) {
+      const brandFromTitle = brandMatch[1].trim();
+      console.log(`🔍 Extracted brand "${brandFromTitle}" directly from title pattern`);
+      extractedParams.searchParams.brand = brandFromTitle;
+    }
+  }
+  
   // Pre-process the content to fetch Amazon products
   console.log('🛒 Fetching Amazon products before generating content...');
   try {
@@ -29,6 +41,34 @@ export async function fetchProductsForTop10(prompt: string): Promise<any[]> {
       });
       throw new Error('No products found for the specified query');
     } else {
+      // Verify products match the requested brand if it's a brand-specific post
+      if (extractedParams.searchParams.brand) {
+        const targetBrand = extractedParams.searchParams.brand.toLowerCase();
+        const matchingBrandProducts = products.filter(p => 
+          (p.brand && p.brand.toLowerCase().includes(targetBrand)) || 
+          (p.title && p.title.toLowerCase().includes(targetBrand))
+        );
+        
+        console.log(`🔍 Found ${matchingBrandProducts.length}/${products.length} products matching brand "${targetBrand}"`);
+        
+        // If we have too few matching products, show a warning
+        if (matchingBrandProducts.length < 5 && matchingBrandProducts.length > 0) {
+          console.warn(`⚠️ Only found ${matchingBrandProducts.length} products for brand "${targetBrand}"`);
+          toast({
+            title: 'Limited Brand Products',
+            description: `Only found ${matchingBrandProducts.length} products for ${extractedParams.searchParams.brand}. Some non-brand products may be included.`,
+            variant: 'warning',
+          });
+        } else if (matchingBrandProducts.length === 0) {
+          console.error(`❌ No products found for brand "${targetBrand}"`);
+          toast({
+            title: 'Brand Not Found',
+            description: `No ${extractedParams.searchParams.brand} products found. Using general laptop products instead.`,
+            variant: 'destructive',
+          });
+        }
+      }
+      
       // Store products in local storage for use after content generation
       console.log('💾 Storing fetched products in localStorage for later use');
       try {
