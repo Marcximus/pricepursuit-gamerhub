@@ -36,6 +36,7 @@ export function replaceProductPlaceholders(content: string, products: any[]): {
         const product = products[productIndex];
         if (product) {
           console.log(`✅ Replacing placeholder ${fullMatch} with product at index ${productIndex}: ${product.title?.substring(0, 30) || 'Unknown'}...`);
+          console.log(`✅ Product specs: CPU: ${product.cpu || 'Not specified'}, RAM: ${product.ram || 'Not specified'}`);
           
           // Generate HTML for this product with the position number from the placeholder
           const productHtml = generateProductHtml(product, placeholderNum);
