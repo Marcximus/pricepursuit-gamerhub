@@ -84,4 +84,16 @@ export const getTop10BlogStyles = (): string => `
   .blog-subtitle {
     color: #166534 !important; /* Ensuring green color for subtitles */
   }
+  
+  /* Clickable elements styling */
+  .product-card a {
+    text-decoration: none;
+    color: inherit;
+  }
+  .product-card a:hover .product-title {
+    text-decoration: underline;
+  }
+  .product-card a:hover .text-lg {
+    color: #15803d;
+  }
 `;

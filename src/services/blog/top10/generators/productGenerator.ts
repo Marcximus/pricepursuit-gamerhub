@@ -1,3 +1,4 @@
+
 /**
  * Product HTML generation utilities for Top10 blog posts
  */
@@ -64,8 +65,9 @@ export function generateProductHtml(product: any, index: number): string {
   // Use the index + 1 directly as the rank (from #1 to #10)
   const rank = index + 1;
   
-  // Generate star rating HTML
+  // Generate star rating HTML with link
   const starsHtml = generateStarsHtml(productRating, productRatingTotal);
+  const linkedStarsHtml = starsHtml.replace('<div class="flex items-center">', `<a href="${productUrl}" class="flex items-center hover:underline" target="_blank" rel="nofollow noopener">`).replace('</div>', '</a>');
   
   // Extract key specifications for display - with enhanced error handling
   // First prioritize the AI-provided specs (cpu, ram, etc.) then fall back to extracted specs
@@ -84,15 +86,21 @@ export function generateProductHtml(product: any, index: number): string {
   <div class="p-4">
     <div class="flex flex-col md:flex-row">
       <div class="md:w-1/3 flex items-center justify-center">
-        <img src="${imageUrl}" 
-             alt="${simplifiedTitle}" 
-             class="w-full h-auto rounded-md object-contain max-h-48"
-             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300&q=80'; this.classList.add('fallback-image');" />
+        <a href="${productUrl}" target="_blank" rel="nofollow noopener">
+          <img src="${imageUrl}" 
+               alt="${simplifiedTitle}" 
+               class="w-full h-auto rounded-md object-contain max-h-48 hover:opacity-90 transition-opacity"
+               onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300&q=80'; this.classList.add('fallback-image');" />
+        </a>
       </div>
       <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
-        <h4 class="text-xl font-semibold mb-2 product-title text-green-800">${simplifiedTitle}</h4>
-        ${starsHtml}
-        <p class="text-lg font-bold mb-3">${productPrice}</p>
+        <a href="${productUrl}" class="block hover:underline" target="_blank" rel="nofollow noopener">
+          <h4 class="text-xl font-semibold mb-2 product-title text-green-800">${simplifiedTitle}</h4>
+        </a>
+        ${linkedStarsHtml}
+        <a href="${productUrl}" class="block hover:underline" target="_blank" rel="nofollow noopener">
+          <p class="text-lg font-bold mb-3">${productPrice}</p>
+        </a>
         <p class="text-sm text-black mb-2">${brandName} ${modelInfo}</p>
         <div class="specs-grid grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
           <div><span class="font-medium">CPU:</span> ${processor}</div>
