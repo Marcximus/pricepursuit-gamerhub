@@ -69,15 +69,18 @@ export function generateProductHtml(product: any, index: number): string {
   const starsHtml = generateStarsHtml(productRating, productRatingTotal);
   
   // Extract key specifications for display - with enhanced error handling
-  // First prioritize the AI-provided specs (cpu, ram, etc.) then fall back to extracted specs
-  const screenSize = product.screen || product.screen_size || 'N/A';
-  const processor = product.cpu || product.processor || 'N/A';
-  const ram = product.ram || 'N/A';
-  const storage = product.storage || 'N/A';
-  const graphics = product.graphics || 'N/A';
-  const batteryLife = product.battery || product.battery_life || 'N/A';
+  // First check if specs are directly in the product object
+  const cpu = product.cpu || 'Unknown';
+  const ram = product.ram || 'Unknown';
+  const graphics = product.graphics || 'Unknown';
+  const storage = product.storage || 'Unknown';
+  const screen = product.screen || product.screen_size || 'Unknown';
+  const battery = product.battery || product.battery_life || 'Unknown';
   
   console.log(`🖼️ Generating HTML for product #${rank}: ${simplifiedTitle}`);
+  console.log(`📊 Specifications for product #${rank}:`, {
+    cpu, ram, graphics, storage, screen, battery
+  });
   
   return `
 <div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6" data-asin="${product.asin || ''}" data-rank="${rank}">
@@ -103,12 +106,12 @@ export function generateProductHtml(product: any, index: number): string {
           ${productPrice}
         </a>
         <div class="specs-grid grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
-          <div><span class="font-medium">CPU:</span> ${processor}</div>
+          <div><span class="font-medium">CPU:</span> ${cpu}</div>
           <div><span class="font-medium">RAM:</span> ${ram}</div>
           <div><span class="font-medium">Graphics:</span> ${graphics}</div>
           <div><span class="font-medium">Storage:</span> ${storage}</div>
-          <div><span class="font-medium">Display:</span> ${screenSize}</div>
-          <div><span class="font-medium">Battery:</span> ${batteryLife}</div>
+          <div><span class="font-medium">Display:</span> ${screen}</div>
+          <div><span class="font-medium">Battery:</span> ${battery}</div>
         </div>
         <div class="mb-4">
           <a href="${productUrl}" 

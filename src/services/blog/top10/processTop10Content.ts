@@ -59,20 +59,15 @@ export async function processTop10Content(content: string, prompt: string): Prom
       processedContent = `<h1 class="text-center mb-8">${prompt}</h1>\n\n${processedContent}`;
     }
     
-    // Extract product specs from the content if they exist
-    let productSpecs = [];
-    try {
-      // Try to parse the content as JSON to extract product specs
-      if (content.includes('"products":')) {
-        const match = content.match(/"products"\s*:\s*(\[[\s\S]*?\])/);
-        if (match && match[1]) {
-          const productsJson = match[1].replace(/\/\/.*$/gm, ''); // Remove comments
-          productSpecs = JSON.parse(productsJson);
-          console.log(`✅ Successfully extracted product specs for ${productSpecs.length} products`);
-        }
-      }
-    } catch (e) {
-      console.warn('⚠️ Could not extract product specs from content:', e);
+    // Extract product specs directly from the content
+    console.log('🔍 Extracting product specifications from content...');
+    const productSpecs = extractProductSpecs(processedContent);
+    
+    if (productSpecs.length > 0) {
+      console.log(`✅ Successfully extracted specifications for ${productSpecs.length} products`);
+      console.log(`📊 First product specs:`, productSpecs[0]);
+    } else {
+      console.warn('⚠️ No product specifications found in content');
     }
     
     // Get products either from localStorage or by fetching them
@@ -83,13 +78,16 @@ export async function processTop10Content(content: string, prompt: string): Prom
     // If we have productSpecs from the AI response, merge them with the products data
     if (productSpecs.length > 0 && products && products.length > 0) {
       for (let i = 0; i < Math.min(productSpecs.length, products.length); i++) {
-        // Ensure product specs are converted to the format expected by generateProductHtml
-        products[i].cpu = productSpecs[i].cpu || products[i].processor || '';
-        products[i].ram = productSpecs[i].ram || products[i].ram || '';
-        products[i].graphics = productSpecs[i].graphics || products[i].graphics || '';
-        products[i].storage = productSpecs[i].storage || products[i].storage || '';
-        products[i].screen = productSpecs[i].screen || products[i].screen_size || '';
-        products[i].battery = productSpecs[i].battery || products[i].battery_life || '';
+        const spec = productSpecs.find(s => s.position === (i + 1)) || productSpecs[i];
+        if (spec) {
+          // Ensure product specs are converted to the format expected by generateProductHtml
+          products[i].cpu = spec.cpu || products[i].processor || '';
+          products[i].ram = spec.ram || products[i].ram || '';
+          products[i].graphics = spec.graphics || products[i].graphics || '';
+          products[i].storage = spec.storage || products[i].storage || '';
+          products[i].screen = spec.screen || products[i].screen_size || '';
+          products[i].battery = spec.battery || products[i].battery_life || '';
+        }
       }
       console.log('✅ Successfully merged product specs with product data');
     }
@@ -100,6 +98,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
       console.log(`🔍 First product: "${products[0]?.title?.substring(0, 30) || 'Unknown'}..."`);
       console.log(`First product has HTML content: ${!!products[0]?.htmlContent}`);
       console.log(`First product ASIN: ${products[0]?.asin || 'Unknown'}`);
+      console.log(`First product CPU: ${products[0]?.cpu || products[0]?.processor || 'Unknown'}`);
       
       // Check key fields on all products
       const productsWithHtml = products.filter(p => !!p.htmlContent).length;

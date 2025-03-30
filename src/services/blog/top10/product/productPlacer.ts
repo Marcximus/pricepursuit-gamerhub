@@ -3,6 +3,7 @@
  * Product placement utilities for Top10 blog posts
  */
 import { generateProductHtml } from '../generators/productGenerator';
+import { extractProductSpecs } from '../contentProcessor';
 
 /**
  * Replace product placeholders with actual product HTML
@@ -15,6 +16,28 @@ export function replaceProductPlaceholders(content: string, products: any[]): { 
   
   let replacementsCount = 0;
   let updatedContent = content;
+  
+  // Extract product specifications from the content
+  const extractedSpecs = extractProductSpecs(content);
+  console.log(`📊 Extracted ${extractedSpecs.length} product specifications from content`);
+  
+  // Merge the extracted specs with the product data
+  if (extractedSpecs.length > 0) {
+    for (let i = 0; i < Math.min(extractedSpecs.length, products.length); i++) {
+      // Find the matching spec by position
+      const spec = extractedSpecs.find(s => s.position === (i + 1)) || extractedSpecs[i];
+      if (spec) {
+        products[i].cpu = spec.cpu || products[i].cpu || products[i].processor || '';
+        products[i].ram = spec.ram || products[i].ram || '';
+        products[i].graphics = spec.graphics || products[i].graphics || '';
+        products[i].storage = spec.storage || products[i].storage || '';
+        products[i].screen = spec.screen || products[i].screen_size || '';
+        products[i].battery = spec.battery || products[i].battery_life || '';
+        
+        console.log(`✅ Merged specifications for product #${i + 1}`);
+      }
+    }
+  }
   
   // Process standard [PRODUCT_DATA_X] placeholders
   const placeholderPattern = /\[PRODUCT_DATA_(\d+)\]/g;
@@ -86,6 +109,9 @@ export function replaceProductPlaceholders(content: string, products: any[]): { 
     }
   }
   
+  // Clean up any remaining raw JSON data
+  updatedContent = removeJsonData(updatedContent);
+  
   console.log(`📊 Replaced ${replacementsCount} product placeholders in content`);
   return { content: updatedContent, replacementsCount };
 }
@@ -123,3 +149,17 @@ export function removeDuplicateProductBlocks(content: string): string {
   
   return cleanedContent;
 }
+
+/**
+ * Remove raw JSON data from the content
+ */
+function removeJsonData(content: string): string {
+  // Remove the raw products JSON array that might be at the end of the content
+  return content.replace(/"products"\s*:\s*\[\s*\{[\s\S]*?\}\s*\]\s*}/g, '');
+}
+
+// Export functions
+export {
+  replaceProductPlaceholders,
+  removeDuplicateProductBlocks
+};
