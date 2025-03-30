@@ -1,4 +1,3 @@
-
 import { useEffect, useRef } from 'react';
 import { BlogPost } from '@/contexts/blog';
 import { removeJsonFormatting } from '@/services/blog/top10/contentProcessor';
@@ -131,6 +130,40 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
           }
         }
       });
+
+      // Add type assertion to handle click event
+      const handleContainerClick = (e: MouseEvent) => {
+        // Explicitly cast target to HTMLElement
+        const target = e.target as HTMLElement;
+        
+        // Check if the click is on or inside a product card
+        const productCard = target.closest('.product-card');
+        if (!productCard) return;
+
+        // If the click is directly on a link, let the default behavior happen
+        if (target.tagName === 'A' || target.closest('a')) {
+          return;
+        }
+
+        // If the click is on the card but not on a link, find the main link and click it
+        const mainLink = productCard.querySelector('.button-link') || 
+                        productCard.querySelector('.title-link');
+        if (mainLink) {
+          e.preventDefault();
+          e.stopPropagation();
+          (mainLink as HTMLElement).click();
+        }
+      };
+
+      if (contentRef.current) {
+        contentRef.current.addEventListener('click', handleContainerClick as EventListener);
+      }
+
+      return () => {
+        if (contentRef.current) {
+          contentRef.current.removeEventListener('click', handleContainerClick as EventListener);
+        }
+      };
     };
 
     // Run immediately after render
@@ -140,39 +173,8 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
     const observer = new MutationObserver(fixProductCardLinks);
     observer.observe(contentRef.current, { childList: true, subtree: true });
 
-    // Add additional click handler at the container level
-    const handleContainerClick = (e: MouseEvent) => {
-      // Fix TypeScript error by properly casting the target
-      const target = e.target as HTMLElement;
-      
-      // Check if the click is on or inside a product card
-      const productCard = target.closest('.product-card');
-      if (!productCard) return;
-
-      // If the click is directly on a link, let the default behavior happen
-      if (target.tagName === 'A' || target.closest('a')) {
-        return;
-      }
-
-      // If the click is on the card but not on a link, find the main link and click it
-      const mainLink = productCard.querySelector('.button-link') || 
-                      productCard.querySelector('.title-link');
-      if (mainLink) {
-        e.preventDefault();
-        e.stopPropagation();
-        (mainLink as HTMLElement).click();
-      }
-    };
-
-    if (contentRef.current) {
-      contentRef.current.addEventListener('click', handleContainerClick as EventListener);
-    }
-
     return () => {
       observer.disconnect();
-      if (contentRef.current) {
-        contentRef.current.removeEventListener('click', handleContainerClick as EventListener);
-      }
     };
   }, [content]);
 
