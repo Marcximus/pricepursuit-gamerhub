@@ -21,7 +21,7 @@ export const ProductActions: React.FC<ProductActionsProps> = ({
       {productUrl ? (
         <Button 
           onClick={() => handleViewOnAmazon(productUrl)}
-          className="w-full bg-blue-600 hover:bg-blue-700 transform hover:-translate-y-0.5 transition-all"
+          className="w-auto min-w-[120px] max-w-[180px] bg-blue-600 hover:bg-blue-700 transform hover:-translate-y-0.5 transition-all"
         >
           Check it out
           <Zap className="w-4 h-4 ml-2 animate-pulse" />
@@ -29,7 +29,7 @@ export const ProductActions: React.FC<ProductActionsProps> = ({
       ) : (
         <Button
           variant="outline"
-          className="w-full hover:border-blue-500 hover:text-blue-600 transform hover:-translate-y-0.5 transition-all"
+          className="w-auto min-w-[120px] max-w-[180px] hover:border-blue-500 hover:text-blue-600 transform hover:-translate-y-0.5 transition-all"
           onClick={() => searchQuery && window.open(`https://www.amazon.com/s?k=${encodeURIComponent(searchQuery)}`, '_blank')}
         >
           Search on Amazon
