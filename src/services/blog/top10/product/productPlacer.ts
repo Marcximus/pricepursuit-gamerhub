@@ -60,7 +60,20 @@ export function replaceProductPlaceholders(content: string, products: any[]): {
   
   console.log(`✅ Replaced ${replacementsCount} product placeholders in content`);
   
+  // Clean up any JSON data artifacts that might be at the end of the content
+  updatedContent = cleanupJsonProductsData(updatedContent);
+  
   return { content: updatedContent, replacementsCount };
+}
+
+/**
+ * Clean up any JSON products data that might be at the end of the content
+ * This removes the raw JSON data from the final displayed content
+ */
+function cleanupJsonProductsData(content: string): string {
+  // Look for the products array JSON at the end of the content
+  const productsJsonPattern = /\"products\"\s*:\s*\[\s*\{[\s\S]*?\}\s*\]/g;
+  return content.replace(productsJsonPattern, '');
 }
 
 /**

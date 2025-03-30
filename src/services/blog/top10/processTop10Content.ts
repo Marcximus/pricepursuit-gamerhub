@@ -21,6 +21,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
   console.log(`📝 Original prompt: "${prompt.substring(0, 100)}..."`);
   console.log(`📄 Content length before processing: ${content ? content.length : 0} characters`);
   console.log(`📄 Content preview (first 200 chars): "${content ? content.substring(0, 200) : 'EMPTY'}..."`);
+  console.log(`📄 Content preview (last 200 chars): "${content ? content.substring(content.length - 200) : 'EMPTY'}..."`);
   
   if (!content || content.trim().length === 0) {
     console.error('❌ CRITICAL ERROR: Received empty content in processTop10Content');
