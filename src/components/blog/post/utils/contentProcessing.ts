@@ -125,10 +125,11 @@ export const improveContentSpacing = (content: string): string => {
     '$1\n<div class="my-4"></div>$2'
   );
   
-  // Add spacing after bullet lists
+  // IMPROVED: Add better spacing after bullet lists
+  // Increase spacing from my-4 to my-6 (from 16px to 24px) for better visual separation
   improvedContent = improvedContent.replace(
-    /(<\/ul>)(<p>)/g,
-    '$1\n<div class="my-4"></div>$2'
+    /(<\/ul>)(\s*)(<p>)/g,
+    '$1\n<div class="my-6"></div>$3'
   );
   
   // Ensure emoji bullets have proper spacing
