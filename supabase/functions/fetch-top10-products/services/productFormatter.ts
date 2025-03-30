@@ -45,6 +45,14 @@ export const formatProductsForDisplay = (topProducts: any[]) => {
  * @returns HTML string representation of the product
  */
 const generateProductHtml = (product: any, specs: string[], rank: number): string => {
+  // Extract individual specifications for the two-column layout
+  const processor = product.processor || 'Unknown';
+  const ram = product.ram || 'Unknown';
+  const storage = product.storage || 'Unknown';
+  const screenSize = product.screen_size || 'Unknown';
+  const graphics = product.graphics || 'Unknown';
+  const battery = product.battery_life || 'Up to 8 hours';
+
   return `
     <div class="product-card">
       <div class="product-image">
@@ -52,10 +60,35 @@ const generateProductHtml = (product: any, specs: string[], rank: number): strin
       </div>
       <div class="product-info">
         <h3 class="text-xl font-semibold text-green-800">${product.title}</h3>
-        <div class="specs text-sm text-gray-600 my-2">
-          ${specs.join(' | ')}
+        
+        <div class="specs-grid grid grid-cols-2 gap-2 text-sm text-gray-600 my-2 bg-gray-50 p-3 rounded-md">
+          <div class="spec-item">
+            <span class="spec-name font-medium">CPU:</span>
+            <span class="spec-value">${processor}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-name font-medium">Storage:</span>
+            <span class="spec-value">${storage}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-name font-medium">RAM:</span>
+            <span class="spec-value">${ram}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-name font-medium">Screen:</span>
+            <span class="spec-value">${screenSize}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-name font-medium">Graphics:</span>
+            <span class="spec-value">${graphics}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-name font-medium">Battery:</span>
+            <span class="spec-value">${battery}</span>
+          </div>
         </div>
-        <div class="price-rating flex justify-between items-center">
+        
+        <div class="price-rating flex justify-between items-center mt-3">
           <div class="price font-bold">${product.current_price ? `$${product.current_price}` : 'Check Price'}</div>
           <div class="rating flex items-center">
             <span class="stars">★★★★★</span>

@@ -27,6 +27,8 @@ export const getTop10BlogStyles = (): string => `
     transform: translateY(-5px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
+  
+  /* Two-column specs grid styling */
   .product-card .specs-grid { 
     display: grid; 
     grid-template-columns: repeat(2, 1fr); 
@@ -36,16 +38,22 @@ export const getTop10BlogStyles = (): string => `
     border-radius: 0.375rem;
     border: 1px solid #e5e7eb;
   }
-  .product-card .specs-grid div { 
+  .product-card .specs-grid .spec-item { 
+    display: flex;
+    flex-direction: column;
     padding: 0.25rem; 
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
-  .product-card .specs-grid .font-medium {
+  .product-card .specs-grid .spec-name {
     color: #4b5563;
+    font-weight: 500;
     margin-right: 0.25rem;
   }
+  .product-card .specs-grid .spec-value {
+    color: #111827;
+    white-space: normal;
+    word-break: break-word;
+  }
+  
   .product-card .product-rank { 
     z-index: 10; 
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);

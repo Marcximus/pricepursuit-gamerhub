@@ -61,7 +61,7 @@ export function generateProductHtml(product: any, position: number): string {
   // Log what we're generating for debugging
   console.log(`🧩 Generating product HTML for position ${position}: ${title.substring(0, 30)}...`);
   
-  // Generate and return the HTML with prominent specifications
+  // Generate and return the HTML with specifications in a 2-column layout
   return `
     <div class="product-card shadow-lg hover:shadow-xl transition-all duration-300 rounded-lg overflow-hidden" data-asin="${asin}" data-rank="${position}">
       <div class="product-rank bg-green-600 text-white font-bold py-1 px-3 absolute top-2 left-2 rounded-full shadow-md">#${position}</div>
@@ -76,38 +76,36 @@ export function generateProductHtml(product: any, position: number): string {
       </div>
       <div class="product-details p-4">
         <div class="product-specs bg-gray-50 p-3 rounded-md mb-4">
-          <table class="specs-table w-full">
-            <tbody>
-              <tr>
-                <td class="spec-name font-medium text-gray-700 pr-2">CPU:</td>
-                <td class="spec-value text-gray-900">${cpu}</td>
-              </tr>
-              <tr>
-                <td class="spec-name font-medium text-gray-700 pr-2">RAM:</td>
-                <td class="spec-value text-gray-900">${ram}</td>
-              </tr>
-              <tr>
-                <td class="spec-name font-medium text-gray-700 pr-2">Graphics:</td>
-                <td class="spec-value text-gray-900">${graphics}</td>
-              </tr>
-              <tr>
-                <td class="spec-name font-medium text-gray-700 pr-2">Storage:</td>
-                <td class="spec-value text-gray-900">${storage}</td>
-              </tr>
-              <tr>
-                <td class="spec-name font-medium text-gray-700 pr-2">Screen:</td>
-                <td class="spec-value text-gray-900">${screen}</td>
-              </tr>
-              <tr>
-                <td class="spec-name font-medium text-gray-700 pr-2">Battery:</td>
-                <td class="spec-value text-gray-900">${battery}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="specs-grid grid grid-cols-2 gap-2">
+            <div class="spec-item">
+              <span class="spec-name font-medium text-gray-700">CPU:</span>
+              <span class="spec-value text-gray-900">${cpu}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-name font-medium text-gray-700">Storage:</span>
+              <span class="spec-value text-gray-900">${storage}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-name font-medium text-gray-700">RAM:</span>
+              <span class="spec-value text-gray-900">${ram}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-name font-medium text-gray-700">Screen:</span>
+              <span class="spec-value text-gray-900">${screen}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-name font-medium text-gray-700">Graphics:</span>
+              <span class="spec-value text-gray-900">${graphics}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-name font-medium text-gray-700">Battery:</span>
+              <span class="spec-value text-gray-900">${battery}</span>
+            </div>
+          </div>
         </div>
         
         <div class="product-cta flex justify-center">
-          <a href="${url}" class="check-price-btn button-amazon bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-6 rounded inline-block w-auto max-w-xs mx-auto text-center whitespace-nowrap transition-colors duration-200" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
+          <a href="${url}" class="check-price-btn button-amazon bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-8 rounded inline-block w-auto min-w-[200px] max-w-[300px] mx-auto text-center whitespace-nowrap transition-colors duration-200" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
         </div>
       </div>
     </div>

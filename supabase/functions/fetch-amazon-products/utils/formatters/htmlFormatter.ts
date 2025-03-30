@@ -61,6 +61,14 @@ export function generateHtmlContent(product: any, rank: number): string {
   const asin = product.asin || '';
   const url = product.url || product.productUrl || `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
   
+  // Extract product specifications
+  const cpu = product.cpu || product.processor || 'Unknown';
+  const ram = product.ram || 'Unknown';
+  const graphics = product.graphics || 'Unknown';
+  const storage = product.storage || 'Unknown';
+  const screen = product.screen || product.screen_size || 'Unknown';
+  const battery = product.battery || product.battery_life || 'Up to 8 hours';
+  
   // Extract key features (limited to 3 for clean display)
   let featuresList = '';
   if (product.feature_bullets && Array.isArray(product.feature_bullets)) {
@@ -90,6 +98,36 @@ export function generateHtmlContent(product: any, rank: number): string {
           <h3 class="product-title text-xl font-bold mb-4 text-green-800">
             <a href="${escapeHtml(url)}" target="_blank" rel="nofollow noopener" class="text-green-800 hover:text-green-900">#${rank} ${escapeHtml(title)}</a>
           </h3>
+          
+          <div class="product-specs bg-gray-50 p-3 rounded-md mb-4">
+            <div class="specs-grid grid grid-cols-2 gap-2">
+              <div class="spec-item">
+                <span class="spec-name font-medium text-gray-700">CPU:</span>
+                <span class="spec-value text-gray-900">${escapeHtml(cpu)}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-name font-medium text-gray-700">Storage:</span>
+                <span class="spec-value text-gray-900">${escapeHtml(storage)}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-name font-medium text-gray-700">RAM:</span>
+                <span class="spec-value text-gray-900">${escapeHtml(ram)}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-name font-medium text-gray-700">Screen:</span>
+                <span class="spec-value text-gray-900">${escapeHtml(screen)}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-name font-medium text-gray-700">Graphics:</span>
+                <span class="spec-value text-gray-900">${escapeHtml(graphics)}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-name font-medium text-gray-700">Battery:</span>
+                <span class="spec-value text-gray-900">${escapeHtml(battery)}</span>
+              </div>
+            </div>
+          </div>
+          
           ${featuresList ? `
           <div class="product-features mb-4">
             <h4 class="font-semibold text-gray-700 mb-2">Key Features:</h4>
@@ -97,7 +135,7 @@ export function generateHtmlContent(product: any, rank: number): string {
           </div>` : ''}
         </div>
         <div class="product-cta mt-4 flex justify-center">
-          <a href="${escapeHtml(url)}" class="check-price-btn button-amazon inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full transition-colors w-auto min-width-[200px] max-w-[300px] mx-auto text-center whitespace-nowrap" target="_blank" rel="nofollow noopener">
+          <a href="${escapeHtml(url)}" class="check-price-btn button-amazon inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded-full transition-colors w-auto min-w-[200px] max-w-[300px] mx-auto text-center whitespace-nowrap" target="_blank" rel="nofollow noopener">
             Check Price on Amazon
           </a>
         </div>
