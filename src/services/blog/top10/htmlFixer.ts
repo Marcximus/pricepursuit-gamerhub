@@ -1,4 +1,3 @@
-
 /**
  * HTML fixing utilities for Top10 blog posts
  */
@@ -6,6 +5,8 @@
 /**
  * Fix common HTML issues in blog post content
  */
+import { fixHtmlTags } from './htmlWrapper';
+
 export function fixHtmlTags(content: string): string {
   console.log('🔧 Fixing HTML tags in content');
   
@@ -15,6 +16,22 @@ export function fixHtmlTags(content: string): string {
   }
   
   let fixedContent = content;
+  
+  // Fix duplicate title issues, where the blog title is repeated multiple times
+  const titlePattern = /<h1[^>]*>(.*?)<\/h1>/gi;
+  const titles = [...fixedContent.matchAll(titlePattern)];
+  if (titles.length > 1) {
+    console.log(`⚠️ Found ${titles.length} h1 titles, keeping only the most descriptive one`);
+    
+    // Prefer the longer, more descriptive title
+    const sortedTitles = titles.sort((a, b) => b[1].length - a[1].length);
+    const keepTitle = sortedTitles[0][0];
+    
+    // Replace all other titles with empty string
+    for (let i = 1; i < titles.length; i++) {
+      fixedContent = fixedContent.replace(titles[i][0], '');
+    }
+  }
   
   // Remove JSON formatting artifacts
   fixedContent = fixedContent.replace(/```json\s*\{/g, '');
@@ -33,19 +50,6 @@ export function fixHtmlTags(content: string): string {
       }
     } catch (e) {
       console.warn('⚠️ Error attempting to parse JSON wrapper:', e);
-    }
-  }
-  
-  // Fix duplicate title issues, where the blog title is repeated multiple times
-  const titlePattern = /<h1[^>]*>(.*?)<\/h1>/gi;
-  const titles = [...fixedContent.matchAll(titlePattern)];
-  if (titles.length > 1) {
-    console.log(`⚠️ Found ${titles.length} h1 titles, keeping only the first one`);
-    // Keep only the first title
-    const firstTitle = titles[0][0];
-    // Replace all other titles with empty string
-    for (let i = 1; i < titles.length; i++) {
-      fixedContent = fixedContent.replace(titles[i][0], '');
     }
   }
   
