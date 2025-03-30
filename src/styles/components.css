@@ -7,7 +7,7 @@
 /* Amazon product button styles - ensuring they can't be easily overridden */
 .button-amazon {
   display: inline-block !important;
-  background-color: #f59e0b !important;
+  background-color: #16a34a !important; /* Changed to green */
   color: white !important;
   font-weight: 600 !important;
   padding: 0.5rem 1rem !important;
@@ -18,15 +18,19 @@
   cursor: pointer !important;
   border: none !important;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  width: auto !important;
+  max-width: 200px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 .button-amazon:hover {
-  background-color: #d97706 !important;
+  background-color: #15803d !important; /* Darker green on hover */
 }
 
 .check-price-btn {
   display: inline-block !important;
-  background-color: #f59e0b !important;
+  background-color: #16a34a !important; /* Changed to green */
   color: white !important;
   font-weight: 600 !important;
   padding: 0.5rem 1rem !important;
@@ -37,8 +41,12 @@
   cursor: pointer !important;
   border: none !important;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  width: auto !important;
+  max-width: 200px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 .check-price-btn:hover {
-  background-color: #d97706 !important;
+  background-color: #15803d !important; /* Darker green on hover */
 }

@@ -5,16 +5,7 @@
 import { escapeHtml } from '../utils/security.ts';
 
 export function generateProductHTML(product: any, rank: number): string {
-  // Format price with dollar sign if needed
-  const formattedPrice = typeof product.price === 'number' 
-    ? `$${product.price.toFixed(2)}` 
-    : (typeof product.price?.value === 'number' 
-      ? `$${product.price.value.toFixed(2)}`
-      : (typeof product.price === 'string' && product.price.indexOf('$') === -1
-        ? `$${product.price}`
-        : (product.price || 'Price not available')));
-  
-  // Enhanced rating display with stars
+  // Format rating display with stars
   let ratingDisplay = '';
   let reviewText = '';
   
@@ -54,15 +45,14 @@ export function generateProductHTML(product: any, rank: number): string {
         <a href="${escapeHtml(product.url)}" target="_blank" rel="nofollow noopener">
           <img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.title)}" loading="lazy" />
         </a>
+        <div class="product-rating text-center mt-2 mb-3">
+          ${ratingDisplay} ${escapeHtml(reviewText)}
+        </div>
       </div>
       <div class="product-details">
         <h4 class="product-title">
           <a href="${escapeHtml(product.url)}" target="_blank" rel="nofollow noopener">${escapeHtml(product.title)}</a>
         </h4>
-        <div class="product-meta">
-          <span class="product-price">${escapeHtml(formattedPrice)}</span>
-          <span class="product-rating">${ratingDisplay} ${escapeHtml(reviewText)}</span>
-        </div>
         ${features.length > 0 ? 
           `<div class="product-features">
             <ul>
@@ -71,8 +61,8 @@ export function generateProductHTML(product: any, rank: number): string {
             </ul>
           </div>` : ''
         }
-        <div class="product-cta">
-          <a href="${escapeHtml(product.url)}" class="check-price-btn button-amazon bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded inline-block transition-colors duration-200" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
+        <div class="product-cta flex justify-center">
+          <a href="${escapeHtml(product.url)}" class="check-price-btn button-amazon bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded inline-block w-auto max-w-[200px] mx-auto text-center transition-colors duration-200" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
         </div>
       </div>
     </div>

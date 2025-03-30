@@ -1,3 +1,4 @@
+
 /**
  * Styles for Top10 blog posts
  */
@@ -58,6 +59,10 @@ export const getTop10BlogStyles = (): string => `
   }
   .product-card .button-amazon {
     transition: all 0.2s ease;
+    width: auto !important;
+    max-width: 200px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
   .product-card .button-amazon:hover {
     transform: translateY(-2px);
@@ -76,6 +81,20 @@ export const getTop10BlogStyles = (): string => `
   .button-amazon,
   .check-price-btn {
     background-color: #16a34a !important;
+    width: auto !important;
+    max-width: 200px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  
+  /* Move ratings under the image and center */
+  .product-card .product-rating {
+    text-align: center !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 1rem !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
   }
   
   /* Ensure all subtitles in product cards are green */
@@ -108,5 +127,11 @@ export const getTop10BlogStyles = (): string => `
   
   .product-card .product-title a:hover {
     text-decoration: underline;
+  }
+  
+  /* Center product CTA */
+  .product-card .product-cta {
+    display: flex !important;
+    justify-content: center !important;
   }
 `;

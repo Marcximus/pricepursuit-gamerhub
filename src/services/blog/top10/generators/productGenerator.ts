@@ -17,7 +17,6 @@ export function generateProductHtml(product: any, position: number): string {
   const title = product.title || 'Unknown Product';
   const image = product.image || product.imageUrl || '';
   const url = product.url || product.productUrl || `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
-  const price = typeof product.price === 'number' ? product.price.toFixed(2) : (product.price || '');
   const rating = product.rating || 0;
   const ratingsTotal = product.ratings_total || product.ratings_count || 0;
   const isBestSeller = product.is_best_seller || false;
@@ -70,13 +69,12 @@ export function generateProductHtml(product: any, position: number): string {
         <a href="${url}" target="_blank" rel="nofollow noopener">
           <img src="${image}" alt="${title.replace(/"/g, '&quot;')}" loading="lazy" class="w-full h-auto object-contain bg-white" />
         </a>
+        <div class="product-rating flex justify-center items-center mt-2 mb-3">
+          <span class="text-amber-500">${starsHtml}</span> 
+          <span class="ml-1">${rating}/5 (${formattedRatings})</span>
+        </div>
       </div>
       <div class="product-details p-4">
-        <div class="product-meta flex justify-between items-center mb-3">
-          <span class="product-price font-bold text-green-700">${price ? `$${price}` : 'Check price'}</span>
-          <span class="product-rating"><span class="text-amber-500">${starsHtml}</span> ${rating}/5 (${formattedRatings})</span>
-        </div>
-        
         <div class="product-specs bg-gray-50 p-3 rounded-md mb-4">
           <table class="specs-table w-full">
             <tbody>
@@ -108,8 +106,8 @@ export function generateProductHtml(product: any, position: number): string {
           </table>
         </div>
         
-        <div class="product-cta">
-          <a href="${url}" class="check-price-btn button-amazon bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded inline-block w-full text-center transition-colors duration-200" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
+        <div class="product-cta flex justify-center">
+          <a href="${url}" class="check-price-btn button-amazon bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded inline-block w-auto max-w-[200px] mx-auto text-center transition-colors duration-200" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
         </div>
       </div>
     </div>

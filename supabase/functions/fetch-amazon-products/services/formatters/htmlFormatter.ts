@@ -14,9 +14,6 @@ export function generateHtmlContent(product: any, rank: number): string {
   
   // Ensure we have data for all fields or use defaults
   const title = product.title || 'Lenovo Laptop';
-  const price = product.price?.value 
-    ? `$${parseFloat(product.price.value).toFixed(2)}` 
-    : (typeof product.price === 'string' ? product.price : 'Price not available');
   
   // Enhanced rating and reviews display
   let rating = 'No ratings';
@@ -83,28 +80,24 @@ export function generateHtmlContent(product: any, rank: number): string {
         <a href="${escapeHtml(url)}" target="_blank" rel="nofollow noopener">
           <img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" class="w-full h-64 object-contain p-4" loading="lazy" />
         </a>
+        <div class="product-rating flex items-center justify-center mt-2 mb-4">
+          ${starHTML}
+          <span class="ml-1 text-gray-700">${escapeHtml(rating)} ${escapeHtml(reviews)}</span>
+        </div>
       </div>
       <div class="product-details p-4 flex flex-col justify-between flex-grow">
         <div>
-          <h3 class="product-title text-xl font-bold mb-2 text-green-800">
+          <h3 class="product-title text-xl font-bold mb-4 text-green-800">
             <a href="${escapeHtml(url)}" target="_blank" rel="nofollow noopener" class="text-green-800 hover:text-green-900">#${rank} ${escapeHtml(title)}</a>
           </h3>
-          <div class="product-meta flex flex-wrap items-center gap-2 mb-4">
-            <span class="product-price text-lg font-bold text-green-600">${escapeHtml(price)}</span>
-            <span class="mx-2 text-gray-400">|</span>
-            <span class="product-rating flex items-center">
-              ${starHTML}
-              <span class="ml-1 text-gray-700">${escapeHtml(rating)} ${escapeHtml(reviews)}</span>
-            </span>
-          </div>
           ${featuresList ? `
           <div class="product-features mb-4">
             <h4 class="font-semibold text-gray-700 mb-2">Key Features:</h4>
             ${featuresList}
           </div>` : ''}
         </div>
-        <div class="product-cta mt-4 w-full">
-          <a href="${escapeHtml(url)}" class="check-price-btn button-amazon inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full transition-colors text-center w-auto max-w-[200px] mx-auto" target="_blank" rel="nofollow noopener">
+        <div class="product-cta mt-4 flex justify-center">
+          <a href="${escapeHtml(url)}" class="check-price-btn button-amazon inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full transition-colors w-auto max-w-[200px] mx-auto text-center" target="_blank" rel="nofollow noopener">
             View on Amazon
           </a>
         </div>

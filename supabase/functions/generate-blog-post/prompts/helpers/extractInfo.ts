@@ -1,75 +1,82 @@
 
 /**
- * Helper functions to extract computer specifications from title string
+ * Helper functions to extract product information for blog post generation
  */
 
-export function extractInfoFromTitle(title: string, type: 'processor' | 'ram' | 'graphics' | 'storage' | 'screen'): string | null {
-  if (!title) return null;
-  
-  switch (type) {
-    case 'processor':
-      // Extract processor information (Intel Core i7, AMD Ryzen, etc.)
-      const processorMatch = title.match(/(?:Intel\s+Core\s+i[3579][0-9-]*|AMD\s+Ryzen\s+[3579][0-9]*|Apple\s+M[123]\s+(?:Pro|Max|Ultra)?)/i);
-      return processorMatch ? processorMatch[0] : null;
-      
-    case 'ram':
-      // Extract RAM information (8GB, 16GB, etc.)
-      const ramMatch = title.match(/(\d+)\s*GB\s*(?:DDR[45])?(?:\s*RAM)?/i);
-      return ramMatch ? `${ramMatch[1]}GB RAM` : null;
-      
-    case 'graphics':
-      // Extract graphics card information (RTX 3050, etc.)
-      const graphicsMatch = title.match(/(?:NVIDIA|GeForce)\s+(?:RTX|GTX)\s+\d{4}(?:\s*Ti)?/i) ||
-                           title.match(/Intel\s+(?:UHD|Iris\s+Xe)\s+Graphics/i) ||
-                           title.match(/AMD\s+Radeon(?:\s+\w+\s+\d+)?/i);
-      return graphicsMatch ? graphicsMatch[0] : null;
-      
-    case 'storage':
-      // Extract storage information (512GB SSD, etc.)
-      const storageMatch = title.match(/(\d+)\s*(?:GB|TB)\s*(?:SSD|HDD|NVMe)/i);
-      return storageMatch ? storageMatch[0] : null;
-      
-    case 'screen':
-      // Extract screen size information (15.6", etc.)
-      const screenMatch = title.match(/(\d+\.?\d*)[\s-]?(?:inch|"|inches)?(?:\s*(?:FHD|QHD|UHD|HD))?/i);
-      return screenMatch ? `${screenMatch[1]}" Display` : null;
-      
-    default:
-      return null;
-  }
+export interface ProductData {
+  title: string;
+  brand?: string;
+  model?: string;
+  price?: number | string;
+  rating?: number;
+  reviewCount?: number;
+  asin?: string;
+  url?: string;
+  imageUrl?: string;
+  cpu?: string;
+  ram?: string;
+  graphics?: string;
+  storage?: string;
+  screen?: string;
+  battery?: string;
+  features?: string[];
 }
 
 /**
- * Extract brand from product title if not explicitly provided
+ * Extract product information from raw product data
+ * @param product Raw product data object
+ * @returns Formatted product data
  */
-export function extractBrandFromTitle(title: string): string {
-  if (!title) return 'Unknown';
+export function extractProductInfo(product: any): ProductData {
+  if (!product) return { title: 'Unknown Product' };
   
-  // Common laptop brands to look for in titles
-  const commonBrands = [
-    'MSI', 'Lenovo', 'HP', 'Dell', 'ASUS', 'Acer', 'Apple', 'Samsung', 
-    'Microsoft', 'LG', 'Razer', 'Toshiba', 'Gigabyte', 'Alienware'
+  return {
+    title: product.title || 'Unknown Product',
+    brand: product.brand || 'Unknown',
+    model: product.model || '',
+    price: product.price || product.current_price || '',
+    rating: product.rating || 0,
+    reviewCount: product.ratings_total || product.rating_count || product.reviews_count || 0,
+    asin: product.asin || '',
+    url: product.url || product.productUrl || product.product_url || '',
+    imageUrl: product.image || product.imageUrl || product.image_url || '',
+    cpu: product.cpu || product.processor || 'Not specified',
+    ram: product.ram || 'Not specified',
+    graphics: product.graphics || 'Not specified',
+    storage: product.storage || 'Not specified',
+    screen: product.screen || product.screen_size || 'Not specified',
+    battery: product.battery || product.battery_life || 'Up to 8 hours',
+    features: Array.isArray(product.feature_bullets) 
+      ? product.feature_bullets 
+      : (Array.isArray(product.features) ? product.features : [])
+  };
+}
+
+/**
+ * Format product data into a detailed string for prompt generation
+ * @param product Formatted product data
+ * @param position Product ranking position
+ * @returns String representation for prompts
+ */
+export function formatProductForPrompt(product: ProductData, position: number): string {
+  const lines = [
+    `Product ${position}:`,
+    `- Title: ${product.title}`,
+    `- Brand: ${product.brand || 'Unknown'}`,
+    `- Model: ${product.model || 'Unknown'}`,
+    `- Price: ${product.price || 'Unknown'}`,
+    `- Rating: ${product.rating || 0} (${product.reviewCount || 0} reviews)`,
+    `- ASIN: ${product.asin || 'Unknown'}`,
+    `- CPU: ${product.cpu || 'Unknown'}`,
+    `- RAM: ${product.ram || 'Unknown'}`,
+    `- Graphics: ${product.graphics || 'Unknown'}`,
+    `- Storage: ${product.storage || 'Unknown'}`,
+    `- Screen: ${product.screen || 'Unknown'}`,
+    `- Battery: ${product.battery || 'Unknown'}`,
+    `- Key Features: ${(product.features && product.features.length > 0) 
+      ? product.features.slice(0, 3).join(' | ') 
+      : 'High performance, reliability, good value'}`
   ];
   
-  // Check if any brand appears at the start of the title
-  for (const brand of commonBrands) {
-    if (title.toLowerCase().startsWith(brand.toLowerCase())) {
-      return brand;
-    }
-  }
-  
-  // Alternatively, look for brand anywhere in the title
-  for (const brand of commonBrands) {
-    if (title.toLowerCase().includes(brand.toLowerCase())) {
-      return brand;
-    }
-  }
-  
-  // Default to first word if it's more than 2 characters
-  const firstWord = title.split(' ')[0];
-  if (firstWord && firstWord.length > 2) {
-    return firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
-  }
-  
-  return 'Unknown Brand';
+  return lines.join('\n');
 }
