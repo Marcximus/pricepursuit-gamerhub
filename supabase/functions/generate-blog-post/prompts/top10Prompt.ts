@@ -56,9 +56,10 @@ CRITICAL: Do not write less than 1500 words on the topic!
    - Add a final horizontal rule after the conclusion
 
 8. Excerpt:
-   - CRITICAL: You MUST provide a concise, engaging excerpt (max 160 characters) that summarizes the article
-   - This excerpt will be used for social sharing and SEO purposes
-   - Make it compelling and include relevant keywords
+   - CRITICAL: You MUST provide a related, SEO-friendly excerpt (max 160 characters) that summarizes the blog post
+   - Focus on including primary keywords like "best laptops", specific category, or performance highlights
+   - Aim to entice clicks by highlighting unique value proposition
+   - Ensure the excerpt reads naturally and provides clear context
 
 Your response MUST be a valid JSON object with this structure:
 {
@@ -204,9 +205,10 @@ CRITICAL: Do not write less than 1500 words on the topic!
    - Add a final horizontal rule after the conclusion
 
 8. Excerpt:
-   - CRITICAL: You MUST provide a concise, engaging excerpt (max 160 characters) that summarizes the article
-   - This excerpt will be used for social sharing and SEO purposes
-   - Make it compelling and include relevant keywords
+   - CRITICAL: You MUST provide a related, SEO-friendly excerpt (max 160 characters) that summarizes the blog post
+   - Focus on including primary keywords like "best laptops", specific category, or performance highlights
+   - Aim to entice clicks by highlighting unique value proposition
+   - Ensure the excerpt reads naturally and provides clear context
 
 Use the EXACT names, models, and details of these products in your content:
 ${productsInfo}
