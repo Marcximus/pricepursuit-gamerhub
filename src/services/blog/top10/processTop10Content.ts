@@ -83,16 +83,29 @@ export async function processTop10Content(content: string, prompt: string): Prom
     
     // If we have productSpecs from the AI response, merge them with the products data
     if (productSpecs.length > 0 && products && products.length > 0) {
+      console.log('🔄 Merging product specs with product data...');
+      
       for (let i = 0; i < Math.min(productSpecs.length, products.length); i++) {
-        const spec = productSpecs.find(s => s.position === (i + 1)) || productSpecs[i];
+        // First, try to find the product spec with matching position
+        const matchingSpec = productSpecs.find(spec => spec.position === (i + 1));
+        const spec = matchingSpec || productSpecs[i];
+        
         if (spec) {
           // Ensure product specs are converted to the format expected by generateProductHtml
           products[i].cpu = spec.cpu || products[i].processor || '';
+          products[i].processor = spec.cpu || products[i].processor || '';
           products[i].ram = spec.ram || products[i].ram || '';
           products[i].graphics = spec.graphics || products[i].graphics || '';
           products[i].storage = spec.storage || products[i].storage || '';
           products[i].screen = spec.screen || products[i].screen_size || '';
+          products[i].screen_size = spec.screen || products[i].screen_size || '';
           products[i].battery = spec.battery || products[i].battery_life || '';
+          products[i].battery_life = spec.battery || products[i].battery_life || '';
+          
+          // Ensure position is set correctly
+          products[i].position = i + 1;
+          
+          console.log(`📋 Product ${i+1} merged specs: CPU: ${products[i].cpu}, RAM: ${products[i].ram}`);
         }
       }
       console.log('✅ Successfully merged product specs with product data');

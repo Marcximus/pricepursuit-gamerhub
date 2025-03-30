@@ -20,8 +20,13 @@ export function replaceProductPlaceholders(content: string, products: any[]): {
   // Make sure products have correct position values for correct rank display
   const productsWithPositions = products.map((product, index) => ({
     ...product,
-    position: index + 1 // Ensure correct order: first product is #1, last is #10
+    position: index + 1, // Ensure correct order: first product is #1, last is #10
+    rank: index + 1      // Also add rank for consistency
   }));
+  
+  // Log position values for debugging
+  console.log('📊 Product positions after mapping:');
+  productsWithPositions.forEach(p => console.log(`Position ${p.position}: ${p.title?.substring(0, 30) || 'Unknown'}`));
   
   // Find and replace [PRODUCT_DATA_X] placeholders
   for (let i = 1; i <= productsWithPositions.length; i++) {
@@ -29,13 +34,16 @@ export function replaceProductPlaceholders(content: string, products: any[]): {
     
     if (updatedContent.includes(placeholder)) {
       // Get the product for this position, accounting for zero-based array indexing
-      const product = productsWithPositions[i-1];
+      const product = productsWithPositions.find(p => p.position === i) || productsWithPositions[i-1];
       
       if (product) {
-        console.log(`✅ Replacing placeholder ${placeholder} with product: ${product.title?.substring(0, 30) || 'Unknown'}...`);
+        console.log(`✅ Replacing placeholder ${placeholder} with product position ${product.position}: ${product.title?.substring(0, 30) || 'Unknown'}...`);
         
-        // Generate HTML for this product with its position (i is 1-based)
-        const productHtml = generateProductHtml(product, i-1);
+        // Log product specs for debugging
+        console.log(`📋 Product specs: CPU: ${product.cpu || product.processor || 'Unknown'}, RAM: ${product.ram || 'Unknown'}`);
+        
+        // Generate HTML for this product with its position
+        const productHtml = generateProductHtml(product, i);
         
         // Replace the placeholder with the product HTML
         updatedContent = updatedContent.replace(placeholder, productHtml);
