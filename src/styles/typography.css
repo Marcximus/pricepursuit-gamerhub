@@ -1,0 +1,14 @@
+
+/* Navigation link styles */
+.nav-link {
+  @apply relative px-2 py-2 text-sm font-medium text-gaming-800 hover:text-gaming-600 transition-colors;
+}
+
+.nav-link::after {
+  content: '';
+  @apply absolute left-0 bottom-0 w-full h-0.5 bg-gaming-600 transform scale-x-0 transition-transform duration-200;
+}
+
+.nav-link:hover::after {
+  @apply scale-x-100;
+}

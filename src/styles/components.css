@@ -1,0 +1,44 @@
+
+/* Glass card effect */
+.glass-card {
+  @apply bg-white/30 backdrop-blur-sm border border-white/20 shadow-xl;
+}
+
+/* Amazon product button styles - ensuring they can't be easily overridden */
+.button-amazon {
+  display: inline-block !important;
+  background-color: #f59e0b !important;
+  color: white !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.375rem !important;
+  text-decoration: none !important;
+  transition: background-color 0.2s !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  border: none !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+.button-amazon:hover {
+  background-color: #d97706 !important;
+}
+
+.check-price-btn {
+  display: inline-block !important;
+  background-color: #f59e0b !important;
+  color: white !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.375rem !important;
+  text-decoration: none !important;
+  transition: background-color 0.2s !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  border: none !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+.check-price-btn:hover {
+  background-color: #d97706 !important;
+}
