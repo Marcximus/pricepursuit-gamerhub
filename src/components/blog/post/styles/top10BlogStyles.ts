@@ -1,3 +1,4 @@
+
 /**
  * Styles for Top10 blog posts
  */
@@ -69,6 +70,9 @@ export const getTop10BlogStyles = (): string => `
     min-width: 120px !important;
     padding: 0.375rem 0.75rem !important;
     font-size: 0.875rem !important;
+    display: block !important;
+    margin: 0 auto !important;
+    text-align: center !important;
   }
   /* High specificity selectors to override any other styles */
   .product-card .product-title,
@@ -116,4 +120,12 @@ export const getTop10BlogStyles = (): string => `
   .product-card .product-title a:hover {
     text-decoration: underline;
   }
+  
+  /* Rating display above CTA button */
+  .product-card .product-rating {
+    display: block;
+    margin-bottom: 0.75rem;
+    text-align: center;
+  }
 `;
+

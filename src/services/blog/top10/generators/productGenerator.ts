@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 
 export function generateProductHtml(product: any, position: number): string {
@@ -109,9 +110,13 @@ export function generateProductHtml(product: any, position: number): string {
         </div>
         
         <div class="product-cta">
-          <a href="${url}" class="check-price-btn button-amazon bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded inline-block w-full text-center transition-colors duration-200" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
+          <div class="text-center mb-3">
+            <span class="text-amber-500">${starsHtml}</span> ${rating}/5 (${formattedRatings})
+          </div>
+          <a href="${url}" class="check-price-btn button-amazon bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded inline-block text-center transition-colors duration-200" target="_blank" rel="nofollow noopener">Check It Out Now</a>
         </div>
       </div>
     </div>
   `;
 }
+
