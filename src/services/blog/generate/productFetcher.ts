@@ -57,7 +57,7 @@ export async function fetchProductsForTop10(prompt: string): Promise<any[]> {
           toast({
             title: 'Limited Brand Products',
             description: `Only found ${matchingBrandProducts.length} products for ${extractedParams.searchParams.brand}. Some non-brand products may be included.`,
-            variant: 'warning',
+            variant: 'default', // Changed from 'warning' to 'default' since warning isn't available
           });
         } else if (matchingBrandProducts.length === 0) {
           console.error(`❌ No products found for brand "${targetBrand}"`);
