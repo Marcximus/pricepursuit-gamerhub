@@ -1,4 +1,3 @@
-
 /**
  * Product HTML generation utilities for Top10 blog posts
  */
@@ -81,7 +80,7 @@ export function generateProductHtml(product: any, index: number): string {
   
   return `
 <div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6" data-asin="${product.asin || ''}" data-rank="${rank}">
-  <div class="product-rank absolute top-2 left-2 bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold">#${rank}</div>
+  <div class="product-rank absolute top-2 left-2 bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold">#${rank}</div>
   <div class="p-4">
     <div class="flex flex-col md:flex-row">
       <div class="md:w-1/3 flex items-center justify-center">
@@ -91,7 +90,7 @@ export function generateProductHtml(product: any, index: number): string {
              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300&q=80'; this.classList.add('fallback-image');" />
       </div>
       <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
-        <h4 class="text-xl font-semibold mb-2 product-title">${simplifiedTitle}</h4>
+        <h4 class="text-xl font-semibold mb-2 product-title text-green-800">${simplifiedTitle}</h4>
         ${starsHtml}
         <p class="text-lg font-bold mb-3">${productPrice}</p>
         <div class="specs-grid grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
