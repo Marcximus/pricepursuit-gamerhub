@@ -17,30 +17,30 @@ export function replaceProductPlaceholders(content: string, products: any[]): {
   
   console.log(`🧩 Starting product placeholder replacement with ${products.length} products`);
   
-  // Make sure products have correct position values for correct rank display
+  // Make sure products have correct position values for proper rank display
   const productsWithPositions = products.map((product, index) => ({
     ...product,
-    position: index + 1, // Ensure correct order: first product is #1, last is #10
-    rank: index + 1      // Also add rank for consistency
+    position: product.position || (index + 1), // Use product.position if available, otherwise use index+1
+    rank: product.position || (index + 1)      // Same for rank
   }));
   
+  // Sort the products by position to ensure correct order when placing them in the content
+  productsWithPositions.sort((a, b) => a.position - b.position);
+  
   // Log position values for debugging
-  console.log('📊 Product positions after mapping:');
+  console.log('📊 Product positions after sorting:');
   productsWithPositions.forEach(p => console.log(`Position ${p.position}: ${p.title?.substring(0, 30) || 'Unknown'}`));
   
   // Find and replace [PRODUCT_DATA_X] placeholders
-  for (let i = 1; i <= productsWithPositions.length; i++) {
+  for (let i = 1; i <= 10; i++) {
     const placeholder = `[PRODUCT_DATA_${i}]`;
     
     if (updatedContent.includes(placeholder)) {
-      // Get the product for this position, accounting for zero-based array indexing
-      const product = productsWithPositions.find(p => p.position === i) || productsWithPositions[i-1];
+      // Find the product for this position
+      const product = productsWithPositions.find(p => p.position === i);
       
       if (product) {
         console.log(`✅ Replacing placeholder ${placeholder} with product position ${product.position}: ${product.title?.substring(0, 30) || 'Unknown'}...`);
-        
-        // Log product specs for debugging
-        console.log(`📋 Product specs: CPU: ${product.cpu || product.processor || 'Unknown'}, RAM: ${product.ram || 'Unknown'}`);
         
         // Generate HTML for this product with its position
         const productHtml = generateProductHtml(product, i);
@@ -50,14 +50,25 @@ export function replaceProductPlaceholders(content: string, products: any[]): {
         replacementsCount++;
       } else {
         console.warn(`⚠️ No product found for placeholder ${placeholder}`);
-        // Replace with a message indicating missing product
-        updatedContent = updatedContent.replace(
-          placeholder, 
-          `<div class="product-card bg-gray-100 p-4 text-center rounded-lg border border-gray-300">
-            <p class="text-gray-600">Product information not available</p>
-          </div>`
-        );
-        replacementsCount++;
+        
+        // Try to find any product that hasn't been used yet
+        const unusedProduct = productsWithPositions[i - 1];
+        
+        if (unusedProduct) {
+          console.log(`🔄 Using product at index ${i-1} as fallback for position ${i}`);
+          const productHtml = generateProductHtml(unusedProduct, i);
+          updatedContent = updatedContent.replace(placeholder, productHtml);
+          replacementsCount++;
+        } else {
+          // Replace with a message indicating missing product
+          updatedContent = updatedContent.replace(
+            placeholder, 
+            `<div class="product-card bg-gray-100 p-4 text-center rounded-lg border border-gray-300">
+              <p class="text-gray-600">Product information not available</p>
+            </div>`
+          );
+          replacementsCount++;
+        }
       }
     }
   }

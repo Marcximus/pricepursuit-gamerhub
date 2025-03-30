@@ -21,7 +21,6 @@ export async function processTop10Content(content: string, prompt: string): Prom
   console.log(`📝 Original prompt: "${prompt.substring(0, 100)}..."`);
   console.log(`📄 Content length before processing: ${content ? content.length : 0} characters`);
   console.log(`📄 Content preview (first 200 chars): "${content ? content.substring(0, 200) : 'EMPTY'}..."`);
-  console.log(`📄 Content preview (last 200 chars): "${content ? '...' + content.substring(content.length - 200) : 'EMPTY'}"`);
   
   if (!content || content.trim().length === 0) {
     console.error('❌ CRITICAL ERROR: Received empty content in processTop10Content');
@@ -44,6 +43,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
     console.log(`🔍 Content contains <h2> tags: ${processedContent.includes('<h2>')}`);
     console.log(`🔍 Content contains <p> tags: ${processedContent.includes('<p>')}`);
     console.log(`🔍 Content contains [PRODUCT_DATA_ markers: ${processedContent.includes('[PRODUCT_DATA_')}`);
+    console.log(`🔍 Content contains "products": [...] array: ${processedContent.includes('"products":')}`);
     
     // First, determine if content has proper HTML structure
     const hasHtmlStructure = processedContent.includes('<h1>') || processedContent.includes('<h2>') || 
@@ -65,73 +65,78 @@ export async function processTop10Content(content: string, prompt: string): Prom
       processedContent = `<h1 class="text-center mb-8">${prompt}</h1>\n\n${processedContent}`;
     }
     
-    // Extract product specs directly from the content
+    // Preserve the original content to debug the "products" array extraction
+    const originalContent = processedContent;
+    
+    // Extract product specs directly from the content, especially the JSON "products" array
     console.log('🔍 Extracting product specifications from content...');
-    const productSpecs = extractProductSpecs(processedContent);
+    const productSpecs = extractProductSpecs(originalContent);
     
     if (productSpecs.length > 0) {
       console.log(`✅ Successfully extracted specifications for ${productSpecs.length} products`);
       console.log(`📊 First product specs:`, productSpecs[0]);
+      console.log(`📊 Last product specs:`, productSpecs[productSpecs.length - 1]);
     } else {
       console.warn('⚠️ No product specifications found in content');
+      // Look for the products array in the original content for debugging
+      console.log('🔍 DEBUG: Looking for "products" array in content:');
+      const productsArrayMatch = originalContent.match(/\"products\"\s*:\s*(\[\s*\{[\s\S]*?\}\s*\])/);
+      if (productsArrayMatch) {
+        console.log('🔍 DEBUG: Found "products" array:');
+        console.log(productsArrayMatch[1].substring(0, 300) + '...');
+      } else {
+        console.log('🔍 DEBUG: "products" array not found');
+      }
     }
     
     // Get products either from localStorage or by fetching them
-    console.log('🛒 Attempting to get product data...');
+    console.log('🛒 Attempting to get pre-fetched product data...');
     const products = await getProducts(prompt);
     console.log(`🛒 getProducts returned ${products?.length || 0} products`);
     
     // If we have productSpecs from the AI response, merge them with the products data
+    let productsToUse = products;
+    
     if (productSpecs.length > 0 && products && products.length > 0) {
       console.log('🔄 Merging product specs with product data...');
-      
-      for (let i = 0; i < Math.min(productSpecs.length, products.length); i++) {
+      productsToUse = products.map((product, index) => {
         // First, try to find the product spec with matching position
-        const matchingSpec = productSpecs.find(spec => spec.position === (i + 1));
-        const spec = matchingSpec || productSpecs[i];
+        const matchingSpec = productSpecs.find(spec => spec.position === (index + 1));
         
-        if (spec) {
-          // Ensure product specs are converted to the format expected by generateProductHtml
-          products[i].cpu = spec.cpu || products[i].processor || '';
-          products[i].processor = spec.cpu || products[i].processor || '';
-          products[i].ram = spec.ram || products[i].ram || '';
-          products[i].graphics = spec.graphics || products[i].graphics || '';
-          products[i].storage = spec.storage || products[i].storage || '';
-          products[i].screen = spec.screen || products[i].screen_size || '';
-          products[i].screen_size = spec.screen || products[i].screen_size || '';
-          products[i].battery = spec.battery || products[i].battery_life || '';
-          products[i].battery_life = spec.battery || products[i].battery_life || '';
-          
-          // Ensure position is set correctly
-          products[i].position = i + 1;
-          
-          console.log(`📋 Product ${i+1} merged specs: CPU: ${products[i].cpu}, RAM: ${products[i].ram}`);
+        if (matchingSpec) {
+          return {
+            ...product,
+            cpu: matchingSpec.cpu || product.processor || product.cpu || '',
+            processor: matchingSpec.cpu || product.processor || product.cpu || '',
+            ram: matchingSpec.ram || product.ram || '',
+            graphics: matchingSpec.graphics || product.graphics || '',
+            storage: matchingSpec.storage || product.storage || '',
+            screen: matchingSpec.screen || product.screen_size || product.screen || '',
+            screen_size: matchingSpec.screen || product.screen_size || product.screen || '',
+            battery: matchingSpec.battery || product.battery_life || product.battery || '',
+            battery_life: matchingSpec.battery || product.battery_life || product.battery || '',
+            position: index + 1, // Ensure position is set correctly (1-indexed)
+          };
         }
-      }
+        
+        // If no matching spec, just ensure position is set correctly
+        return {
+          ...product,
+          position: index + 1
+        };
+      });
+      
       console.log('✅ Successfully merged product specs with product data');
-    }
-    
-    // If we have products, log some info about the first product
-    if (products && products.length > 0) {
-      console.log(`✅ Successfully fetched ${products.length} products for Top10 post`);
-      console.log(`🔍 First product: "${products[0]?.title?.substring(0, 30) || 'Unknown'}..."`);
-      console.log(`First product has HTML content: ${!!products[0]?.htmlContent}`);
-      console.log(`First product ASIN: ${products[0]?.asin || 'Unknown'}`);
-      console.log(`First product CPU: ${products[0]?.cpu || products[0]?.processor || 'Unknown'}`);
-      
-      // Check key fields on all products
-      const productsWithHtml = products.filter(p => !!p.htmlContent).length;
-      const productsWithAsin = products.filter(p => !!p.asin).length;
-      const productsWithTitle = products.filter(p => !!p.title).length;
-      
-      console.log(`📊 Products with HTML content: ${productsWithHtml}/${products.length}`);
-      console.log(`📊 Products with ASIN: ${productsWithAsin}/${products.length}`);
-      console.log(`📊 Products with title: ${productsWithTitle}/${products.length}`);
-    } else {
-      console.error('⚠️ No Amazon products found, cannot proceed without products');
+      console.log(`🔍 First merged product: CPU: ${productsToUse[0]?.cpu || 'Unknown'}, RAM: ${productsToUse[0]?.ram || 'Unknown'}`);
+    } else if (productSpecs.length > 0) {
+      // If we only have product specs but no pre-fetched products
+      console.log('🔍 Using extracted product specs directly');
+      productsToUse = productSpecs;
+    } else if (!products || products.length === 0) {
+      console.error('⚠️ No product data available for Top10 post');
       toast({
         title: 'No products found',
-        description: 'We couldn\'t find any products matching your criteria for the Top 10 post',
+        description: 'We couldn\'t find any products for the Top 10 post',
         variant: 'destructive',
       });
       throw new Error('No product data available for processing Top10 content');
@@ -147,30 +152,26 @@ export async function processTop10Content(content: string, prompt: string): Prom
     processedContent = fixHtmlTags(processedContent);
     console.log(`📏 Content length after fixing HTML tags: ${processedContent.length} characters`);
     
-    // Check if the content already has product data embedded directly by DeepSeek
-    const hasEmbeddedProducts = processedContent.includes('product-card') || 
-                                processedContent.includes('asin=') || 
-                                processedContent.includes('amazon.com');
-    
-    console.log(`🔍 Content has embedded product cards/links: ${hasEmbeddedProducts}`);
-    
-    // Replace the product data placeholders with actual data if needed
-    if (processedContent.includes('[PRODUCT_DATA_') || !hasEmbeddedProducts) {
+    // Replace the product data placeholders with actual data
+    if (processedContent.includes('[PRODUCT_DATA_')) {
       console.log('🔄 Replacing product data placeholders in content...');
       const { content: updatedContent, replacementsCount } = replaceProductPlaceholders(
         processedContent,
-        products
+        productsToUse
       );
       processedContent = updatedContent;
       console.log(`📏 Content length after replacing placeholders: ${processedContent.length} characters`);
       console.log(`✅ Replaced ${replacementsCount} product placeholders in content`);
       
-      if (replacementsCount === 0 && !hasEmbeddedProducts) {
+      if (replacementsCount === 0) {
         console.warn('⚠️ No product placeholders were replaced in the content');
-        throw new Error('DeepSeek did not include product placeholders or embed products directly in the HTML');
+        // This is a failure only if there were placeholders to begin with
+        if (processedContent.includes('[PRODUCT_DATA_')) {
+          throw new Error('Failed to replace product placeholders in content');
+        }
       }
     } else {
-      console.log('✅ Content already has embedded product data, skipping placeholder replacement');
+      console.warn('⚠️ No [PRODUCT_DATA_X] placeholders found in content, cannot add product information');
     }
     
     // Add Humix video embed if not already present

@@ -14,7 +14,7 @@ export function generateProductHtml(product: any, position: number): string {
     </div>`;
   }
   
-  // Extract product data
+  // Extract product data, use position for ranking
   const asin = product.asin || '';
   const title = product.title || 'Unknown Product';
   const image = product.image || product.imageUrl || '';
@@ -24,13 +24,16 @@ export function generateProductHtml(product: any, position: number): string {
   const ratingsTotal = product.ratings_total || product.ratings_count || 0;
   const isBestSeller = product.is_best_seller || false;
   
-  // Extract product specifications
+  // Extract product specifications, with multiple fallbacks
   const cpu = product.cpu || product.processor || 'Not specified';
   const ram = product.ram || 'Not specified';
   const graphics = product.graphics || 'Not specified';
   const storage = product.storage || 'Not specified';
   const screen = product.screen || product.screen_size || 'Not specified';
   const battery = product.battery || product.battery_life || 'Not specified';
+  
+  // Log the specifications for debugging
+  console.log(`🔍 Product ${position} specs: CPU: ${cpu}, RAM: ${ram}, Graphics: ${graphics}, Storage: ${storage}`);
   
   // Generate rating stars HTML
   const fullStars = Math.floor(rating);
@@ -52,9 +55,8 @@ export function generateProductHtml(product: any, position: number): string {
   
   // Log what we're generating for debugging
   console.log(`🧩 Generating product HTML for position ${position}: ${title.substring(0, 30)}...`);
-  console.log(`📋 Specs: CPU: ${cpu}, RAM: ${ram}, Graphics: ${graphics}, Storage: ${storage}`);
   
-  // Generate and return the HTML
+  // Generate and return the HTML with prominent specifications
   return `
     <div class="product-card" data-asin="${asin}" data-rank="${position}">
       <div class="product-rank">#${position}</div>

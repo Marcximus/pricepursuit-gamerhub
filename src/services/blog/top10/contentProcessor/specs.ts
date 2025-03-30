@@ -10,18 +10,20 @@ export function extractProductSpecs(content: string): any[] {
   if (!content) return [];
   
   try {
-    // First try to find the products array in the structured JSON format
-    const productsMatch = content.match(/"products"\s*:\s*(\[\s*\{[\s\S]*?\}\s*\])/);
+    // Check for JSON structure with products array first
+    const jsonMatch = content.match(/\"products\"\s*:\s*(\[\s*\{[\s\S]*?\}\s*\])/);
     
-    if (productsMatch && productsMatch[1]) {
-      // Clean up the matched JSON string
-      const productsJson = productsMatch[1]
+    if (jsonMatch && jsonMatch[1]) {
+      // Clean up the JSON string
+      const productsJson = jsonMatch[1]
         .replace(/\/\/.*$/gm, '') // Remove comments
         .replace(/,\s*\]/g, ']') // Remove trailing commas
-        .replace(/\\+"/g, '"'); // Handle escaped quotes
+        .replace(/\\+"/g, '"') // Handle escaped quotes
+        .replace(/\n/g, '') // Remove newlines
+        .replace(/\r/g, ''); // Remove carriage returns
       
       try {
-        // Parse the JSON
+        // Parse the JSON with proper wrapping
         const products = JSON.parse(`${productsJson}`);
         console.log(`✅ Successfully extracted specifications for ${products.length} products from JSON`);
         
@@ -34,33 +36,50 @@ export function extractProductSpecs(content: string): any[] {
       } catch (jsonError) {
         console.warn('⚠️ Error parsing products JSON:', jsonError);
         
-        // Try with a more lenient approach - this is a fallback
+        // Try a more flexible approach - sometimes the JSON isn't perfectly formatted
         try {
-          // Extract the array content more carefully
-          const cleanedJson = productsJson
-            .replace(/\\n/g, '')
-            .replace(/\\"/g, '"')
-            .replace(/"\s*\+\s*"/g, '') // Handle string concatenation
-            .replace(/,\s*}/g, '}'); // Remove trailing commas in objects
+          // Extract each product object separately and parse them
+          const productMatches = productsJson.match(/\{\s*"position"\s*:\s*\d+[\s\S]*?\}/g);
           
-          console.log('Attempting to parse cleaned JSON:', cleanedJson.substring(0, 200));
-          const products = JSON.parse(`${cleanedJson}`);
-          console.log(`✅ Fallback: Extracted specifications for ${products.length} products`);
-          return products;
+          if (productMatches && productMatches.length > 0) {
+            console.log(`🔍 Found ${productMatches.length} individual product objects`);
+            
+            const products = productMatches.map(productStr => {
+              try {
+                // Clean up the product string
+                const cleanProductStr = productStr
+                  .replace(/\\n/g, '')
+                  .replace(/\\"/g, '"')
+                  .replace(/"\s*\+\s*"/g, '') // Handle string concatenation
+                  .replace(/,\s*}/g, '}'); // Remove trailing commas
+                
+                return JSON.parse(`${cleanProductStr}`);
+              } catch (e) {
+                console.warn('⚠️ Failed to parse individual product:', e);
+                return null;
+              }
+            }).filter(Boolean);
+            
+            console.log(`✅ Parsed ${products.length} products using individual extraction`);
+            return products;
+          }
         } catch (fallbackError) {
           console.warn('⚠️ Fallback extraction also failed:', fallbackError);
         }
       }
     }
     
-    // If we still don't have products, look for plain text patterns
+    // If we still don't have products, as a last resort, search for raw text patterns
     console.log('🔍 Searching for product specifications in plain text format...');
     
-    // Look for products specified with position and specs
-    const positionMatches = [...content.matchAll(/position["\s]*:[\s"]*(\d+)["\s]*,[\s\S]*?cpu["\s]*:[\s"]*([^"]*)["\s]*,[\s\S]*?ram["\s]*:[\s"]*([^"]*)["\s]*,[\s\S]*?graphics["\s]*:[\s"]*([^"]*)["\s]*,[\s\S]*?storage["\s]*:[\s"]*([^"]*)["\s]*,[\s\S]*?screen["\s]*:[\s"]*([^"]*)["\s]*,[\s\S]*?battery["\s]*:[\s"]*([^"]*)["\s]*/gi)];
+    // Try to match based on position and specs pattern
+    const productsTextPattern = /\"position\"\s*:\s*(\d+)[^}]*\"cpu\"\s*:\s*\"([^\"]*)\"\s*,[^}]*\"ram\"\s*:\s*\"([^\"]*)\"\s*,[^}]*\"graphics\"\s*:\s*\"([^\"]*)\"\s*,[^}]*\"storage\"\s*:\s*\"([^\"]*)\"\s*,[^}]*\"screen\"\s*:\s*\"([^\"]*)\"\s*,[^}]*\"battery\"\s*:\s*\"([^\"]*)\"/g;
     
-    if (positionMatches.length > 0) {
-      const products = positionMatches.map(match => ({
+    const products = [];
+    let match;
+    
+    while ((match = productsTextPattern.exec(content)) !== null) {
+      products.push({
         position: parseInt(match[1], 10),
         cpu: match[2].trim(),
         ram: match[3].trim(),
@@ -68,10 +87,13 @@ export function extractProductSpecs(content: string): any[] {
         storage: match[5].trim(),
         screen: match[6].trim(),
         battery: match[7].trim()
-      }));
-      
-      console.log(`✅ Alternative method: Extracted specifications for ${products.length} products from text patterns`);
-      return products.sort((a, b) => a.position - b.position); // Ensure correct order
+      });
+    }
+    
+    if (products.length > 0) {
+      console.log(`✅ Extracted ${products.length} products using regex pattern matching`);
+      // Sort products by position to ensure correct order
+      return products.sort((a, b) => a.position - b.position);
     }
     
     console.warn('⚠️ No product specifications found in content');
