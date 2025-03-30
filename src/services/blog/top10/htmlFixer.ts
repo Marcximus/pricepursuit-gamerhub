@@ -1,7 +1,4 @@
-
-/**
- * HTML fixing utilities for Top10 blog posts
- */
+import React from 'react';
 
 /**
  * Fix common HTML issues in blog post content
@@ -16,20 +13,30 @@ export function fixHtmlTags(content: string): string {
   
   let fixedContent = content;
   
-  // Fix duplicate title issues, where the blog title is repeated multiple times
+  // More robust title handling to keep only the most descriptive title
   const titlePattern = /<h1[^>]*>(.*?)<\/h1>/gi;
   const titles = [...fixedContent.matchAll(titlePattern)];
+  
   if (titles.length > 1) {
     console.log(`⚠️ Found ${titles.length} h1 titles, keeping only the most descriptive one`);
     
-    // Prefer the longer, more descriptive title
-    const sortedTitles = titles.sort((a, b) => b[1].length - a[1].length);
+    // Sort titles by length and complexity
+    const sortedTitles = titles.sort((a, b) => {
+      // Prefer titles with more details (emojis, descriptive words)
+      const aHasDetails = /[\u{1F600}-\u{1F6FF}]|performance|power|portability/ui.test(a[1]);
+      const bHasDetails = /[\u{1F600}-\u{1F6FF}]|performance|power|portability/ui.test(b[1]);
+      
+      if (aHasDetails && !bHasDetails) return -1;
+      if (!aHasDetails && bHasDetails) return 1;
+      
+      // If both or neither have details, compare by length
+      return b[1].length - a[1].length;
+    });
+    
     const keepTitle = sortedTitles[0][0];
     
-    // Replace all other titles with empty string
-    for (let i = 1; i < titles.length; i++) {
-      fixedContent = fixedContent.replace(titles[i][0], '');
-    }
+    // Replace all titles with the kept title
+    fixedContent = fixedContent.replace(titlePattern, () => keepTitle);
   }
   
   // Remove JSON formatting artifacts
