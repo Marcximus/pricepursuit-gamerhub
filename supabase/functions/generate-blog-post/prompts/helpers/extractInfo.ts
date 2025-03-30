@@ -1,8 +1,82 @@
 
 /**
- * Helper functions to extract product information for blog post generation
+ * Helper functions to extract information from titles and product data
+ * These are used by the prompt generators to get relevant details for the AI
  */
 
+/**
+ * Extract brand information from a product title
+ * @param title The product title
+ * @returns Brand name or empty string if not found
+ */
+export function extractBrandFromTitle(title: string): string {
+  if (!title) return '';
+  
+  // List of common laptop brands to look for
+  const commonBrands = [
+    'Dell', 'HP', 'Lenovo', 'ASUS', 'Acer', 'MSI', 'Apple', 
+    'Samsung', 'Microsoft', 'Razer', 'Toshiba', 'LG', 'Gigabyte',
+    'Alienware', 'Huawei', 'CHUWI', 'Gateway'
+  ];
+  
+  // Check for explicit mentions of these brands
+  for (const brand of commonBrands) {
+    // Use word boundary to avoid partial matches
+    const regex = new RegExp(`\\b${brand}\\b`, 'i');
+    if (regex.test(title)) {
+      return brand;
+    }
+  }
+  
+  return '';
+}
+
+/**
+ * Extract hardware specifications from product title
+ * @param title The product title
+ * @param type Type of information to extract (processor, ram, storage, etc.)
+ * @returns Extracted information or empty string if not found
+ */
+export function extractInfoFromTitle(title: string, type: 'processor' | 'ram' | 'storage' | 'graphics' | 'screen'): string {
+  if (!title) return '';
+  
+  // Convert title to lowercase for easier matching
+  const titleLower = title.toLowerCase();
+  
+  switch (type) {
+    case 'processor':
+      // Match Intel or AMD processors
+      const processorMatch = titleLower.match(/\b(i3|i5|i7|i9|intel|ryzen|r3|r5|r7|r9|amd)[\s-]?(\d{3,4}[a-z]*)?/);
+      return processorMatch ? processorMatch[0] : '';
+      
+    case 'ram':
+      // Match RAM configurations (e.g., 8GB, 16 GB, etc.)
+      const ramMatch = titleLower.match(/\b(\d{1,3})[\s]?(?:gb|gigs?)[\s](?:ram|memory)\b/);
+      return ramMatch ? ramMatch[0] : '';
+      
+    case 'storage':
+      // Match storage configurations (e.g., 256GB SSD, 1TB, etc.)
+      const storageMatch = titleLower.match(/\b(\d{3,4})[\s]?(?:gb|tb)[\s]?(?:ssd|hdd|storage|nvme)\b/);
+      return storageMatch ? storageMatch[0] : '';
+      
+    case 'graphics':
+      // Match graphics cards (e.g., RTX 3050, Intel Iris, etc.)
+      const graphicsMatch = titleLower.match(/\b(rtx|gtx|nvidia|amd|radeon|iris)\s?(\d{3,4})?(?:\s?ti)?\b/);
+      return graphicsMatch ? graphicsMatch[0] : '';
+      
+    case 'screen':
+      // Match screen sizes (e.g., 15.6-inch, 13", etc.)
+      const screenMatch = titleLower.match(/\b(\d{2}\.?\d?)[\s-]?(?:inch|"|in|inches)\b/);
+      return screenMatch ? screenMatch[0] : '';
+      
+    default:
+      return '';
+  }
+}
+
+/**
+ * Helper to extract info for use in ProductData interface
+ */
 export interface ProductData {
   title: string;
   brand?: string;

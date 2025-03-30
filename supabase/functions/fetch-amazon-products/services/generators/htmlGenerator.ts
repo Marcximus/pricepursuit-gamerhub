@@ -37,7 +37,10 @@ export function generateProductHTML(product: any, rank: number): string {
     ? product.feature_bullets.slice(0, 3) 
     : (Array.isArray(product.features) ? product.features.slice(0, 3) : []);
   
-  // Build the HTML for the product card
+  // Build the HTML for the product card with the requested design changes:
+  // 1. Remove price
+  // 2. Center reviews beneath the image
+  // 3. Make Check Price button less wide
   return `
     <div class="product-card" data-asin="${escapeHtml(product.asin)}" data-rank="${rank}">
       <div class="product-rank">#${rank}</div>
