@@ -3,8 +3,8 @@
  * System prompt for Top10 blog post generation
  */
 import { extractInfoFromTitle, extractBrandFromTitle } from './helpers/extractInfo.ts';
-import { getDefaultTop10Prompt } from './templates/defaultTop10Prompt';
-import { getProductTop10Prompt } from './templates/productTop10Prompt';
+import { getDefaultTop10Prompt } from './templates/defaultTop10Prompt.ts';
+import { getProductTop10Prompt } from './templates/productTop10Prompt.ts';
 
 export function getTop10Prompt(products?: any[]): string {
   // Default prompt when no products are provided
