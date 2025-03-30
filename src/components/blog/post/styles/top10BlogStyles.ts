@@ -89,11 +89,23 @@ export const getTop10BlogStyles = (): string => `
   .product-card a {
     text-decoration: none;
     color: inherit;
+    cursor: pointer !important;
   }
   .product-card a:hover .product-title {
     text-decoration: underline;
   }
   .product-card a:hover .text-lg {
     color: #15803d;
+  }
+  
+  /* Ensure proper link behavior */
+  .product-card a img {
+    cursor: pointer;
+  }
+  .product-card a.flex {
+    display: flex;
+  }
+  .product-card a.block {
+    display: block;
   }
 `;

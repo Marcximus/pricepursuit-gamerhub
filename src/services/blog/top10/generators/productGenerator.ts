@@ -65,7 +65,7 @@ export function generateProductHtml(product: any, index: number): string {
   // Use the index + 1 directly as the rank (from #1 to #10)
   const rank = index + 1;
   
-  // Generate star rating HTML with link
+  // Generate star rating HTML with link - fixing the wrapping to make it properly clickable
   const starsHtml = generateStarsHtml(productRating, productRatingTotal);
   const linkedStarsHtml = starsHtml.replace('<div class="flex items-center">', `<a href="${productUrl}" class="flex items-center hover:underline" target="_blank" rel="nofollow noopener">`).replace('</div>', '</a>');
   
