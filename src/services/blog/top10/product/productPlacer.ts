@@ -1,4 +1,3 @@
-
 /**
  * Product placement utilities for Top10 blog posts
  */
@@ -157,9 +156,3 @@ function removeJsonData(content: string): string {
   // Remove the raw products JSON array that might be at the end of the content
   return content.replace(/"products"\s*:\s*\[\s*\{[\s\S]*?\}\s*\]\s*}/g, '');
 }
-
-// Export functions
-export {
-  replaceProductPlaceholders,
-  removeDuplicateProductBlocks
-};

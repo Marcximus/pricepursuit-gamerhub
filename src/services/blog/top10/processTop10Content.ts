@@ -1,9 +1,10 @@
+
 /**
  * Main processor for Top10 content
  */
 import { toast } from '@/components/ui/use-toast';
 import { getProducts } from './productHandler';
-import { cleanupContent, fixHtmlTags, removeJsonFormatting } from './contentProcessor';
+import { cleanupContent, fixHtmlTags, removeJsonFormatting, extractProductSpecs } from './contentProcessor';
 import { replaceProductPlaceholders } from './product/productPlacer';
 import { addVideoEmbed, wrapTextInHtml } from './htmlGenerator';
 

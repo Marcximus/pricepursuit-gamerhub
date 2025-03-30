@@ -209,15 +209,3 @@ export function improveContentSpacing(content: string): string {
     .replace(/(<\/h[1-6]>)(?!\s*<p>|\s*<ul>|\s*<ol>|\s*<div>)/g, '$1\n<p>&nbsp;</p>\n')
     .replace(/(<\/ul>|<\/ol>)(?!\s*<p>|\s*<h[1-6]>|\s*<div>)/g, '$1\n<p>&nbsp;</p>\n');
 }
-
-// Export all functions
-export {
-  removeJsonFormatting,
-  cleanupContent,
-  fixHtmlTags,
-  extractProductSpecs,
-  fixTopTenHtmlIfNeeded,
-  injectAdditionalImages,
-  addImageFallbacks,
-  improveContentSpacing
-};
