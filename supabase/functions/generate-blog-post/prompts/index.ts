@@ -7,3 +7,5 @@ export * from './top10Prompt.ts';
 export * from './comparisonPrompt.ts';
 export * from './howToPrompt.ts';
 export * from './defaultPrompt.ts';
+export * from './helpers/extractInfo.ts';
+
