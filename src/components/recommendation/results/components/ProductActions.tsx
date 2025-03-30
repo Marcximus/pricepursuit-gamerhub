@@ -23,7 +23,7 @@ export const ProductActions: React.FC<ProductActionsProps> = ({
           onClick={() => handleViewOnAmazon(productUrl)}
           className="w-full bg-blue-600 hover:bg-blue-700 transform hover:-translate-y-0.5 transition-all"
         >
-          Check it out
+          Check It Out Now
           <Zap className="w-4 h-4 ml-2 animate-pulse" />
         </Button>
       ) : (
