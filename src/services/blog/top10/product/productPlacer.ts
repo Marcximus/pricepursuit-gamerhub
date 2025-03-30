@@ -17,47 +17,45 @@ export function replaceProductPlaceholders(content: string, products: any[]): {
   
   console.log(`🧩 Starting product placeholder replacement with ${products.length} products`);
   
-  // Index products by array position (0-based) to match with placeholder numbers (1-based)
-  // This simplifies the matching logic without complex fallback mechanisms
-  const indexedProducts = [...products];
-  
-  // Log position values for debugging
-  console.log('📊 Product positions before processing:');
-  indexedProducts.forEach((p, idx) => console.log(`Index ${idx} (Position ${idx+1}): ${p.title?.substring(0, 30) || 'Unknown'}`));
-  
-  // Check if content contains explicit placeholders
-  const hasExplicitPlaceholders = /\[PRODUCT_DATA_\d+\]/i.test(updatedContent);
-  console.log(`📍 Found ${hasExplicitPlaceholders ? 'explicit' : 'no'} product placeholders`);
-  
-  // Count potential placeholders
+  // Match placeholders in the format [PRODUCT_DATA_X] where X is 1-10
+  const placeholderPattern = /\[PRODUCT_DATA_(\d+)\]/g;
+  const matches = [...updatedContent.matchAll(placeholderPattern)];
   const placeholderMatches = updatedContent.match(/\[PRODUCT_DATA_\d+\]/g) || [];
   console.log(`📍 Found ${placeholderMatches.length} potential product placeholders`);
   
-  // Find and replace [PRODUCT_DATA_X] placeholders with simple index-based matching
-  for (let i = 1; i <= Math.min(10, products.length); i++) {
-    const placeholder = `[PRODUCT_DATA_${i}]`;
-    
-    if (updatedContent.includes(placeholder)) {
-      // Get product by array index (0-based, so i-1)
-      const productIndex = i - 1;
-      const product = indexedProducts[productIndex];
+  if (matches.length > 0) {
+    // Use a simple zero-based array indexing approach
+    // When a placeholder like [PRODUCT_DATA_1] is found, use products[0]
+    // When a placeholder like [PRODUCT_DATA_2] is found, use products[1], etc.
+    for (const match of matches) {
+      const fullMatch = match[0]; // e.g., [PRODUCT_DATA_1]
+      const placeholderNum = parseInt(match[1], 10); // e.g., 1
+      const productIndex = placeholderNum - 1; // Convert to 0-based index
       
-      if (product) {
-        console.log(`✅ Replacing placeholder ${placeholder} with product at index ${productIndex}: ${product.title?.substring(0, 30) || 'Unknown'}...`);
-        
-        // Generate HTML for this product with its position
-        const productHtml = generateProductHtml(product, i);
-        
-        // Replace the placeholder with the product HTML
-        updatedContent = updatedContent.replace(placeholder, productHtml);
-        replacementsCount++;
+      if (productIndex >= 0 && productIndex < products.length) {
+        const product = products[productIndex];
+        if (product) {
+          console.log(`✅ Replacing placeholder ${fullMatch} with product at index ${productIndex}: ${product.title?.substring(0, 30) || 'Unknown'}...`);
+          
+          // Generate HTML for this product with the position number from the placeholder
+          const productHtml = generateProductHtml(product, placeholderNum);
+          
+          // Replace the placeholder with the product HTML
+          updatedContent = updatedContent.replace(fullMatch, productHtml);
+          replacementsCount++;
+        } else {
+          console.warn(`⚠️ Product at index ${productIndex} is undefined or null`);
+          // Remove the placeholder to avoid showing raw placeholders
+          updatedContent = updatedContent.replace(fullMatch, '');
+        }
       } else {
-        console.warn(`⚠️ No product available at index ${productIndex} for placeholder ${placeholder}`);
-        
-        // Just remove the placeholder to avoid breaking the layout
-        updatedContent = updatedContent.replace(placeholder, '');
+        console.warn(`⚠️ No product available at index ${productIndex} for placeholder ${fullMatch}`);
+        // Remove the placeholder to avoid showing raw placeholders
+        updatedContent = updatedContent.replace(fullMatch, '');
       }
     }
+  } else {
+    console.warn('⚠️ No product placeholders found in content');
   }
   
   console.log(`✅ Replaced ${replacementsCount} product placeholders in content`);
