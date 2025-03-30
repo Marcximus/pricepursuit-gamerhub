@@ -64,52 +64,52 @@ export function generateProductHtml(product: any, position: number): string {
   
   // Generate and return the HTML with prominent specifications
   return `
-    <div class="product-card" data-asin="${asin}" data-rank="${position}">
-      <div class="product-rank">#${position}</div>
-      <div class="product-image">
+    <div class="product-card shadow-lg hover:shadow-xl transition-all duration-300 rounded-lg overflow-hidden" data-asin="${asin}" data-rank="${position}">
+      <div class="product-rank bg-green-600 text-white font-bold py-1 px-3 absolute top-2 left-2 rounded-full shadow-md">#${position}</div>
+      <div class="product-image relative">
         <a href="${url}" target="_blank" rel="nofollow noopener">
-          <img src="${image}" alt="${title.replace(/"/g, '&quot;')}" loading="lazy" />
+          <img src="${image}" alt="${title.replace(/"/g, '&quot;')}" loading="lazy" class="w-full h-auto object-contain bg-white" />
         </a>
       </div>
-      <div class="product-details">
-        <div class="product-meta">
-          <span class="product-price">${price ? `$${price}` : 'Check price'}</span>
-          <span class="product-rating"><span class="text-amber-500">${starsHtml}</span> ${rating}/5 (${formattedRatings} reviews)</span>
+      <div class="product-details p-4">
+        <div class="product-meta flex justify-between items-center mb-3">
+          <span class="product-price font-bold text-green-700">${price ? `$${price}` : 'Check price'}</span>
+          <span class="product-rating"><span class="text-amber-500">${starsHtml}</span> ${rating}/5 (${formattedRatings})</span>
         </div>
         
-        <div class="product-specs">
-          <table class="specs-table">
+        <div class="product-specs bg-gray-50 p-3 rounded-md mb-4">
+          <table class="specs-table w-full">
             <tbody>
               <tr>
-                <td class="spec-name">CPU:</td>
-                <td class="spec-value">${cpu}</td>
+                <td class="spec-name font-medium text-gray-700 pr-2">CPU:</td>
+                <td class="spec-value text-gray-900">${cpu}</td>
               </tr>
               <tr>
-                <td class="spec-name">RAM:</td>
-                <td class="spec-value">${ram}</td>
+                <td class="spec-name font-medium text-gray-700 pr-2">RAM:</td>
+                <td class="spec-value text-gray-900">${ram}</td>
               </tr>
               <tr>
-                <td class="spec-name">Graphics:</td>
-                <td class="spec-value">${graphics}</td>
+                <td class="spec-name font-medium text-gray-700 pr-2">Graphics:</td>
+                <td class="spec-value text-gray-900">${graphics}</td>
               </tr>
               <tr>
-                <td class="spec-name">Storage:</td>
-                <td class="spec-value">${storage}</td>
+                <td class="spec-name font-medium text-gray-700 pr-2">Storage:</td>
+                <td class="spec-value text-gray-900">${storage}</td>
               </tr>
               <tr>
-                <td class="spec-name">Screen:</td>
-                <td class="spec-value">${screen}</td>
+                <td class="spec-name font-medium text-gray-700 pr-2">Screen:</td>
+                <td class="spec-value text-gray-900">${screen}</td>
               </tr>
               <tr>
-                <td class="spec-name">Battery:</td>
-                <td class="spec-value">${battery}</td>
+                <td class="spec-name font-medium text-gray-700 pr-2">Battery:</td>
+                <td class="spec-value text-gray-900">${battery}</td>
               </tr>
             </tbody>
           </table>
         </div>
         
         <div class="product-cta">
-          <a href="${url}" class="check-price-btn button-amazon bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded inline-block transition-colors duration-200" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
+          <a href="${url}" class="check-price-btn button-amazon bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded inline-block w-full text-center transition-colors duration-200" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
         </div>
       </div>
     </div>
