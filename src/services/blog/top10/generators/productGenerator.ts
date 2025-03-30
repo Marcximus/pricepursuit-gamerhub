@@ -65,18 +65,8 @@ export function generateProductHtml(product: any, index: number): string {
   // Use the index + 1 directly as the rank (from #1 to #10)
   const rank = index + 1;
   
-  // Generate star rating HTML with link - fixing the wrapping to make it properly clickable
+  // Generate star rating HTML for later inclusion in the anchor tag
   const starsHtml = generateStarsHtml(productRating, productRatingTotal);
-  const linkedStarsHtml = starsHtml.replace('<div class="flex items-center">', `<a href="${productUrl}" class="flex items-center hover:underline" target="_blank" rel="nofollow noopener">`).replace('</div>', '</a>');
-  
-  // Extract key specifications for display - with enhanced error handling
-  // First prioritize the AI-provided specs (cpu, ram, etc.) then fall back to extracted specs
-  const screenSize = product.screen || product.screen_size || 'N/A';
-  const processor = product.cpu || product.processor || 'N/A';
-  const ram = product.ram || 'N/A';
-  const storage = product.storage || 'N/A';
-  const graphics = product.graphics || 'N/A';
-  const batteryLife = product.battery || product.battery_life || 'N/A';
   
   console.log(`🖼️ Generating HTML for product #${rank}: ${simplifiedTitle}`);
   
@@ -86,7 +76,7 @@ export function generateProductHtml(product: any, index: number): string {
   <div class="p-4">
     <div class="flex flex-col md:flex-row">
       <div class="md:w-1/3 flex items-center justify-center">
-        <a href="${productUrl}" target="_blank" rel="nofollow noopener">
+        <a href="${productUrl}" class="product-image-link block" target="_blank" rel="nofollow noopener">
           <img src="${imageUrl}" 
                alt="${simplifiedTitle}" 
                class="w-full h-auto rounded-md object-contain max-h-48 hover:opacity-90 transition-opacity"
@@ -94,21 +84,26 @@ export function generateProductHtml(product: any, index: number): string {
         </a>
       </div>
       <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
-        <a href="${productUrl}" class="block hover:underline" target="_blank" rel="nofollow noopener">
+        <a href="${productUrl}" class="product-title-link block hover:underline" target="_blank" rel="nofollow noopener">
           <h4 class="text-xl font-semibold mb-2 product-title text-green-800">${simplifiedTitle}</h4>
         </a>
-        ${linkedStarsHtml}
-        <a href="${productUrl}" class="block hover:underline" target="_blank" rel="nofollow noopener">
-          <p class="text-lg font-bold mb-3">${productPrice}</p>
+        
+        <a href="${productUrl}" class="product-rating-link flex items-center hover:underline mb-2" target="_blank" rel="nofollow noopener">
+          ${starsHtml}
         </a>
+        
+        <a href="${productUrl}" class="product-price-link block hover:underline mb-3" target="_blank" rel="nofollow noopener">
+          <p class="text-lg font-bold">${productPrice}</p>
+        </a>
+        
         <p class="text-sm text-black mb-2">${brandName} ${modelInfo}</p>
         <div class="specs-grid grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
-          <div><span class="font-medium">CPU:</span> ${processor}</div>
-          <div><span class="font-medium">RAM:</span> ${ram}</div>
-          <div><span class="font-medium">Graphics:</span> ${graphics}</div>
-          <div><span class="font-medium">Storage:</span> ${storage}</div>
-          <div><span class="font-medium">Display:</span> ${screenSize}</div>
-          <div><span class="font-medium">Battery:</span> ${batteryLife}</div>
+          <div><span class="font-medium">CPU:</span> ${product.cpu || product.processor || 'N/A'}</div>
+          <div><span class="font-medium">RAM:</span> ${product.ram || 'N/A'}</div>
+          <div><span class="font-medium">Graphics:</span> ${product.graphics || 'N/A'}</div>
+          <div><span class="font-medium">Storage:</span> ${product.storage || 'N/A'}</div>
+          <div><span class="font-medium">Display:</span> ${product.screen || product.screen_size || 'N/A'}</div>
+          <div><span class="font-medium">Battery:</span> ${product.battery || product.battery_life || 'N/A'}</div>
         </div>
         <div class="mb-4">
           <a href="${productUrl}" 

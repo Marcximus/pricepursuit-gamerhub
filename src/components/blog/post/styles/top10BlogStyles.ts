@@ -85,27 +85,64 @@ export const getTop10BlogStyles = (): string => `
     color: #166534 !important; /* Ensuring green color for subtitles */
   }
   
-  /* Clickable elements styling */
-  .product-card a {
-    text-decoration: none;
-    color: inherit;
+  /* Enhanced clickable elements styling */
+  .product-card a,
+  .product-title-link,
+  .product-image-link,
+  .product-rating-link,
+  .product-price-link {
+    text-decoration: none !important;
+    color: inherit !important;
     cursor: pointer !important;
-  }
-  .product-card a:hover .product-title {
-    text-decoration: underline;
-  }
-  .product-card a:hover .text-lg {
-    color: #15803d;
+    display: block !important;
+    position: relative !important;
+    z-index: 5 !important;
   }
   
-  /* Ensure proper link behavior */
-  .product-card a img {
-    cursor: pointer;
+  .product-card a:hover .product-title {
+    text-decoration: underline !important;
   }
-  .product-card a.flex {
-    display: flex;
+  
+  .product-card a:hover .text-lg {
+    color: #15803d !important;
   }
-  .product-card a.block {
-    display: block;
+  
+  /* Fix image clickability specifically */
+  .product-image-link {
+    display: block !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 10 !important;
+  }
+  
+  .product-image-link img {
+    cursor: pointer !important;
+  }
+  
+  /* Fix display issues for anchors */
+  .product-card a.flex,
+  .product-rating-link {
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  .product-card a.block,
+  .product-title-link,
+  .product-price-link {
+    display: block !important;
+  }
+  
+  /* Fix any potential z-index issues */
+  .product-card .p-4 {
+    position: relative !important;
+    z-index: 1 !important;
+  }
+  
+  /* Ensure hover states work */
+  .product-title-link:hover,
+  .product-price-link:hover,
+  .product-rating-link:hover,
+  .product-image-link:hover {
+    opacity: 0.9 !important;
   }
 `;
