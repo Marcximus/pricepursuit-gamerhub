@@ -116,7 +116,8 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
         // Ensure image is wrapped in a link
         const productImage = card.querySelector('img:not(.fallback-image)');
         const imageWrapper = productImage?.parentElement;
-        if (productImage && imageWrapper && !imageWrapper.tagName.toLowerCase() === 'a') {
+        // Fix for the comparison error - check if the parent is not an anchor tag
+        if (productImage && imageWrapper && imageWrapper.tagName.toLowerCase() !== 'a') {
           const buttonLink = card.querySelector('.button-link') as HTMLAnchorElement;
           if (buttonLink) {
             const imageLink = document.createElement('a');
