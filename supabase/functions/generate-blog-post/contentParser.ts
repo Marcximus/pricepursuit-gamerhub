@@ -1,3 +1,4 @@
+
 /**
  * This file handles parsing AI-generated content into structured blog post data
  */
@@ -36,14 +37,29 @@ export function parseGeneratedContent(content: string, category: string) {
         console.log(`⚠️ First 200 chars of content: ${processedContent.substring(0, 200)}`);
       }
       
-      // Generate excerpt from the first paragraph
-      const excerptMatch = processedContent.match(/<p>(.*?)<\/p>/i);
-      if (excerptMatch && excerptMatch[1]) {
-        // Strip HTML tags and limit to 160 chars
-        excerpt = excerptMatch[1].replace(/<[^>]*>/g, '').trim().substring(0, 160);
-        console.log(`📋 Generated excerpt from first paragraph: "${excerpt.substring(0, 30)}..."`);
-      } else {
-        console.warn(`⚠️ Could not extract excerpt from HTML content`);
+      // First, try to extract the excerpt from the JSON response
+      try {
+        if (content.includes('"excerpt"')) {
+          const excerptMatch = content.match(/"excerpt":\s*"([^"]*)"/);
+          if (excerptMatch && excerptMatch[1]) {
+            excerpt = excerptMatch[1].trim();
+            console.log(`📋 Using excerpt from DeepSeek: "${excerpt.substring(0, 30)}..."`);
+          }
+        }
+      } catch (excerptError) {
+        console.warn(`⚠️ Error extracting excerpt from JSON: ${excerptError.message}`);
+      }
+      
+      // Fallback: Generate excerpt from the first paragraph if not found in JSON
+      if (!excerpt) {
+        const excerptMatch = processedContent.match(/<p>(.*?)<\/p>/i);
+        if (excerptMatch && excerptMatch[1]) {
+          // Strip HTML tags and limit to 200 chars
+          excerpt = excerptMatch[1].replace(/<[^>]*>/g, '').trim().substring(0, 200);
+          console.log(`📋 Generated excerpt from first paragraph: "${excerpt.substring(0, 30)}..."`);
+        } else {
+          console.warn(`⚠️ Could not extract excerpt from HTML content`);
+        }
       }
       
       // Generate default tags based on title and content
