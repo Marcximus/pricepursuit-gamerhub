@@ -1,4 +1,3 @@
-
 /**
  * Styles for Top10 blog posts
  */
@@ -21,6 +20,7 @@ export const getTop10BlogStyles = (): string => `
     transition: all 0.3s ease;
     border-radius: 0.5rem;
     overflow: hidden;
+    margin-bottom: 2rem; /* Added margin beneath the product card */
   }
   .product-card:hover { 
     transform: translateY(-5px);
