@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { BlogPost } from '@/contexts/blog';
 import { removeJsonFormatting } from '@/services/blog/top10/contentProcessor';
@@ -9,11 +8,9 @@ interface BlogPostContentProps {
 }
 
 export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
-  // Use the separate removeJsonFormatting function to ensure consistent cleanup
   const cleanContent = removeJsonFormatting(content);
 
   useEffect(() => {
-    // Add styling for Top10 list items if not already present
     if (post.category === 'Top10' && !document.getElementById('top10-blog-styles')) {
       const styleElement = document.createElement('style');
       styleElement.id = 'top10-blog-styles';
@@ -91,11 +88,17 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
         .check-price-btn {
           background-color: #16a34a !important;
         }
+        
+        /* Ensure all subtitles in product cards are green */
+        .product-card h3,
+        .prose h3,
+        .blog-subtitle {
+          color: #166534 !important; /* Ensuring green color for subtitles */
+        }
       `;
       document.head.appendChild(styleElement);
     }
     
-    // Clean up
     return () => {
       const styleElement = document.getElementById('top10-blog-styles');
       if (styleElement) {
