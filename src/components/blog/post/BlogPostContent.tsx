@@ -48,11 +48,50 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
           if (!link.getAttribute('rel')) {
             link.setAttribute('rel', 'nofollow noopener');
           }
-          // Ensure z-index is set for proper stacking context
+          
+          // Ensure link has product-link class for styling
+          if (!link.classList.contains('product-link')) {
+            link.classList.add('product-link');
+          }
+          
+          // Add specific roles for accessibility
+          if (!link.getAttribute('role')) {
+            link.setAttribute('role', 'link');
+          }
+          
+          // Enforce link styling
           link.style.position = 'relative';
-          link.style.zIndex = '5';
-          // Make sure cursor is pointer
+          link.style.zIndex = '15';
           link.style.cursor = 'pointer';
+          link.style.pointerEvents = 'auto';
+          
+          // Add direct click event handler as a fallback
+          if (!link.onclick) {
+            link.onclick = function(e) {
+              const href = this.getAttribute('href');
+              if (href) {
+                window.open(href, '_blank', 'noopener,noreferrer');
+                e.stopPropagation();
+                return false;
+              }
+            };
+          }
+        });
+        
+        // Specifically target each main clickable component
+        const titleLink = card.querySelector('.title-link');
+        const imageLink = card.querySelector('.image-link');
+        const ratingLink = card.querySelector('.rating-link');
+        const priceLink = card.querySelector('.price-link');
+        const buttonLink = card.querySelector('.button-link');
+        
+        // Apply extra styling to each specific component
+        [titleLink, imageLink, ratingLink, priceLink, buttonLink].forEach(link => {
+          if (link) {
+            link.classList.add('direct-link');
+            (link as HTMLElement).style.cursor = 'pointer';
+            (link as HTMLElement).style.pointerEvents = 'auto';
+          }
         });
       });
     };
@@ -64,8 +103,37 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
     const observer = new MutationObserver(fixProductCardLinks);
     observer.observe(contentRef.current, { childList: true, subtree: true });
 
+    // Add additional click handler at the container level
+    const handleContainerClick = (e: MouseEvent) => {
+      // Check if the click is on or inside a product card
+      const productCard = (e.target as HTMLElement).closest('.product-card');
+      if (!productCard) return;
+
+      // If the click is directly on a link, let the default behavior happen
+      if ((e.target as HTMLElement).tagName === 'A' || 
+          (e.target as HTMLElement).closest('a')) {
+        return;
+      }
+
+      // If the click is on the card but not on a link, find the main link and click it
+      const mainLink = productCard.querySelector('.button-link') || 
+                      productCard.querySelector('.title-link');
+      if (mainLink) {
+        e.preventDefault();
+        e.stopPropagation();
+        (mainLink as HTMLElement).click();
+      }
+    };
+
+    if (contentRef.current) {
+      contentRef.current.addEventListener('click', handleContainerClick);
+    }
+
     return () => {
       observer.disconnect();
+      if (contentRef.current) {
+        contentRef.current.removeEventListener('click', handleContainerClick);
+      }
     };
   }, [content]);
 

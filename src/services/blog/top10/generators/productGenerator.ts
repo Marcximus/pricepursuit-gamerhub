@@ -85,7 +85,7 @@ export function generateProductHtml(product: any, index: number): string {
   <div class="p-4">
     <div class="flex flex-col md:flex-row">
       <div class="md:w-1/3 flex items-center justify-center">
-        <a href="${productUrl}" class="relative block w-full h-full" target="_blank" rel="nofollow noopener">
+        <a href="${productUrl}" class="product-link image-link block w-full h-full relative" target="_blank" rel="nofollow noopener" aria-label="View ${simplifiedTitle} on Amazon">
           <img src="${imageUrl}" 
                alt="${simplifiedTitle}" 
                class="w-full h-auto rounded-md object-contain max-h-48 transition-transform duration-200 hover:scale-105"
@@ -94,12 +94,12 @@ export function generateProductHtml(product: any, index: number): string {
       </div>
       <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
         <h4 class="text-xl font-semibold mb-2 product-title text-green-800">
-          <a href="${productUrl}" class="hover:underline cursor-pointer" target="_blank" rel="nofollow noopener">${simplifiedTitle}</a>
+          <a href="${productUrl}" class="product-link title-link hover:underline cursor-pointer" target="_blank" rel="nofollow noopener">${simplifiedTitle}</a>
         </h4>
-        <a href="${productUrl}" class="inline-block mb-2" target="_blank" rel="nofollow noopener">
+        <a href="${productUrl}" class="product-link rating-link inline-block mb-2" target="_blank" rel="nofollow noopener" aria-label="View ${simplifiedTitle} ratings on Amazon">
           ${starsHtml}
         </a>
-        <a href="${productUrl}" class="text-lg font-bold mb-3 inline-block hover:text-green-700" target="_blank" rel="nofollow noopener">
+        <a href="${productUrl}" class="product-link price-link text-lg font-bold mb-3 inline-block hover:text-green-700" target="_blank" rel="nofollow noopener">
           ${productPrice}
         </a>
         <div class="specs-grid grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
@@ -112,7 +112,7 @@ export function generateProductHtml(product: any, index: number): string {
         </div>
         <div class="mb-4">
           <a href="${productUrl}" 
-             class="button-amazon inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition-colors duration-200" 
+             class="product-link button-link button-amazon inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition-colors duration-200" 
              target="_blank" rel="nofollow noopener">
             View Now on Amazon
           </a>

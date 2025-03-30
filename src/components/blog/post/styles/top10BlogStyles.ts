@@ -86,27 +86,52 @@ export const getTop10BlogStyles = (): string => `
   }
   
   /* Enhanced clickable elements styling */
-  .product-card a {
+  .product-card a.product-link {
     cursor: pointer !important;
-    position: relative;
-    z-index: 5;
-    display: inline-block;
+    position: relative !important;
+    z-index: 10 !important;
+    display: inline-block !important;
+    pointer-events: auto !important;
   }
   
-  .product-card a:hover {
-    text-decoration: underline;
+  .product-card a.image-link {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
   }
   
-  .product-card a img {
+  .product-card a.product-link:hover {
+    text-decoration: underline !important;
+  }
+  
+  .product-card a.product-link img {
     cursor: pointer !important;
+    pointer-events: auto !important;
   }
   
-  .product-card .product-title a {
+  .product-card .product-title a.product-link {
     color: #166534 !important;
-    text-decoration: none;
+    font-weight: bold !important;
   }
   
-  .product-card .product-title a:hover {
-    text-decoration: underline;
+  .product-card .product-title a.product-link:hover {
+    text-decoration: underline !important;
+  }
+  
+  /* Fix potential link overlapping issues */
+  .product-card a.button-link {
+    display: inline-block !important;
+    position: relative !important;
+    z-index: 15 !important;
+  }
+  
+  /* Prevent any potential hover issues */
+  .product-card:hover a.product-link {
+    pointer-events: auto !important;
+  }
+  
+  /* Fix potential container issues */
+  .product-card > div {
+    position: relative !important;
   }
 `;
