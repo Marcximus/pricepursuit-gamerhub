@@ -1,3 +1,4 @@
+
 /**
  * Generates HTML content for a product
  */
