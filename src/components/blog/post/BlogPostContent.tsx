@@ -105,13 +105,15 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
 
     // Add additional click handler at the container level
     const handleContainerClick = (e: MouseEvent) => {
+      // Fix TypeScript error by properly casting the target
+      const target = e.target as HTMLElement;
+      
       // Check if the click is on or inside a product card
-      const productCard = (e.target as HTMLElement).closest('.product-card');
+      const productCard = target.closest('.product-card');
       if (!productCard) return;
 
       // If the click is directly on a link, let the default behavior happen
-      if ((e.target as HTMLElement).tagName === 'A' || 
-          (e.target as HTMLElement).closest('a')) {
+      if (target.tagName === 'A' || target.closest('a')) {
         return;
       }
 
