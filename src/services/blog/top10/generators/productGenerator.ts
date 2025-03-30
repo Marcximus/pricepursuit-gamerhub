@@ -107,3 +107,4 @@ export function generateProductHtml(product: any, position: number): string {
     </div>
   `;
 }
+
