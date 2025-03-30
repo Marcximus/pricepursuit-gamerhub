@@ -1,4 +1,3 @@
-
 /**
  * Product HTML generation utilities for Top10 blog posts
  */
@@ -94,6 +93,7 @@ export function generateProductHtml(product: any, index: number): string {
         <h4 class="text-xl font-semibold mb-2 product-title text-green-800">${simplifiedTitle}</h4>
         ${starsHtml}
         <p class="text-lg font-bold mb-3">${productPrice}</p>
+        <p class="text-sm text-black mb-2">${brandName} ${modelInfo}</p>
         <div class="specs-grid grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
           <div><span class="font-medium">CPU:</span> ${processor}</div>
           <div><span class="font-medium">RAM:</span> ${ram}</div>
