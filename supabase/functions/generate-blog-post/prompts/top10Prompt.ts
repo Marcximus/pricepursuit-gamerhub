@@ -2,7 +2,7 @@
 /**
  * System prompt for Top10 blog post generation
  */
-import { extractInfoFromTitle, extractBrandFromTitle } from './helpers/extractInfo';
+import { extractInfoFromTitle, extractBrandFromTitle } from './helpers/extractInfo.ts';
 import { getDefaultTop10Prompt } from './templates/defaultTop10Prompt';
 import { getProductTop10Prompt } from './templates/productTop10Prompt';
 
