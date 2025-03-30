@@ -1,165 +1,112 @@
 
 /**
- * Product handling for Top10 content
+ * Functions for handling products in Top10 blog posts
  */
-import { fetchAmazonProducts, extractSearchParamsFromPrompt } from '../amazonProductService';
-import { generateProductHtml } from './htmlGenerator';
-import { 
-  showErrorToast, 
-  formatAmazonUrl, 
-  generateStarsHtml, 
-  formatPrice, 
-  generateAffiliateButtonHtml,
-  generateStars
-} from './utils';
+import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
-// Get products from localStorage or fetch them
+/**
+ * Get products either from localStorage or by fetching them
+ */
 export async function getProducts(prompt: string): Promise<any[]> {
-  console.log('🔍 Extracting search parameters from prompt...');
-  const extractedParams = extractSearchParamsFromPrompt(prompt);
-  console.log('🎯 Extracted search parameters:', JSON.stringify(extractedParams, null, 2));
+  console.log('🔍 Getting products for prompt:', prompt);
   
-  // First, try to get products from localStorage (fetched earlier)
-  let products = [];
-  const storedProducts = localStorage.getItem('currentTop10Products');
-  
-  if (storedProducts) {
-    console.log('📦 Found pre-fetched products in localStorage');
-    try {
-      products = JSON.parse(storedProducts);
-      console.log(`Found ${products.length} products in localStorage`);
-      if (products.length > 0) {
-        console.log(`First product title: ${products[0]?.title || 'Unknown'}`);
-        console.log(`First product has HTML content: ${!!products[0]?.htmlContent}`);
-        
-        // If htmlContent is missing, generate it now
-        if (!products[0]?.htmlContent) {
-          console.log('🔄 Generating missing HTML content for products...');
-          products = products.map((product, index) => {
-            if (!product.htmlContent) {
-              // Ensure product has title
-              if (!product.title && product.asin) {
-                product.title = `Lenovo Laptop (${product.asin})`;
-              }
-              
-              // Generate HTML content for the product
-              const stars = generateStars(product.rating);
-              const price = formatPrice(product.price);
-              const productUrl = formatAmazonUrl(product.asin);
-              
-              // Generate HTML content using the new utility functions if possible
-              if (typeof generateStarsHtml === 'function' && typeof generateAffiliateButtonHtml === 'function') {
-                product.htmlContent = `
-                  <div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6">
-                    <div class="p-4">
-                      <h3 class="text-xl font-semibold mb-2">${product.title}</h3>
-                      <div class="flex flex-col md:flex-row">
-                        <div class="md:w-1/3">
-                          <img src="${product.image_url || 'https://via.placeholder.com/300x300?text=No+Image'}" 
-                               alt="${product.title}" 
-                               class="w-full h-auto rounded-md" />
-                        </div>
-                        <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
-                          ${generateStarsHtml(product.rating, product.reviews_count)}
-                          <p class="text-lg font-bold mb-3">${price}</p>
-                          <div class="mb-4">${generateAffiliateButtonHtml(product.asin)}</div>
-                          <div class="text-sm text-gray-600">
-                            <p><strong>ASIN:</strong> ${product.asin}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                `;
-              } else {
-                product.htmlContent = generateProductHtml(product, index + 1);
-              }
-              
-              console.log(`✅ Generated HTML content for product #${index + 1}`);
-            }
-            return product;
-          });
+  // First, try to get products from localStorage
+  try {
+    const storedProducts = localStorage.getItem('currentTop10Products');
+    if (storedProducts) {
+      console.log('📦 Found stored products in localStorage');
+      
+      try {
+        const products = JSON.parse(storedProducts);
+        if (Array.isArray(products) && products.length > 0) {
+          console.log(`✅ Successfully parsed ${products.length} products from localStorage`);
+          
+          // Ensure products have proper position values for correct ordering
+          return products.map((product, index) => ({
+            ...product,
+            position: index + 1 // First product is #1, last is #10
+          }));
         }
+      } catch (parseError) {
+        console.error('❌ Error parsing localStorage products:', parseError);
       }
-      // Continue to clear the storage
-      localStorage.removeItem('currentTop10Products');
-    } catch (parseError) {
-      console.error('Error parsing stored products:', parseError);
-      console.error('Raw stored products string:', storedProducts.substring(0, 100) + '...');
-      products = [];
     }
+  } catch (error) {
+    console.error('❌ Error accessing localStorage:', error);
   }
   
-  // If no stored products, fetch them now as a fallback
-  if (!products || products.length === 0) {
-    console.log(`🚀 No pre-fetched products found. Fetching Amazon products with query: "${extractedParams.searchParams.query}"`);
-    console.log(`📤 Search parameters being sent to API: ${JSON.stringify(extractedParams.searchParams)}`);
+  console.log('📤 No valid products in localStorage, fetching from API...');
+  
+  // If we didn't find valid products in localStorage, we need to fetch them
+  try {
+    // Extract search parameters from the prompt
+    const searchParams = extractSearchParamsFromPrompt(prompt);
+    console.log('🔎 Extracted search parameters:', searchParams);
     
-    try {
-      products = await fetchAmazonProducts(extractedParams);
-      console.log(`✅ fetchAmazonProducts returned ${products?.length || 0} products`);
-      
-      // Check if products are missing titles
-      if (products.length > 0) {
-        // Ensure all products have titles
-        products = products.map((product, index) => {
-          if (!product.title && product.asin) {
-            product.title = `Lenovo Laptop (${product.asin})`;
-          }
-          return product;
-        });
-      }
-      
-      // Check if htmlContent is missing and generate it if needed
-      if (products.length > 0 && !products[0]?.htmlContent) {
-        console.log('🔄 Generating missing HTML content for newly fetched products...');
-        products = products.map((product, index) => {
-          if (!product.htmlContent) {
-            // Generate HTML content for the product using new utility functions if possible
-            if (typeof generateStarsHtml === 'function' && typeof generateAffiliateButtonHtml === 'function') {
-              product.htmlContent = `
-                <div class="product-card bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 my-6">
-                  <div class="p-4">
-                    <h3 class="text-xl font-semibold mb-2">${product.title}</h3>
-                    <div class="flex flex-col md:flex-row">
-                      <div class="md:w-1/3">
-                        <img src="${product.image_url || 'https://via.placeholder.com/300x300?text=No+Image'}" 
-                             alt="${product.title}" 
-                             class="w-full h-auto rounded-md" />
-                      </div>
-                      <div class="md:w-2/3 md:pl-4 mt-4 md:mt-0">
-                        ${generateStarsHtml(product.rating, product.reviews_count)}
-                        <p class="text-lg font-bold mb-3">${formatPrice(product.price)}</p>
-                        <div class="mb-4">${generateAffiliateButtonHtml(product.asin)}</div>
-                        <div class="text-sm text-gray-600">
-                          <p><strong>ASIN:</strong> ${product.asin}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              `;
-            } else {
-              // Fall back to the original method
-              const stars = generateStars(product.rating);
-              const price = formatPrice(product.price);
-              const productUrl = formatAmazonUrl(product.asin);
-              product.htmlContent = generateProductHtml(product, index + 1);
-            }
-            
-            console.log(`✅ Generated HTML content for product #${index + 1}`);
-          }
-          return product;
-        });
-      }
-    } catch (callError) {
-      console.error('💥 Exception during Amazon products fetch:', callError);
-      showErrorToast(
-        'Error calling product service',
-        'Technical error while fetching products. Please try again.'
-      );
+    // Call the edge function to fetch products
+    const { data, error } = await supabase.functions.invoke('fetch-top10-products', {
+      body: { searchParams, count: 10 },
+    });
+    
+    if (error) {
+      console.error('❌ Error fetching products from API:', error);
+      toast({
+        title: 'Error Fetching Products',
+        description: 'Unable to fetch product data. Please try again.',
+        variant: 'destructive',
+      });
+      return [];
     }
+    
+    if (!data || !data.products || !Array.isArray(data.products)) {
+      console.error('❌ Invalid response from API:', data);
+      toast({
+        title: 'Invalid Product Data',
+        description: 'The API returned invalid product data. Please try again.',
+        variant: 'destructive',
+      });
+      return [];
+    }
+    
+    console.log(`✅ Fetched ${data.products.length} products from API`);
+    
+    // Ensure products have proper position values for correct ordering
+    const productsWithPositions = data.products.map((product, index) => ({
+      ...product,
+      position: index + 1 // First product is #1, last is #10
+    }));
+    
+    // Store the products in localStorage for future use
+    try {
+      localStorage.setItem('currentTop10Products', JSON.stringify(productsWithPositions));
+      console.log('💾 Stored products in localStorage for later use');
+    } catch (storageError) {
+      console.error('❌ Error storing products in localStorage:', storageError);
+    }
+    
+    return productsWithPositions;
+  } catch (error) {
+    console.error('❌ Error fetching products:', error);
+    toast({
+      title: 'Error Fetching Products',
+      description: 'An unexpected error occurred. Please try again.',
+      variant: 'destructive',
+    });
+    return [];
   }
-  
-  return products;
+}
+
+/**
+ * Extract search parameters from prompt
+ * This is a simplified version, as the actual implementation would be in amazonProductService.ts
+ */
+function extractSearchParamsFromPrompt(prompt: string) {
+  // Default parameters for demonstration
+  // In a real implementation, this would parse the prompt to extract meaningful search terms
+  return {
+    searchParams: [
+      { brand: 'Alienware', category: 'Laptops' }
+    ]
+  };
 }

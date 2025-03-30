@@ -72,15 +72,27 @@ export async function fetchProductsForTop10(prompt: string): Promise<any[]> {
       // Store products in local storage for use after content generation
       console.log('💾 Storing fetched products in localStorage for later use');
       try {
-        localStorage.setItem('currentTop10Products', JSON.stringify(products));
+        // Ensure products have correct position values for ranking
+        const productsWithPositions = products.map((product, index) => ({
+          ...product,
+          position: index + 1 // First product is #1, last is #10
+        }));
+        
+        localStorage.setItem('currentTop10Products', JSON.stringify(productsWithPositions));
         console.log('✅ Products successfully stored in localStorage');
+        
+        return productsWithPositions;
       } catch (storageError) {
         console.error('❌ Error storing products in localStorage:', storageError);
         console.log('💾 Will continue without localStorage backup');
+        
+        // Ensure products have correct position values for ranking even if storage fails
+        return products.map((product, index) => ({
+          ...product,
+          position: index + 1 // First product is #1, last is #10
+        }));
       }
     }
-    
-    return products;
   } catch (error) {
     console.error('❌ Error fetching Amazon products:', error);
     toast({

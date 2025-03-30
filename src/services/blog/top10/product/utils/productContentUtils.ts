@@ -22,7 +22,8 @@ export function fixProductNumbering(content: string): string {
     const correctRanks = new Map();
     for (let i = 0; i < headings.length; i++) {
       // In a top-10 list, the first product should be #1, and the last should be #10
-      const correctRank = headings.length - i;
+      // Fixed order: first product is #1, last is #10
+      const correctRank = i + 1;
       const currentHeading = headings[i][0];
       
       // Extract the current rank number
@@ -99,6 +100,8 @@ export function ensureConsistentProductLinks(content: string, products: any[]): 
     
     // Use the best matching product for this section
     const matchedProduct = products[bestMatchIndex];
+    // Ensure the position attribute is set correctly for proper ranking display
+    matchedProduct.position = i + 1;
     
     // Find the product card after this heading
     const headingPos = newContent.indexOf(headingSections[i]);
@@ -116,11 +119,11 @@ export function ensureConsistentProductLinks(content: string, products: any[]): 
     const productCardHtml = productCardMatch[0];
     
     // Generate new product HTML for the matched product
-    const newProductHtml = generateProductHtml(matchedProduct, products.length - bestMatchIndex);
+    const newProductHtml = generateProductHtml(matchedProduct, i);
     
     // Replace the old product card with the new one that matches the heading
     newContent = newContent.replace(productCardHtml, newProductHtml);
-    console.log(`✅ Updated product link for "${headingText}" to match described product`);
+    console.log(`✅ Updated product link for "${headingText}" to match described product with rank #${i+1}`);
   }
   
   return newContent;

@@ -1,108 +1,108 @@
 
+/**
+ * Product placement utilities for Top10 blog posts
+ */
 import { generateProductHtml } from '../generators/productGenerator';
+import { fixProductNumbering, cleanupDuplicateContent } from './utils/productContentUtils';
 
-export function replaceProductPlaceholders(
-  content: string, 
-  products: any[]
-): { content: string; replacementsCount: number } {
-  let newContent = content;
+/**
+ * Replace product data placeholders with actual product content
+ */
+export function replaceProductPlaceholders(content: string, products: any[]): { 
+  content: string; 
+  replacementsCount: number 
+} {
   let replacementsCount = 0;
+  let updatedContent = content;
   
-  const placeholderPattern = /\[PRODUCT_DATA_(\d+)\]/g;
-  const placeholders = [...newContent.matchAll(placeholderPattern)];
-  console.log(`📍 Found ${placeholders.length} potential product placeholders`);
+  console.log(`🧩 Starting product placeholder replacement with ${products.length} products`);
   
-  if (placeholders.length >= 1) {
-    // Replace explicit placeholders
-    for (const match of placeholders) {
-      const placeholderRank = parseInt(match[1], 10);
-      
-      // Find the product that matches this placeholder's rank/position
-      const product = products.find(p => p.position === placeholderRank);
+  // Make sure products have correct position values for correct rank display
+  const productsWithPositions = products.map((product, index) => ({
+    ...product,
+    position: index + 1 // Ensure correct order: first product is #1, last is #10
+  }));
+  
+  // Find and replace [PRODUCT_DATA_X] placeholders
+  for (let i = 1; i <= productsWithPositions.length; i++) {
+    const placeholder = `[PRODUCT_DATA_${i}]`;
+    
+    if (updatedContent.includes(placeholder)) {
+      // Get the product for this position, accounting for zero-based array indexing
+      const product = productsWithPositions[i-1];
       
       if (product) {
-        const productHtml = generateProductHtml(product, placeholderRank);
-        newContent = newContent.replace(match[0], productHtml);
+        console.log(`✅ Replacing placeholder ${placeholder} with product: ${product.title?.substring(0, 30) || 'Unknown'}...`);
+        
+        // Generate HTML for this product with its position (i is 1-based)
+        const productHtml = generateProductHtml(product, i-1);
+        
+        // Replace the placeholder with the product HTML
+        updatedContent = updatedContent.replace(placeholder, productHtml);
         replacementsCount++;
       } else {
-        console.warn(`⚠️ No product found for placeholder rank ${placeholderRank}`);
+        console.warn(`⚠️ No product found for placeholder ${placeholder}`);
+        // Replace with a message indicating missing product
+        updatedContent = updatedContent.replace(
+          placeholder, 
+          `<div class="product-card bg-gray-100 p-4 text-center rounded-lg border border-gray-300">
+            <p class="text-gray-600">Product information not available</p>
+          </div>`
+        );
+        replacementsCount++;
       }
     }
   }
   
-  return { content: newContent, replacementsCount };
+  // Now fix any issues with product numbering
+  updatedContent = fixProductNumbering(updatedContent);
+  
+  // Clean up any duplicated content
+  updatedContent = cleanupDuplicateContent(updatedContent);
+  
+  console.log(`✅ Replaced ${replacementsCount} product placeholders in content`);
+  
+  return { content: updatedContent, replacementsCount };
 }
 
 /**
- * Remove duplicate product card blocks if any are present
- * This can happen if the AI includes product cards directly in the content
- * and we also add product cards through the placeholder replacement
+ * Remove duplicate product blocks that sometimes occur during generation
  */
 export function removeDuplicateProductBlocks(content: string): string {
-  // Check if there are any product cards in the content
-  if (!content.includes('product-card')) {
+  // This pattern matches product card div elements
+  const productBlockRegex = /<div\s+class="product-card[^>]*>[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g;
+  const blocks = Array.from(content.matchAll(productBlockRegex));
+  
+  console.log(`🔍 Found ${blocks.length} product blocks to check for duplicates`);
+  
+  // If we have few or no blocks, no need to do anything
+  if (blocks.length <= 1) {
     return content;
   }
   
-  console.log('🔄 Checking for duplicate product blocks...');
-  
-  // Find all product card divs with their data-asin attribute
-  const productCardRegex = /<div[^>]*class="[^"]*product-card[^"]*"[^>]*data-asin="([^"]*)"[^>]*>/g;
-  const productMatches = [...content.matchAll(productCardRegex)];
-  
-  // If there are no matches or just one, no duplicates to remove
-  if (productMatches.length <= 1) {
-    return content;
-  }
-  
-  console.log(`📊 Found ${productMatches.length} product blocks, checking for duplicates`);
-  
-  // Track which ASINs we've seen to detect duplicates
+  // Check for duplicate blocks based on ASIN
   const seenAsins = new Set<string>();
-  let dedupedContent = content;
+  let result = content;
   
-  for (const match of productMatches) {
-    const asin = match[1];
-    const fullMatch = match[0];
+  for (const block of blocks) {
+    const blockHtml = block[0];
+    const asinMatch = blockHtml.match(/data-asin="([^"]+)"/);
     
-    // If we've seen this ASIN before, it's a duplicate
-    if (seenAsins.has(asin)) {
-      console.log(`🗑️ Found duplicate product with ASIN: ${asin}, removing...`);
+    if (asinMatch && asinMatch[1]) {
+      const asin = asinMatch[1];
       
-      // Find the start of the div
-      const startIndex = dedupedContent.indexOf(fullMatch);
-      if (startIndex !== -1) {
-        // Find the matching closing div
-        let depth = 1;
-        let endIndex = startIndex + fullMatch.length;
-        
-        while (depth > 0 && endIndex < dedupedContent.length) {
-          if (dedupedContent.substring(endIndex).startsWith('</div>')) {
-            depth--;
-            if (depth === 0) {
-              endIndex += 6; // Length of </div>
-              break;
-            } else {
-              endIndex += 6;
-            }
-          } else if (dedupedContent.substring(endIndex).startsWith('<div')) {
-            depth++;
-            // Skip to end of div opening tag
-            const nextCloseTag = dedupedContent.indexOf('>', endIndex);
-            endIndex = nextCloseTag + 1;
-          } else {
-            endIndex++;
-          }
-        }
-        
-        // Remove the duplicate product card
-        dedupedContent = dedupedContent.substring(0, startIndex) + dedupedContent.substring(endIndex);
+      if (seenAsins.has(asin)) {
+        // This is a duplicate, remove it
+        console.log(`🧹 Removing duplicate product block for ASIN: ${asin}`);
+        // We remove it by replacing the block with an empty string
+        result = result.replace(blockHtml, '');
+      } else {
+        seenAsins.add(asin);
       }
-    } else {
-      seenAsins.add(asin);
     }
   }
   
-  console.log(`✅ Removed ${productMatches.length - seenAsins.size} duplicate product blocks`);
-  return dedupedContent;
+  console.log(`✅ Removed ${blocks.length - seenAsins.size} duplicate product blocks`);
+  
+  return result;
 }
