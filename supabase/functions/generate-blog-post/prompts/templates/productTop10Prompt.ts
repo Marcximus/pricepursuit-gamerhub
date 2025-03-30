@@ -36,9 +36,14 @@ CRITICAL: Do not write less than 1500 words on the topic!
        <li>✅ [Key Feature 3]</li>
      </ul>
 
-5. Product Data Placement:
-   - After each product title (<h3>), insert a placeholder [PRODUCT_DATA_X] where X is the position (1-${productCount})
-   - This placeholder will be replaced with product images, ratings, and buy buttons
+5. Product Data Placement (CRUCIAL):
+   - IMMEDIATELY after each product <h3> heading, you MUST insert the placeholder [PRODUCT_DATA_X] where X is the position (1-${productCount})
+   - EXAMPLE FORMAT:
+     <h3>Acer Laptop Model Name</h3>
+     [PRODUCT_DATA_1]
+     <p>The rest of the content...</p>
+   - DO NOT skip any placeholders or change their format - this is CRITICAL for proper display
+   - These placeholders MUST appear in your HTML output exactly as shown: [PRODUCT_DATA_1], [PRODUCT_DATA_2], etc.
 
 6. Product Specifications:
    - For EACH laptop, you MUST provide the following specifications which will be displayed in the product card:

@@ -44,6 +44,7 @@ export async function processTop10Content(content: string, prompt: string): Prom
     console.log(`🔍 Content contains <p> tags: ${processedContent.includes('<p>')}`);
     console.log(`🔍 Content contains [PRODUCT_DATA_ markers: ${processedContent.includes('[PRODUCT_DATA_')}`);
     console.log(`🔍 Content contains "products": [...] array: ${processedContent.includes('"products":')}`);
+    console.log(`🔍 Content has embedded product cards/links: ${processedContent.includes('product-card')}`);
     
     // First, determine if content has proper HTML structure
     const hasHtmlStructure = processedContent.includes('<h1>') || processedContent.includes('<h2>') || 
@@ -90,9 +91,25 @@ export async function processTop10Content(content: string, prompt: string): Prom
     }
     
     // Get products either from localStorage or by fetching them
-    console.log('🛒 Attempting to get pre-fetched product data...');
+    console.log('🛒 Attempting to get product data...');
     const products = await getProducts(prompt);
     console.log(`🛒 getProducts returned ${products?.length || 0} products`);
+    
+    // Log more info about the products we found
+    if (products && products.length > 0) {
+      console.log(`🔍 First product: "${products[0].title?.substring(0, 30)}..."`);
+      console.log(`First product has HTML content: ${!!products[0].htmlContent}`);
+      console.log(`First product ASIN: ${products[0].asin}`);
+      console.log(`First product CPU: ${products[0].cpu || products[0].processor || 'Unknown'}`);
+      
+      const productsWithHtml = products.filter(p => !!p.htmlContent).length;
+      const productsWithAsin = products.filter(p => !!p.asin).length;
+      const productsWithTitle = products.filter(p => !!p.title).length;
+      
+      console.log(`📊 Products with HTML content: ${productsWithHtml}/${products.length}`);
+      console.log(`📊 Products with ASIN: ${productsWithAsin}/${products.length}`);
+      console.log(`📊 Products with title: ${productsWithTitle}/${products.length}`);
+    }
     
     // If we have productSpecs from the AI response, merge them with the products data
     let productsToUse = products;
@@ -153,8 +170,16 @@ export async function processTop10Content(content: string, prompt: string): Prom
     console.log(`📏 Content length after fixing HTML tags: ${processedContent.length} characters`);
     
     // Replace the product data placeholders with actual data
-    if (processedContent.includes('[PRODUCT_DATA_')) {
+    const hasPlaceholders = processedContent.includes('[PRODUCT_DATA_');
+    const hasProductCards = processedContent.includes('product-card');
+    console.log(`🔍 Content has embedded product cards/links: ${hasProductCards}`);
+    
+    if (hasPlaceholders || !hasProductCards) {
       console.log('🔄 Replacing product data placeholders in content...');
+      // Count potential placeholders for debugging
+      const placeholderMatches = processedContent.match(/\[PRODUCT_DATA_\d+\]/g) || [];
+      console.log(`📍 Found ${placeholderMatches.length} potential product placeholders`);
+      
       const { content: updatedContent, replacementsCount } = replaceProductPlaceholders(
         processedContent,
         productsToUse
@@ -163,15 +188,13 @@ export async function processTop10Content(content: string, prompt: string): Prom
       console.log(`📏 Content length after replacing placeholders: ${processedContent.length} characters`);
       console.log(`✅ Replaced ${replacementsCount} product placeholders in content`);
       
-      if (replacementsCount === 0) {
+      if (replacementsCount === 0 && hasPlaceholders) {
         console.warn('⚠️ No product placeholders were replaced in the content');
-        // This is a failure only if there were placeholders to begin with
-        if (processedContent.includes('[PRODUCT_DATA_')) {
-          throw new Error('Failed to replace product placeholders in content');
-        }
+        // Critical only if there were placeholders but none were replaced
+        throw new Error('DeepSeek did not include product placeholders or embed products directly in the HTML');
       }
     } else {
-      console.warn('⚠️ No [PRODUCT_DATA_X] placeholders found in content, cannot add product information');
+      console.log('✅ Content already contains product cards, skipping placeholder replacement');
     }
     
     // Add Humix video embed if not already present
@@ -186,6 +209,15 @@ export async function processTop10Content(content: string, prompt: string): Prom
     // If there are no paragraph tags, something went wrong with the HTML processing
     if (!finalContent.includes('<p>')) {
       console.warn('⚠️ No paragraph tags found in processed content, this indicates a major issue');
+      
+      // Try to fix by wrapping text in paragraph tags
+      const fixedContent = wrapTextInHtml(finalContent, prompt);
+      
+      if (fixedContent.includes('<p>')) {
+        console.log('✅ Successfully fixed missing paragraph tags');
+        return fixedContent;
+      }
+      
       throw new Error('Generated content has no paragraph tags - invalid HTML structure');
     }
     
