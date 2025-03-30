@@ -19,6 +19,11 @@ export function extractSearchParamsFromPrompt(prompt: string): ExtractedParams {
   const titleMatch = prompt.match(/(?:write about|create|make|generate|do)?\s*(?:a post about|an article about|a blog about|about)?\s*(top\s*10.*?)(?:\.|\?|$)/i);
   let title = titleMatch ? titleMatch[1].trim() : '';
   
+  // If no title was extracted, use the entire prompt
+  if (!title) {
+    title = prompt.trim();
+  }
+  
   // Capitalize first letter of each word
   title = title
     .split(' ')
@@ -35,9 +40,26 @@ export function extractSearchParamsFromPrompt(prompt: string): ExtractedParams {
     title = title.replace('Top 10', 'Top 10 Best');
   }
   
-  // Extract brand
-  const brandMatches = promptLower.match(/\b(lenovo|dell|hp|asus|acer|msi|apple|samsung|microsoft|razer|toshiba|lg)\b/i);
-  const brand = brandMatches ? brandMatches[1].toUpperCase() : undefined;
+  // Extract brand - more comprehensive brand detection
+  const brandMatches = promptLower.match(/\b(lenovo|dell|hp|asus|acer|msi|apple|samsung|microsoft|razer|toshiba|lg|alienware)\b/i);
+  let brand = brandMatches ? brandMatches[1] : undefined;
+  
+  // Ensure proper capitalization for the brand
+  if (brand) {
+    if (brand.toLowerCase() === 'hp') {
+      brand = 'HP';
+    } else if (brand.toLowerCase() === 'lg') {
+      brand = 'LG';
+    } else if (brand.toLowerCase() === 'msi') {
+      brand = 'MSI';
+    } else if (brand.toLowerCase() === 'asus') {
+      brand = 'ASUS';
+    } else if (brand.toLowerCase() === 'alienware') {
+      brand = 'Alienware';
+    } else {
+      brand = brand.charAt(0).toUpperCase() + brand.slice(1).toLowerCase();
+    }
+  }
   
   // Extract price range
   const priceMatch = promptLower.match(/under\s*\$?(\d+)/);
@@ -130,6 +152,32 @@ export async function fetchAmazonProducts(params: SearchParam | ExtractedParams)
     }
     
     console.log(`✅ Successfully fetched ${data.products.length || 0} products`);
+    
+    // Special handling for brand-specific searches
+    if (searchParams.brand) {
+      console.log(`🏷️ Filtering products for brand: ${searchParams.brand}`);
+      
+      // Filter products to only include those matching the specified brand
+      const filteredProducts = data.products.filter(product => {
+        const productBrand = product.brand || '';
+        const productTitle = product.title || '';
+        
+        // Case-insensitive brand match in either brand field or title
+        const brandLower = searchParams.brand?.toLowerCase() || '';
+        return productBrand.toLowerCase().includes(brandLower) || 
+               productTitle.toLowerCase().includes(brandLower);
+      });
+      
+      console.log(`🔍 Brand filter results: ${filteredProducts.length}/${data.products.length} products match brand "${searchParams.brand}"`);
+      
+      // If we don't have enough brand-specific products, log this issue
+      if (filteredProducts.length < 5 && data.products.length > 0) {
+        console.warn(`⚠️ Warning: Only ${filteredProducts.length} products match the brand "${searchParams.brand}". This may result in a poor blog post.`);
+      }
+      
+      // Return filtered products, or all products if filter yields too few results
+      return filteredProducts.length >= 5 ? filteredProducts : data.products;
+    }
     
     // Log a sample of the first product to verify data structure
     if (data.products.length > 0) {
