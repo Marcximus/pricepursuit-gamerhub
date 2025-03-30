@@ -9,6 +9,9 @@ export function generateProductHtml(product: any, position: number): string {
     </div>`;
   }
   
+  // Log full product data for debugging
+  console.log(`🧩 Full product data for position ${position}:`, JSON.stringify(product).substring(0, 500) + '...');
+  
   // Extract product data, use position for ranking
   const asin = product.asin || '';
   const title = product.title || 'Unknown Product';
@@ -28,7 +31,15 @@ export function generateProductHtml(product: any, position: number): string {
   const battery = product.battery || product.battery_life || 'Not specified';
   
   // Log the specifications for debugging
-  console.log(`🔍 Product ${position} specs: CPU: ${cpu}, RAM: ${ram}, Graphics: ${graphics}, Storage: ${storage}`);
+  console.log(`🔍 Product ${position} specs: 
+    Title: ${title.substring(0, 50)}... 
+    CPU: ${cpu}, 
+    RAM: ${ram}, 
+    Graphics: ${graphics}, 
+    Storage: ${storage},
+    Screen: ${screen},
+    Battery: ${battery}`
+  );
   
   // Generate rating stars HTML
   const fullStars = Math.floor(rating);
@@ -61,9 +72,6 @@ export function generateProductHtml(product: any, position: number): string {
         </a>
       </div>
       <div class="product-details">
-        <h4 class="product-title">
-          <a href="${url}" target="_blank" rel="nofollow noopener">${title}</a>
-        </h4>
         <div class="product-meta">
           <span class="product-price">${price ? `$${price}` : 'Check price'}</span>
           <span class="product-rating"><span class="text-amber-500">${starsHtml}</span> ${rating}/5 (${formattedRatings} reviews)</span>
@@ -107,4 +115,3 @@ export function generateProductHtml(product: any, position: number): string {
     </div>
   `;
 }
-
