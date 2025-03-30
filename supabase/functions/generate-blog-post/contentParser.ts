@@ -106,7 +106,7 @@ export function parseGeneratedContent(content: string, category: string) {
         console.log(`⚠️ No excerpt found, generating from content`);
         // If no excerpt found, use the first paragraph of content as excerpt
         const firstParagraph = content.split('\n\n')[1] || content.split('\n\n')[0] || '';
-        excerpt = firstParagraph.replace(/^#.*$/gm, '').trim().substring(0, 160);
+        excerpt = firstParagraph.replace(/^#.*$/gm, '').trim().substring(0, 200);
       }
       
       // Extract tags
