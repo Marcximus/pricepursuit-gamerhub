@@ -97,8 +97,8 @@ export function generateHtmlContent(product: any, rank: number): string {
           </div>` : ''}
         </div>
         <div class="product-cta mt-4 flex justify-center">
-          <a href="${escapeHtml(url)}" class="check-price-btn button-amazon inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full transition-colors w-auto max-w-[200px] mx-auto text-center" target="_blank" rel="nofollow noopener">
-            View on Amazon
+          <a href="${escapeHtml(url)}" class="check-price-btn button-amazon inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full transition-colors w-auto min-width-[200px] max-w-[300px] mx-auto text-center whitespace-nowrap" target="_blank" rel="nofollow noopener">
+            Check Price on Amazon
           </a>
         </div>
       </div>

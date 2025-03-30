@@ -107,7 +107,7 @@ export function generateProductHtml(product: any, position: number): string {
         </div>
         
         <div class="product-cta flex justify-center">
-          <a href="${url}" class="check-price-btn button-amazon bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded inline-block w-auto max-w-[200px] mx-auto text-center transition-colors duration-200" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
+          <a href="${url}" class="check-price-btn button-amazon bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-6 rounded inline-block w-auto max-w-xs mx-auto text-center whitespace-nowrap transition-colors duration-200" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
         </div>
       </div>
     </div>

@@ -19,9 +19,11 @@
   border: none !important;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
   width: auto !important;
-  max-width: 200px !important;
+  min-width: 200px !important;
+  max-width: 300px !important;
   margin-left: auto !important;
   margin-right: auto !important;
+  white-space: nowrap !important;
 }
 
 .button-amazon:hover {
@@ -42,9 +44,11 @@
   border: none !important;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
   width: auto !important;
-  max-width: 200px !important;
+  min-width: 200px !important;
+  max-width: 300px !important;
   margin-left: auto !important;
   margin-right: auto !important;
+  white-space: nowrap !important;
 }
 
 .check-price-btn:hover {

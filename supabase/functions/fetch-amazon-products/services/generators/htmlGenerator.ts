@@ -65,7 +65,7 @@ export function generateProductHTML(product: any, rank: number): string {
           </div>` : ''
         }
         <div class="product-cta flex justify-center">
-          <a href="${escapeHtml(product.url)}" class="check-price-btn button-amazon bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded inline-block w-auto max-w-[200px] mx-auto text-center transition-colors duration-200" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
+          <a href="${escapeHtml(product.url)}" class="check-price-btn button-amazon bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-6 rounded inline-block w-auto min-width-[200px] max-w-[300px] mx-auto text-center whitespace-nowrap transition-colors duration-200" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
         </div>
       </div>
     </div>

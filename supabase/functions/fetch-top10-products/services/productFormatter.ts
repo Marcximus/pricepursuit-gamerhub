@@ -62,7 +62,7 @@ const generateProductHtml = (product: any, specs: string[], rank: number): strin
             <span class="rating-text ml-1">${product.rating ? product.rating.toFixed(1) : '-'}/5</span>
           </div>
         </div>
-        <a href="${product.product_url}" target="_blank" rel="noopener noreferrer" class="btn-view mt-2 block text-center bg-green-600 text-white py-2 px-4 rounded-md">View on Amazon</a>
+        <a href="${product.product_url}" target="_blank" rel="noopener noreferrer" class="btn-view mt-2 block text-center bg-green-600 text-white py-2 px-6 rounded-md whitespace-nowrap">View on Amazon</a>
       </div>
     </div>
   `;

@@ -57,14 +57,20 @@ export const getTop10BlogStyles = (): string => `
   .product-card:hover img {
     transform: scale(1.05);
   }
-  .product-card .button-amazon {
+  .product-card .button-amazon,
+  .product-card .check-price-btn {
     transition: all 0.2s ease;
     width: auto !important;
-    max-width: 200px !important;
+    min-width: 200px !important;
+    max-width: 300px !important;
     margin-left: auto !important;
     margin-right: auto !important;
+    white-space: nowrap !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
   }
-  .product-card .button-amazon:hover {
+  .product-card .button-amazon:hover,
+  .product-card .check-price-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
@@ -82,9 +88,11 @@ export const getTop10BlogStyles = (): string => `
   .check-price-btn {
     background-color: #16a34a !important;
     width: auto !important;
-    max-width: 200px !important;
+    min-width: 200px !important;
+    max-width: 300px !important;
     margin-left: auto !important;
     margin-right: auto !important;
+    white-space: nowrap !important;
   }
   
   /* Move ratings under the image and center */
