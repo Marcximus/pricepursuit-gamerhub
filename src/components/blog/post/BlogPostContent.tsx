@@ -48,123 +48,13 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
           if (!link.getAttribute('rel')) {
             link.setAttribute('rel', 'nofollow noopener');
           }
-          
-          // Ensure link has product-link class for styling
-          if (!link.classList.contains('product-link')) {
-            link.classList.add('product-link');
-          }
-          
-          // Add specific roles for accessibility
-          if (!link.getAttribute('role')) {
-            link.setAttribute('role', 'link');
-          }
-          
-          // Enforce link styling
+          // Ensure z-index is set for proper stacking context
           link.style.position = 'relative';
-          link.style.zIndex = '15';
+          link.style.zIndex = '5';
+          // Make sure cursor is pointer
           link.style.cursor = 'pointer';
-          link.style.pointerEvents = 'auto';
-          
-          // Add direct click event handler as a fallback
-          if (!link.onclick) {
-            link.onclick = function(e) {
-              const href = this.getAttribute('href');
-              if (href) {
-                window.open(href, '_blank', 'noopener,noreferrer');
-                e.stopPropagation();
-                return false;
-              }
-            };
-          }
         });
-        
-        // Specifically target each main clickable component
-        const titleLink = card.querySelector('.title-link');
-        const imageLink = card.querySelector('.image-link');
-        const ratingLink = card.querySelector('.rating-link');
-        const priceLink = card.querySelector('.price-link');
-        const buttonLink = card.querySelector('.button-link');
-        
-        // Apply extra styling to each specific component
-        [titleLink, imageLink, ratingLink, priceLink, buttonLink].forEach(link => {
-          if (link) {
-            link.classList.add('direct-link');
-            (link as HTMLElement).style.cursor = 'pointer';
-            (link as HTMLElement).style.pointerEvents = 'auto';
-          }
-        });
-        
-        // Make sure product title is clickable if it doesn't have a link already
-        const productTitle = card.querySelector('.product-title');
-        if (productTitle && !productTitle.querySelector('a')) {
-          const buttonLink = card.querySelector('.button-link') as HTMLAnchorElement;
-          if (buttonLink) {
-            const titleLink = document.createElement('a');
-            titleLink.href = buttonLink.href;
-            titleLink.target = '_blank';
-            titleLink.rel = 'nofollow noopener';
-            titleLink.className = 'product-link title-link';
-            
-            // Move the title's inner content to the link
-            while (productTitle.firstChild) {
-              titleLink.appendChild(productTitle.firstChild);
-            }
-            productTitle.appendChild(titleLink);
-          }
-        }
-        
-        // Ensure image is wrapped in a link
-        const productImage = card.querySelector('img:not(.fallback-image)');
-        const imageWrapper = productImage?.parentElement;
-        // Fix for the comparison error - check if the parent is not an anchor tag
-        if (productImage && imageWrapper && imageWrapper.tagName.toLowerCase() !== 'a') {
-          const buttonLink = card.querySelector('.button-link') as HTMLAnchorElement;
-          if (buttonLink) {
-            const imageLink = document.createElement('a');
-            imageLink.href = buttonLink.href;
-            imageLink.target = '_blank';
-            imageLink.rel = 'nofollow noopener';
-            imageLink.className = 'product-link image-link block';
-            
-            imageWrapper.insertBefore(imageLink, productImage);
-            imageLink.appendChild(productImage);
-          }
-        }
       });
-
-      // Add type assertion to handle click event
-      const handleContainerClick = (e: MouseEvent) => {
-        // Explicitly cast target to HTMLElement
-        const target = e.target as HTMLElement;
-        
-        // Check if the click is on or inside a product card
-        const productCard = target.closest('.product-card');
-        if (!productCard) return;
-
-        // If the click is directly on a link, let the default behavior happen
-        if (target.tagName === 'A' || target.closest('a')) {
-          return;
-        }
-
-        // If the click is on the card but not on a link, find the main link and click it
-        const mainLink = productCard.querySelector('.button-link') || 
-                        productCard.querySelector('.title-link');
-        if (mainLink) {
-          e.preventDefault();
-          e.stopPropagation();
-          (mainLink as HTMLElement).click();
-        }
-      };
-
-      if (contentRef.current) {
-        contentRef.current.addEventListener('click', handleContainerClick as EventListener);
-      }
-
-      return () => {
-        if (contentRef.current) {
-          contentRef.current.removeEventListener('click', handleContainerClick as EventListener);
-        }
-      };
     };
 
     // Run immediately after render
