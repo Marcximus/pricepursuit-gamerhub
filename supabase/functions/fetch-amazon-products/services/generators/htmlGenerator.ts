@@ -72,13 +72,9 @@ export function generateProductHTML(product: any, rank: number): string {
           </div>` : ''
         }
         <div class="product-cta">
-          <div class="product-rating text-center mb-3">
-            ${ratingDisplay} ${escapeHtml(reviewText)}
-          </div>
-          <a href="${escapeHtml(product.url)}" class="check-price-btn button-amazon bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded inline-block transition-colors duration-200" target="_blank" rel="nofollow noopener">Check It Out Now</a>
+          <a href="${escapeHtml(product.url)}" class="check-price-btn button-amazon bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded inline-block transition-colors duration-200" target="_blank" rel="nofollow noopener">Check Price on Amazon</a>
         </div>
       </div>
     </div>
   `;
 }
-

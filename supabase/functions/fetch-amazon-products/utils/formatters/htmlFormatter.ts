@@ -1,5 +1,4 @@
 
-
 /**
  * Generates HTML content for a product
  */
@@ -105,12 +104,8 @@ export function generateHtmlContent(product: any, rank: number): string {
           </div>` : ''}
         </div>
         <div class="product-cta mt-4">
-          <div class="product-rating text-center mb-3">
-            ${starHTML}
-            <span class="ml-1 text-gray-700">${escapeHtml(rating)} ${escapeHtml(reviews)}</span>
-          </div>
           <a href="${escapeHtml(url)}" class="check-price-btn button-amazon inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full transition-colors text-center" target="_blank" rel="nofollow noopener">
-            Check It Out Now
+            View on Amazon
           </a>
         </div>
       </div>
@@ -131,4 +126,3 @@ function escapeHtml(unsafe: string | number | undefined): string {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
-

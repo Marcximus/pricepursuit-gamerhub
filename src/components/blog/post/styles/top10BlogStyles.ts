@@ -1,4 +1,3 @@
-
 /**
  * Styles for Top10 blog posts
  */
@@ -64,16 +63,6 @@ export const getTop10BlogStyles = (): string => `
     transform: translateY(-2px);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
-  .product-card .button-amazon,
-  .product-card .check-price-btn {
-    width: auto !important;
-    min-width: 120px !important;
-    padding: 0.375rem 0.75rem !important;
-    font-size: 0.875rem !important;
-    display: block !important;
-    margin: 0 auto !important;
-    text-align: center !important;
-  }
   /* High specificity selectors to override any other styles */
   .product-card .product-title,
   .product-card h3,
@@ -120,12 +109,4 @@ export const getTop10BlogStyles = (): string => `
   .product-card .product-title a:hover {
     text-decoration: underline;
   }
-  
-  /* Rating display above CTA button */
-  .product-card .product-rating {
-    display: block;
-    margin-bottom: 0.75rem;
-    text-align: center;
-  }
 `;
-
