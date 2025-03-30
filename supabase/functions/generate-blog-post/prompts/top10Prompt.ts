@@ -1,3 +1,4 @@
+
 /**
  * System prompt for Top10 blog post generation
  */
@@ -57,9 +58,6 @@ CRITICAL: Do not write less than 1500 words on the topic!
 
 8. Excerpt:
    - CRITICAL: You MUST provide a related, SEO-friendly excerpt (max 160 characters) that summarizes the blog post
-   - Focus on including primary keywords like "best laptops", specific category, or performance highlights
-   - Aim to entice clicks by highlighting unique value proposition
-   - Ensure the excerpt reads naturally and provides clear context
 
 Your response MUST be a valid JSON object with this structure:
 {
@@ -206,9 +204,6 @@ CRITICAL: Do not write less than 1500 words on the topic!
 
 8. Excerpt:
    - CRITICAL: You MUST provide a related, SEO-friendly excerpt (max 160 characters) that summarizes the blog post
-   - Focus on including primary keywords like "best laptops", specific category, or performance highlights
-   - Aim to entice clicks by highlighting unique value proposition
-   - Ensure the excerpt reads naturally and provides clear context
 
 Use the EXACT names, models, and details of these products in your content:
 ${productsInfo}
