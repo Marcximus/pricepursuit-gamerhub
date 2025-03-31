@@ -65,6 +65,7 @@ export const PostContent = ({
         videoPlacement={videoPlacement}
         setVideoPlacement={setVideoPlacement}
         category={category}
+        postTitle={title}
       />
       
       <ExcerptInput excerpt={excerpt} onExcerptChange={onExcerptChange} />

@@ -1,10 +1,12 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { ensureBlogBucket } from './ensureBlogBucket';
 
 export async function uploadBlogImage(
-  file: File
-): Promise<string | null> {
+  file: File,
+  altText: string = 'Blog image'
+): Promise<{ url: string; alt: string } | null> {
   try {
     // Ensure blog-assets bucket exists
     const bucketReady = await ensureBlogBucket();
@@ -22,7 +24,10 @@ export async function uploadBlogImage(
       .from('blog-assets')
       .upload(filePath, file, {
         cacheControl: '3600',
-        upsert: false
+        upsert: false,
+        // Store alt text in metadata
+        contentType: file.type,
+        duplex: 'half'
       });
 
     if (uploadError) {
@@ -40,7 +45,7 @@ export async function uploadBlogImage(
       .from('blog-assets')
       .getPublicUrl(filePath);
 
-    return urlData.publicUrl;
+    return { url: urlData.publicUrl, alt: altText };
   } catch (error) {
     console.error('Error uploading image:', error);
     

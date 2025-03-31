@@ -12,6 +12,7 @@ interface ContentEditorProps {
   videoPlacement: boolean;
   setVideoPlacement: (value: boolean) => void;
   category: string;
+  postTitle?: string;
 }
 
 export const ContentEditor = ({ 
@@ -20,7 +21,8 @@ export const ContentEditor = ({
   categoryPlaceholder, 
   videoPlacement, 
   setVideoPlacement,
-  category
+  category,
+  postTitle
 }: ContentEditorProps) => {
   
   const handleAddVideoPlacement = () => {
@@ -109,7 +111,8 @@ export const ContentEditor = ({
           {category === 'How-To' && (
             <ImagePlaceholderHandler 
               content={content} 
-              onContentChange={handleImagePlaceholderContentChange} 
+              onContentChange={handleImagePlaceholderContentChange}
+              postTitle={postTitle}
             />
           )}
         </TabsContent>

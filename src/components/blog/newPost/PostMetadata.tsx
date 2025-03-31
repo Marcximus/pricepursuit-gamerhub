@@ -50,9 +50,16 @@ export const PostMetadata = ({ post, onChange, tagsInput, onTagsInputChange }: P
         <ImageUploadSection 
           imageUrl={post.image_url} 
           additionalImages={post.additional_images || []}
-          onImageUpload={(url) => onChange('image_url', url)}
-          onAdditionalImagesUpdate={(images) => onChange('additional_images', images)}
+          onImageUpload={(url, alt) => {
+            onChange('image_url', url);
+            if (alt) onChange('image_alt', alt);
+          }}
+          onAdditionalImagesUpdate={(images, alts) => {
+            onChange('additional_images', images);
+            if (alts) onChange('additional_image_alts', alts);
+          }}
           category={post.category}
+          postTitle={post.title}
         />
       </CardContent>
     </Card>

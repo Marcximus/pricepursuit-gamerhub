@@ -1,8 +1,10 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
-import { uploadBlogImage } from '@/services/blog/uploadBlogImage'; // Import directly from the file
+import { uploadBlogImage } from '@/services/blog/uploadBlogImage';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
@@ -10,10 +12,12 @@ import { LogIn } from 'lucide-react';
 interface ImagePlaceholderHandlerProps {
   content: string;
   onContentChange: (newContent: string) => void;
+  postTitle?: string;
 }
 
-export const ImagePlaceholderHandler = ({ content, onContentChange }: ImagePlaceholderHandlerProps) => {
+export const ImagePlaceholderHandler = ({ content, onContentChange, postTitle = '' }: ImagePlaceholderHandlerProps) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [imageAlts, setImageAlts] = useState<Record<string, string>>({});
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -23,6 +27,13 @@ export const ImagePlaceholderHandler = ({ content, onContentChange }: ImagePlace
   if (imagePlaceholders.length === 0) {
     return null;
   }
+
+  const handleAltTextChange = (imageId: string, value: string) => {
+    setImageAlts(prev => ({
+      ...prev,
+      [imageId]: value
+    }));
+  };
   
   const handleImageUpload = async (imageId: string, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -39,18 +50,20 @@ export const ImagePlaceholderHandler = ({ content, onContentChange }: ImagePlace
       }
       
       setIsUploading(true);
-      const url = await uploadBlogImage(file);
+      const imageNumber = imageId.split('-')[1];
+      const altText = imageAlts[imageId] || `${postTitle} - Image ${imageNumber}`;
+      const result = await uploadBlogImage(file, altText);
       
-      if (url) {
-        // Replace the placeholder with an img tag
+      if (result) {
+        // Replace the placeholder with an img tag including alt text
         const placeholderRegex = new RegExp(`<div class="image-placeholder" id="${imageId}"[^>]*>.*?<\/div>`, 's');
-        const newContent = content.replace(placeholderRegex, `<img src="${url}" alt="${file.name}" class="blog-image" id="${imageId}" />`);
+        const newContent = content.replace(placeholderRegex, `<img src="${result.url}" alt="${result.alt}" class="blog-image" id="${imageId}" />`);
         
         onContentChange(newContent);
         
         toast({
           title: "Image uploaded successfully",
-          description: `Image for placeholder ${imageId} has been uploaded and inserted into the content.`,
+          description: `Image for placeholder ${imageId} has been uploaded and inserted with SEO-friendly alt text.`,
         });
       }
     } catch (error) {
@@ -74,7 +87,7 @@ export const ImagePlaceholderHandler = ({ content, onContentChange }: ImagePlace
   return (
     <div className="space-y-4 mt-6 p-4 border rounded-md bg-gray-50">
       <h3 className="text-lg font-medium">Image Placeholders ({imagePlaceholders.length})</h3>
-      <p className="text-sm text-gray-500">Upload images for the placeholders in your How-To guide:</p>
+      <p className="text-sm text-gray-500">Upload images with SEO-friendly alt text for your How-To guide:</p>
       
       {!user ? (
         <div className="flex flex-col items-center space-y-4 border-2 border-dashed border-gray-300 rounded-md p-4 bg-white">
@@ -94,30 +107,44 @@ export const ImagePlaceholderHandler = ({ content, onContentChange }: ImagePlace
             const isPlaceholderReplaced = !content.includes(`id="${imageId}"`);
             
             return (
-              <div key={imageId} className="flex items-center justify-between p-2 border rounded bg-white">
-                <span>Image {i+1}</span>
-                <div>
-                  {isPlaceholderReplaced ? (
-                    <span className="text-green-600 text-sm">✓ Uploaded</span>
-                  ) : (
-                    <label className="cursor-pointer">
-                      <Button 
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={isUploading}
-                      >
-                        {isUploading ? 'Uploading...' : 'Upload Image'}
-                      </Button>
-                      <input 
-                        type="file"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={(e) => handleImageUpload(imageId, e)}
-                        disabled={isUploading}
-                      />
-                    </label>
-                  )}
+              <div key={imageId} className="flex flex-col space-y-2 p-2 border rounded bg-white">
+                <div className="flex items-center justify-between">
+                  <span>Image {i+1}</span>
+                  <div>
+                    {isPlaceholderReplaced ? (
+                      <span className="text-green-600 text-sm">✓ Uploaded</span>
+                    ) : (
+                      <>
+                        <div className="mb-2">
+                          <Label htmlFor={`alt-text-${imageId}`}>Alt Text (for SEO)</Label>
+                          <Input
+                            id={`alt-text-${imageId}`}
+                            value={imageAlts[imageId] || ''}
+                            onChange={(e) => handleAltTextChange(imageId, e.target.value)}
+                            placeholder={`${postTitle || 'How-To guide'} - Image ${i+1}`}
+                            className="mb-2"
+                          />
+                        </div>
+                        <label className="cursor-pointer">
+                          <Button 
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={isUploading}
+                          >
+                            {isUploading ? 'Uploading...' : 'Upload Image'}
+                          </Button>
+                          <input 
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(imageId, e)}
+                            disabled={isUploading}
+                          />
+                        </label>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             );

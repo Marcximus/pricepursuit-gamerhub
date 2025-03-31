@@ -9,9 +9,10 @@ import { AdditionalImagesUpload } from './AdditionalImagesUpload';
 interface ImageUploadSectionProps {
   imageUrl: string | undefined;
   additionalImages: string[];
-  onImageUpload: (url: string) => void;
-  onAdditionalImagesUpdate: (images: string[]) => void;
+  onImageUpload: (url: string, alt?: string) => void;
+  onAdditionalImagesUpdate: (images: string[], alts?: string[]) => void;
   category: string | undefined;
+  postTitle?: string;
 }
 
 export const getMaxAdditionalImages = (category: string | undefined) => {
@@ -39,7 +40,8 @@ export const ImageUploadSection = ({
   additionalImages,
   onImageUpload,
   onAdditionalImagesUpdate,
-  category
+  category,
+  postTitle
 }: ImageUploadSectionProps) => {
   const maxImages = getMaxAdditionalImages(category);
 
@@ -73,7 +75,8 @@ export const ImageUploadSection = ({
         <TabsContent value="featured">
           <FeaturedImageUpload 
             imageUrl={imageUrl} 
-            onImageUpload={onImageUpload} 
+            onImageUpload={onImageUpload}
+            postTitle={postTitle}
           />
         </TabsContent>
         
@@ -83,6 +86,7 @@ export const ImageUploadSection = ({
             onImagesUpdate={onAdditionalImagesUpdate}
             maxImages={maxImages}
             category={category}
+            postTitle={postTitle}
           />
         </TabsContent>
       </Tabs>
