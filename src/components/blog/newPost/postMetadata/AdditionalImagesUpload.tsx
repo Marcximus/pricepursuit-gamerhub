@@ -2,7 +2,7 @@
 import { ImagePlus, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { uploadBlogImage } from '@/services/blog';
+import { uploadBlogImage } from '@/services/blog/uploadBlogImage'; // Import directly from the file
 import { toast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { uploadBlogImage } from '@/services/blog';
+import { uploadBlogImage } from '@/services/blog/uploadBlogImage'; // Import directly from the file
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';

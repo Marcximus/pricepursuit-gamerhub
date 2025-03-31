@@ -1,7 +1,7 @@
 
 import { Image, LogIn } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { uploadBlogImage } from '@/services/blog';
+import { uploadBlogImage } from '@/services/blog/uploadBlogImage'; // Import directly from the file
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
