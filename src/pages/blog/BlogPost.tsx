@@ -14,6 +14,7 @@ import {
   addImageFallbacks,
   improveContentSpacing
 } from '@/components/blog/post';
+import { processHowToContent } from '@/services/blog/howto';
 
 const BlogPost = () => {
   const { category, slug } = useParams<{ category: string; slug: string }>();
@@ -51,11 +52,30 @@ const BlogPost = () => {
     return <BlogNotFound />;
   }
 
-  // Process content
-  const fixedContent = fixTopTenHtmlIfNeeded(post.content, post.category);
-  const contentWithImages = injectAdditionalImages(fixedContent, post.additional_images, post.category);
+  // Process content based on category
+  let processedContent = post.content;
+  
+  // Apply category-specific processing
+  if (category === 'Top10') {
+    processedContent = fixTopTenHtmlIfNeeded(processedContent, category);
+  } else if (category === 'How-To') {
+    try {
+      // Use the synchronous version of our How-To processor
+      // We'll handle any errors inside the component for better UX
+      const tmpProcessedContent = processHowToContent(processedContent, post.title);
+      // Only update if successful
+      if (tmpProcessedContent && typeof tmpProcessedContent === 'string') {
+        processedContent = tmpProcessedContent;
+      }
+    } catch (error) {
+      console.error('Error processing How-To content:', error);
+      // We'll continue with the original content if processing fails
+    }
+  }
+  
+  // Common processing for all categories
+  const contentWithImages = injectAdditionalImages(processedContent, post.additional_images, category);
   const contentWithFallbacks = addImageFallbacks(contentWithImages);
-  // Apply improved spacing
   const enhancedContent = improveContentSpacing(contentWithFallbacks);
 
   return (

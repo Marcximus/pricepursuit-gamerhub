@@ -32,13 +32,94 @@ export function parseGenerationResponse(response: any): GeneratedBlogContent {
       console.error('📄 Raw response data preview:', 
         response.data.substring(0, Math.min(200, response.data.length)) + '...');
       
-      // Fail explicitly rather than using fallback content
-      throw new Error('Failed to parse AI response: ' + parseError.message);
+      // Check if the response contains JSON within the content (common issue with How-To blogs)
+      if (response.data.includes('"title":') && response.data.includes('"content":')) {
+        console.log('🔍 Detected JSON structure within response data, attempting to extract...');
+        try {
+          // Extract JSON object from content
+          const jsonMatch = response.data.match(/\{[\s\S]*"title"[\s\S]*"content"[\s\S]*\}/);
+          if (jsonMatch) {
+            const jsonContent = jsonMatch[0];
+            console.log('🔍 Extracted potential JSON:', jsonContent.substring(0, 100) + '...');
+            data = JSON.parse(jsonContent);
+            console.log('✅ Successfully parsed extracted JSON');
+          } else {
+            throw new Error('Could not extract valid JSON from response');
+          }
+        } catch (nestedError) {
+          console.error('❌ Failed to extract JSON from content:', nestedError);
+          // Fail explicitly rather than using fallback content
+          throw new Error('Failed to parse AI response: ' + parseError.message);
+        }
+      } else {
+        // Fail explicitly rather than using fallback content
+        throw new Error('Failed to parse AI response: ' + parseError.message);
+      }
     }
   } else {
     // If it's already an object, use it directly
     console.log('🔍 Response is already an object, using directly');
     data = response.data as GeneratedBlogContent;
+  }
+  
+  // Process content for How-To blogs to ensure proper HTML rendering
+  if (data.content) {
+    // Remove any escaped newlines and replace with proper HTML
+    data.content = data.content
+      .replace(/\\n\\n/g, '\n\n')
+      .replace(/\\n/g, '\n')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n([^<])/g, '<br/>$1');
+    
+    // Ensure proper HTML structure with tags
+    if (!data.content.includes('<h1>') && !data.content.includes('<h2>')) {
+      // If no heading tags, wrap content in proper HTML structure
+      const lines = data.content.split(/\n\n|\r\n\r\n/);
+      if (lines.length > 1) {
+        const title = lines[0];
+        const rest = lines.slice(1).join('\n\n');
+        data.content = `<h1>${title}</h1><p>${rest}</p>`;
+      }
+    }
+    
+    // Fix table formatting issues - common in How-To blogs
+    if (data.content.includes('Term') && data.content.includes('What It Means')) {
+      console.log('🔍 Detected table structure, fixing formatting...');
+      // Extract table data
+      const tableMatch = data.content.match(/Term([\s\S]*?)(?=<\/p>|<h2>|$)/);
+      if (tableMatch) {
+        const tableText = tableMatch[0];
+        // Create proper HTML table
+        const rows = tableText.split('\n').filter(line => line.trim().length > 0);
+        let htmlTable = '<table class="w-full border-collapse border border-gray-300 my-4"><thead><tr>';
+        
+        // Process header row
+        const headers = rows[0].split('\t').map(h => h.trim());
+        headers.forEach(header => {
+          htmlTable += `<th class="border border-gray-300 px-4 py-2">${header}</th>`;
+        });
+        htmlTable += '</tr></thead><tbody>';
+        
+        // Process data rows
+        for (let i = 1; i < rows.length; i++) {
+          const cells = rows[i].split('\t').map(c => c.trim());
+          htmlTable += '<tr>';
+          cells.forEach(cell => {
+            htmlTable += `<td class="border border-gray-300 px-4 py-2">${cell}</td>`;
+          });
+          htmlTable += '</tr>';
+        }
+        htmlTable += '</tbody></table>';
+        
+        // Replace the text table with HTML table
+        data.content = data.content.replace(tableText, htmlTable);
+      }
+    }
+    
+    // Fix image placeholders for How-To blogs
+    data.content = data.content
+      .replace(/Image (\d+)/g, '<div class="image-placeholder"></div>')
+      .replace(/\[Image (\d+)\]/g, '<div class="image-placeholder"></div>');
   }
   
   // Log the content length for debugging
