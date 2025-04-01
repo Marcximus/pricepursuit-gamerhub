@@ -11,7 +11,30 @@ export function processHowToContent(content: string, title: string): string {
   
   // First check if the content is already in JSON format
   try {
-    const jsonContent = JSON.parse(content);
+    // Check if the entire content is a JSON string
+    let jsonContent;
+    
+    // Handle cases where content includes HTML tags like <br/>
+    if (content.includes('<br/>') || content.includes('&quot;')) {
+      const cleanedContent = content
+        .replace(/<br\/>/g, '')
+        .replace(/&quot;/g, '"')
+        .replace(/<[^>]*>/g, '');
+        
+      try {
+        jsonContent = JSON.parse(cleanedContent);
+      } catch (e) {
+        // If cleaning and parsing fails, try to extract JSON with regex
+        const jsonMatch = content.match(/\{[\s\S]*"title"[\s\S]*"content"[\s\S]*\}/);
+        if (jsonMatch) {
+          const extractedJson = jsonMatch[0].replace(/<br\/>/g, '').replace(/<[^>]*>/g, '');
+          jsonContent = JSON.parse(extractedJson);
+        }
+      }
+    } else {
+      // Try direct parsing if no HTML tags
+      jsonContent = JSON.parse(content);
+    }
     
     // If we have a JSON object with content field, use that
     if (jsonContent && typeof jsonContent.content === 'string') {

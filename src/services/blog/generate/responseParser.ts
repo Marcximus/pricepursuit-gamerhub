@@ -41,15 +41,66 @@ export function parseGenerationResponse(response: any): GeneratedBlogContent {
           if (jsonMatch) {
             const jsonContent = jsonMatch[0];
             console.log('🔍 Extracted potential JSON:', jsonContent.substring(0, 100) + '...');
-            data = JSON.parse(jsonContent);
+            
+            // Clean up HTML tags like <br/> that might be present
+            const cleanedJson = jsonContent
+              .replace(/<br\/>/g, '')
+              .replace(/<[^>]*>/g, '');
+              
+            data = JSON.parse(cleanedJson);
             console.log('✅ Successfully parsed extracted JSON');
           } else {
             throw new Error('Could not extract valid JSON from response');
           }
         } catch (nestedError) {
           console.error('❌ Failed to extract JSON from content:', nestedError);
-          // Fail explicitly rather than using fallback content
-          throw new Error('Failed to parse AI response: ' + parseError.message);
+          // Try one more approach - if we can see it's a How-To blog with clear JSON structure
+          if (response.data.includes('"title":') && response.data.includes('"content":') && 
+              response.data.includes('"excerpt":') && response.data.includes('"tags":')) {
+            try {
+              // Try to manually create a valid JSON by extracting key components
+              console.log('🔍 Attempting manual extraction of JSON components...');
+              
+              // Extract title
+              const titleMatch = response.data.match(/"title"\s*:\s*"([^"]+)"/);
+              const title = titleMatch ? titleMatch[1] : 'New How-To Post';
+              
+              // Extract content - more complex since it may contain nested quotes
+              let contentMatch = response.data.match(/"content"\s*:\s*"([\s\S]*?)(?=",\s*"excerpt"|",\s*"tags"|"})/);
+              let content = '';
+              if (contentMatch) {
+                content = contentMatch[1]
+                  .replace(/\\"/g, '"')  // Replace escaped quotes
+                  .replace(/\\\\/g, '\\'); // Replace escaped backslashes
+              }
+              
+              // Extract excerpt
+              const excerptMatch = response.data.match(/"excerpt"\s*:\s*"([^"]+)"/);
+              const excerpt = excerptMatch ? excerptMatch[1] : '';
+              
+              // Extract tags
+              const tagsMatch = response.data.match(/"tags"\s*:\s*\[([\s\S]*?)\]/);
+              const tags = tagsMatch ? 
+                tagsMatch[1].split(',').map(tag => tag.trim().replace(/"/g, '')) : 
+                ['how-to', 'tutorial', 'guide'];
+              
+              data = {
+                title,
+                content,
+                excerpt,
+                tags,
+                category: 'How-To'
+              };
+              
+              console.log('✅ Successfully extracted content through manual parsing');
+            } catch (manualError) {
+              console.error('❌ Manual extraction failed:', manualError);
+              throw new Error('Failed to parse AI response: ' + parseError.message);
+            }
+          } else {
+            // Fail explicitly rather than using fallback content
+            throw new Error('Failed to parse AI response: ' + parseError.message);
+          }
         }
       } else {
         // Fail explicitly rather than using fallback content
@@ -60,6 +111,37 @@ export function parseGenerationResponse(response: any): GeneratedBlogContent {
     // If it's already an object, use it directly
     console.log('🔍 Response is already an object, using directly');
     data = response.data as GeneratedBlogContent;
+    
+    // If the content field itself contains a JSON string (common in How-To posts)
+    if (typeof data.content === 'string' && 
+        (data.content.startsWith('{') || data.content.includes('"title":'))) {
+      try {
+        console.log('🔍 Content appears to be a JSON string, attempting to parse content field');
+        // Check if we need to clean HTML tags first
+        let contentToProcess = data.content;
+        if (contentToProcess.includes('<br/>') || contentToProcess.includes('&quot;')) {
+          contentToProcess = contentToProcess
+            .replace(/<br\/>/g, '')
+            .replace(/&quot;/g, '"')
+            .replace(/<[^>]*>/g, '');
+        }
+        
+        const parsedContent = JSON.parse(contentToProcess);
+        
+        // If the parsed content has the structure we expect, use it
+        if (parsedContent.content) {
+          console.log('✅ Successfully parsed nested JSON content');
+          // Update the data object with the parsed fields
+          data.content = parsedContent.content;
+          // Only update these if the original didn't have them
+          if (!data.title && parsedContent.title) data.title = parsedContent.title;
+          if (!data.excerpt && parsedContent.excerpt) data.excerpt = parsedContent.excerpt;
+          if ((!data.tags || data.tags.length === 0) && parsedContent.tags) data.tags = parsedContent.tags;
+        }
+      } catch (contentParseError) {
+        console.warn('⚠️ Could not parse content as JSON, using as-is:', contentParseError);
+      }
+    }
   }
   
   // Process content for How-To blogs to ensure proper HTML rendering
