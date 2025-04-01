@@ -14,31 +14,48 @@ export function processHowToContent(content: string, title: string): string {
     // Check if the entire content is a JSON string
     let jsonContent;
     
-    // Handle cases where content includes HTML tags like <br/>
-    if (content.includes('<br/>') || content.includes('&quot;')) {
-      const cleanedContent = content
-        .replace(/<br\/>/g, '')
-        .replace(/&quot;/g, '"')
-        .replace(/<[^>]*>/g, '');
+    // First, clean up HTML tags like <br/> that might be embedded in the JSON
+    const cleanedHtmlContent = content
+      .replace(/<br\/>/g, '')
+      .replace(/&quot;/g, '"')
+      .replace(/<[^>]*>/g, '');
+    
+    try {
+      // Try to parse the cleaned content
+      jsonContent = JSON.parse(cleanedHtmlContent);
+    } catch (parseError) {
+      // If direct parsing fails, try to extract JSON pattern
+      const jsonMatch = content.match(/\{[\s\S]*"title"[\s\S]*"content"[\s\S]*\}/);
+      if (jsonMatch) {
+        const extractedJson = jsonMatch[0]
+          .replace(/<br\/>/g, '')
+          .replace(/&quot;/g, '"')
+          .replace(/<[^>]*>/g, '');
         
-      try {
-        jsonContent = JSON.parse(cleanedContent);
-      } catch (e) {
-        // If cleaning and parsing fails, try to extract JSON with regex
-        const jsonMatch = content.match(/\{[\s\S]*"title"[\s\S]*"content"[\s\S]*\}/);
-        if (jsonMatch) {
-          const extractedJson = jsonMatch[0].replace(/<br\/>/g, '').replace(/<[^>]*>/g, '');
+        try {
           jsonContent = JSON.parse(extractedJson);
+        } catch (extractError) {
+          // If both methods fail, log the error and return the original content
+          console.error('Failed to parse How-To content as JSON:', extractError);
+          console.log('Content excerpt that failed parsing:', 
+            extractedJson.substring(0, Math.min(300, extractedJson.length)));
         }
       }
-    } else {
-      // Try direct parsing if no HTML tags
-      jsonContent = JSON.parse(content);
     }
     
     // If we have a JSON object with content field, use that
     if (jsonContent && typeof jsonContent.content === 'string') {
       let processedContent = jsonContent.content;
+      
+      // Remove escaped newlines
+      processedContent = processedContent
+        .replace(/\\n\\n/g, '\n\n')
+        .replace(/\\n/g, '\n');
+      
+      // Remove escaped quotes
+      processedContent = processedContent
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'");
       
       // Apply HTML fixes and formatting
       processedContent = cleanupContent(processedContent);
@@ -58,7 +75,7 @@ export function processHowToContent(content: string, title: string): string {
       return processedContent;
     }
   } catch (error) {
-    console.log('Content is not in JSON format, processing as plain text');
+    console.log('Processing How-To content as plain text:', error);
   }
   
   // If not JSON or parsing failed, process as plain text

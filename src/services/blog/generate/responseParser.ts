@@ -42,9 +42,10 @@ export function parseGenerationResponse(response: any): GeneratedBlogContent {
             const jsonContent = jsonMatch[0];
             console.log('🔍 Extracted potential JSON:', jsonContent.substring(0, 100) + '...');
             
-            // Clean up HTML tags like <br/> that might be present
+            // Clean up HTML tags like <br/> that might be embedded in the JSON
             const cleanedJson = jsonContent
               .replace(/<br\/>/g, '')
+              .replace(/&quot;/g, '"')
               .replace(/<[^>]*>/g, '');
               
             data = JSON.parse(cleanedJson);
