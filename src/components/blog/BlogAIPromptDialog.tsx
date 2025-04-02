@@ -59,10 +59,27 @@ export function BlogAIPromptDialog({
           ? "E.g., 'Compare these laptops focusing on value for money and performance'" 
           : "E.g., 'Compare the Dell XPS 13 and HP Spectre x360, highlighting the key differences for professional users'";
       case 'How-To':
-        return "E.g., 'Create a guide on how to optimize a laptop for gaming performance with these questions: What settings should I change? How do I monitor temperatures? How can I improve battery life while gaming?'";
+        return "E.g., 'Create a comprehensive guide on how to optimize a laptop for gaming performance with these questions: What settings should I change? How do I monitor temperatures? How can I improve battery life while gaming? What software should I use for optimizing performance?'";
       default:
         return "Describe what you'd like the AI to write about...";
     }
+  };
+
+  const renderCategoryHelp = () => {
+    if (category === 'How-To') {
+      return (
+        <div className="mt-2 p-3 bg-blue-50 text-blue-800 rounded-md text-sm">
+          <p className="font-medium mb-1">Tips for better How-To guides:</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Include specific questions you want answered in your guide</li>
+            <li>List any problems or scenarios you want addressed</li>
+            <li>Mention your experience level with the topic</li>
+            <li>Include 4+ questions to get a more comprehensive guide</li>
+          </ul>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -138,11 +155,7 @@ export function BlogAIPromptDialog({
               onChange={(e) => setPrompt(e.target.value)}
               required
             />
-            {category === 'How-To' && (
-              <p className="text-xs text-gray-500 mt-1">
-                Include specific questions you want answered in your guide. This helps the AI create more targeted content.
-              </p>
-            )}
+            {renderCategoryHelp()}
           </div>
           
           <DialogFooter>
