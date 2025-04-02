@@ -1,7 +1,7 @@
 
 import { cleanupContent, fixHtmlTags, formatTables } from './contentProcessor';
 import { addVideoEmbed, wrapTextInHtml } from './htmlGenerator';
-import { getHowToPrompt } from '../../../supabase/functions/generate-blog-post/prompts/howToPrompt';
+import { getHowToPrompt } from './howToPrompt';
 
 /**
  * Process How-To blog content to ensure proper formatting
