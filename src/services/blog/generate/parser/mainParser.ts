@@ -37,12 +37,15 @@ export function parseGenerationResponse(response: any): GeneratedBlogContent {
     const content = data?.content ? processContent(data.content) : '';
     const excerpt = data?.excerpt ? cleanExcerpt(data.excerpt) : '';
     const tags = Array.isArray(data?.tags) ? data.tags : [];
+    // Extract the category from data or fallback to a default
+    const category = data?.category || 'How-To'; // Default to How-To if no category is provided
     
     // Return the cleaned and structured blog content
     return {
       title,
       content,
       excerpt,
+      category, // Now we're including the category property
       tags
     };
   } catch (error) {
@@ -55,6 +58,7 @@ export function parseGenerationResponse(response: any): GeneratedBlogContent {
       title: recoveredData.title || 'New Blog Post',
       content: recoveredData.content || '<p>Content generation failed. Please try again.</p>',
       excerpt: recoveredData.excerpt || '',
+      category: recoveredData.category || 'How-To', // Include category in recovery as well
       tags: recoveredData.tags || []
     };
   }
@@ -102,9 +106,13 @@ function attemptContentRecovery(response: any): Partial<GeneratedBlogContent> {
         .filter(tag => tag.length > 0);
     }
     
-    return { title, content, excerpt, tags };
+    // Try to extract category
+    const categoryMatch = responseText.match(/"category"\s*:\s*"([^"]+)"/);
+    const category = categoryMatch ? categoryMatch[1] : 'How-To';
+    
+    return { title, content, excerpt, tags, category };
   } catch (recoveryError) {
     console.error('💥 Recovery attempt failed:', recoveryError);
-    return {};
+    return { category: 'How-To' }; // Include default category even in case of failure
   }
 }
