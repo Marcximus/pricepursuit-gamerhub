@@ -61,6 +61,43 @@ export const usePostAI = (
     return cleanTitle;
   };
   
+  // Helper function to clean excerpts from any JSON or HTML formatting
+  const cleanExcerptText = (rawExcerpt: string): string => {
+    if (!rawExcerpt) return '';
+    
+    // First, check if the entire excerpt is in JSON format
+    if (rawExcerpt.trim().startsWith('{') && rawExcerpt.trim().endsWith('}')) {
+      try {
+        // Try to parse as JSON
+        const parsed = JSON.parse(rawExcerpt);
+        if (parsed && parsed.excerpt) {
+          console.log('Successfully parsed JSON excerpt:', parsed.excerpt);
+          return parsed.excerpt;
+        }
+      } catch (e) {
+        console.warn('Failed to parse excerpt as JSON:', e);
+        // If parsing fails, proceed with regex cleaning
+      }
+    }
+    
+    // Apply regex cleaning in any case as a fallback
+    const cleanExcerpt = rawExcerpt
+      // Handle JSON format: {"excerpt": "Actual excerpt"} or variations
+      .replace(/^{.*?"excerpt"[\s]*:[\s]*"(.*?)".*}$/i, '$1')
+      // Handle HTML line breaks
+      .replace(/<br\/>/g, ' ')
+      // Handle escaped newlines
+      .replace(/\\n/g, ' ')
+      // Handle escaped quotes
+      .replace(/\\"/g, '"')
+      .replace(/\\'/g, "'")
+      // Remove any HTML tags
+      .replace(/<[^>]*>/g, '')
+      .trim();
+      
+    return cleanExcerpt;
+  };
+  
   const handleGenerateContent = async () => {
     if (!prompt.trim()) {
       toast({
@@ -104,7 +141,17 @@ export const usePostAI = (
         }
         
         setContent(generatedContent.content);
-        setExcerpt(generatedContent.excerpt);
+        
+        // Clean the excerpt using our enhanced function
+        if (generatedContent.excerpt) {
+          const cleanedExcerpt = cleanExcerptText(generatedContent.excerpt);
+          console.log('Original excerpt:', generatedContent.excerpt);
+          console.log('Cleaned excerpt:', cleanedExcerpt);
+          setExcerpt(cleanedExcerpt);
+        } else {
+          setExcerpt('');
+        }
+        
         setCategory(generatedContent.category as any);
         
         if (generatedContent.tags) {
