@@ -24,6 +24,44 @@ export const usePostAI = (
     setAsin2('');
   };
   
+  // Helper function to clean titles from any JSON or HTML formatting
+  const cleanTitleText = (rawTitle: string): string => {
+    if (!rawTitle) return '';
+    
+    let cleanTitle = rawTitle;
+    
+    // First, check if the entire string is a JSON object with a title property
+    const jsonMatch = rawTitle.match(/^{[\s\S]*"title"[\s\S]*}$/);
+    if (jsonMatch) {
+      try {
+        // Try to parse as JSON
+        const parsed = JSON.parse(rawTitle);
+        if (parsed && parsed.title) {
+          cleanTitle = parsed.title;
+        }
+      } catch (e) {
+        // If parsing fails, proceed with regex cleaning
+      }
+    }
+    
+    // Apply regex cleaning in any case as a fallback
+    cleanTitle = cleanTitle
+      // Handle JSON format: {"title": "Actual Title"} or variations
+      .replace(/^{.*?"title"[\s]*:[\s]*"(.*?)".*}$/i, '$1')
+      // Handle HTML line breaks
+      .replace(/<br\/>/g, '')
+      // Handle escaped newlines
+      .replace(/\\n/g, ' ')
+      // Handle escaped quotes
+      .replace(/\\"/g, '"')
+      .replace(/\\'/g, "'")
+      // Remove any HTML tags
+      .replace(/<[^>]*>/g, '')
+      .trim();
+      
+    return cleanTitle;
+  };
+  
   const handleGenerateContent = async () => {
     if (!prompt.trim()) {
       toast({
@@ -55,19 +93,14 @@ export const usePostAI = (
       );
       
       if (generatedContent) {
-        // Clean the title to handle potential JSON or HTML formatting
+        // Clean the title using our enhanced function
         if (generatedContent.title) {
-          const cleanTitle = generatedContent.title
-            .replace(/^{.*?title['"]\s*:\s*['"](.*?)['"].*}$/i, '$1')
-            .replace(/<br\/>/g, '')
-            .replace(/\\n/g, ' ')
-            .replace(/\\"/g, '"')
-            .replace(/\\'/g, "'")
-            .replace(/<[^>]*>/g, '')
-            .trim();
+          const cleanedTitle = cleanTitleText(generatedContent.title);
+          console.log('Original title:', generatedContent.title);
+          console.log('Cleaned title:', cleanedTitle);
           
           if (selectedCategory !== 'Top10') {
-            setTitle(cleanTitle);
+            setTitle(cleanedTitle);
           }
         }
         

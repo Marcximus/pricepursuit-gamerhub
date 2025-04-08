@@ -1,4 +1,3 @@
-
 /**
  * Parses the API response from the blog generation service
  */
@@ -145,10 +144,29 @@ export function parseGenerationResponse(response: any): GeneratedBlogContent {
     }
   }
   
-  // NEW: Clean title from any JSON or HTML formatting
+  // Clean title from any JSON or HTML formatting - Enhanced version
   if (data.title) {
+    // Log the original title for debugging
+    console.log('📄 Original title before cleaning:', data.title);
+    
+    // First, check if the entire title is a JSON object
+    if (data.title.startsWith('{') && data.title.endsWith('}')) {
+      try {
+        // Try to parse as JSON
+        const parsed = JSON.parse(data.title);
+        if (parsed && parsed.title) {
+          data.title = parsed.title;
+          console.log('📄 Title extracted from JSON:', data.title);
+        }
+      } catch (e) {
+        console.warn('⚠️ Title looks like JSON but failed to parse:', e);
+        // Continue with regex-based cleaning
+      }
+    }
+    
+    // Apply our standard cleaning steps
     data.title = data.title
-      .replace(/^{.*?title['"]\s*:\s*['"](.*?)['"].*}$/i, '$1') // Extract from JSON if needed
+      .replace(/^{.*?"title"[\s]*:[\s]*"(.*?)".*}$/i, '$1')
       .replace(/<br\/>/g, '')
       .replace(/\\n/g, ' ')
       .replace(/\\"/g, '"')
