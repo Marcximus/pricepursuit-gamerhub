@@ -145,6 +145,20 @@ export function parseGenerationResponse(response: any): GeneratedBlogContent {
     }
   }
   
+  // NEW: Clean title from any JSON or HTML formatting
+  if (data.title) {
+    data.title = data.title
+      .replace(/^{.*?title['"]\s*:\s*['"](.*?)['"].*}$/i, '$1') // Extract from JSON if needed
+      .replace(/<br\/>/g, '')
+      .replace(/\\n/g, ' ')
+      .replace(/\\"/g, '"')
+      .replace(/\\'/g, "'")
+      .replace(/<[^>]*>/g, '')
+      .trim();
+    
+    console.log('📄 Title after cleaning:', data.title);
+  }
+  
   // Process content for How-To blogs to ensure proper HTML rendering
   if (data.content) {
     // Remove any escaped newlines and replace with proper HTML
@@ -205,7 +219,7 @@ export function parseGenerationResponse(response: any): GeneratedBlogContent {
       .replace(/\[Image (\d+)\]/g, '<div class="image-placeholder"></div>');
   }
   
-  // NEW: Ensure excerpt is properly formatted and not cut off
+  // Ensure excerpt is properly formatted and not cut off
   if (data.excerpt) {
     // Clean up any HTML or special characters in excerpt
     data.excerpt = data.excerpt

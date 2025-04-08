@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { extractSearchParamsFromPrompt } from '@/services/blog/amazonProductService';
@@ -54,9 +55,22 @@ export const usePostAI = (
       );
       
       if (generatedContent) {
-        if (selectedCategory !== 'Top10') {
-          setTitle(generatedContent.title);
+        // Clean the title to handle potential JSON or HTML formatting
+        if (generatedContent.title) {
+          const cleanTitle = generatedContent.title
+            .replace(/^{.*?title['"]\s*:\s*['"](.*?)['"].*}$/i, '$1')
+            .replace(/<br\/>/g, '')
+            .replace(/\\n/g, ' ')
+            .replace(/\\"/g, '"')
+            .replace(/\\'/g, "'")
+            .replace(/<[^>]*>/g, '')
+            .trim();
+          
+          if (selectedCategory !== 'Top10') {
+            setTitle(cleanTitle);
+          }
         }
+        
         setContent(generatedContent.content);
         setExcerpt(generatedContent.excerpt);
         setCategory(generatedContent.category as any);
