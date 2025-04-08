@@ -6,7 +6,7 @@ import { GeneratedBlogContent } from '../types';
 import { processTop10Content } from '../top10';
 import { fetchProductsForTop10 } from './productFetcher';
 import { callGenerateBlogPostAPI } from './apiClient';
-import { parseGenerationResponse } from './responseParser';
+import { parseGenerationResponse } from './parser';
 import { handleGenerationError } from './errorHandler';
 
 /**
