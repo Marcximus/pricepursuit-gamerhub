@@ -205,8 +205,41 @@ export function parseGenerationResponse(response: any): GeneratedBlogContent {
       .replace(/\[Image (\d+)\]/g, '<div class="image-placeholder"></div>');
   }
   
+  // NEW: Ensure excerpt is properly formatted and not cut off
+  if (data.excerpt) {
+    // Clean up any HTML or special characters in excerpt
+    data.excerpt = data.excerpt
+      .replace(/\\n/g, ' ')
+      .replace(/\\"/g, '"')
+      .replace(/\\'/g, "'")
+      .replace(/<[^>]*>/g, '')
+      .trim();
+    
+    // If excerpt ends abruptly, add ellipsis
+    if (data.excerpt.endsWith(',') || 
+        data.excerpt.endsWith('-') || 
+        data.excerpt.endsWith('–')) {
+      data.excerpt = data.excerpt.slice(0, -1) + '...';
+    }
+    
+    // Ensure excerpt doesn't exceed 200 characters (as specified in the prompt)
+    if (data.excerpt.length > 200) {
+      data.excerpt = data.excerpt.substring(0, 197) + '...';
+    }
+    
+    // Ensure excerpt has proper ending punctuation
+    if (!data.excerpt.endsWith('.') && 
+        !data.excerpt.endsWith('!') && 
+        !data.excerpt.endsWith('?') && 
+        !data.excerpt.endsWith('...')) {
+      data.excerpt += '.';
+    }
+  }
+  
   // Log the content length for debugging
   console.log('📄 Final content length:', data?.content?.length || 0, 'characters');
+  console.log('📄 Final excerpt length:', data?.excerpt?.length || 0, 'characters');
+  console.log('📄 Excerpt sample:', data?.excerpt?.substring(0, 50) + '...');
   
   if (!data.content || data.content.length === 0) {
     console.error('❌ CRITICAL ERROR: Content is empty after API call');

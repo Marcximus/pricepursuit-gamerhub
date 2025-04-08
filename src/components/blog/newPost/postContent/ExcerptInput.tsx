@@ -8,12 +8,21 @@ interface ExcerptInputProps {
 }
 
 export const ExcerptInput = ({ excerpt, onExcerptChange }: ExcerptInputProps) => {
+  // Clean the excerpt from any JSON formatting or incomplete sentences
+  const cleanExcerpt = excerpt
+    ?.replace(/^{.*?excerpt['"]\s*:\s*['"](.*?)['"].*}$/i, '$1') // Extract from JSON if needed
+    .replace(/\\n/g, ' ')
+    .replace(/\\"/g, '"')
+    .replace(/\\'/g, "'")
+    .replace(/<[^>]*>/g, '')
+    .trim();
+
   return (
     <div className="space-y-2">
       <Label htmlFor="excerpt">Excerpt*</Label>
       <Textarea 
         id="excerpt" 
-        value={excerpt} 
+        value={cleanExcerpt || excerpt} 
         onChange={onExcerptChange} 
         placeholder="Brief summary of the post (2-3 sentences)" 
         rows={3} 
