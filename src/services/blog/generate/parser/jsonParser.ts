@@ -1,92 +1,111 @@
 
 /**
- * Specialized module for extracting JSON from different formats
+ * Specialized JSON parser with robust error handling
  */
-import { GeneratedBlogContent } from '../../types';
 
 /**
- * Extract and parse JSON from response content
+ * Parse a potentially malformed JSON string with robust error handling
  */
-export function parseJsonResponse(content: string, existingData?: GeneratedBlogContent): GeneratedBlogContent {
-  // Check if the response contains JSON within the content (common issue with How-To blogs)
-  if (content.includes('"title":') && content.includes('"content":')) {
-    console.log('🔍 Detected JSON structure within response data, attempting to extract...');
+export function parseJsonResponse(responseText: string): any {
+  // Remove non-printable control characters that could break JSON parsing
+  const cleanedText = cleanControlCharacters(responseText);
+  
+  try {
+    // First try: direct JSON parsing
+    return JSON.parse(cleanedText);
+  } catch (error) {
+    console.warn('⚠️ Direct JSON parsing failed, trying to extract JSON object');
+    
     try {
-      // Extract JSON object from content
-      const jsonMatch = content.match(/\{[\s\S]*"title"[\s\S]*"content"[\s\S]*\}/);
-      if (jsonMatch) {
-        const jsonContent = jsonMatch[0];
-        console.log('🔍 Extracted potential JSON:', jsonContent.substring(0, 100) + '...');
+      // Second try: extract JSON object using regex
+      const jsonMatch = cleanedText.match(/(\{[\s\S]*\})/);
+      if (jsonMatch && jsonMatch[1]) {
+        const extractedJson = jsonMatch[1];
+        return JSON.parse(extractedJson);
+      }
+    } catch (extractError) {
+      console.warn('⚠️ JSON extraction failed');
+    }
+    
+    // Third try: handle markdown code blocks with JSON
+    try {
+      const codeBlockMatch = cleanedText.match(/```(?:json)?([\s\S]*?)```/);
+      if (codeBlockMatch && codeBlockMatch[1]) {
+        return JSON.parse(codeBlockMatch[1].trim());
+      }
+    } catch (codeBlockError) {
+      console.warn('⚠️ Code block extraction failed');
+    }
+    
+    // Final attempt: extract individual fields
+    const result: any = {};
+    
+    // Extract title
+    const titleMatch = cleanedText.match(/"title"\s*:\s*"([^"]+)"/);
+    if (titleMatch) result.title = titleMatch[1];
+    
+    // Extract content (more complex as it can contain nested quotes)
+    const contentStartMatch = cleanedText.match(/"content"\s*:\s*"/);
+    if (contentStartMatch) {
+      const startIndex = cleanedText.indexOf('"content"') + 11;
+      let content = '';
+      let inQuote = false;
+      let inEscape = false;
+      let quoteDepth = 0;
+      
+      for (let i = startIndex; i < cleanedText.length; i++) {
+        const char = cleanedText[i];
         
-        // Clean up HTML tags like <br/> that might be embedded in the JSON
-        const cleanedJson = jsonContent
-          .replace(/<br\/>/g, '')
-          .replace(/&quot;/g, '"')
-          .replace(/<[^>]*>/g, '');
-          
-        const parsedData = JSON.parse(cleanedJson);
-        console.log('✅ Successfully parsed extracted JSON');
-        
-        // If we have existing data and parsed new content, merge them
-        if (existingData) {
-          return {
-            ...existingData,
-            content: parsedData.content || existingData.content,
-            title: parsedData.title || existingData.title,
-            excerpt: parsedData.excerpt || existingData.excerpt,
-            tags: parsedData.tags || existingData.tags || []
-          };
+        if (char === '\\' && !inEscape) {
+          inEscape = true;
+          content += char;
+          continue;
         }
         
-        return parsedData;
-      }
-    } catch (error) {
-      console.error('💥 Error in parseJsonResponse:', error);
-    }
-  }
-  
-  // If we got here, try one more approach - if we can see it's a How-To blog with clear JSON structure
-  if (content.includes('"title":') && content.includes('"content":') && 
-      content.includes('"excerpt":') && content.includes('"tags":')) {
-    try {
-      // Try to manually create a valid JSON by extracting key components
-      console.log('🔍 Attempting manual extraction of JSON components...');
-      
-      // Extract title
-      const titleMatch = content.match(/"title"\s*:\s*"([^"]+)"/);
-      const title = titleMatch ? titleMatch[1] : 'New How-To Post';
-      
-      // Extract content - more complex since it may contain nested quotes
-      let contentMatch = content.match(/"content"\s*:\s*"([\s\S]*?)(?=",\s*"excerpt"|",\s*"tags"|"})/);
-      let extractedContent = '';
-      if (contentMatch) {
-        extractedContent = contentMatch[1]
-          .replace(/\\"/g, '"')  // Replace escaped quotes
-          .replace(/\\\\/g, '\\'); // Replace escaped backslashes
+        if (char === '"' && !inEscape) {
+          if (!inQuote) {
+            inQuote = true;
+          } else {
+            // Check if this is the end quote of the content field
+            if (i + 1 < cleanedText.length && 
+                (cleanedText[i + 1] === ',' || cleanedText[i + 1] === '}')) {
+              break; // End of content field
+            }
+          }
+        }
+        
+        inEscape = false;
+        content += char;
       }
       
-      // Extract excerpt
-      const excerptMatch = content.match(/"excerpt"\s*:\s*"([^"]+)"/);
-      const excerpt = excerptMatch ? excerptMatch[1] : '';
-      
-      // Extract tags
-      const tagsMatch = content.match(/"tags"\s*:\s*\[([\s\S]*?)\]/);
-      const tags = tagsMatch ? 
-        tagsMatch[1].split(',').map(tag => tag.trim().replace(/"/g, '')) : 
-        ['how-to', 'tutorial', 'guide'];
-      
-      return {
-        title,
-        content: extractedContent,
-        excerpt,
-        tags,
-        category: 'How-To'
-      };
-    } catch (manualError) {
-      console.error('❌ Manual extraction failed:', manualError);
-      throw new Error('Failed to parse AI response: ' + manualError.message);
+      result.content = content.replace(/^"/, '').replace(/\\"/g, '"');
     }
+    
+    // Extract excerpt
+    const excerptMatch = cleanedText.match(/"excerpt"\s*:\s*"([^"]+)"/);
+    if (excerptMatch) result.excerpt = excerptMatch[1];
+    
+    // Extract tags
+    const tagsMatch = cleanedText.match(/"tags"\s*:\s*\[(.*?)\]/s);
+    if (tagsMatch) {
+      const tagsList = tagsMatch[1]
+        .split(',')
+        .map(tag => tag.trim().replace(/"/g, ''))
+        .filter(tag => tag.length > 0);
+      result.tags = tagsList;
+    }
+    
+    return result;
   }
-  
-  throw new Error('Could not extract valid JSON from response');
+}
+
+/**
+ * Clean control characters from a string that would break JSON parsing
+ */
+function cleanControlCharacters(text: string): string {
+  // Remove ASCII control characters (0-31) except tabs, newlines, and carriage returns
+  return text
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
+    // Handle escaped control characters as well
+    .replace(/\\u00([0-1][0-9a-fA-F])/g, ''); 
 }
