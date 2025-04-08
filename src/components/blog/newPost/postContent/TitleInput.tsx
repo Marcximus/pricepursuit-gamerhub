@@ -12,16 +12,13 @@ export const TitleInput = ({ title, onTitleChange }: TitleInputProps) => {
   const cleanTitle = (rawTitle: string): string => {
     if (!rawTitle) return '';
     
-    let cleanTitle = rawTitle;
-    
-    // First, check if the entire string is a JSON object with a title property
-    const jsonMatch = rawTitle.match(/^{[\s\S]*"title"[\s\S]*}$/);
-    if (jsonMatch) {
+    // First, check if the entire title is a JSON object with a title property
+    if (rawTitle.trim().startsWith('{') && rawTitle.trim().endsWith('}')) {
       try {
         // Try to parse as JSON
         const parsed = JSON.parse(rawTitle);
         if (parsed && parsed.title) {
-          cleanTitle = parsed.title;
+          return parsed.title;
         }
       } catch (e) {
         // If parsing fails, proceed with regex cleaning
@@ -29,7 +26,7 @@ export const TitleInput = ({ title, onTitleChange }: TitleInputProps) => {
     }
     
     // Apply regex cleaning in any case as a fallback
-    return cleanTitle
+    return rawTitle
       // Handle JSON format: {"title": "Actual Title"} or variations
       .replace(/^{.*?"title"[\s]*:[\s]*"(.*?)".*}$/i, '$1')
       // Handle HTML line breaks

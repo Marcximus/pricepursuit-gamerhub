@@ -28,24 +28,23 @@ export const usePostAI = (
   const cleanTitleText = (rawTitle: string): string => {
     if (!rawTitle) return '';
     
-    let cleanTitle = rawTitle;
-    
-    // First, check if the entire string is a JSON object with a title property
-    const jsonMatch = rawTitle.match(/^{[\s\S]*"title"[\s\S]*}$/);
-    if (jsonMatch) {
+    // First, check if the entire title is a JSON object with a title property
+    if (rawTitle.trim().startsWith('{') && rawTitle.trim().endsWith('}')) {
       try {
         // Try to parse as JSON
         const parsed = JSON.parse(rawTitle);
         if (parsed && parsed.title) {
-          cleanTitle = parsed.title;
+          console.log('Successfully parsed JSON title:', parsed.title);
+          return parsed.title;
         }
       } catch (e) {
+        console.warn('Failed to parse title as JSON:', e);
         // If parsing fails, proceed with regex cleaning
       }
     }
     
     // Apply regex cleaning in any case as a fallback
-    cleanTitle = cleanTitle
+    const cleanTitle = rawTitle
       // Handle JSON format: {"title": "Actual Title"} or variations
       .replace(/^{.*?"title"[\s]*:[\s]*"(.*?)".*}$/i, '$1')
       // Handle HTML line breaks

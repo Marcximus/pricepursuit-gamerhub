@@ -11,13 +11,14 @@ export function cleanTitle(title: string): string {
   console.log('📄 Original title before cleaning:', title);
   
   // First, check if the entire title is a JSON object
-  if (title.startsWith('{') && title.endsWith('}')) {
+  if (title.trim().startsWith('{') && title.trim().endsWith('}')) {
     try {
       // Try to parse as JSON
       const parsed = JSON.parse(title);
       if (parsed && parsed.title) {
         title = parsed.title;
         console.log('📄 Title extracted from JSON:', title);
+        return title; // Return immediately after extracting from JSON
       }
     } catch (e) {
       console.warn('⚠️ Title looks like JSON but failed to parse:', e);
