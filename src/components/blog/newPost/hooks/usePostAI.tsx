@@ -1,8 +1,10 @@
+
 import { useState } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { extractSearchParamsFromPrompt } from '@/services/blog/amazonProductService';
 import { generateBlogPost } from '@/services/blog/generate/generateBlogPost'; 
 import { cleanExcerpt } from '@/services/blog/generate/parser/excerptCleaner';
+import { cleanTitle } from '@/services/blog/generate/parser/titleCleaner';
 
 export const usePostAI = (
   setTitle: (value: string) => void,
@@ -22,43 +24,6 @@ export const usePostAI = (
     setPrompt('');
     setAsin('');
     setAsin2('');
-  };
-  
-  // Helper function to clean titles from any JSON or HTML formatting
-  const cleanTitleText = (rawTitle: string): string => {
-    if (!rawTitle) return '';
-    
-    // First, check if the entire title is a JSON object with a title property
-    if (rawTitle.trim().startsWith('{') && rawTitle.trim().endsWith('}')) {
-      try {
-        // Try to parse as JSON
-        const parsed = JSON.parse(rawTitle);
-        if (parsed && parsed.title) {
-          console.log('Successfully parsed JSON title:', parsed.title);
-          return parsed.title;
-        }
-      } catch (e) {
-        console.warn('Failed to parse title as JSON:', e);
-        // If parsing fails, proceed with regex cleaning
-      }
-    }
-    
-    // Apply regex cleaning in any case as a fallback
-    const cleanTitle = rawTitle
-      // Handle JSON format: {"title": "Actual Title"} or variations
-      .replace(/^{.*?"title"[\s]*:[\s]*"(.*?)".*}$/i, '$1')
-      // Handle HTML line breaks
-      .replace(/<br\/>/g, '')
-      // Handle escaped newlines
-      .replace(/\\n/g, ' ')
-      // Handle escaped quotes
-      .replace(/\\"/g, '"')
-      .replace(/\\'/g, "'")
-      // Remove any HTML tags
-      .replace(/<[^>]*>/g, '')
-      .trim();
-      
-    return cleanTitle;
   };
   
   const handleGenerateContent = async () => {
@@ -92,15 +57,14 @@ export const usePostAI = (
       );
       
       if (generatedContent) {
-        // Clean the title using our enhanced function
+        // Clean the title using our imported cleanTitle function
         if (generatedContent.title) {
-          const cleanedTitle = cleanTitleText(generatedContent.title);
+          const cleanedTitle = cleanTitle(generatedContent.title);
           console.log('Original title:', generatedContent.title);
           console.log('Cleaned title:', cleanedTitle);
           
-          if (selectedCategory !== 'Top10') {
-            setTitle(cleanedTitle);
-          }
+          // Always set the title, regardless of category
+          setTitle(cleanedTitle);
         }
         
         setContent(generatedContent.content);

@@ -7,6 +7,9 @@
  * Clean title from any JSON or HTML formatting
  */
 export function cleanTitle(title: string): string {
+  // If title is empty, return empty string
+  if (!title) return '';
+  
   // Log the original title for debugging
   console.log('📄 Original title before cleaning:', title);
   
@@ -18,11 +21,16 @@ export function cleanTitle(title: string): string {
       if (parsed && parsed.title) {
         title = parsed.title;
         console.log('📄 Title extracted from JSON:', title);
-        return title; // Return immediately after extracting from JSON
       }
     } catch (e) {
       console.warn('⚠️ Title looks like JSON but failed to parse:', e);
-      // Continue with regex-based cleaning
+      
+      // Try to extract title using regex
+      const titleMatch = title.match(/"title"\s*:\s*"([^"]*)(?:"|$)/);
+      if (titleMatch && titleMatch[1]) {
+        title = titleMatch[1];
+        console.log('📄 Title extracted using regex:', title);
+      }
     }
   }
   
