@@ -9,6 +9,9 @@
 export function cleanExcerpt(excerpt: string): string {
   console.log('📄 Original excerpt before cleaning:', excerpt);
   
+  // If excerpt is null or undefined, return empty string
+  if (!excerpt) return '';
+  
   // First, check if the entire excerpt is part of a JSON object
   if (excerpt.trim().startsWith('{') && excerpt.trim().endsWith('}')) {
     try {
@@ -20,7 +23,13 @@ export function cleanExcerpt(excerpt: string): string {
       }
     } catch (e) {
       console.warn('⚠️ Excerpt looks like JSON but failed to parse:', e);
-      // Continue with regex cleaning if JSON parsing fails
+      
+      // If JSON parsing fails, try to extract excerpt using regex
+      const excerptMatch = excerpt.match(/"excerpt"\s*:\s*"([^"]*)(?:"|$)/);
+      if (excerptMatch && excerptMatch[1]) {
+        excerpt = excerptMatch[1];
+        console.log('📄 Excerpt extracted using regex:', excerpt);
+      }
     }
   }
   
