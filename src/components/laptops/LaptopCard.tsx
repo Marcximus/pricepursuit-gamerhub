@@ -1,5 +1,5 @@
-
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import type { Product } from "@/types/product";
 import { LaptopImage } from "./components/LaptopImage";
 import { LaptopPrice } from "./components/LaptopPrice";
@@ -7,6 +7,7 @@ import { LaptopRating } from "./components/LaptopRating";
 import { LaptopSpecs } from "./components/LaptopSpecs";
 import { LaptopReviews } from "./components/LaptopReviews";
 import { LaptopCompareButton } from "./components/LaptopCompareButton";
+import { Zap } from "lucide-react";
 
 type LaptopCardProps = {
   laptop: Product;
@@ -38,6 +39,12 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
   // Check if we have valid review data to display
   const hasReviews = laptop.review_data?.recent_reviews && 
                      laptop.review_data.recent_reviews.length > 0;
+
+  const handleCheckItOut = () => {
+    if (productUrl) {
+      window.open(productUrl, '_blank');
+    }
+  };
 
   return (
     <Card className="flex p-4 gap-4 hover:shadow-lg transition-shadow">
@@ -83,7 +90,14 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
             model={laptop.model}
           />
           
-          <div className="ml-2 mt-1">
+          <div className="ml-2 mt-1 flex flex-col gap-2">
+            <Button
+              onClick={handleCheckItOut}
+              className="bg-green-600 hover:bg-green-700 transform hover:-translate-y-0.5 transition-all"
+            >
+              Check it out
+              <Zap className="w-4 h-4 ml-2 animate-pulse" />
+            </Button>
             <LaptopCompareButton laptop={laptop} />
           </div>
         </div>
