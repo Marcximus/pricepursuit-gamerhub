@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from 'react';
 import { BlogPost } from '@/contexts/blog';
 import { removeJsonFormatting } from '@/services/blog/top10/contentProcessor';
@@ -33,7 +34,7 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
     };
   }, [post.category]);
 
-  // Effect to ensure all links in product cards are working correctly
+  // Effect to ensure all links in product cards and image handling are working correctly
   useEffect(() => {
     if (!contentRef.current) return;
 
@@ -61,12 +62,27 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
         });
       });
     };
+    
+    // Enhance uploaded images with proper styling
+    const enhanceImages = () => {
+      const blogImages = contentRef.current?.querySelectorAll('img:not(.product-image)');
+      
+      blogImages?.forEach(img => {
+        if (!img.classList.contains('blog-image')) {
+          img.classList.add('blog-image');
+        }
+      });
+    };
 
     // Run immediately after render
     fixProductCardLinks();
+    enhanceImages();
 
     // Use MutationObserver to handle dynamically loaded content
-    const observer = new MutationObserver(fixProductCardLinks);
+    const observer = new MutationObserver(() => {
+      fixProductCardLinks();
+      enhanceImages();
+    });
     observer.observe(contentRef.current, { childList: true, subtree: true });
 
     return () => {

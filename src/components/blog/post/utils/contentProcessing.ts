@@ -60,6 +60,53 @@ export const injectAdditionalImages = (content: string, additionalImages: string
   
   if (['Review', 'How-To', 'Comparison'].includes(category || '')) {
     let modifiedContent = content;
+    
+    // For How-To, find section headings to place images before
+    if (category === 'How-To') {
+      const sectionBreaks = content.match(/<h[23][^>]*>|<div class="qa-item">|<div class="step-container">/gi) || [];
+      
+      if (sectionBreaks.length > 1) {
+        // Skip the first heading (usually the title)
+        const startIndex = 1;
+        const step = Math.max(1, Math.floor((sectionBreaks.length - startIndex) / additionalImages.length));
+        
+        additionalImages.forEach((img, imageIndex) => {
+          const sectionIndex = startIndex + (imageIndex * step);
+          if (sectionBreaks[sectionIndex]) {
+            const sectionBreak = sectionBreaks[sectionIndex];
+            const sectionPos = modifiedContent.indexOf(sectionBreak);
+            
+            if (sectionPos !== -1) {
+              const imageHtml = `<div class="my-6">
+                <img 
+                  src="${img}" 
+                  alt="Image ${imageIndex + 1}" 
+                  class="rounded-lg w-full blog-image" 
+                  onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
+                />
+              </div>`;
+              
+              modifiedContent = 
+                modifiedContent.substring(0, sectionPos) + 
+                imageHtml + 
+                modifiedContent.substring(sectionPos);
+              
+              // Adjust indices for subsequent insertions
+              for (let j = imageIndex + 1; j < sectionBreaks.length; j++) {
+                const breakPos = modifiedContent.indexOf(sectionBreaks[j], sectionPos + 1);
+                if (breakPos !== -1) {
+                  sectionBreaks[j] = modifiedContent.substring(breakPos, breakPos + sectionBreaks[j].length);
+                }
+              }
+            }
+          }
+        });
+        
+        return modifiedContent;
+      }
+    }
+    
+    // Default behavior for other categories or if section breaks not found
     const paragraphs = content.match(/<p>.*?<\/p>/gi) || [];
     
     additionalImages.forEach((img, index) => {
@@ -125,8 +172,7 @@ export const improveContentSpacing = (content: string): string => {
     '$1\n<div class="my-4"></div>$2'
   );
   
-  // IMPROVED: Add better spacing after bullet lists
-  // Increase spacing from my-4 to my-6 (from 16px to 24px) for better visual separation
+  // Add better spacing after bullet lists
   improvedContent = improvedContent.replace(
     /(<\/ul>)(\s*)(<p>)/g,
     '$1\n<div class="my-6"></div>$3'

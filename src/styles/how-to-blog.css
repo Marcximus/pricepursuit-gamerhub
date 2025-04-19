@@ -177,12 +177,28 @@
   position: relative;
 }
 
+/* Specific styling for section images */
+.blog-section-image {
+  margin: 2.5rem 0;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
 .image-placeholder:after {
   content: "Image Placeholder";
   display: block;
   color: #64748b;
   font-style: italic;
   font-size: 0.875rem;
+}
+
+/* Uploaded blog images */
+.blog-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 2rem 0;
+  display: block;
 }
 
 /* Code Blocks */
