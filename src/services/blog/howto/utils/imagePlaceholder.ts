@@ -21,23 +21,46 @@ export function replaceImagePlaceholders(content: string): string {
 export function distributeImagesBeforeSections(content: string, imageCount: number = 3): string {
   if (!content || imageCount <= 0) return content;
   
-  // Find all section break points (h2, h3, div.qa-item, div.step-container)
-  const sectionBreakRegex = /<(h2|h3|div class="qa-item"|div class="step-container")[^>]*>/g;
+  // Focus on finding h2 tags and other major section breaks
+  const sectionBreakRegex = /<h2[^>]*>/g;
   const matches = Array.from(content.matchAll(sectionBreakRegex));
   
-  if (matches.length <= 1) {
-    // Not enough section breaks, return content as is
-    return content;
+  // If no h2 headings found, try with other section breaks
+  if (matches.length === 0) {
+    const fallbackBreakRegex = /<(h3|div class="qa-item"|div class="step-container")[^>]*>/g;
+    const fallbackMatches = Array.from(content.matchAll(fallbackBreakRegex));
+    
+    if (fallbackMatches.length <= 1) {
+      // Not enough section breaks, insert at regular intervals in the content
+      return insertImagesAtRegularIntervals(content, imageCount);
+    }
+    
+    // Use fallback matches for positioning
+    return insertImagesBeforeMatches(content, fallbackMatches, imageCount);
   }
   
+  // Use h2 matches for positioning
+  return insertImagesBeforeMatches(content, matches, imageCount);
+}
+
+/**
+ * Insert images before matched section breaks
+ */
+function insertImagesBeforeMatches(content: string, matches: RegExpMatchArray[], imageCount: number): string {
   // Skip the first heading (usually the title) and distribute images before other section breaks
-  const availableBreakPoints = matches.slice(1);
+  const availableBreakPoints = matches.length > 1 ? matches.slice(1) : matches;
+  
+  if (availableBreakPoints.length === 0) {
+    return insertImagesAtRegularIntervals(content, imageCount);
+  }
+  
   const breakPointsToUse = Math.min(imageCount, availableBreakPoints.length);
   
   // Calculate which break points to use for even distribution
   const breakIndices = [];
   for (let i = 0; i < breakPointsToUse; i++) {
-    const index = Math.floor(availableBreakPoints.length * (i + 1) / (breakPointsToUse + 1));
+    // Distribute evenly across available break points
+    const index = Math.floor((i * availableBreakPoints.length) / breakPointsToUse);
     breakIndices.push(index);
   }
   
@@ -59,6 +82,43 @@ export function distributeImagesBeforeSections(content: string, imageCount: numb
       offset += imageHTML.length;
     }
   });
+  
+  return result;
+}
+
+/**
+ * Insert images at regular intervals when no suitable section breaks are found
+ */
+function insertImagesAtRegularIntervals(content: string, imageCount: number): string {
+  if (imageCount <= 0) return content;
+  
+  const contentLength = content.length;
+  let result = content;
+  let offset = 0;
+  
+  // Skip first 20% of content for first image to avoid placing near the title
+  const startOffset = Math.floor(contentLength * 0.2);
+  
+  for (let i = 0; i < imageCount; i++) {
+    // Calculate position based on content length
+    // First image after 20% of content, then distribute remaining images evenly
+    const position = i === 0 
+      ? startOffset 
+      : Math.floor(startOffset + ((contentLength - startOffset) * i / imageCount));
+    
+    // Find the next paragraph or section end to insert image
+    const nextParagraphEnd = result.indexOf('</p>', position + offset);
+    const insertPosition = nextParagraphEnd !== -1 ? nextParagraphEnd + 4 : position + offset;
+    
+    const imageHTML = `<div class="section-image">
+      <div class="image-placeholder" id="image-${i + 1}">
+        <p class="placeholder-text">Click to upload image ${i + 1}</p>
+      </div>
+    </div>\n`;
+    
+    result = result.slice(0, insertPosition) + imageHTML + result.slice(insertPosition);
+    offset += imageHTML.length;
+  }
   
   return result;
 }

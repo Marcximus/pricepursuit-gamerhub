@@ -1,4 +1,3 @@
-
 /**
  * Fixes HTML in Top10 blog posts to ensure proper tag closure
  */
@@ -82,6 +81,48 @@ export const injectAdditionalImages = (content: string, additionalImages: string
         );
       }
     });
+    
+    // If there are no placeholders but we have additional images, inject them before h2 tags
+    if (placeholders.length === 0 && additionalImages.length > 0) {
+      // Find all h2 tags
+      const h2Regex = /<h2[^>]*>/g;
+      const h2Tags = Array.from(modifiedContent.matchAll(h2Regex));
+      
+      // If we have h2 tags, place images before them
+      if (h2Tags.length > 0) {
+        let offset = 0;
+        
+        // Distribute images evenly before h2 tags
+        const tagsToUse = Math.min(additionalImages.length, h2Tags.length);
+        
+        for (let i = 0; i < tagsToUse; i++) {
+          // Calculate which h2 to use for even distribution
+          const tagIndex = Math.floor((i * h2Tags.length) / tagsToUse);
+          
+          if (tagIndex < h2Tags.length) {
+            const h2Match = h2Tags[tagIndex];
+            const imgSrc = additionalImages[i];
+            const position = h2Match.index! + offset;
+            
+            const imageHtml = `<div class="section-image">
+              <img 
+                src="${imgSrc}" 
+                alt="How-to guide image ${i + 1}" 
+                class="rounded-lg w-full how-to-image" 
+                onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
+              />
+            </div>\n`;
+            
+            modifiedContent = 
+              modifiedContent.substring(0, position) + 
+              imageHtml + 
+              modifiedContent.substring(position);
+              
+            offset += imageHtml.length;
+          }
+        }
+      }
+    }
     
     return modifiedContent;
   }

@@ -40,15 +40,30 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
       });
     };
 
-    // Fix How-To image spacing
+    // Fix How-To image spacing and positioning
     const fixHowToImageSpacing = () => {
       if (post.category !== 'How-To') return;
       
+      // Fix image styling
       const howToImages = contentRef.current?.querySelectorAll('.how-to-image');
       howToImages?.forEach(img => {
         // Make sure image is responsive
         (img as HTMLElement).style.maxWidth = '100%';
         (img as HTMLElement).style.height = 'auto';
+      });
+      
+      // Ensure section images are properly positioned before headings
+      const sectionImages = contentRef.current?.querySelectorAll('.section-image');
+      sectionImages?.forEach(sectionImage => {
+        const nextElement = sectionImage.nextElementSibling;
+        
+        // If next element is not a heading (h2, h3, etc.), adjust spacing
+        if (nextElement && !nextElement.tagName.match(/^H[1-6]$/)) {
+          (sectionImage as HTMLElement).style.marginBottom = '2rem';
+        } else {
+          // Add spacing between image and heading
+          (sectionImage as HTMLElement).style.marginBottom = '1rem';
+        }
       });
     };
 
