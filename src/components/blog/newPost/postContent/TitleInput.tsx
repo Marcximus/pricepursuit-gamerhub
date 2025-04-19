@@ -10,6 +10,7 @@ interface TitleInputProps {
 
 export const TitleInput = ({ title, onTitleChange }: TitleInputProps) => {
   // Use the imported cleanTitle function for consistent cleaning
+  // This ensures that any JSON or HTML formatting is removed from the title
   const processedTitle = title ? cleanTitle(title) : '';
 
   return (

@@ -67,7 +67,16 @@ export const usePostAI = (
           setTitle(cleanedTitle);
         }
         
-        setContent(generatedContent.content);
+        // Log content type to help with debugging
+        console.log('Content type:', typeof generatedContent.content);
+        if (typeof generatedContent.content === 'string' && generatedContent.content.includes('"title"')) {
+          console.log('Content appears to contain JSON with title field');
+          // If content includes JSON title, clean it up
+          const cleanedContent = generatedContent.content.replace(/{[\s\S]*?"title"[\s\S]*?}/, '');
+          setContent(cleanedContent);
+        } else {
+          setContent(generatedContent.content);
+        }
         
         // Clean the excerpt using our imported cleanExcerpt function
         if (generatedContent.excerpt) {

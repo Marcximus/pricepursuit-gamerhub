@@ -12,14 +12,14 @@ export function cleanTitle(title: string): string {
   // If title is null or undefined, return empty string
   if (!title) return '';
   
-  // First, check if the entire title is part of a JSON object
+  // First, check if the title value itself is a JSON string
   if (title.trim().startsWith('{') && title.trim().endsWith('}')) {
     try {
       // Try to parse as JSON
       const parsed = JSON.parse(title);
       if (parsed && parsed.title) {
         title = parsed.title;
-        console.log('📝 Title extracted from JSON:', title);
+        console.log('📝 Title extracted from JSON object:', title);
       }
     } catch (e) {
       console.warn('⚠️ Title looks like JSON but failed to parse:', e);
@@ -33,13 +33,18 @@ export function cleanTitle(title: string): string {
     }
   }
   
-  // Clean up any HTML or special characters in title
+  // Handle HTML formatting issues (common with AI generations)
   let cleanedTitle = title
     // Remove any JSON format markers
     .replace(/^{.*?"title"[\s]*:[\s]*"(.*?)".*}$/i, '$1')
+    // Handle HTML line breaks that might appear in the title
+    .replace(/<br\s*\/?>/gi, ' ')
+    // Handle escaped newlines
     .replace(/\\n/g, ' ')
+    // Handle escaped quotes
     .replace(/\\"/g, '"')
     .replace(/\\'/g, "'")
+    // Remove any HTML tags
     .replace(/<[^>]*>/g, '')
     .trim();
   

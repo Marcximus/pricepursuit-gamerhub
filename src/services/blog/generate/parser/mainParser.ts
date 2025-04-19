@@ -34,7 +34,26 @@ export function parseGenerationResponse(response: any): GeneratedBlogContent {
     
     // Extract and clean the components
     const title = data?.title ? cleanTitle(data.title) : 'New Blog Post';
-    const content = data?.content ? processContent(data.content) : '';
+    
+    // For content, ensure we're not passing JSON objects directly to the editor
+    let content = '';
+    if (data?.content) {
+      // Check if content is a JSON string and extract just the content part
+      if (typeof data.content === 'string' && 
+          data.content.trim().startsWith('{') && 
+          data.content.trim().endsWith('}')) {
+        try {
+          const contentObj = JSON.parse(data.content);
+          content = contentObj.content || data.content;
+        } catch (e) {
+          content = data.content;
+        }
+      } else {
+        content = data.content;
+      }
+      content = processContent(content);
+    }
+    
     const excerpt = data?.excerpt ? cleanExcerpt(data.excerpt) : '';
     const tags = Array.isArray(data?.tags) ? data.tags : [];
     // Extract the category from data or fallback to a default
