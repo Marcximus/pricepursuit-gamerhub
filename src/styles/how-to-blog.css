@@ -52,23 +52,6 @@
   width: 100%;
 }
 
-/* Section image container styling */
-.section-image-container {
-  margin: 2rem 0;
-  padding: 0;
-  border-radius: 0.5rem;
-  overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.section-image-container img {
-  display: block;
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-  border-radius: 0.5rem;
-}
-
 /* QA Item Styling */
 .qa-item {
   margin: 1.5rem 0;

@@ -24,17 +24,12 @@ export function processHowToContent(content: string, title: string): string {
     // Replace image placeholders with proper HTML
     processedContent = replaceImagePlaceholders(processedContent);
     
-    // Ensure the content has proper HTML structure
-    if (!processedContent.includes('<p>')) {
-      processedContent = wrapTextInHtml(processedContent, title);
-    }
+    // Wrap content in HTML container
+    processedContent = wrapContentInHtml(processedContent);
     
     // Format FAQ sections and step-by-step instructions
     processedContent = formatFAQSections(processedContent);
     processedContent = formatStepByStepInstructions(processedContent);
-    
-    // Finally wrap content in HTML container
-    processedContent = wrapContentInHtml(processedContent);
     
     return processedContent;
   }
@@ -42,21 +37,20 @@ export function processHowToContent(content: string, title: string): string {
   // If not JSON or parsing failed, process as plain text
   let processedContent = cleanupContent(content);
   processedContent = fixHtmlTags(processedContent);
-  
-  // Ensure the content has proper HTML structure
-  if (!processedContent.includes('<p>')) {
-    processedContent = wrapTextInHtml(processedContent, title);
-  }
-  
   processedContent = formatTables(processedContent);
   processedContent = addVideoEmbed(processedContent);
+  
+  // Wrap content in HTML container
+  processedContent = wrapContentInHtml(processedContent);
   
   // Format FAQ sections and step-by-step instructions
   processedContent = formatFAQSections(processedContent);
   processedContent = formatStepByStepInstructions(processedContent);
   
-  // Finally wrap content in HTML container
-  processedContent = wrapContentInHtml(processedContent);
+  // If no HTML tags found, wrap in basic HTML
+  if (!processedContent.includes('<h1>') && !processedContent.includes('<p>')) {
+    processedContent = wrapTextInHtml(processedContent, title);
+  }
   
   return processedContent;
 }
