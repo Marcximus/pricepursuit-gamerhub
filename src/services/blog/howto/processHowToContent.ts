@@ -3,7 +3,7 @@
  * Process How-To blog content to ensure proper formatting
  */
 
-// Import the utility functions that were missing
+// Import the utility functions
 import { cleanupContent, fixHtmlTags, formatTables } from './contentProcessor';
 import { addVideoEmbed, wrapTextInHtml } from './htmlGenerator';
 import { getHowToPrompt } from './howToPrompt';
