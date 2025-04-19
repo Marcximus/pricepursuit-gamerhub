@@ -4,7 +4,7 @@ import { addVideoEmbed, wrapTextInHtml } from './htmlGenerator';
 import { formatFAQSections } from './formatters/faqFormatter';
 import { formatStepByStepInstructions } from './formatters/stepsFormatter';
 import { processJsonContent } from './processors/jsonProcessor';
-import { replaceImagePlaceholders } from './utils/imagePlaceholder';
+import { replaceImagePlaceholders, distributeImagesBeforeSections } from './utils/imagePlaceholder';
 import { wrapContentInHtml } from './utils/htmlWrapper';
 
 export function processHowToContent(content: string, title: string): string {
@@ -24,12 +24,15 @@ export function processHowToContent(content: string, title: string): string {
     // Replace image placeholders with proper HTML
     processedContent = replaceImagePlaceholders(processedContent);
     
-    // Wrap content in HTML container
-    processedContent = wrapContentInHtml(processedContent);
-    
     // Format FAQ sections and step-by-step instructions
     processedContent = formatFAQSections(processedContent);
     processedContent = formatStepByStepInstructions(processedContent);
+    
+    // Distribute images evenly before section breaks (after formatting sections)
+    processedContent = distributeImagesBeforeSections(processedContent, 3);
+    
+    // Wrap content in HTML container
+    processedContent = wrapContentInHtml(processedContent);
     
     return processedContent;
   }
@@ -40,12 +43,15 @@ export function processHowToContent(content: string, title: string): string {
   processedContent = formatTables(processedContent);
   processedContent = addVideoEmbed(processedContent);
   
-  // Wrap content in HTML container
-  processedContent = wrapContentInHtml(processedContent);
-  
   // Format FAQ sections and step-by-step instructions
   processedContent = formatFAQSections(processedContent);
   processedContent = formatStepByStepInstructions(processedContent);
+  
+  // Distribute images evenly before section breaks
+  processedContent = distributeImagesBeforeSections(processedContent, 3);
+  
+  // Wrap content in HTML container
+  processedContent = wrapContentInHtml(processedContent);
   
   // If no HTML tags found, wrap in basic HTML
   if (!processedContent.includes('<h1>') && !processedContent.includes('<p>')) {
