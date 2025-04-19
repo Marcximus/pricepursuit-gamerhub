@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from 'react';
 import { BlogPost } from '@/contexts/blog';
 import { removeJsonFormatting } from '@/services/blog/top10/contentProcessor';
@@ -74,21 +75,11 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
     };
   }, [content]);
 
-  // Remove the extra processing for How-To blogs that might be stripping HTML
-  const getProcessedContent = () => {
-    // For How-To blogs, simply return the cleaned content without additional processing
-    if (post.category === 'How-To') {
-      return cleanContent;
-    }
-    
-    return cleanContent;
-  };
-
   return (
     <div 
       ref={contentRef}
-      className={`prose prose-lg max-w-none ${post.category === 'How-To' ? 'how-to-content' : ''}`} 
-      dangerouslySetInnerHTML={{ __html: getProcessedContent() }}
+      className={`prose prose-lg max-w-none ${post.category === 'How-To' ? 'how-to-article' : ''}`} 
+      dangerouslySetInnerHTML={{ __html: cleanContent }}
     />
   );
 };

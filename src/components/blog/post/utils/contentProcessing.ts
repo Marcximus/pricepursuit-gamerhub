@@ -63,32 +63,66 @@ export const injectAdditionalImages = (content: string, additionalImages: string
     
     // For How-To posts, identify section breaks to place images after
     if (category === 'How-To') {
-      // Find all section breaks (headings or div class="step-container" or div class="qa-item")
-      const sectionBreakRegex = /<\/(?:h[1-6]|div class="step-container"|div class="qa-item")[^>]*>/gi;
+      // Find all section breaks (headings, step containers, qa items, or divs)
+      const sectionBreakRegex = /<\/(?:h[1-6]|div class="step-container"|div class="qa-item"|section)[^>]*>/gi;
       const sectionBreaks = [...modifiedContent.matchAll(sectionBreakRegex)];
       
-      if (sectionBreaks.length > 0) {
-        // Distribute images evenly across the section breaks
-        const totalBreaks = sectionBreaks.length;
-        const totalImages = additionalImages.length;
-        
-        // Calculate how many section breaks to skip between images for even distribution
-        const skipFactor = Math.max(1, Math.floor(totalBreaks / (totalImages + 1)));
+      // Also get paragraph breaks as potential insertion points if we don't have enough section breaks
+      const paragraphBreaks = [...modifiedContent.matchAll(/<\/p>/gi)];
+      const allBreakPoints = [...sectionBreaks];
+      
+      // Add paragraph breaks but only ones that are not too close to section breaks
+      if (sectionBreaks.length < additionalImages.length * 2) {
+        paragraphBreaks.forEach(paragraphBreak => {
+          const paragraphPos = paragraphBreak.index!;
+          // Only add if it's not too close to an existing section break
+          if (sectionBreaks.every(sectionBreak => 
+              Math.abs((sectionBreak.index || 0) - paragraphPos) > 300)) {
+            allBreakPoints.push(paragraphBreak);
+          }
+        });
+      }
+      
+      // Sort breaks by position
+      allBreakPoints.sort((a, b) => (a.index || 0) - (b.index || 0));
+      
+      if (allBreakPoints.length > 0) {
+        // Calculate content sections for even distribution
+        const contentLength = modifiedContent.length;
+        const sectionLength = contentLength / (additionalImages.length + 1);
         
         // Map of positions where we'll insert images
         const insertPositions = new Map();
         
-        for (let imgIndex = 0; imgIndex < totalImages; imgIndex++) {
-          // Calculate which section break to place the image after
-          const breakIndex = Math.min((imgIndex + 1) * skipFactor, totalBreaks - 1);
+        for (let imgIndex = 0; imgIndex < additionalImages.length; imgIndex++) {
+          // Ideal position would be at (imgIndex + 1) * sectionLength
+          const idealPosition = Math.floor((imgIndex + 1) * sectionLength);
           
-          if (breakIndex >= 0 && breakIndex < sectionBreaks.length) {
-            const breakMatch = sectionBreaks[breakIndex];
-            const breakEndPosition = breakMatch.index! + breakMatch[0].length;
+          // Find the nearest break point after the ideal position
+          let closestBreak = null;
+          let minDistance = Number.MAX_SAFE_INTEGER;
+          
+          for (const breakPoint of allBreakPoints) {
+            const breakPos = breakPoint.index! + breakPoint[0].length;
+            if (breakPos > idealPosition) {
+              const distance = breakPos - idealPosition;
+              if (distance < minDistance) {
+                minDistance = distance;
+                closestBreak = breakPoint;
+              }
+            }
+          }
+          
+          // If we found a suitable break point
+          if (closestBreak) {
+            const breakEndPosition = closestBreak.index! + closestBreak[0].length;
             
             // Avoid placing images too close to each other
-            if ([...insertPositions.keys()].every(pos => Math.abs(pos - breakEndPosition) > 200)) {
+            if ([...insertPositions.keys()].every(pos => Math.abs(pos - breakEndPosition) > 300)) {
               insertPositions.set(breakEndPosition, additionalImages[imgIndex]);
+              
+              // Remove this break point from consideration for future images
+              allBreakPoints.splice(allBreakPoints.indexOf(closestBreak), 1);
             }
           }
         }
