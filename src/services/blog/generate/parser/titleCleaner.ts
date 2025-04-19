@@ -46,9 +46,10 @@ export function cleanTitle(title: string): string {
     .replace(/\\'/g, "'")
     // Remove any HTML tags
     .replace(/<[^>]*>/g, '')
+    // Trim any whitespace from ends
     .trim();
-  
-  // IMPORTANT: We're no longer modifying spaces here, so they should be preserved
+    
+  // CRITICAL: Preserve internal spaces and don't modify them
   
   console.log('📝 Final cleaned title:', cleanedTitle);
   
