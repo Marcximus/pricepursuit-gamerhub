@@ -33,16 +33,20 @@ export function distributeImagesBeforeSections(content: string, imageCount: numb
     
     if (fallbackMatches.length <= 1) {
       // Not enough section breaks, insert at regular intervals in the content
-      // Skip the first 20% of content to account for intro
+      // Skip the first 30% of content to account for intro
       return insertImagesAtRegularIntervals(content, imageCount);
     }
     
     // Skip the first match (intro section) and distribute remaining images
-    return insertImagesBeforeMatches(content, fallbackMatches.slice(1), imageCount);
+    // Make sure we have at least one match before slicing
+    const matchesToUse = fallbackMatches.length > 1 ? fallbackMatches.slice(1) : [];
+    return insertImagesBeforeMatches(content, matchesToUse, imageCount);
   }
   
   // Skip the first h2 match (intro section) and distribute images among remaining sections
-  return insertImagesBeforeMatches(content, matches.slice(1), imageCount);
+  // Make sure we have at least one match before slicing
+  const matchesToUse = matches.length > 1 ? matches.slice(1) : [];
+  return insertImagesBeforeMatches(content, matchesToUse, imageCount);
 }
 
 /**
@@ -87,7 +91,7 @@ function insertImagesBeforeMatches(content: string, matches: RegExpMatchArray[],
 
 /**
  * Insert images at regular intervals when no suitable section breaks are found
- * Skip the first 20% of content to account for intro
+ * Skip the first 30% of content to account for intro
  */
 function insertImagesAtRegularIntervals(content: string, imageCount: number): string {
   if (imageCount <= 0) return content;
@@ -96,10 +100,10 @@ function insertImagesAtRegularIntervals(content: string, imageCount: number): st
   let result = content;
   let offset = 0;
   
-  // Skip first 25% of content to account for intro section
-  const startOffset = Math.floor(contentLength * 0.25);
+  // Skip first 30% of content to account for intro section
+  const startOffset = Math.floor(contentLength * 0.3);
   
-  // Only distribute remaining images in the last 75% of content
+  // Only distribute remaining images in the last 70% of content
   const remainingLength = contentLength - startOffset;
   
   for (let i = 0; i < imageCount; i++) {
@@ -122,4 +126,3 @@ function insertImagesAtRegularIntervals(content: string, imageCount: number): st
   
   return result;
 }
-

@@ -1,3 +1,4 @@
+
 /**
  * Fixes HTML in Top10 blog posts to ensure proper tag closure
  */
@@ -83,24 +84,26 @@ export const injectAdditionalImages = (content: string, additionalImages: string
     });
     
     // If there are no placeholders but we have additional images, inject them before h2 tags
+    // BUT skip the first h2 which is typically part of the intro section
     if (placeholders.length === 0 && additionalImages.length > 0) {
       // Find all h2 tags
       const h2Regex = /<h2[^>]*>/g;
       const h2Tags = Array.from(modifiedContent.matchAll(h2Regex));
       
-      // If we have h2 tags, place images before them
-      if (h2Tags.length > 0) {
+      // If we have h2 tags, place images before them, skipping the first one
+      if (h2Tags.length > 1) {
         let offset = 0;
         
-        // Distribute images evenly before h2 tags
-        const tagsToUse = Math.min(additionalImages.length, h2Tags.length);
+        // Start from the second h2 tag (skip first one which belongs to intro)
+        const tagsToUse = h2Tags.slice(1);
+        const imageCount = Math.min(additionalImages.length, tagsToUse.length);
         
-        for (let i = 0; i < tagsToUse; i++) {
+        for (let i = 0; i < imageCount; i++) {
           // Calculate which h2 to use for even distribution
-          const tagIndex = Math.floor((i * h2Tags.length) / tagsToUse);
+          const tagIndex = Math.floor((i * tagsToUse.length) / imageCount);
           
-          if (tagIndex < h2Tags.length) {
-            const h2Match = h2Tags[tagIndex];
+          if (tagIndex < tagsToUse.length) {
+            const h2Match = tagsToUse[tagIndex];
             const imgSrc = additionalImages[i];
             const position = h2Match.index! + offset;
             

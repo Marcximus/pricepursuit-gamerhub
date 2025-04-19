@@ -64,6 +64,11 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
           // Add spacing between image and heading
           (sectionImage as HTMLElement).style.marginBottom = '1rem';
         }
+        
+        // Make sure images don't appear at very top of content
+        if (!sectionImage.previousElementSibling) {
+          (sectionImage as HTMLElement).style.display = 'none';
+        }
       });
     };
 
