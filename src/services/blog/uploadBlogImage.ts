@@ -16,7 +16,7 @@ export async function uploadBlogImage(
 
     // Generate a unique file name
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
     const filePath = `blog-images/${fileName}`;
 
     // Upload the file without checking auth

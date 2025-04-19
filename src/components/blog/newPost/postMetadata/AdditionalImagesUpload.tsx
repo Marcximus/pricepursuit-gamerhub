@@ -38,13 +38,13 @@ export const AdditionalImagesUpload = ({
   }, [postTitle]);
 
   const handleAdditionalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
     
-    if (additionalImages.length >= maxImages) {
+    if (additionalImages.length + files.length > maxImages) {
       toast({
-        title: "Maximum images reached",
-        description: `You can only upload ${maxImages} additional images for this post type.`,
+        title: "Maximum images exceeded",
+        description: `You can only upload ${maxImages} additional images in total. Please select fewer images.`,
         variant: "destructive",
       });
       return;
@@ -61,26 +61,40 @@ export const AdditionalImagesUpload = ({
       }
       
       setIsUploading(true);
-      const imageIndex = additionalImages.length + 1;
-      const altText = imageAlt || `Image ${imageIndex} for ${postTitle || category || 'blog post'}`;
-      const result = await uploadBlogImage(file, altText);
       
-      if (result) {
-        const updatedImages = [...additionalImages, result.url];
-        const updatedAlts = [...additionalImageAlts, result.alt];
-        onImagesUpdate(updatedImages, updatedAlts);
-        setAdditionalImageAlts(updatedAlts);
+      const newImages: string[] = [...additionalImages];
+      const newAlts: string[] = [...additionalImageAlts];
+      
+      // Process each file in the selection
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const imageIndex = additionalImages.length + i + 1;
+        const altText = imageAlt 
+          ? `${imageAlt} ${imageIndex}` 
+          : `Image ${imageIndex} for ${postTitle || category || 'blog post'}`;
         
-        toast({
-          title: "Additional image uploaded",
-          description: "Your image has been uploaded successfully with alt text.",
-        });
+        const result = await uploadBlogImage(file, altText);
+        
+        if (result) {
+          newImages.push(result.url);
+          newAlts.push(result.alt);
+        }
       }
+      
+      onImagesUpdate(newImages, newAlts);
+      setAdditionalImageAlts(newAlts);
+      
+      toast({
+        title: files.length > 1 ? "Images uploaded" : "Image uploaded",
+        description: files.length > 1 
+          ? `${files.length} images have been uploaded successfully.`
+          : "Your image has been uploaded successfully with alt text.",
+      });
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error('Error uploading images:', error);
       toast({
         title: "Upload failed",
-        description: error instanceof Error ? error.message : "There was an error uploading your image.",
+        description: error instanceof Error ? error.message : "There was an error uploading your images.",
         variant: "destructive",
       });
     } finally {
@@ -132,7 +146,10 @@ export const AdditionalImagesUpload = ({
             <div className="flex flex-col items-center space-y-2">
               <ImagePlus className="h-8 w-8 text-gray-400" />
               <span className="text-sm text-gray-500">
-                {isUploading ? 'Uploading...' : 'Add additional image'}
+                {isUploading ? 'Uploading...' : `Add images (${additionalImages.length}/${maxImages})`}
+              </span>
+              <span className="text-xs text-gray-400">
+                Select multiple files by holding Ctrl/Cmd while clicking
               </span>
             </div>
           </label>
@@ -141,6 +158,7 @@ export const AdditionalImagesUpload = ({
             type="file" 
             className="hidden" 
             accept="image/*" 
+            multiple
             onChange={handleAdditionalImageUpload}
             disabled={isUploading || additionalImages.length >= maxImages}
           />
