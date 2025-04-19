@@ -1,4 +1,3 @@
-
 /* How-To Blog Post Styles */
 
 /* Basic content styling */
@@ -46,13 +45,39 @@
   margin-bottom: 0.5rem;
 }
 
-/* Custom spacer styling */
+/* Improved spacer styling */
 .how-to-content .spacer,
 .how-to-article .spacer {
-  height: 1.5rem;
+  height: 2rem;
   width: 100%;
   display: block;
   clear: both;
+  margin: 1.5rem 0;
+  border-bottom: 1px dashed #e2e8f0;
+  opacity: 0.5;
+}
+
+/* Improved blog image container styling */
+.blog-image-container {
+  margin: 2.5rem 0;
+  text-align: center;
+  clear: both;
+  width: 100%;
+  padding: 0.5rem;
+}
+
+.blog-image-container img {
+  max-width: 85%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.blog-image-container img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 24px -6px rgba(0, 0, 0, 0.2);
 }
 
 /* QA Item Styling */
@@ -169,39 +194,48 @@
   content: "⚠️";
 }
 
-/* Image Placeholders */
+/* Improved Image Placeholders */
 .image-placeholder {
-  margin: 2rem 0;
-  padding: 2rem;
-  background-color: #f8fafc;
-  border: 2px dashed #cbd5e1;
+  margin: 2.5rem 0;
+  padding: 2.5rem 2rem;
+  background-color: #f0f9ff;
+  border: 2px dashed #93c5fd;
   border-radius: 0.5rem;
   text-align: center;
+  transition: all 0.2s ease;
+}
+
+.image-placeholder:hover {
+  background-color: #e0f2fe;
+  border-color: #60a5fa;
+  cursor: pointer;
 }
 
 .image-placeholder::before {
   content: "📸";
   display: block;
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .image-placeholder .placeholder-text {
-  color: #64748b;
-  font-style: italic;
+  color: #3b82f6;
+  font-weight: 500;
+  font-size: 1.1rem;
 }
 
 .image-placeholder:after {
-  content: "Image Placeholder";
+  content: "Click to upload image";
   display: block;
   color: #64748b;
   font-style: italic;
   font-size: 0.875rem;
+  margin-top: 0.5rem;
 }
 
 /* Blog Image Container */
 .blog-image-container {
-  margin: 2rem 0;
+  margin: 2.5rem 0;
   text-align: center;
   clear: both;
   width: 100%;

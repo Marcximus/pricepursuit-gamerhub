@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VideoPlacementButton } from './VideoPlacementButton';
 import { ImagePlaceholderHandler } from './ImagePlaceholderHandler';
+import { useState } from 'react';
 
 interface ContentEditorProps {
   content: string;
@@ -24,6 +25,7 @@ export const ContentEditor = ({
   category,
   postTitle
 }: ContentEditorProps) => {
+  const [imageCount, setImageCount] = useState(0);
   
   const handleAddVideoPlacement = () => {
     const videoScript = `\n\n<script data-ezscrex="false" data-cfasync="false">(window.humixPlayers = window.humixPlayers || []).push({target: document.currentScript});</script><script async data-ezscrex="false" data-cfasync="false" src="https://www.humix.com/video.js"></script>\n\n`;
@@ -76,27 +78,41 @@ export const ContentEditor = ({
     );
     
     if (category === 'How-To') {
-      // Mark h2 and h3 headings to show where images might be placed
-      processedContent = processedContent.replace(
-        /(<h2[^>]*>)(.*?)(<\/h2>)/g,
-        '$1$2$3<div class="p-3 mt-2 mb-4 border border-dashed border-blue-300 bg-blue-50 rounded-md text-center"><span class="text-xs text-blue-600">📸 Images will appear near this section</span></div>'
-      );
+      // Calculate the number of images available
+      const imageCount = processedContent.match(/<div class="image-placeholder"[^>]*>/g)?.length || 0;
+      setImageCount(imageCount);
       
-      // Convert image placeholders to more visible preview elements
-      processedContent = processedContent.replace(
-        /<div class="image-placeholder"[^>]*>/g,
-        '<div class="p-4 my-6 border-2 border-dashed border-blue-500 bg-blue-50 rounded-md text-center">' +
-        '<p class="text-blue-600 font-medium">📸 Image will be placed here</p>' +
-        '<p class="text-sm text-blue-500 mt-2">Upload an image in the Additional Images section</p>'
-      );
-      
-      // Add visual guide about image placement
+      // Add helpful guidance banner at the top of the preview
       processedContent = '<div class="p-4 mb-6 bg-blue-50 border border-blue-200 rounded-md">' +
         '<p class="text-sm text-blue-800 font-medium">💡 <strong>Image Placement Guide:</strong> ' +
-        'Images will be automatically distributed throughout your content, typically after sections ' +
-        'and paragraphs. Add <code>&lt;h2&gt;</code> and <code>&lt;h3&gt;</code> headings to control ' +
-        'where images will appear.</p>' +
+        `${imageCount} images will be automatically distributed evenly throughout your content. ` +
+        'Use <code>&lt;h2&gt;</code> and <code>&lt;h3&gt;</code> headings to create logical sections ' +
+        'where images will be placed.</p>' +
         '</div>' + processedContent;
+        
+      // Highlight sections where images will likely be placed
+      let sectionCount = 0;
+      
+      // Mark sections (after headings) to show where images might be placed
+      processedContent = processedContent.replace(
+        /(<h[23][^>]*>)(.*?)(<\/h[23]>)/g,
+        (match, openTag, content, closeTag) => {
+          sectionCount++;
+          // Only add image indicators for some sections to simulate distribution
+          const shouldShowImage = sectionCount % Math.max(2, Math.ceil(sectionCount / Math.max(1, imageCount))) === 1;
+          
+          if (shouldShowImage) {
+            return `${openTag}${content}${closeTag}<div class="p-3 mt-2 mb-4 border border-dashed border-blue-300 bg-blue-50 rounded-md text-center"><span class="text-xs text-blue-600">📸 Image will likely appear near this section</span></div>`;
+          }
+          return match;
+        }
+      );
+      
+      // Add visual spacer indicators for better visualization of section breaks
+      processedContent = processedContent.replace(
+        /<div class="spacer"><\/div>/g,
+        '<div class="p-2 my-3 border border-dashed border-gray-300 bg-gray-50 rounded-md text-center"><span class="text-xs text-gray-500">Spacer - Visual Separation</span></div>'
+      );
     }
     
     return processedContent;
@@ -159,7 +175,10 @@ export const ContentEditor = ({
           {category === 'How-To' && (
             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-sm text-blue-800 font-medium">
-                HTML formatting will be preserved in the published post. Images will be positioned throughout your content based on headings and paragraphs.
+                HTML formatting will be preserved in the published post. Images will be distributed evenly throughout your content based on document structure.
+              </p>
+              <p className="text-sm text-blue-600 mt-2">
+                <strong>Images:</strong> {imageCount} image{imageCount !== 1 ? 's' : ''} will be positioned automatically.
               </p>
             </div>
           )}
