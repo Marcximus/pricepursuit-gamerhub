@@ -14,6 +14,7 @@ export function replaceImagePlaceholders(content: string): string {
 
 /**
  * Distribute images evenly across the content before section breaks
+ * Skip the first section since it will have an intro image
  * @param content HTML content
  * @param imageCount Number of images to distribute
  * @returns HTML content with image placeholders inserted before section breaks
@@ -32,35 +33,33 @@ export function distributeImagesBeforeSections(content: string, imageCount: numb
     
     if (fallbackMatches.length <= 1) {
       // Not enough section breaks, insert at regular intervals in the content
+      // Skip the first 20% of content to account for intro
       return insertImagesAtRegularIntervals(content, imageCount);
     }
     
-    // Use fallback matches for positioning
-    return insertImagesBeforeMatches(content, fallbackMatches, imageCount);
+    // Skip the first match (intro section) and distribute remaining images
+    return insertImagesBeforeMatches(content, fallbackMatches.slice(1), imageCount);
   }
   
-  // Use h2 matches for positioning
-  return insertImagesBeforeMatches(content, matches, imageCount);
+  // Skip the first h2 match (intro section) and distribute images among remaining sections
+  return insertImagesBeforeMatches(content, matches.slice(1), imageCount);
 }
 
 /**
  * Insert images before matched section breaks
  */
 function insertImagesBeforeMatches(content: string, matches: RegExpMatchArray[], imageCount: number): string {
-  // Skip the first heading (usually the title) and distribute images before other section breaks
-  const availableBreakPoints = matches.length > 1 ? matches.slice(1) : matches;
-  
-  if (availableBreakPoints.length === 0) {
+  if (matches.length === 0) {
     return insertImagesAtRegularIntervals(content, imageCount);
   }
   
-  const breakPointsToUse = Math.min(imageCount, availableBreakPoints.length);
+  const breakPointsToUse = Math.min(imageCount, matches.length);
   
   // Calculate which break points to use for even distribution
   const breakIndices = [];
   for (let i = 0; i < breakPointsToUse; i++) {
     // Distribute evenly across available break points
-    const index = Math.floor((i * availableBreakPoints.length) / breakPointsToUse);
+    const index = Math.floor((i * matches.length) / breakPointsToUse);
     breakIndices.push(index);
   }
   
@@ -69,8 +68,8 @@ function insertImagesBeforeMatches(content: string, matches: RegExpMatchArray[],
   let offset = 0;
   
   breakIndices.forEach((breakIdx, imageIdx) => {
-    if (breakIdx < availableBreakPoints.length) {
-      const match = availableBreakPoints[breakIdx];
+    if (breakIdx < matches.length) {
+      const match = matches[breakIdx];
       const position = match.index! + offset;
       const imageHTML = `<div class="section-image">
         <div class="image-placeholder" id="image-${imageIdx + 1}">
@@ -88,6 +87,7 @@ function insertImagesBeforeMatches(content: string, matches: RegExpMatchArray[],
 
 /**
  * Insert images at regular intervals when no suitable section breaks are found
+ * Skip the first 20% of content to account for intro
  */
 function insertImagesAtRegularIntervals(content: string, imageCount: number): string {
   if (imageCount <= 0) return content;
@@ -96,15 +96,15 @@ function insertImagesAtRegularIntervals(content: string, imageCount: number): st
   let result = content;
   let offset = 0;
   
-  // Skip first 20% of content for first image to avoid placing near the title
-  const startOffset = Math.floor(contentLength * 0.2);
+  // Skip first 25% of content to account for intro section
+  const startOffset = Math.floor(contentLength * 0.25);
+  
+  // Only distribute remaining images in the last 75% of content
+  const remainingLength = contentLength - startOffset;
   
   for (let i = 0; i < imageCount; i++) {
-    // Calculate position based on content length
-    // First image after 20% of content, then distribute remaining images evenly
-    const position = i === 0 
-      ? startOffset 
-      : Math.floor(startOffset + ((contentLength - startOffset) * i / imageCount));
+    // Calculate position in remaining content
+    const position = startOffset + Math.floor((remainingLength * (i + 1)) / (imageCount + 1));
     
     // Find the next paragraph or section end to insert image
     const nextParagraphEnd = result.indexOf('</p>', position + offset);
@@ -122,3 +122,4 @@ function insertImagesAtRegularIntervals(content: string, imageCount: number): st
   
   return result;
 }
+
