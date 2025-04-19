@@ -1,8 +1,4 @@
 
-import { cleanupContent, fixHtmlTags, formatTables } from './contentProcessor';
-import { addVideoEmbed, wrapTextInHtml } from './htmlGenerator';
-import { getHowToPrompt } from './howToPrompt';
-
 /**
  * Process How-To blog content to ensure proper formatting
  */
@@ -82,6 +78,9 @@ export function processHowToContent(content: string, title: string): string {
         </div>`;
       });
       
+      // Add a wrapper class to help with styling
+      processedContent = `<div class="how-to-content">${processedContent}</div>`;
+      
       // Format FAQ sections
       processedContent = formatFAQSections(processedContent);
       
@@ -99,6 +98,9 @@ export function processHowToContent(content: string, title: string): string {
   processedContent = fixHtmlTags(processedContent);
   processedContent = formatTables(processedContent);
   processedContent = addVideoEmbed(processedContent);
+  
+  // Add a wrapper class to help with styling
+  processedContent = `<div class="how-to-content">${processedContent}</div>`;
   
   // Format FAQ sections and step-by-step instructions
   processedContent = formatFAQSections(processedContent);

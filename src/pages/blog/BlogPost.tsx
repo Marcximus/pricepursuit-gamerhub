@@ -15,6 +15,7 @@ import {
   improveContentSpacing
 } from '@/components/blog/post';
 import { processHowToContent } from '@/services/blog/howto';
+import '@/styles/how-to-blog.css'; // Import the How-To blog CSS directly
 
 const BlogPost = () => {
   const { category, slug } = useParams<{ category: string; slug: string }>();
@@ -61,7 +62,6 @@ const BlogPost = () => {
   } else if (category === 'How-To') {
     try {
       // Use the synchronous version of our How-To processor
-      // We'll handle any errors inside the component for better UX
       const tmpProcessedContent = processHowToContent(processedContent, post.title);
       // Only update if successful
       if (tmpProcessedContent && typeof tmpProcessedContent === 'string') {
@@ -86,7 +86,7 @@ const BlogPost = () => {
       
       <div className="pt-20 container mx-auto px-4 mt-10">
         <div className="max-w-3xl mx-auto">
-          <article>
+          <article className={category === 'How-To' ? 'how-to-article' : ''}>
             <BlogPostHeader post={post} category={category} />
             
             <BlogPostContent post={post} content={enhancedContent} />
