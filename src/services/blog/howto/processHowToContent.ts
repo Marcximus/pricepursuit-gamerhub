@@ -21,18 +21,15 @@ export function processHowToContent(content: string, title: string): string {
     processedContent = formatTables(processedContent);
     processedContent = addVideoEmbed(processedContent);
     
+    // Replace image placeholders with proper HTML
+    processedContent = replaceImagePlaceholders(processedContent);
+    
     // Format FAQ sections and step-by-step instructions
     processedContent = formatFAQSections(processedContent);
     processedContent = formatStepByStepInstructions(processedContent);
     
-    // Replace image placeholder text with proper HTML
-    processedContent = replaceImagePlaceholders(processedContent);
-    
-    // Count how many image placeholders we have and distribute them
-    const imagePlaceholders = (processedContent.match(/<div class="image-placeholder"/g) || []).length;
-    if (imagePlaceholders > 0) {
-      processedContent = distributeImagesBeforeSections(processedContent, imagePlaceholders);
-    }
+    // Distribute images evenly before section breaks (after formatting sections)
+    processedContent = distributeImagesBeforeSections(processedContent, 3);
     
     // Wrap content in HTML container
     processedContent = wrapContentInHtml(processedContent);
@@ -50,22 +47,16 @@ export function processHowToContent(content: string, title: string): string {
   processedContent = formatFAQSections(processedContent);
   processedContent = formatStepByStepInstructions(processedContent);
   
+  // Distribute images evenly before section breaks
+  processedContent = distributeImagesBeforeSections(processedContent, 3);
+  
+  // Wrap content in HTML container
+  processedContent = wrapContentInHtml(processedContent);
+  
   // If no HTML tags found, wrap in basic HTML
   if (!processedContent.includes('<h1>') && !processedContent.includes('<p>')) {
     processedContent = wrapTextInHtml(processedContent, title);
   }
-  
-  // Replace image placeholder text with proper HTML
-  processedContent = replaceImagePlaceholders(processedContent);
-  
-  // Count how many image placeholders we have and distribute them
-  const imagePlaceholders = (processedContent.match(/<div class="image-placeholder"/g) || []).length;
-  if (imagePlaceholders > 0) {
-    processedContent = distributeImagesBeforeSections(processedContent, imagePlaceholders);
-  }
-  
-  // Wrap content in HTML container
-  processedContent = wrapContentInHtml(processedContent);
   
   return processedContent;
 }

@@ -13,83 +13,52 @@ export function replaceImagePlaceholders(content: string): string {
 }
 
 /**
- * Distribute image placeholders evenly throughout the content,
- * placing them before new sections (h2, h3, qa-items, step-containers)
+ * Distribute images evenly across the content before section breaks
+ * @param content HTML content
+ * @param imageCount Number of images to distribute
+ * @returns HTML content with image placeholders inserted before section breaks
  */
-export function distributeImagesBeforeSections(content: string, imageCount: number): string {
+export function distributeImagesBeforeSections(content: string, imageCount: number = 3): string {
   if (!content || imageCount <= 0) return content;
   
-  // Find all section break points (headings, Q&A items, step containers)
-  const sectionBreakRegex = /<h[23][^>]*>|<div class="qa-item">|<div class="step-container">/g;
-  const matches = [...content.matchAll(sectionBreakRegex)];
+  // Find all section break points (h2, h3, div.qa-item, div.step-container)
+  const sectionBreakRegex = /<(h2|h3|div class="qa-item"|div class="step-container")[^>]*>/g;
+  const matches = Array.from(content.matchAll(sectionBreakRegex));
   
-  // If no section breaks or too few, return original content
-  if (matches.length <= 1) return content;
-  
-  // Calculate distribution points - we want to place images evenly before sections
-  // Skip the first heading (usually the title) and distribute images before later sections
-  const startIndex = 1; // Skip the first heading (title)
-  
-  // Choose breakpoints evenly throughout the sections
-  const step = Math.max(1, Math.floor((matches.length - startIndex) / imageCount));
-  let modifiedContent = content;
-  let insertedImages = 0;
-  
-  // Create image placeholders
-  const createImagePlaceholder = (index: number) => {
-    return `\n<div class="image-placeholder blog-section-image" id="image-${index + 1}">
-  <p class="placeholder-text">Click to upload image ${index + 1}</p>
-</div>\n`;
-  };
-  
-  // Insert images before selected section breaks
-  for (let i = startIndex; i < matches.length && insertedImages < imageCount; i += step) {
-    const match = matches[i];
-    if (match && match.index !== undefined) {
-      const placeholder = createImagePlaceholder(insertedImages);
-      modifiedContent = 
-        modifiedContent.substring(0, match.index) + 
-        placeholder +
-        modifiedContent.substring(match.index);
-      
-      // Adjust subsequent match indices to account for the inserted content
-      for (let j = i + 1; j < matches.length; j++) {
-        if (matches[j].index !== undefined) {
-          matches[j].index += placeholder.length;
-        }
-      }
-      
-      insertedImages++;
-    }
+  if (matches.length <= 1) {
+    // Not enough section breaks, return content as is
+    return content;
   }
   
-  // If we still have images left to place, put them at regular intervals in the remaining content
-  if (insertedImages < imageCount) {
-    const remainingImages = imageCount - insertedImages;
-    const contentChunks = Math.min(remainingImages + 1, 4); // Split into at most 4 sections
-    const contentLength = modifiedContent.length;
-    const chunkSize = Math.floor(contentLength / contentChunks);
-    
-    for (let i = 0; i < remainingImages; i++) {
-      const position = Math.min(
-        contentLength - 1, 
-        chunkSize * (i + 1)
-      );
-      
-      // Find the next paragraph end or div end after the target position
-      const nextBreakMatch = modifiedContent.substring(position).match(/<\/p>|<\/div>/);
-      if (nextBreakMatch) {
-        const breakPosition = position + nextBreakMatch.index! + nextBreakMatch[0].length;
-        const placeholder = createImagePlaceholder(insertedImages + i);
-        
-        modifiedContent = 
-          modifiedContent.substring(0, breakPosition) + 
-          placeholder +
-          modifiedContent.substring(breakPosition);
-      }
-    }
+  // Skip the first heading (usually the title) and distribute images before other section breaks
+  const availableBreakPoints = matches.slice(1);
+  const breakPointsToUse = Math.min(imageCount, availableBreakPoints.length);
+  
+  // Calculate which break points to use for even distribution
+  const breakIndices = [];
+  for (let i = 0; i < breakPointsToUse; i++) {
+    const index = Math.floor(availableBreakPoints.length * (i + 1) / (breakPointsToUse + 1));
+    breakIndices.push(index);
   }
   
-  return modifiedContent;
+  // Insert image placeholders at the calculated positions
+  let result = content;
+  let offset = 0;
+  
+  breakIndices.forEach((breakIdx, imageIdx) => {
+    if (breakIdx < availableBreakPoints.length) {
+      const match = availableBreakPoints[breakIdx];
+      const position = match.index! + offset;
+      const imageHTML = `<div class="section-image">
+        <div class="image-placeholder" id="image-${imageIdx + 1}">
+          <p class="placeholder-text">Click to upload image ${imageIdx + 1}</p>
+        </div>
+      </div>\n`;
+      
+      result = result.slice(0, position) + imageHTML + result.slice(position);
+      offset += imageHTML.length;
+    }
+  });
+  
+  return result;
 }
-
