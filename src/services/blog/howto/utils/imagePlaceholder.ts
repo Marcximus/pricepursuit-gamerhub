@@ -13,24 +13,24 @@ export function replaceImagePlaceholders(content: string): string {
 }
 
 /**
- * Distribute images evenly across the content before section breaks
+ * Distribute images evenly across the content after section breaks
  * @param content HTML content
  * @param imageCount Number of images to distribute
- * @returns HTML content with image placeholders inserted before section breaks
+ * @returns HTML content with image placeholders inserted after section breaks
  */
 export function distributeImagesBeforeSections(content: string, imageCount: number = 3): string {
   if (!content || imageCount <= 0) return content;
   
-  // Find all section break points (h2, h3, div.qa-item, div.step-container)
-  const sectionBreakRegex = /<(h2|h3|div class="qa-item"|div class="step-container")[^>]*>/g;
-  const matches = Array.from(content.matchAll(sectionBreakRegex));
+  // Find all section end points (closing tags for h2, h3, div.qa-item, div.step-container)
+  const sectionEndRegex = /(<\/(h2|h3)>|<\/div>(?=.*?class="(?:qa-item|step-container)"))/g;
+  const matches = Array.from(content.matchAll(sectionEndRegex));
   
   if (matches.length <= 1) {
     // Not enough section breaks, return content as is
     return content;
   }
   
-  // Skip the first heading (usually the title) and distribute images before other section breaks
+  // Skip the first heading (usually the title) and distribute images after other section breaks
   const availableBreakPoints = matches.slice(1);
   const breakPointsToUse = Math.min(imageCount, availableBreakPoints.length);
   
@@ -48,8 +48,8 @@ export function distributeImagesBeforeSections(content: string, imageCount: numb
   breakIndices.forEach((breakIdx, imageIdx) => {
     if (breakIdx < availableBreakPoints.length) {
       const match = availableBreakPoints[breakIdx];
-      const position = match.index! + offset;
-      const imageHTML = `<div class="section-image">
+      const position = match.index! + match[0].length + offset;
+      const imageHTML = `\n<div class="section-image">
         <div class="image-placeholder" id="image-${imageIdx + 1}">
           <p class="placeholder-text">Click to upload image ${imageIdx + 1}</p>
         </div>
