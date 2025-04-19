@@ -57,6 +57,12 @@ function insertImagesBeforeMatches(content: string, matches: RegExpMatchArray[],
     return insertImagesAtRegularIntervals(content, imageCount);
   }
   
+  // Make sure we have enough matches to distribute images
+  // We need at least one match per image
+  if (matches.length < imageCount) {
+    return insertImagesAtRegularIntervals(content, imageCount);
+  }
+  
   const breakPointsToUse = Math.min(imageCount, matches.length);
   
   // Calculate which break points to use for even distribution
@@ -120,7 +126,11 @@ function insertImagesAtRegularIntervals(content: string, imageCount: number): st
       </div>
     </div>\n`;
     
-    result = result.slice(0, insertPosition) + imageHTML + result.slice(insertPosition);
+    result = 
+      result.slice(0, insertPosition) + 
+      imageHTML + 
+      result.slice(insertPosition);
+      
     offset += imageHTML.length;
   }
   

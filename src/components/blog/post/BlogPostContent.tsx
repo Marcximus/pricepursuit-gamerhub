@@ -54,7 +54,7 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
       
       // Ensure section images are properly positioned before headings
       const sectionImages = contentRef.current?.querySelectorAll('.section-image');
-      sectionImages?.forEach(sectionImage => {
+      sectionImages?.forEach((sectionImage, index) => {
         const nextElement = sectionImage.nextElementSibling;
         
         // If next element is not a heading (h2, h3, etc.), adjust spacing
@@ -65,8 +65,13 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
           (sectionImage as HTMLElement).style.marginBottom = '1rem';
         }
         
-        // Make sure images don't appear at very top of content
-        if (!sectionImage.previousElementSibling) {
+        // Only hide the image if it's the first element in the content
+        // AND there's no content before it (to avoid hiding all images)
+        const isFirstElement = !sectionImage.previousElementSibling;
+        const isAtVeryTop = sectionImage.getBoundingClientRect().top < 300;
+        
+        if (isFirstElement && isAtVeryTop && index === 0) {
+          console.log('Hiding first image that appears at the very top');
           (sectionImage as HTMLElement).style.display = 'none';
         }
       });

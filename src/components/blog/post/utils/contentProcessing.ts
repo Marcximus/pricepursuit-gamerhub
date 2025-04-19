@@ -66,26 +66,35 @@ export const injectAdditionalImages = (content: string, additionalImages: string
     const placeholderRegex = /<div class="image-placeholder" id="image-(\d+)"[^>]*>.*?<\/div>/gs;
     const placeholders = Array.from(modifiedContent.matchAll(placeholderRegex));
     
-    placeholders.forEach((match, index) => {
-      if (index < additionalImages.length) {
-        const imgSrc = additionalImages[index];
-        const imageHtml = `<img 
-          src="${imgSrc}" 
-          alt="How-to guide image ${index + 1}" 
-          class="rounded-lg w-full how-to-image" 
-          onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
-        />`;
-        
-        modifiedContent = modifiedContent.replace(
-          match[0],
-          imageHtml
-        );
-      }
-    });
+    // If we found placeholders, replace them with actual images
+    if (placeholders.length > 0) {
+      console.log(`Found ${placeholders.length} placeholders to replace with images`);
+      
+      placeholders.forEach((match, index) => {
+        if (index < additionalImages.length) {
+          const imgSrc = additionalImages[index];
+          const imageHtml = `<img 
+            src="${imgSrc}" 
+            alt="How-to guide image ${index + 1}" 
+            class="rounded-lg w-full how-to-image" 
+            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
+          />`;
+          
+          modifiedContent = modifiedContent.replace(
+            match[0],
+            imageHtml
+          );
+        }
+      });
+      
+      return modifiedContent;
+    }
     
     // If there are no placeholders but we have additional images, inject them before h2 tags
     // BUT skip the first h2 which is typically part of the intro section
     if (placeholders.length === 0 && additionalImages.length > 0) {
+      console.log('No placeholders found, adding images before h2 tags');
+      
       // Find all h2 tags
       const h2Regex = /<h2[^>]*>/g;
       const h2Tags = Array.from(modifiedContent.matchAll(h2Regex));
@@ -122,7 +131,45 @@ export const injectAdditionalImages = (content: string, additionalImages: string
               modifiedContent.substring(position);
               
             offset += imageHtml.length;
+            console.log(`Added image at position ${position} before h2 tag`);
           }
+        }
+      } else if (h2Tags.length === 1) {
+        // If there's only one h2 tag, distribute the images throughout the content
+        console.log('Only one h2 tag found, distributing images evenly in content');
+        const contentLength = modifiedContent.length;
+        const h2Position = h2Tags[0].index!;
+        
+        // Skip the first section (before the h2)
+        // Place images in the remaining content
+        const afterH2Content = modifiedContent.substring(h2Position);
+        const remainingLength = afterH2Content.length;
+        
+        for (let i = 0; i < Math.min(additionalImages.length, 3); i++) {
+          const imgSrc = additionalImages[i];
+          // Calculate position in the content after the h2
+          const relativePosition = Math.floor((remainingLength * (i + 1)) / 4); // divide into 4 parts
+          const absolutePosition = h2Position + relativePosition;
+          
+          // Find a good place to insert (after a paragraph)
+          const nextParagraphEnd = modifiedContent.indexOf('</p>', absolutePosition);
+          const insertPosition = nextParagraphEnd !== -1 ? nextParagraphEnd + 4 : absolutePosition;
+          
+          const imageHtml = `<div class="section-image">
+            <img 
+              src="${imgSrc}" 
+              alt="How-to guide image ${i + 1}" 
+              class="rounded-lg w-full how-to-image" 
+              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
+            />
+          </div>\n`;
+          
+          modifiedContent = 
+            modifiedContent.substring(0, insertPosition) + 
+            imageHtml + 
+            modifiedContent.substring(insertPosition);
+            
+          console.log(`Added image at position ${insertPosition} in the content`);
         }
       }
     }
