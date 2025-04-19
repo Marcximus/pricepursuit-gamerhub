@@ -50,35 +50,38 @@ export const ContentEditor = ({
     } as React.ChangeEvent<HTMLTextAreaElement>);
   };
 
-  // Fix the function to preserve HTML formatting in preview
   const prepareContentForPreview = (content: string) => {
-    // Handle JSON-formatted content by extracting only the content value
     if (content.trim().startsWith('{') && content.includes('"content":')) {
       try {
         const parsed = JSON.parse(content);
         return parsed.content || content;
       } catch (e) {
-        // If parsing fails, continue with original content
         console.error('Error parsing JSON content:', e);
       }
     }
     
-    // Remove excerpt and tags sections for preview if they exist
     let processedContent = content
       .replace(/\*\*Excerpt:\*\*([\s\S]*?)(?=\n\n)/, '')
       .replace(/\*\*Tags:\*\*([\s\S]*?)$/, '');
       
-    // Highlight product placeholders to make them more visible in the preview
     processedContent = processedContent.replace(
       /<div class="product-placeholder"[^>]*data-asin="([^"]*)"[^>]*data-index="([^"]*)"[^>]*><\/div>/g,
       '<div class="p-4 my-4 border-2 border-dashed border-amber-500 bg-amber-50 rounded-md text-center font-bold">Product Placeholder #$2 (ASIN: $1)</div>'
     );
     
-    // Style raw product card HTML for better preview visualization
     processedContent = processedContent.replace(
       /<div class="product-card"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g,
       '<div class="p-4 my-4 border-2 border-dashed border-blue-500 bg-blue-50 rounded-md text-center font-bold">Product Card HTML (Will be rendered as proper product card)</div>'
     );
+    
+    if (category === 'How-To') {
+      processedContent = processedContent.replace(
+        /<div class="image-placeholder"[^>]*>/g,
+        '<div class="p-4 my-6 border-2 border-dashed border-blue-500 bg-blue-50 rounded-md text-center">' +
+        '<p class="text-blue-600 font-medium">📸 Image will be placed here</p>' +
+        '<p class="text-sm text-blue-500 mt-2">Upload an image in the Additional Images section</p>'
+      );
+    }
     
     return processedContent;
   };
@@ -149,3 +152,5 @@ export const ContentEditor = ({
     </div>
   );
 };
+
+export default ContentEditor;

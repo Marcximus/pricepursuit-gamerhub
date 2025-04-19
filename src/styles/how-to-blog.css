@@ -1,4 +1,3 @@
-
 /* How-To Blog Post Styles */
 
 /* Basic content styling */
@@ -168,13 +167,24 @@
 
 /* Image Placeholders */
 .image-placeholder {
-  background-color: #f1f5f9;
+  margin: 2rem 0;
+  padding: 2rem;
+  background-color: #f8fafc;
   border: 2px dashed #cbd5e1;
   border-radius: 0.5rem;
-  padding: 2rem;
-  margin: 1.5rem 0;
   text-align: center;
-  position: relative;
+}
+
+.image-placeholder::before {
+  content: "📸";
+  display: block;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.image-placeholder .placeholder-text {
+  color: #64748b;
+  font-style: italic;
 }
 
 .image-placeholder:after {
@@ -183,6 +193,20 @@
   color: #64748b;
   font-style: italic;
   font-size: 0.875rem;
+}
+
+/* Blog Image Container */
+.blog-image-container {
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.blog-image-container img {
+  max-width: 75%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* Code Blocks */

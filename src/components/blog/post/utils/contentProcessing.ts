@@ -1,4 +1,3 @@
-
 /**
  * Fixes HTML in Top10 blog posts to ensure proper tag closure
  */
@@ -60,27 +59,23 @@ export const injectAdditionalImages = (content: string, additionalImages: string
   
   if (['Review', 'How-To', 'Comparison'].includes(category || '')) {
     let modifiedContent = content;
-    const paragraphs = content.match(/<p>.*?<\/p>/gi) || [];
+    const sections = content.match(/<h2>.*?(?=<h2>|$)/gs) || [];
     
     additionalImages.forEach((img, index) => {
-      const targetParagraphIndex = Math.min(
-        Math.floor(paragraphs.length * (index + 1) / (additionalImages.length + 1)),
-        paragraphs.length - 1
-      );
-      
-      if (targetParagraphIndex >= 0 && paragraphs[targetParagraphIndex]) {
-        const imageHtml = `<div class="my-4">
+      if (index < sections.length) {
+        const section = sections[index];
+        const imageHtml = `<div class="blog-image-container">
           <img 
             src="${img}" 
             alt="Image ${index + 1}" 
-            class="rounded-lg w-full" 
+            class="rounded-lg mx-auto" 
             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
           />
         </div>`;
         
         modifiedContent = modifiedContent.replace(
-          paragraphs[targetParagraphIndex],
-          `${paragraphs[targetParagraphIndex]}${imageHtml}`
+          section,
+          `${section}${imageHtml}`
         );
       }
     });
