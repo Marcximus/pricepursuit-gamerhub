@@ -1,4 +1,3 @@
-
 /**
  * Handle image placeholder replacements in How-To content
  */
@@ -21,7 +20,7 @@ export function replaceImagePlaceholders(content: string): string {
 export function distributeImagesBeforeSections(content: string, imageCount: number = 3): string {
   if (!content || imageCount <= 0) return content;
   
-  // First try to find h2 tags to use as section breaks
+  // Find all h2 tags to use as section breaks
   const h2Regex = /<h2[^>]*>/g;
   const h2Matches = Array.from(content.matchAll(h2Regex));
   
@@ -44,42 +43,22 @@ export function distributeImagesBeforeSections(content: string, imageCount: numb
     const contentBeforeImages = content.substring(0, contentStartIndex);
     const contentForImages = content.substring(contentStartIndex);
     
-    if (h2Matches.length >= imageCount) {
+    // Get h2 tags after the introduction
+    const h2MatchesAfterIntro = h2Matches.filter(match => match.index! >= contentStartIndex - introEnd);
+    
+    if (h2MatchesAfterIntro.length >= imageCount) {
       // We have enough h2 tags to distribute images
-      return insertImagesBeforeHeadings(contentBeforeImages, contentForImages, h2Matches, imageCount);
+      return insertImagesBeforeHeadings(contentBeforeImages, contentForImages, h2MatchesAfterIntro, imageCount);
+    } else if (h2MatchesAfterIntro.length > 0) {
+      // Not enough h2 tags, but we have some - use them and distribute evenly
+      return insertImagesEvenly(contentBeforeImages, contentForImages, h2MatchesAfterIntro, imageCount);
     } else {
-      // Not enough h2 tags, use regular intervals
+      // No h2 tags, use regular intervals with paragraphs
       return insertImagesAtRegularIntervals(contentBeforeImages, contentForImages, imageCount);
     }
   } else if (h2Matches.length > 0) {
-    // No clear intro but we have h2 tags
-    // Use the first h2 as the intro section
-    const firstH2Index = h2Matches[0].index!;
-    const firstParaAfterH2Regex = /<\/p>/;
-    const firstParaAfterH2Match = content.substring(firstH2Index).match(firstParaAfterH2Regex);
-    
-    let contentStartIndex = firstH2Index;
-    if (firstParaAfterH2Match) {
-      contentStartIndex = firstH2Index + firstParaAfterH2Match.index! + 4;
-    }
-    
-    const contentBeforeImages = content.substring(0, contentStartIndex);
-    const contentForImages = content.substring(contentStartIndex);
-    
-    if (h2Matches.length > 1) {
-      // Use remaining h2 tags for image distribution
-      const remainingH2s = h2Matches.slice(1).map(match => {
-        return {
-          ...match,
-          index: match.index! - contentStartIndex // Adjust index for the new substring
-        };
-      });
-      
-      return insertImagesBeforeHeadings(contentBeforeImages, contentForImages, remainingH2s, imageCount);
-    } else {
-      // Only one h2, use regular intervals
-      return insertImagesAtRegularIntervals(contentBeforeImages, contentForImages, imageCount);
-    }
+    // No clear intro but we have h2 tags - use them directly
+    return insertImagesBeforeHeadings('', content, h2Matches, imageCount);
   } else {
     // No headings at all - look for paragraphs as delimiters
     const paragraphRegex = /<\/p>/g;
@@ -106,19 +85,48 @@ export function distributeImagesBeforeSections(content: string, imageCount: numb
 }
 
 /**
- * Insert images before heading tags
+ * Insert images before heading tags - IMPROVED to ensure they're before h2 tags
  */
 function insertImagesBeforeHeadings(contentBeforeImages: string, contentForImages: string, headings: RegExpMatchArray[], imageCount: number): string {
-  const distributionPoints = Math.min(headings.length, imageCount);
+  // Only use h2 headings for image placement
+  const h2Headings = headings.filter(h => {
+    const tagMatch = h[0].match(/<(h[1-6])[^>]*>/);
+    return tagMatch && tagMatch[1] === 'h2';
+  });
+  
+  if (h2Headings.length === 0) {
+    return insertImagesAtRegularIntervals(contentBeforeImages, contentForImages, imageCount);
+  }
+  
+  const distributionPoints = Math.min(h2Headings.length, imageCount);
   let processedContent = contentForImages;
   let offset = 0;
   
+  // Sort headings by their position
+  const sortedHeadings = [...h2Headings].sort((a, b) => a.index! - b.index!);
+  
   // Calculate which headings to use for even distribution
-  for (let i = 0; i < distributionPoints; i++) {
-    // Calculate heading indices with even spacing
-    const headingIndex = Math.floor(i * headings.length / distributionPoints);
-    if (headingIndex < headings.length) {
-      const position = headings[headingIndex].index! + offset;
+  const selectedIndices = [];
+  
+  if (distributionPoints === 1) {
+    // If only one image, put it before the first h2
+    selectedIndices.push(0);
+  } else {
+    // Distribute evenly
+    for (let i = 0; i < distributionPoints; i++) {
+      const headingIndex = Math.floor(i * (sortedHeadings.length - 1) / (distributionPoints - 1));
+      selectedIndices.push(headingIndex);
+    }
+  }
+  
+  // Remove duplicates and sort
+  const uniqueIndices = [...new Set(selectedIndices)].sort((a, b) => a - b);
+  
+  // Insert images before the selected h2 headings
+  for (let i = 0; i < uniqueIndices.length && i < imageCount; i++) {
+    const headingIndex = uniqueIndices[i];
+    if (headingIndex < sortedHeadings.length) {
+      const position = sortedHeadings[headingIndex].index! + offset;
       const imageHTML = generateImagePlaceholder(i + 1);
       
       processedContent = 
@@ -127,6 +135,89 @@ function insertImagesBeforeHeadings(contentBeforeImages: string, contentForImage
         processedContent.substring(position);
         
       offset += imageHTML.length;
+    }
+  }
+  
+  return contentBeforeImages + processedContent;
+}
+
+/**
+ * Insert images evenly using available h2 tags and paragraphs
+ */
+function insertImagesEvenly(contentBeforeImages: string, contentForImages: string, headings: RegExpMatchArray[], imageCount: number): string {
+  // Filter to only h2 headings
+  const h2Headings = headings.filter(h => {
+    const tagMatch = h[0].match(/<(h[1-6])[^>]*>/);
+    return tagMatch && tagMatch[1] === 'h2';
+  });
+  
+  let processedContent = contentForImages;
+  let offset = 0;
+  
+  // Use the available h2 tags first
+  for (let i = 0; i < Math.min(h2Headings.length, imageCount); i++) {
+    const position = h2Headings[i].index! + offset;
+    const imageHTML = generateImagePlaceholder(i + 1);
+    
+    processedContent = 
+      processedContent.substring(0, position) + 
+      imageHTML + 
+      processedContent.substring(position);
+      
+    offset += imageHTML.length;
+  }
+  
+  // If we need more images than h2 tags, find suitable paragraph breaks
+  if (imageCount > h2Headings.length) {
+    const paragraphRegex = /<\/p>/g;
+    const remainingImages = imageCount - h2Headings.length;
+    
+    // Find paragraphs in the processed content
+    const updatedContent = processedContent;
+    const paragraphs = Array.from(updatedContent.matchAll(paragraphRegex));
+    
+    // Skip paragraphs near the already inserted images
+    const safeDistance = 500; // characters
+    const imagePositions = h2Headings.map(h => h.index! + offset);
+    
+    const safeParagraphs = paragraphs.filter(p => {
+      const paraPos = p.index!;
+      return !imagePositions.some(imgPos => Math.abs(paraPos - imgPos) < safeDistance);
+    });
+    
+    // Calculate spacing for remaining images
+    const contentLength = updatedContent.length;
+    const sectionSize = contentLength / (remainingImages + 1);
+    
+    // Place remaining images
+    for (let i = 0; i < remainingImages; i++) {
+      const targetPosition = Math.floor((i + 1) * sectionSize);
+      
+      // Find the nearest safe paragraph
+      let nearestPara = -1;
+      let minDistance = Infinity;
+      
+      for (let j = 0; j < safeParagraphs.length; j++) {
+        const paraPos = safeParagraphs[j].index!;
+        const distance = Math.abs(paraPos - targetPosition);
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestPara = j;
+        }
+      }
+      
+      if (nearestPara >= 0) {
+        const position = safeParagraphs[nearestPara].index! + 4; // after </p>
+        const imageHTML = generateImagePlaceholder(h2Headings.length + i + 1);
+        
+        processedContent = 
+          processedContent.substring(0, position) + 
+          imageHTML + 
+          processedContent.substring(position);
+          
+        offset += imageHTML.length;
+      }
     }
   }
   

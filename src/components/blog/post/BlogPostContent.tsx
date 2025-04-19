@@ -56,40 +56,47 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
       // Ensure section images are properly positioned
       const sectionImages = contentRef.current?.querySelectorAll('.section-image');
       
-      // Check if any image appears before the first heading or paragraph
+      // Process all section images
       sectionImages?.forEach((sectionImage) => {
-        const rect = sectionImage.getBoundingClientRect();
-        const contentRect = contentRef.current?.getBoundingClientRect();
+        // Find all h2 elements
+        const allH2s = contentRef.current?.querySelectorAll('h2');
+        if (!allH2s || allH2s.length === 0) return;
         
-        // Get the previous element (to check if it's a heading)
-        const prevElement = sectionImage.previousElementSibling;
-        const nextElement = sectionImage.nextElementSibling;
+        // Get the image's position
+        const imgRect = sectionImage.getBoundingClientRect();
         
-        // If this image appears at the very beginning before any content, move it after the first paragraph
-        if (rect.top < (contentRect?.top || 0) + 100 && 
-            (!prevElement || prevElement.tagName === 'BR' || prevElement.tagName === 'DIV')) {
-          console.log('Image appears too early in the content, repositioning');
+        // Check if the image is in a good position relative to h2 elements
+        let needsRepositioning = true;
+        let targetH2 = null;
+        
+        // Check if the image is already positioned correctly before an h2
+        for (let i = 0; i < allH2s.length; i++) {
+          const h2Rect = allH2s[i].getBoundingClientRect();
           
-          // Find the first paragraph or heading after introduction
-          const firstHeading = contentRef.current?.querySelector('h1, h2');
-          const firstParagraphAfterHeading = firstHeading?.nextElementSibling;
+          // If image is right before an h2 (within 100px), it's good
+          if (Math.abs(imgRect.bottom - h2Rect.top) < 100 && imgRect.top < h2Rect.top) {
+            needsRepositioning = false;
+            break;
+          }
           
-          if (firstParagraphAfterHeading) {
-            // Move the image after the first paragraph following the heading
-            firstParagraphAfterHeading.after(sectionImage);
-          } else if (firstHeading) {
-            // If no paragraph after heading, place after heading
-            firstHeading.after(sectionImage);
+          // Find the next h2 to position this image before
+          if (imgRect.top < h2Rect.top && !targetH2) {
+            targetH2 = allH2s[i];
           }
         }
         
-        // If next element is not a heading (h2, h3, etc.), add adequate spacing
-        if (nextElement && !nextElement.tagName.match(/^H[1-6]$/)) {
-          (sectionImage as HTMLElement).style.marginBottom = '2rem';
-        } else {
-          // Add spacing between image and heading
-          (sectionImage as HTMLElement).style.marginBottom = '1rem';
+        // If the image needs repositioning and we found a target h2
+        if (needsRepositioning && targetH2) {
+          // Move the image right before the h2
+          targetH2.parentNode?.insertBefore(sectionImage, targetH2);
+          
+          // Add proper spacing
+          (sectionImage as HTMLElement).style.marginBottom = '1.5rem';
         }
+        
+        // Ensure proper spacing between image and surrounding content
+        (sectionImage as HTMLElement).style.marginTop = '2rem';
+        (sectionImage as HTMLElement).style.marginBottom = '2rem';
       });
       
       setImagesProcessed(true);
