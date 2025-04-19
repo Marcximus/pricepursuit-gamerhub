@@ -11,3 +11,5 @@ export { getHowToPrompt } from './howToPrompt';
 // Export utility functions
 export { cleanupContent, fixHtmlTags, formatTables } from './contentProcessor';
 export { addVideoEmbed, wrapTextInHtml } from './htmlGenerator';
+export { replaceImagePlaceholders } from './utils/imagePlaceholder';
+export { wrapContentInHtml } from './utils/htmlWrapper';

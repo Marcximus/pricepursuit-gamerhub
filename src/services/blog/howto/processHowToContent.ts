@@ -4,6 +4,8 @@ import { addVideoEmbed, wrapTextInHtml } from './htmlGenerator';
 import { formatFAQSections } from './formatters/faqFormatter';
 import { formatStepByStepInstructions } from './formatters/stepsFormatter';
 import { processJsonContent } from './processors/jsonProcessor';
+import { replaceImagePlaceholders } from './utils/imagePlaceholder';
+import { wrapContentInHtml } from './utils/htmlWrapper';
 
 export function processHowToContent(content: string, title: string): string {
   if (!content) return '';
@@ -20,14 +22,10 @@ export function processHowToContent(content: string, title: string): string {
     processedContent = addVideoEmbed(processedContent);
     
     // Replace image placeholders with proper HTML
-    processedContent = processedContent.replace(/Image (\d+)/g, (match, number) => {
-      return `<div class="image-placeholder" id="image-${number}">
-        <p class="placeholder-text">Click to upload image ${number}</p>
-      </div>`;
-    });
+    processedContent = replaceImagePlaceholders(processedContent);
     
-    // Add a wrapper class to help with styling
-    processedContent = `<div class="how-to-content">${processedContent}</div>`;
+    // Wrap content in HTML container
+    processedContent = wrapContentInHtml(processedContent);
     
     // Format FAQ sections and step-by-step instructions
     processedContent = formatFAQSections(processedContent);
@@ -42,8 +40,8 @@ export function processHowToContent(content: string, title: string): string {
   processedContent = formatTables(processedContent);
   processedContent = addVideoEmbed(processedContent);
   
-  // Add a wrapper class to help with styling
-  processedContent = `<div class="how-to-content">${processedContent}</div>`;
+  // Wrap content in HTML container
+  processedContent = wrapContentInHtml(processedContent);
   
   // Format FAQ sections and step-by-step instructions
   processedContent = formatFAQSections(processedContent);
