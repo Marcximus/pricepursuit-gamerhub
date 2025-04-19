@@ -48,6 +48,8 @@ export function cleanTitle(title: string): string {
     .replace(/<[^>]*>/g, '')
     .trim();
   
+  // IMPORTANT: We're no longer modifying spaces here, so they should be preserved
+  
   console.log('📝 Final cleaned title:', cleanedTitle);
   
   return cleanedTitle;
