@@ -64,24 +64,22 @@ export const injectAdditionalImages = (content: string, additionalImages: string
     const placeholders = Array.from(modifiedContent.matchAll(placeholderRegex));
     
     if (placeholders.length > 0) {
-      console.log(`Found ${placeholders.length} placeholders to replace with images`);
+      console.log(`Found ${placeholders.length} placeholders to replace with ${additionalImages.length} images`);
       
-      placeholders.forEach((match, index) => {
-        if (index < additionalImages.length) {
-          const imgSrc = additionalImages[index];
-          const imageHtml = `<img 
-            src="${imgSrc}" 
-            alt="How-to guide image ${index + 1}" 
-            class="rounded-lg w-full how-to-image" 
-            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
-          />`;
-          
-          modifiedContent = modifiedContent.replace(
-            match[0],
-            imageHtml
-          );
-        }
-      });
+      const imagesToUse = Math.min(placeholders.length, additionalImages.length);
+      
+      for (let i = 0; i < imagesToUse; i++) {
+        const imgSrc = additionalImages[i];
+        const imageHtml = `<img 
+          src="${imgSrc}" 
+          alt="How-to guide image ${i + 1}" 
+          class="rounded-lg w-full how-to-image" 
+          onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
+        />`;
+        
+        const placeholder = placeholders[i][0];
+        modifiedContent = modifiedContent.replace(placeholder, imageHtml);
+      }
       
       return modifiedContent;
     }
@@ -92,17 +90,20 @@ export const injectAdditionalImages = (content: string, additionalImages: string
       const h2Regex = /<h2[^>]*>/g;
       const h2Tags = Array.from(modifiedContent.matchAll(h2Regex));
       
-      if (h2Tags.length > 1) {
-        let offset = 0;
+      const introHeadingRegex = /<h[12][^>]*>/;
+      const introMatch = modifiedContent.match(introHeadingRegex);
+      
+      if (introMatch && h2Tags.length >= additionalImages.length) {
+        const introEnd = introMatch.index! + introMatch[0].length;
+        const h2TagsAfterIntro = h2Tags.filter(tag => tag.index! > introEnd);
         
-        const tagsToUse = h2Tags.slice(1);
-        
-        if (tagsToUse.length >= additionalImages.length) {
+        if (h2TagsAfterIntro.length >= additionalImages.length) {
+          let offset = 0;
+          
           for (let i = 0; i < additionalImages.length; i++) {
-            const tagIndex = Math.floor((i * tagsToUse.length) / additionalImages.length);
-            
-            if (tagIndex < tagsToUse.length) {
-              const h2Match = tagsToUse[tagIndex];
+            const tagIndex = Math.floor(i * h2TagsAfterIntro.length / additionalImages.length);
+            if (tagIndex < h2TagsAfterIntro.length) {
+              const h2Match = h2TagsAfterIntro[tagIndex];
               const imgSrc = additionalImages[i];
               const position = h2Match.index! + offset;
               
@@ -124,12 +125,25 @@ export const injectAdditionalImages = (content: string, additionalImages: string
               console.log(`Added image ${i+1} at position ${position} before h2 tag`);
             }
           }
-        } else {
-          for (let i = 0; i < additionalImages.length; i++) {
-            const tagIndex = i % tagsToUse.length;
-            const h2Match = tagsToUse[tagIndex];
+          
+          return modifiedContent;
+        }
+      }
+      
+      const paragraphRegex = /<\/p>/g;
+      const paragraphs = Array.from(modifiedContent.matchAll(paragraphRegex));
+      
+      if (paragraphs.length > additionalImages.length + 1) {
+        let usableParagraphs = paragraphs.slice(1);
+        let offset = 0;
+        
+        for (let i = 0; i < additionalImages.length; i++) {
+          const paragraphIndex = Math.floor((i + 1) * usableParagraphs.length / (additionalImages.length + 1));
+          
+          if (paragraphIndex < usableParagraphs.length) {
+            const paraMatch = usableParagraphs[paragraphIndex];
             const imgSrc = additionalImages[i];
-            const position = h2Match.index! + offset;
+            const position = paraMatch.index! + 4 + offset;
             
             const imageHtml = `<div class="section-image">
               <img 
@@ -146,57 +160,19 @@ export const injectAdditionalImages = (content: string, additionalImages: string
               modifiedContent.substring(position);
               
             offset += imageHtml.length;
-            console.log(`Added image ${i+1} at position ${position} before h2 tag`);
+            console.log(`Added image ${i+1} after paragraph ${paragraphIndex}`);
           }
-        }
-      } else if (h2Tags.length === 1) {
-        console.log('Only one h2 tag found, distributing images after it');
-        const h2Position = h2Tags[0].index!;
-        
-        const afterH2Content = modifiedContent.substring(h2Position + 50);
-        const afterH2Length = afterH2Content.length;
-        
-        for (let i = 0; i < additionalImages.length; i++) {
-          const imgSrc = additionalImages[i];
-          const relativePosition = Math.floor(((i + 1) * afterH2Length) / (additionalImages.length + 1));
-          const absolutePosition = h2Position + 50 + relativePosition;
-          
-          const nextParagraphEnd = modifiedContent.indexOf('</p>', absolutePosition);
-          const insertPosition = nextParagraphEnd !== -1 ? nextParagraphEnd + 4 : absolutePosition;
-          
-          const imageHtml = `<div class="section-image">
-            <img 
-              src="${imgSrc}" 
-              alt="How-to guide image ${i + 1}" 
-              class="rounded-lg w-full how-to-image" 
-              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
-            />
-          </div>\n`;
-          
-          modifiedContent = 
-            modifiedContent.substring(0, insertPosition) + 
-            imageHtml + 
-            modifiedContent.substring(insertPosition);
-            
-          console.log(`Added image ${i+1} at position ${insertPosition} in the content`);
         }
       } else {
         const contentLength = modifiedContent.length;
-        const introSkip = Math.floor(contentLength * 0.35);
+        let skipPercentage = 0.2;
         let offset = 0;
         
         for (let i = 0; i < additionalImages.length; i++) {
           const imgSrc = additionalImages[i];
-          const position = introSkip + Math.floor(((i + 1) * (contentLength - introSkip)) / (additionalImages.length + 1)) + offset;
-          
-          const paragraphEndSearch = modifiedContent.substring(position - 100, position + 100);
-          const paragraphEndMatch = paragraphEndSearch.match(/<\/p>/);
-          
-          let insertPosition = position;
-          if (paragraphEndMatch) {
-            const relativeEnd = paragraphEndMatch.index! + 4;
-            insertPosition = position - 100 + relativeEnd;
-          }
+          const position = Math.floor(contentLength * skipPercentage) + 
+            Math.floor((i + 1) * contentLength * (1 - skipPercentage) / (additionalImages.length + 1)) + 
+            offset;
           
           const imageHtml = `<div class="section-image">
             <img 
@@ -208,12 +184,12 @@ export const injectAdditionalImages = (content: string, additionalImages: string
           </div>\n`;
           
           modifiedContent = 
-            modifiedContent.substring(0, insertPosition) + 
+            modifiedContent.substring(0, position) + 
             imageHtml + 
-            modifiedContent.substring(insertPosition);
+            modifiedContent.substring(position);
             
           offset += imageHtml.length;
-          console.log(`Added image ${i+1} at position ${insertPosition} in the content`);
+          console.log(`Added image ${i+1} at position ${position}`);
         }
       }
       

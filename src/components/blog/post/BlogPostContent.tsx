@@ -53,65 +53,46 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
         (img as HTMLElement).style.height = 'auto';
       });
       
-      // Ensure section images are properly positioned before headings
+      // Ensure section images are properly positioned
       const sectionImages = contentRef.current?.querySelectorAll('.section-image');
-      let hiddenFirstImage = false;
       
-      sectionImages?.forEach((sectionImage, index) => {
+      // Check if any image appears before the first heading or paragraph
+      sectionImages?.forEach((sectionImage) => {
+        const rect = sectionImage.getBoundingClientRect();
+        const contentRect = contentRef.current?.getBoundingClientRect();
+        
+        // Get the previous element (to check if it's a heading)
+        const prevElement = sectionImage.previousElementSibling;
         const nextElement = sectionImage.nextElementSibling;
         
-        // If next element is not a heading (h2, h3, etc.), adjust spacing
+        // If this image appears at the very beginning before any content, move it after the first paragraph
+        if (rect.top < (contentRect?.top || 0) + 100 && 
+            (!prevElement || prevElement.tagName === 'BR' || prevElement.tagName === 'DIV')) {
+          console.log('Image appears too early in the content, repositioning');
+          
+          // Find the first paragraph or heading after introduction
+          const firstHeading = contentRef.current?.querySelector('h1, h2');
+          const firstParagraphAfterHeading = firstHeading?.nextElementSibling;
+          
+          if (firstParagraphAfterHeading) {
+            // Move the image after the first paragraph following the heading
+            firstParagraphAfterHeading.after(sectionImage);
+          } else if (firstHeading) {
+            // If no paragraph after heading, place after heading
+            firstHeading.after(sectionImage);
+          }
+        }
+        
+        // If next element is not a heading (h2, h3, etc.), add adequate spacing
         if (nextElement && !nextElement.tagName.match(/^H[1-6]$/)) {
           (sectionImage as HTMLElement).style.marginBottom = '2rem';
         } else {
           // Add spacing between image and heading
           (sectionImage as HTMLElement).style.marginBottom = '1rem';
         }
-        
-        // Only hide the first image if it appears before any headings and is at the very top
-        // This ensures we don't hide images that should be displayed
-        if (!hiddenFirstImage && index === 0) {
-          const isFirstContentElement = isFirstElement(sectionImage);
-          const isBeforeHeading = isBeforeAnyHeading(sectionImage);
-          const isAtVeryTop = sectionImage.getBoundingClientRect().top < 300;
-          
-          if (isFirstContentElement && isBeforeHeading && isAtVeryTop) {
-            console.log('Hiding first image that appears at the very top');
-            (sectionImage as HTMLElement).style.display = 'none';
-            hiddenFirstImage = true;
-          }
-        }
       });
       
       setImagesProcessed(true);
-    };
-    
-    // Helper function to determine if an element is the first element in its parent
-    const isFirstElement = (element: Element): boolean => {
-      let previousElement = element.previousElementSibling;
-      // Skip text nodes and comments
-      while (previousElement && 
-            (previousElement.nodeType !== Node.ELEMENT_NODE || 
-             previousElement.tagName === 'BR' || 
-             (previousElement as HTMLElement).style.display === 'none')) {
-        previousElement = previousElement.previousElementSibling;
-      }
-      return !previousElement;
-    };
-    
-    // Helper function to check if image is before any heading
-    const isBeforeAnyHeading = (element: Element): boolean => {
-      const headings = contentRef.current?.querySelectorAll('h1, h2, h3, h4, h5, h6');
-      if (!headings || headings.length === 0) return true;
-      
-      const imageRect = element.getBoundingClientRect();
-      for (const heading of Array.from(headings)) {
-        const headingRect = heading.getBoundingClientRect();
-        if (imageRect.top < headingRect.top) {
-          return true;
-        }
-      }
-      return false;
     };
 
     // Run immediately after render
