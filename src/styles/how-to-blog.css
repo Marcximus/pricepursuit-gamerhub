@@ -1,3 +1,4 @@
+
 /* How-To Blog Post Styles */
 
 /* Basic content styling */
@@ -45,39 +46,10 @@
   margin-bottom: 0.5rem;
 }
 
-/* Improved spacer styling */
-.how-to-content .spacer,
-.how-to-article .spacer {
-  height: 2rem;
+/* Custom spacer styling */
+.how-to-content .spacer {
+  height: 1.5rem;
   width: 100%;
-  display: block;
-  clear: both;
-  margin: 1.5rem 0;
-  border-bottom: 1px dashed #e2e8f0;
-  opacity: 0.5;
-}
-
-/* Improved blog image container styling */
-.blog-image-container {
-  margin: 2.5rem 0;
-  text-align: center;
-  clear: both;
-  width: 100%;
-  padding: 0.5rem;
-}
-
-.blog-image-container img {
-  max-width: 85%;
-  height: auto;
-  margin: 0 auto;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-}
-
-.blog-image-container img:hover {
-  transform: scale(1.02);
-  box-shadow: 0 6px 24px -6px rgba(0, 0, 0, 0.2);
 }
 
 /* QA Item Styling */
@@ -194,59 +166,23 @@
   content: "⚠️";
 }
 
-/* Improved Image Placeholders */
+/* Image Placeholders */
 .image-placeholder {
-  margin: 2.5rem 0;
-  padding: 2.5rem 2rem;
-  background-color: #f0f9ff;
-  border: 2px dashed #93c5fd;
+  background-color: #f1f5f9;
+  border: 2px dashed #cbd5e1;
   border-radius: 0.5rem;
+  padding: 2rem;
+  margin: 1.5rem 0;
   text-align: center;
-  transition: all 0.2s ease;
-}
-
-.image-placeholder:hover {
-  background-color: #e0f2fe;
-  border-color: #60a5fa;
-  cursor: pointer;
-}
-
-.image-placeholder::before {
-  content: "📸";
-  display: block;
-  font-size: 2.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.image-placeholder .placeholder-text {
-  color: #3b82f6;
-  font-weight: 500;
-  font-size: 1.1rem;
+  position: relative;
 }
 
 .image-placeholder:after {
-  content: "Click to upload image";
+  content: "Image Placeholder";
   display: block;
   color: #64748b;
   font-style: italic;
   font-size: 0.875rem;
-  margin-top: 0.5rem;
-}
-
-/* Blog Image Container */
-.blog-image-container {
-  margin: 2.5rem 0;
-  text-align: center;
-  clear: both;
-  width: 100%;
-}
-
-.blog-image-container img {
-  max-width: 75%;
-  height: auto;
-  margin: 0 auto;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* Code Blocks */

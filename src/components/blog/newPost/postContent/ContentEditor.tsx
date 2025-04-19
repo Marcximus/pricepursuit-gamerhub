@@ -1,10 +1,8 @@
-
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VideoPlacementButton } from './VideoPlacementButton';
 import { ImagePlaceholderHandler } from './ImagePlaceholderHandler';
-import { useState } from 'react';
 
 interface ContentEditorProps {
   content: string;
@@ -25,7 +23,6 @@ export const ContentEditor = ({
   category,
   postTitle
 }: ContentEditorProps) => {
-  const [imageCount, setImageCount] = useState(0);
   
   const handleAddVideoPlacement = () => {
     const videoScript = `\n\n<script data-ezscrex="false" data-cfasync="false">(window.humixPlayers = window.humixPlayers || []).push({target: document.currentScript});</script><script async data-ezscrex="false" data-cfasync="false" src="https://www.humix.com/video.js"></script>\n\n`;
@@ -53,67 +50,35 @@ export const ContentEditor = ({
     } as React.ChangeEvent<HTMLTextAreaElement>);
   };
 
+  // Fix the function to preserve HTML formatting in preview
   const prepareContentForPreview = (content: string) => {
+    // Handle JSON-formatted content by extracting only the content value
     if (content.trim().startsWith('{') && content.includes('"content":')) {
       try {
         const parsed = JSON.parse(content);
         return parsed.content || content;
       } catch (e) {
+        // If parsing fails, continue with original content
         console.error('Error parsing JSON content:', e);
       }
     }
     
+    // Remove excerpt and tags sections for preview if they exist
     let processedContent = content
       .replace(/\*\*Excerpt:\*\*([\s\S]*?)(?=\n\n)/, '')
       .replace(/\*\*Tags:\*\*([\s\S]*?)$/, '');
       
+    // Highlight product placeholders to make them more visible in the preview
     processedContent = processedContent.replace(
       /<div class="product-placeholder"[^>]*data-asin="([^"]*)"[^>]*data-index="([^"]*)"[^>]*><\/div>/g,
       '<div class="p-4 my-4 border-2 border-dashed border-amber-500 bg-amber-50 rounded-md text-center font-bold">Product Placeholder #$2 (ASIN: $1)</div>'
     );
     
+    // Style raw product card HTML for better preview visualization
     processedContent = processedContent.replace(
       /<div class="product-card"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g,
       '<div class="p-4 my-4 border-2 border-dashed border-blue-500 bg-blue-50 rounded-md text-center font-bold">Product Card HTML (Will be rendered as proper product card)</div>'
     );
-    
-    if (category === 'How-To') {
-      // Calculate the number of images available
-      const imageCount = processedContent.match(/<div class="image-placeholder"[^>]*>/g)?.length || 0;
-      setImageCount(imageCount);
-      
-      // Add helpful guidance banner at the top of the preview
-      processedContent = '<div class="p-4 mb-6 bg-blue-50 border border-blue-200 rounded-md">' +
-        '<p class="text-sm text-blue-800 font-medium">💡 <strong>Image Placement Guide:</strong> ' +
-        `${imageCount} images will be automatically distributed evenly throughout your content. ` +
-        'Use <code>&lt;h2&gt;</code> and <code>&lt;h3&gt;</code> headings to create logical sections ' +
-        'where images will be placed.</p>' +
-        '</div>' + processedContent;
-        
-      // Highlight sections where images will likely be placed
-      let sectionCount = 0;
-      
-      // Mark sections (after headings) to show where images might be placed
-      processedContent = processedContent.replace(
-        /(<h[23][^>]*>)(.*?)(<\/h[23]>)/g,
-        (match, openTag, content, closeTag) => {
-          sectionCount++;
-          // Only add image indicators for some sections to simulate distribution
-          const shouldShowImage = sectionCount % Math.max(2, Math.ceil(sectionCount / Math.max(1, imageCount))) === 1;
-          
-          if (shouldShowImage) {
-            return `${openTag}${content}${closeTag}<div class="p-3 mt-2 mb-4 border border-dashed border-blue-300 bg-blue-50 rounded-md text-center"><span class="text-xs text-blue-600">📸 Image will likely appear near this section</span></div>`;
-          }
-          return match;
-        }
-      );
-      
-      // Add visual spacer indicators for better visualization of section breaks
-      processedContent = processedContent.replace(
-        /<div class="spacer"><\/div>/g,
-        '<div class="p-2 my-3 border border-dashed border-gray-300 bg-gray-50 rounded-md text-center"><span class="text-xs text-gray-500">Spacer - Visual Separation</span></div>'
-      );
-    }
     
     return processedContent;
   };
@@ -175,10 +140,7 @@ export const ContentEditor = ({
           {category === 'How-To' && (
             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-sm text-blue-800 font-medium">
-                HTML formatting will be preserved in the published post. Images will be distributed evenly throughout your content based on document structure.
-              </p>
-              <p className="text-sm text-blue-600 mt-2">
-                <strong>Images:</strong> {imageCount} image{imageCount !== 1 ? 's' : ''} will be positioned automatically.
+                HTML formatting will be preserved in the published post.
               </p>
             </div>
           )}
@@ -187,5 +149,3 @@ export const ContentEditor = ({
     </div>
   );
 };
-
-export default ContentEditor;

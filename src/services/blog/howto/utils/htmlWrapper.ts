@@ -5,6 +5,6 @@
 export function wrapContentInHtml(content: string): string {
   if (!content) return '';
   
-  // Add div wrapper for styling without modifying the inner HTML structure
+  // Just add the wrapper class without modifying the inner HTML structure
   return `<div class="how-to-content">${content}</div>`;
 }
