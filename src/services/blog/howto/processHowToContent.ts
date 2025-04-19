@@ -2,6 +2,12 @@
 /**
  * Process How-To blog content to ensure proper formatting
  */
+
+// Import the utility functions that were missing
+import { cleanupContent, fixHtmlTags, formatTables } from './contentProcessor';
+import { addVideoEmbed, wrapTextInHtml } from './htmlGenerator';
+import { getHowToPrompt } from './howToPrompt';
+
 export function processHowToContent(content: string, title: string): string {
   if (!content) return '';
   
