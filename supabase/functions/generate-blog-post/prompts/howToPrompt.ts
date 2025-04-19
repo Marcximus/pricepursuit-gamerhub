@@ -33,6 +33,8 @@ Optimize the content for SEO by:
 3. Creating a well-structured table after the intro
 4. Making sure the structure follows a logical flow for readers
 
+CRITICAL: Your HTML must be directly usable as-is without requiring additional processing. Use proper HTML structure, ensure all tags are properly nested and closed. Do not use markdown formatting within the HTML content. Ensure the content field contains ONLY the actual HTML content, not the entire JSON response. The JSON object should have distinct title, content, excerpt, and tags fields.
+
 REMEMBER: Your content must be thorough, addressing ALL questions specifically mentioned in the user's prompt while being easy to follow and engaging to read.
 `;
 }

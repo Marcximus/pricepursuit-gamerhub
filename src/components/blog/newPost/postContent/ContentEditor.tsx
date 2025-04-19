@@ -51,7 +51,7 @@ export const ContentEditor = ({
     } as React.ChangeEvent<HTMLTextAreaElement>);
   };
 
-  // Improved function to sanitize and format content for preview
+  // Improved function to sanitize and format content for preview that preserves HTML
   const prepareContentForPreview = (content: string) => {
     // Handle JSON-formatted content by extracting only the content value
     if (content.trim().startsWith('{') && content.includes('"content":')) {
@@ -64,7 +64,12 @@ export const ContentEditor = ({
       }
     }
     
-    // Remove excerpt and tags sections for preview if they exist
+    // For How-To posts, preserve HTML structure as much as possible
+    if (category === 'How-To') {
+      return content;
+    }
+    
+    // For other post types, proceed with normal processing
     let processedContent = content
       .replace(/\*\*Excerpt:\*\*([\s\S]*?)(?=\n\n)/, '')
       .replace(/\*\*Tags:\*\*([\s\S]*?)$/, '');
