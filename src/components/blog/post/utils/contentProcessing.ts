@@ -1,4 +1,3 @@
-
 /**
  * Fixes HTML in Top10 blog posts to ensure proper tag closure
  */
@@ -59,14 +58,11 @@ export const injectAdditionalImages = (content: string, additionalImages: string
   }
   
   if (category === 'How-To') {
-    // For How-To blogs, replace any existing image placeholders with actual images
     let modifiedContent = content;
     
-    // Find all image placeholders
     const placeholderRegex = /<div class="image-placeholder" id="image-(\d+)"[^>]*>.*?<\/div>/gs;
     const placeholders = Array.from(modifiedContent.matchAll(placeholderRegex));
     
-    // If we found placeholders, replace them with actual images
     if (placeholders.length > 0) {
       console.log(`Found ${placeholders.length} placeholders to replace with images`);
       
@@ -90,28 +86,47 @@ export const injectAdditionalImages = (content: string, additionalImages: string
       return modifiedContent;
     }
     
-    // If there are no placeholders but we have additional images, inject them before h2 tags
-    // BUT skip the first h2 which is typically part of the intro section
     if (placeholders.length === 0 && additionalImages.length > 0) {
       console.log('No placeholders found, adding images before h2 tags');
       
-      // Find all h2 tags
       const h2Regex = /<h2[^>]*>/g;
       const h2Tags = Array.from(modifiedContent.matchAll(h2Regex));
       
-      // If we have h2 tags, place images before them, skipping the first one
       if (h2Tags.length > 1) {
         let offset = 0;
         
-        // Start from the second h2 tag (skip first one which belongs to intro)
         const tagsToUse = h2Tags.slice(1);
-        const imageCount = Math.min(additionalImages.length, tagsToUse.length);
         
-        for (let i = 0; i < imageCount; i++) {
-          // Calculate which h2 to use for even distribution
-          const tagIndex = Math.floor((i * tagsToUse.length) / imageCount);
-          
-          if (tagIndex < tagsToUse.length) {
+        if (tagsToUse.length >= additionalImages.length) {
+          for (let i = 0; i < additionalImages.length; i++) {
+            const tagIndex = Math.floor((i * tagsToUse.length) / additionalImages.length);
+            
+            if (tagIndex < tagsToUse.length) {
+              const h2Match = tagsToUse[tagIndex];
+              const imgSrc = additionalImages[i];
+              const position = h2Match.index! + offset;
+              
+              const imageHtml = `<div class="section-image">
+                <img 
+                  src="${imgSrc}" 
+                  alt="How-to guide image ${i + 1}" 
+                  class="rounded-lg w-full how-to-image" 
+                  onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
+                />
+              </div>\n`;
+              
+              modifiedContent = 
+                modifiedContent.substring(0, position) + 
+                imageHtml + 
+                modifiedContent.substring(position);
+                
+              offset += imageHtml.length;
+              console.log(`Added image ${i+1} at position ${position} before h2 tag`);
+            }
+          }
+        } else {
+          for (let i = 0; i < additionalImages.length; i++) {
+            const tagIndex = i % tagsToUse.length;
             const h2Match = tagsToUse[tagIndex];
             const imgSrc = additionalImages[i];
             const position = h2Match.index! + offset;
@@ -131,27 +146,21 @@ export const injectAdditionalImages = (content: string, additionalImages: string
               modifiedContent.substring(position);
               
             offset += imageHtml.length;
-            console.log(`Added image at position ${position} before h2 tag`);
+            console.log(`Added image ${i+1} at position ${position} before h2 tag`);
           }
         }
       } else if (h2Tags.length === 1) {
-        // If there's only one h2 tag, distribute the images throughout the content
-        console.log('Only one h2 tag found, distributing images evenly in content');
-        const contentLength = modifiedContent.length;
+        console.log('Only one h2 tag found, distributing images after it');
         const h2Position = h2Tags[0].index!;
         
-        // Skip the first section (before the h2)
-        // Place images in the remaining content
-        const afterH2Content = modifiedContent.substring(h2Position);
-        const remainingLength = afterH2Content.length;
+        const afterH2Content = modifiedContent.substring(h2Position + 50);
+        const afterH2Length = afterH2Content.length;
         
-        for (let i = 0; i < Math.min(additionalImages.length, 3); i++) {
+        for (let i = 0; i < additionalImages.length; i++) {
           const imgSrc = additionalImages[i];
-          // Calculate position in the content after the h2
-          const relativePosition = Math.floor((remainingLength * (i + 1)) / 4); // divide into 4 parts
-          const absolutePosition = h2Position + relativePosition;
+          const relativePosition = Math.floor(((i + 1) * afterH2Length) / (additionalImages.length + 1));
+          const absolutePosition = h2Position + 50 + relativePosition;
           
-          // Find a good place to insert (after a paragraph)
           const nextParagraphEnd = modifiedContent.indexOf('</p>', absolutePosition);
           const insertPosition = nextParagraphEnd !== -1 ? nextParagraphEnd + 4 : absolutePosition;
           
@@ -169,12 +178,47 @@ export const injectAdditionalImages = (content: string, additionalImages: string
             imageHtml + 
             modifiedContent.substring(insertPosition);
             
-          console.log(`Added image at position ${insertPosition} in the content`);
+          console.log(`Added image ${i+1} at position ${insertPosition} in the content`);
+        }
+      } else {
+        const contentLength = modifiedContent.length;
+        const introSkip = Math.floor(contentLength * 0.35);
+        let offset = 0;
+        
+        for (let i = 0; i < additionalImages.length; i++) {
+          const imgSrc = additionalImages[i];
+          const position = introSkip + Math.floor(((i + 1) * (contentLength - introSkip)) / (additionalImages.length + 1)) + offset;
+          
+          const paragraphEndSearch = modifiedContent.substring(position - 100, position + 100);
+          const paragraphEndMatch = paragraphEndSearch.match(/<\/p>/);
+          
+          let insertPosition = position;
+          if (paragraphEndMatch) {
+            const relativeEnd = paragraphEndMatch.index! + 4;
+            insertPosition = position - 100 + relativeEnd;
+          }
+          
+          const imageHtml = `<div class="section-image">
+            <img 
+              src="${imgSrc}" 
+              alt="How-to guide image ${i + 1}" 
+              class="rounded-lg w-full how-to-image" 
+              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
+            />
+          </div>\n`;
+          
+          modifiedContent = 
+            modifiedContent.substring(0, insertPosition) + 
+            imageHtml + 
+            modifiedContent.substring(insertPosition);
+            
+          offset += imageHtml.length;
+          console.log(`Added image ${i+1} at position ${insertPosition} in the content`);
         }
       }
+      
+      return modifiedContent;
     }
-    
-    return modifiedContent;
   }
   
   if (['Review', 'Comparison'].includes(category || '')) {
@@ -226,32 +270,26 @@ export const addImageFallbacks = (content: string): string => {
 export const improveContentSpacing = (content: string): string => {
   let improvedContent = content;
   
-  // Fix spacing for emoji-prefixed paragraphs
   improvedContent = improvedContent.replace(
     /(<p>[📱🌟💻✅🚀💡✨🔥👉][^<]*?<\/p>)(<p>)/g, 
     '$1\n<div class="my-6"></div>$2'
   );
   
-  // Add additional spacing between regular paragraphs if they don't have it
   improvedContent = improvedContent.replace(
     /(<\/p>)(<p>)/g,
     '$1\n<div class="my-4"></div>$2'
   );
   
-  // Add spacing before bullet lists
   improvedContent = improvedContent.replace(
     /(<\/p>)(<ul)/g,
     '$1\n<div class="my-4"></div>$2'
   );
   
-  // IMPROVED: Add better spacing after bullet lists
-  // Increase spacing from my-4 to my-6 (from 16px to 24px) for better visual separation
   improvedContent = improvedContent.replace(
     /(<\/ul>)(\s*)(<p>)/g,
     '$1\n<div class="my-6"></div>$3'
   );
   
-  // Ensure emoji bullets have proper spacing
   improvedContent = improvedContent.replace(
     /<p>(✅[^<]*?)<\/p>/g,
     '<p class="flex items-start mb-2"><span class="mr-2 flex-shrink-0">✅</span><span>$1</span></p>'

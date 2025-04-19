@@ -28,25 +28,34 @@ export function distributeImagesBeforeSections(content: string, imageCount: numb
   
   // If no h2 headings found, try with other section breaks
   if (matches.length === 0) {
-    const fallbackBreakRegex = /<(h3|div class="qa-item"|div class="step-container")[^>]*>/g;
+    const fallbackBreakRegex = /<(h[1-6]|div class="qa-item"|div class="step-container")[^>]*>/g;
     const fallbackMatches = Array.from(content.matchAll(fallbackBreakRegex));
     
     if (fallbackMatches.length <= 1) {
       // Not enough section breaks, insert at regular intervals in the content
-      // Skip the first 30% of content to account for intro
+      // Skip the first 35% of content to account for intro
       return insertImagesAtRegularIntervals(content, imageCount);
     }
     
     // Skip the first match (intro section) and distribute remaining images
-    // Make sure we have at least one match before slicing
-    const matchesToUse = fallbackMatches.length > 1 ? fallbackMatches.slice(1) : [];
-    return insertImagesBeforeMatches(content, matchesToUse, imageCount);
+    if (fallbackMatches.length > 1) {
+      // Make sure we have at least one match after skipping the intro
+      const matchesToUse = fallbackMatches.slice(1);
+      return insertImagesBeforeMatches(content, matchesToUse, imageCount);
+    }
   }
   
   // Skip the first h2 match (intro section) and distribute images among remaining sections
-  // Make sure we have at least one match before slicing
-  const matchesToUse = matches.length > 1 ? matches.slice(1) : [];
-  return insertImagesBeforeMatches(content, matchesToUse, imageCount);
+  if (matches.length > 1) {
+    // Make sure we have at least one match after skipping the intro
+    const matchesToUse = matches.slice(1);
+    return insertImagesBeforeMatches(content, matchesToUse, imageCount);
+  } else if (matches.length === 1) {
+    // If there's only one h2, use it as a boundary and place images after it
+    return insertImagesAfterIntroHeading(content, matches[0], imageCount);
+  }
+  
+  return insertImagesAtRegularIntervals(content, imageCount);
 }
 
 /**
@@ -57,12 +66,7 @@ function insertImagesBeforeMatches(content: string, matches: RegExpMatchArray[],
     return insertImagesAtRegularIntervals(content, imageCount);
   }
   
-  // Make sure we have enough matches to distribute images
-  // We need at least one match per image
-  if (matches.length < imageCount) {
-    return insertImagesAtRegularIntervals(content, imageCount);
-  }
-  
+  // Calculate how many section breaks we'll use to distribute images
   const breakPointsToUse = Math.min(imageCount, matches.length);
   
   // Calculate which break points to use for even distribution
@@ -97,7 +101,7 @@ function insertImagesBeforeMatches(content: string, matches: RegExpMatchArray[],
 
 /**
  * Insert images at regular intervals when no suitable section breaks are found
- * Skip the first 30% of content to account for intro
+ * Skip the first 35% of content to account for intro
  */
 function insertImagesAtRegularIntervals(content: string, imageCount: number): string {
   if (imageCount <= 0) return content;
@@ -106,10 +110,10 @@ function insertImagesAtRegularIntervals(content: string, imageCount: number): st
   let result = content;
   let offset = 0;
   
-  // Skip first 30% of content to account for intro section
-  const startOffset = Math.floor(contentLength * 0.3);
+  // Skip first 35% of content to account for intro section
+  const startOffset = Math.floor(contentLength * 0.35);
   
-  // Only distribute remaining images in the last 70% of content
+  // Only distribute images in the last 65% of content
   const remainingLength = contentLength - startOffset;
   
   for (let i = 0; i < imageCount; i++) {
@@ -135,4 +139,77 @@ function insertImagesAtRegularIntervals(content: string, imageCount: number): st
   }
   
   return result;
+}
+
+/**
+ * Insert images after an intro heading, evenly throughout the rest of the content
+ */
+function insertImagesAfterIntroHeading(content: string, introHeading: RegExpMatchArray, imageCount: number): string {
+  if (imageCount <= 0) return content;
+  
+  const headingPosition = introHeading.index!;
+  const headingLength = introHeading[0].length;
+  const afterHeadingStart = headingPosition + headingLength;
+  
+  // Get the content after the intro heading
+  const contentBeforeHeading = content.slice(0, afterHeadingStart);
+  const contentAfterHeading = content.slice(afterHeadingStart);
+  
+  // Find locations to insert the images in the content after the heading
+  let processedContent = contentAfterHeading;
+  let offset = 0;
+  
+  // Find paragraph breaks to insert after
+  const paragraphBreaks = Array.from(processedContent.matchAll(/<\/p>/g));
+  
+  if (paragraphBreaks.length >= imageCount) {
+    // Calculate which paragraph breaks to use
+    for (let i = 0; i < imageCount; i++) {
+      // Distribute evenly, but ensure we're not too close to the start
+      // Skip the very first paragraph which might still be part of intro
+      const targetIndex = Math.floor(((i + 1) * paragraphBreaks.length) / (imageCount + 1));
+      const adjustedIndex = Math.max(1, Math.min(targetIndex, paragraphBreaks.length - 1));
+      
+      const insertPosition = paragraphBreaks[adjustedIndex].index! + 4 + offset;
+      
+      const imageHTML = `<div class="section-image">
+        <div class="image-placeholder" id="image-${i + 1}">
+          <p class="placeholder-text">Click to upload image ${i + 1}</p>
+        </div>
+      </div>\n`;
+      
+      processedContent = 
+        processedContent.slice(0, insertPosition) + 
+        imageHTML + 
+        processedContent.slice(insertPosition);
+      
+      offset += imageHTML.length;
+    }
+    
+    return contentBeforeHeading + processedContent;
+  } else {
+    // Not enough paragraph breaks, distribute evenly
+    const contentLength = contentAfterHeading.length;
+    
+    for (let i = 0; i < imageCount; i++) {
+      // Skip the first 10% of the after-heading content, which might still be intro
+      const startPos = Math.floor(contentLength * 0.1);
+      const insertPosition = startPos + Math.floor(((i + 1) * (contentLength - startPos)) / (imageCount + 1)) + offset;
+      
+      const imageHTML = `<div class="section-image">
+        <div class="image-placeholder" id="image-${i + 1}">
+          <p class="placeholder-text">Click to upload image ${i + 1}</p>
+        </div>
+      </div>\n`;
+      
+      processedContent = 
+        processedContent.slice(0, insertPosition) + 
+        imageHTML + 
+        processedContent.slice(insertPosition);
+      
+      offset += imageHTML.length;
+    }
+    
+    return contentBeforeHeading + processedContent;
+  }
 }
