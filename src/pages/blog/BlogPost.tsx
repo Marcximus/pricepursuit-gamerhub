@@ -63,9 +63,11 @@ const BlogPost = () => {
     try {
       // Use the synchronous version of our How-To processor
       const tmpProcessedContent = processHowToContent(processedContent, post.title);
-      // Only update if successful
-      if (tmpProcessedContent && typeof tmpProcessedContent === 'string') {
+      // Only update if successful and not empty
+      if (tmpProcessedContent && typeof tmpProcessedContent === 'string' && tmpProcessedContent.trim() !== '') {
         processedContent = tmpProcessedContent;
+      } else {
+        console.warn('How-To processing returned empty content, using original');
       }
     } catch (error) {
       console.error('Error processing How-To content:', error);

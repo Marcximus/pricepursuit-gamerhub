@@ -1,6 +1,57 @@
 
 /* How-To Blog Post Styles */
 
+/* Basic content styling */
+.how-to-article {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.6;
+}
+
+.how-to-article h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: #1a202c;
+}
+
+.how-to-article h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #2d3748;
+}
+
+.how-to-article h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #4a5568;
+}
+
+.how-to-article p {
+  margin-bottom: 1.5rem;
+  color: #4a5568;
+}
+
+.how-to-article ul, .how-to-article ol {
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.how-to-article li {
+  margin-bottom: 0.5rem;
+}
+
+/* Custom spacer styling */
+.how-to-content .spacer {
+  height: 1.5rem;
+  width: 100%;
+}
+
 /* QA Item Styling */
 .qa-item {
   margin: 1.5rem 0;

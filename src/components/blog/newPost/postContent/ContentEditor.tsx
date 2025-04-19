@@ -1,4 +1,3 @@
-
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -51,7 +50,7 @@ export const ContentEditor = ({
     } as React.ChangeEvent<HTMLTextAreaElement>);
   };
 
-  // Improved function to sanitize and format content for preview
+  // Fix the function to preserve HTML formatting in preview
   const prepareContentForPreview = (content: string) => {
     // Handle JSON-formatted content by extracting only the content value
     if (content.trim().startsWith('{') && content.includes('"content":')) {
@@ -134,6 +133,14 @@ export const ContentEditor = ({
             <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-md">
               <p className="text-sm text-amber-800 font-medium">
                 Note: When publishing, product placeholders will be replaced with actual Amazon product data.
+              </p>
+            </div>
+          )}
+          
+          {category === 'How-To' && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-800 font-medium">
+                HTML formatting will be preserved in the published post.
               </p>
             </div>
           )}
