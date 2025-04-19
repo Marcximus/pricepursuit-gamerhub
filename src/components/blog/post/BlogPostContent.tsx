@@ -1,7 +1,7 @@
-
 import { useEffect, useRef } from 'react';
 import { BlogPost } from '@/contexts/blog';
 import { removeJsonFormatting } from '@/services/blog/top10/contentProcessor';
+import { getTop10BlogStyles } from './styles/top10BlogStyles';
 
 interface BlogPostContentProps {
   post: BlogPost;
@@ -12,6 +12,28 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
   const cleanContent = removeJsonFormatting(content);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    // Add category-specific styles
+    if (post.category === 'Top10' && !document.getElementById('top10-blog-styles')) {
+      const styleElement = document.createElement('style');
+      styleElement.id = 'top10-blog-styles';
+      styleElement.textContent = getTop10BlogStyles();
+      document.head.appendChild(styleElement);
+    }
+    
+    // For How-To posts, we'll use the external CSS file that's already included
+    // This ensures the styles are properly applied without dynamic injection issues
+    
+    return () => {
+      // Clean up styles when component unmounts
+      const top10Styles = document.getElementById('top10-blog-styles');
+      if (top10Styles) {
+        top10Styles.remove();
+      }
+    };
+  }, [post.category]);
+
+  // Effect to ensure all links in product cards are working correctly
   useEffect(() => {
     if (!contentRef.current) return;
 
@@ -40,40 +62,33 @@ export const BlogPostContent = ({ post, content }: BlogPostContentProps) => {
       });
     };
 
-    // Fix How-To image spacing
-    const fixHowToImageSpacing = () => {
-      if (post.category !== 'How-To') return;
-      
-      const howToImages = contentRef.current?.querySelectorAll('.how-to-image');
-      howToImages?.forEach(img => {
-        // Make sure image is responsive
-        (img as HTMLElement).style.maxWidth = '100%';
-        (img as HTMLElement).style.height = 'auto';
-      });
-    };
-
     // Run immediately after render
     fixProductCardLinks();
-    fixHowToImageSpacing();
 
     // Use MutationObserver to handle dynamically loaded content
-    const observer = new MutationObserver(() => {
-      fixProductCardLinks();
-      fixHowToImageSpacing();
-    });
-    
+    const observer = new MutationObserver(fixProductCardLinks);
     observer.observe(contentRef.current, { childList: true, subtree: true });
 
     return () => {
       observer.disconnect();
     };
-  }, [content, post.category]);
+  }, [content]);
+
+  // Remove the extra processing for How-To blogs that might be stripping HTML
+  const getProcessedContent = () => {
+    // For How-To blogs, simply return the cleaned content without additional processing
+    if (post.category === 'How-To') {
+      return cleanContent;
+    }
+    
+    return cleanContent;
+  };
 
   return (
     <div 
       ref={contentRef}
       className={`prose prose-lg max-w-none ${post.category === 'How-To' ? 'how-to-content' : ''}`} 
-      dangerouslySetInnerHTML={{ __html: cleanContent }}
+      dangerouslySetInnerHTML={{ __html: getProcessedContent() }}
     />
   );
 };

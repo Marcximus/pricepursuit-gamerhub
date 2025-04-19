@@ -58,35 +58,7 @@ export const injectAdditionalImages = (content: string, additionalImages: string
     return modifiedContent;
   }
   
-  if (category === 'How-To') {
-    // For How-To blogs, replace any existing image placeholders with actual images
-    let modifiedContent = content;
-    
-    // Find all image placeholders
-    const placeholderRegex = /<div class="image-placeholder" id="image-(\d+)"[^>]*>.*?<\/div>/gs;
-    const placeholders = Array.from(modifiedContent.matchAll(placeholderRegex));
-    
-    placeholders.forEach((match, index) => {
-      if (index < additionalImages.length) {
-        const imgSrc = additionalImages[index];
-        const imageHtml = `<img 
-          src="${imgSrc}" 
-          alt="How-to guide image ${index + 1}" 
-          class="rounded-lg w-full how-to-image" 
-          onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
-        />`;
-        
-        modifiedContent = modifiedContent.replace(
-          match[0],
-          imageHtml
-        );
-      }
-    });
-    
-    return modifiedContent;
-  }
-  
-  if (['Review', 'Comparison'].includes(category || '')) {
+  if (['Review', 'How-To', 'Comparison'].includes(category || '')) {
     let modifiedContent = content;
     const paragraphs = content.match(/<p>.*?<\/p>/gi) || [];
     
