@@ -1,4 +1,3 @@
-
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { cleanTitle } from '@/services/blog/generate/parser/titleCleaner';
@@ -9,8 +8,8 @@ interface TitleInputProps {
 }
 
 export const TitleInput = ({ title, onTitleChange }: TitleInputProps) => {
-  // Use the imported cleanTitle function for consistent cleaning
-  const processedTitle = title ? cleanTitle(title) : '';
+  // Modify to keep spaces but still use other cleaning methods
+  const processedTitle = title ? title.trim() : '';
 
   return (
     <div className="space-y-2">
