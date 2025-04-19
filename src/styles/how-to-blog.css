@@ -1,3 +1,4 @@
+
 /* How-To Blog Post Styles */
 
 /* Basic content styling */
@@ -46,9 +47,12 @@
 }
 
 /* Custom spacer styling */
-.how-to-content .spacer {
+.how-to-content .spacer,
+.how-to-article .spacer {
   height: 1.5rem;
   width: 100%;
+  display: block;
+  clear: both;
 }
 
 /* QA Item Styling */
@@ -199,6 +203,8 @@
 .blog-image-container {
   margin: 2rem 0;
   text-align: center;
+  clear: both;
+  width: 100%;
 }
 
 .blog-image-container img {

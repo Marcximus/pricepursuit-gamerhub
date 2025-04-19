@@ -1,3 +1,4 @@
+
 /**
  * Fixes HTML in Top10 blog posts to ensure proper tag closure
  */
@@ -59,26 +60,106 @@ export const injectAdditionalImages = (content: string, additionalImages: string
   
   if (['Review', 'How-To', 'Comparison'].includes(category || '')) {
     let modifiedContent = content;
-    const sections = content.match(/<h2>.*?(?=<h2>|$)/gs) || [];
     
-    additionalImages.forEach((img, index) => {
-      if (index < sections.length) {
-        const section = sections[index];
-        const imageHtml = `<div class="blog-image-container">
-          <img 
-            src="${img}" 
-            alt="Image ${index + 1}" 
-            class="rounded-lg mx-auto" 
-            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
-          />
-        </div>`;
-        
-        modifiedContent = modifiedContent.replace(
-          section,
-          `${section}${imageHtml}`
-        );
+    // Improved section distribution for How-To blog posts
+    // Get all major content breakpoints (h2, h3 sections and paragraphs)
+    const contentBreakpoints = [
+      ...Array.from(content.matchAll(/<h2[^>]*>.*?<\/h2>/gi)).map(m => ({
+        type: 'h2',
+        index: m.index || 0,
+        content: m[0]
+      })),
+      ...Array.from(content.matchAll(/<h3[^>]*>.*?<\/h3>/gi)).map(m => ({
+        type: 'h3',
+        index: m.index || 0,
+        content: m[0]
+      }))
+    ];
+    
+    // Sort breakpoints by their position in the document
+    contentBreakpoints.sort((a, b) => a.index - b.index);
+    
+    // If we have more images than breakpoints, we'll need to distribute differently
+    if (contentBreakpoints.length === 0) {
+      // Fall back to paragraph distribution if no headings
+      const paragraphs = Array.from(content.matchAll(/<p[^>]*>.*?<\/p>/gi));
+      
+      // Only place images if there are paragraphs
+      if (paragraphs.length > 0) {
+        additionalImages.forEach((img, index) => {
+          // Evenly distribute images among paragraphs
+          const paragraphIndex = Math.floor(paragraphs.length * (index + 1) / (additionalImages.length + 1));
+          
+          if (paragraphIndex < paragraphs.length) {
+            const paragraph = paragraphs[paragraphIndex];
+            const imageHtml = `
+            <div class="blog-image-container">
+              <img 
+                src="${img}" 
+                alt="Image ${index + 1}" 
+                class="rounded-lg mx-auto" 
+                onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
+              />
+            </div>`;
+            
+            // Insert after this paragraph
+            const matchPosition = paragraph.index || 0;
+            const matchLength = paragraph[0].length;
+            const insertPosition = matchPosition + matchLength;
+            
+            modifiedContent = 
+              modifiedContent.substring(0, insertPosition) + 
+              imageHtml + 
+              modifiedContent.substring(insertPosition);
+          }
+        });
       }
-    });
+    } else {
+      // Distribute images across content sections more evenly
+      const distribution = Math.ceil(contentBreakpoints.length / Math.min(additionalImages.length, 3));
+      
+      additionalImages.forEach((img, index) => {
+        const breakpointIndex = Math.min(index * distribution, contentBreakpoints.length - 1);
+        if (breakpointIndex < contentBreakpoints.length) {
+          const breakpoint = contentBreakpoints[breakpointIndex];
+          
+          // Find the end of this section (next heading or end of content)
+          let sectionEndIndex = modifiedContent.length;
+          if (breakpointIndex + 1 < contentBreakpoints.length) {
+            sectionEndIndex = contentBreakpoints[breakpointIndex + 1].index;
+          }
+          
+          // Get the section content to find a good insertion point
+          const sectionStartIndex = breakpoint.index + breakpoint.content.length;
+          const sectionContent = modifiedContent.substring(sectionStartIndex, sectionEndIndex);
+          
+          // Look for a paragraph or list end to insert after
+          const insertAfterMatch = sectionContent.match(/<\/p>|<\/ul>|<\/ol>/i);
+          let insertPosition = sectionStartIndex;
+          
+          if (insertAfterMatch && insertAfterMatch.index !== undefined) {
+            insertPosition = sectionStartIndex + insertAfterMatch.index + insertAfterMatch[0].length;
+          }
+          
+          // Create image HTML
+          const imageHtml = `
+          <div class="blog-image-container">
+            <img 
+              src="${img}" 
+              alt="${breakpoint.type === 'h2' ? 'Section' : 'Subsection'} image ${index + 1}" 
+              class="rounded-lg mx-auto" 
+              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=200';"
+            />
+          </div>`;
+          
+          // Insert the image
+          modifiedContent = 
+            modifiedContent.substring(0, insertPosition) + 
+            imageHtml + 
+            modifiedContent.substring(insertPosition);
+        }
+      });
+    }
     
     return modifiedContent;
   }

@@ -1,3 +1,4 @@
+
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -75,12 +76,27 @@ export const ContentEditor = ({
     );
     
     if (category === 'How-To') {
+      // Mark h2 and h3 headings to show where images might be placed
+      processedContent = processedContent.replace(
+        /(<h2[^>]*>)(.*?)(<\/h2>)/g,
+        '$1$2$3<div class="p-3 mt-2 mb-4 border border-dashed border-blue-300 bg-blue-50 rounded-md text-center"><span class="text-xs text-blue-600">📸 Images will appear near this section</span></div>'
+      );
+      
+      // Convert image placeholders to more visible preview elements
       processedContent = processedContent.replace(
         /<div class="image-placeholder"[^>]*>/g,
         '<div class="p-4 my-6 border-2 border-dashed border-blue-500 bg-blue-50 rounded-md text-center">' +
         '<p class="text-blue-600 font-medium">📸 Image will be placed here</p>' +
         '<p class="text-sm text-blue-500 mt-2">Upload an image in the Additional Images section</p>'
       );
+      
+      // Add visual guide about image placement
+      processedContent = '<div class="p-4 mb-6 bg-blue-50 border border-blue-200 rounded-md">' +
+        '<p class="text-sm text-blue-800 font-medium">💡 <strong>Image Placement Guide:</strong> ' +
+        'Images will be automatically distributed throughout your content, typically after sections ' +
+        'and paragraphs. Add <code>&lt;h2&gt;</code> and <code>&lt;h3&gt;</code> headings to control ' +
+        'where images will appear.</p>' +
+        '</div>' + processedContent;
     }
     
     return processedContent;
@@ -143,7 +159,7 @@ export const ContentEditor = ({
           {category === 'How-To' && (
             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-sm text-blue-800 font-medium">
-                HTML formatting will be preserved in the published post.
+                HTML formatting will be preserved in the published post. Images will be positioned throughout your content based on headings and paragraphs.
               </p>
             </div>
           )}
