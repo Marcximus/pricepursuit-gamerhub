@@ -34,10 +34,10 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
       // Clear any previous comparison
       clearComparison();
       
-      // Make sure we add both laptops to the comparison context BEFORE navigating
-      let successfullyAdded = 0;
+      // Create an array to hold the products we'll add to comparison
+      const productsToAdd = [];
       
-      // Convert recommendation products to global Product type and add to comparison
+      // Convert recommendation products to global Product type and prepare them for comparison
       for (let i = 0; i < 2; i++) {
         const recProduct = results[i].product;
         if (!recProduct) continue;
@@ -79,17 +79,25 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
           created_at: new Date().toISOString()
         };
         
-        addToComparison(globalProduct);
-        successfullyAdded++;
+        // Add to our collection array rather than directly to comparison context
+        productsToAdd.push(globalProduct);
       }
       
-      if (successfullyAdded !== 2) {
+      // Check if we have 2 products to compare
+      if (productsToAdd.length !== 2) {
         toast({
-          title: "Note",
-          description: "Some products couldn't be added to comparison",
-          variant: "default" // Changed from "warning" to "default" to match the allowed variants
+          title: "Error",
+          description: "Could not prepare both laptops for comparison",
+          variant: "destructive"
         });
+        return;
       }
+      
+      // Now add both products to the comparison context
+      productsToAdd.forEach(product => {
+        console.log("Adding laptop to comparison:", product.title);
+        addToComparison(product);
+      });
       
       // Now navigate to compare page
       console.log("Navigating to compare page after adding laptops to comparison");
