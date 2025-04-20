@@ -106,7 +106,12 @@ const Blog = () => {
                   </CardHeader>
                   <CardFooter>
                     <Link to={`/blog/${post.category}/post/${post.slug}`} className="w-full">
-                      <Button variant="outline" className="w-full">Read Article</Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full hover:bg-green-500 hover:text-white hover:border-green-500"
+                      >
+                        Read Article
+                      </Button>
                     </Link>
                   </CardFooter>
                 </Card>
