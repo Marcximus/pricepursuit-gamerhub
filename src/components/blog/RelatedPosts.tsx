@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router-dom';
 import { BlogPost } from '@/contexts/blog';
 import { Card, CardContent } from '@/components/ui/card';
@@ -51,7 +52,7 @@ const RelatedPostCard = ({ post }: { post: BlogPost }) => {
   return (
     <Card className="h-full hover:shadow-md transition-shadow">
       <CardContent className="p-4">
-        <Link to={`/blog/${post.category}/${post.slug}`} className="space-y-3 block h-full">
+        <Link to={`/blog/${post.category}/post/${post.slug}`} className="space-y-3 block h-full">
           {post.image_url && (
             <div className="aspect-video overflow-hidden rounded">
               <img 
