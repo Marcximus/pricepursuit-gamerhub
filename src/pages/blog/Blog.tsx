@@ -85,9 +85,9 @@ const Blog = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recentPosts.map((post) => (
-                <Card key={post.id} className="hover:shadow-md transition-shadow">
+                <Card key={post.id} className="flex flex-col hover:shadow-md transition-shadow h-full">
                   {post.image_url && (
-                    <div className="aspect-video w-full overflow-hidden">
+                    <div className="aspect-video w-full overflow-hidden rounded-t-lg">
                       <img 
                         src={post.image_url} 
                         alt={post.title} 
@@ -95,17 +95,15 @@ const Blog = () => {
                       />
                     </div>
                   )}
-                  <CardHeader>
-                    <CardTitle className="line-clamp-2">{post.title}</CardTitle>
-                    <div className="text-sm text-gray-500">
+                  <CardHeader className="flex-grow">
+                    <CardTitle className="line-clamp-2 mb-2">{post.title}</CardTitle>
+                    <div className="text-sm text-gray-500 mb-2">
                       {new Date(post.created_at).toLocaleDateString()}
                       {' · '}
                       {post.category === 'Top10' ? 'Top 10' : post.category === 'How-To' ? 'How-To Guide' : post.category}
                     </div>
+                    <p className="text-gray-600 line-clamp-3 text-sm">{post.excerpt}</p>
                   </CardHeader>
-                  <CardContent>
-                    <p className="line-clamp-3 text-gray-600">{post.excerpt}</p>
-                  </CardContent>
                   <CardFooter>
                     <Link to={`/blog/${post.category}/post/${post.slug}`} className="w-full">
                       <Button variant="outline" className="w-full">Read Article</Button>
@@ -130,3 +128,4 @@ const Blog = () => {
 };
 
 export default Blog;
+
