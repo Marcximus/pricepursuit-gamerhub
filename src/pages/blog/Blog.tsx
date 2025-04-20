@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useBlog } from '@/contexts/blog';
@@ -46,7 +45,6 @@ const Blog = () => {
           </p>
         </div>
         
-        {/* Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {categories.map(category => (
             <Link 
@@ -63,14 +61,14 @@ const Blog = () => {
                   'bg-gradient-to-br from-pink-500/10 to-rose-500/20'
                 }`} />
                 
-                <CardHeader className="relative z-10 pb-4">
-                  <CardTitle className="text-2xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors flex items-center gap-3">
-                    <span className="text-3xl">{category.emoji}</span>
+                <CardHeader className="relative z-10 pb-4 flex flex-col items-center text-center">
+                  <div className="text-5xl mb-4">{category.emoji}</div>
+                  <CardTitle className="text-2xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors">
                     {category.name}
                   </CardTitle>
                 </CardHeader>
                 
-                <CardContent className="relative z-10 flex-grow pb-6">
+                <CardContent className="relative z-10 flex-grow pb-6 text-center">
                   <p className="text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors">
                     {category.description}
                   </p>
@@ -91,7 +89,6 @@ const Blog = () => {
         
         <Separator className="my-16" />
         
-        {/* Recent Posts */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-10 text-center">Recent Articles</h2>
           
