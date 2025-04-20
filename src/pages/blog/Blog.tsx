@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useBlog } from '@/contexts/blog';
@@ -47,24 +46,38 @@ const Blog = () => {
         </div>
         
         {/* Categories */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {categories.map(category => (
             <Link 
               key={category.id} 
               to={`/blog/${category.id}`}
-              className="block transform transition-all duration-200 hover:-translate-y-1"
+              className="block transform transition-all duration-300 hover:-translate-y-2"
             >
-              <Card className="h-full border-2 hover:border-green-500 hover:shadow-lg transition-all duration-200">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl font-semibold text-gray-800">{category.name}</CardTitle>
+              <Card className="h-full overflow-hidden group relative bg-white hover:shadow-xl transition-all duration-300 border-0">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-white/50 to-transparent opacity-100 group-hover:opacity-0 transition-opacity duration-300" />
+                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                  category.id === 'Top10' ? 'bg-gradient-to-br from-blue-500/10 to-purple-500/20' :
+                  category.id === 'Review' ? 'bg-gradient-to-br from-green-500/10 to-emerald-500/20' :
+                  category.id === 'Comparison' ? 'bg-gradient-to-br from-orange-500/10 to-amber-500/20' :
+                  'bg-gradient-to-br from-pink-500/10 to-rose-500/20'
+                }`} />
+                
+                <CardHeader className="relative z-10 pb-4">
+                  <CardTitle className="text-2xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors">
+                    {category.name}
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="flex-grow pb-6">
-                  <p className="text-gray-600 leading-relaxed">{category.description}</p>
+                
+                <CardContent className="relative z-10 flex-grow pb-6">
+                  <p className="text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors">
+                    {category.description}
+                  </p>
                 </CardContent>
-                <CardFooter>
+                
+                <CardFooter className="relative z-10">
                   <Button 
                     variant="outline" 
-                    className="w-full hover:bg-green-500 hover:text-white hover:border-green-500 transition-colors"
+                    className="w-full bg-white/80 backdrop-blur-sm border-gray-200 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-300"
                   >
                     Browse {category.name}
                   </Button>
