@@ -68,7 +68,7 @@ const BlogCategory = () => {
           </Link>
           
           <h1 className="text-4xl font-bold text-gray-900 mb-4">{getCategoryDisplayName()}</h1>
-          <p className="text-xl text-gray-600 max-w-3xl">
+          <p className="text-xl text-gray-600 max-w-3xl leading-relaxed tracking-wide min-h-[3rem]">
             {getSEODescription()}
           </p>
         </div>
@@ -117,3 +117,4 @@ const BlogCategory = () => {
 };
 
 export default BlogCategory;
+
