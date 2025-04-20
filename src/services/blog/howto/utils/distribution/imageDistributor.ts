@@ -5,7 +5,7 @@ import { findIntroductionEnd, findH2Headings } from '../content/sectionFinder';
 /**
  * Distribute images evenly across the content but after introduction
  */
-export function distributeImagesBeforeSections(content: string, imageCount: number = 3): string {
+export function distributeImagesBeforeSections(content: string, imageCount: number = 5): string {  // Changed default from 3 to 5
   if (!content || imageCount <= 0) return content;
   
   // Find where the introduction ends
@@ -20,7 +20,7 @@ export function distributeImagesBeforeSections(content: string, imageCount: numb
   const h2Matches = findH2Headings(mainContent);
   if (h2Matches.length === 0) return content;
   
-  // Calculate target positions for even distribution (25%, 50%, 75%)
+  // Calculate target positions for even distribution (20%, 40%, 60%, 80%)
   const contentLength = mainContent.length;
   const targetPositions = Array.from({ length: imageCount }, (_, i) => 
     Math.floor((i + 1) * contentLength / (imageCount + 1))

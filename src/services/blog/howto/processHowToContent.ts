@@ -29,7 +29,7 @@ export function processHowToContent(content: string, title: string): string {
     processedContent = formatStepByStepInstructions(processedContent);
     
     // Distribute images evenly before section breaks (after formatting sections)
-    processedContent = distributeImagesBeforeSections(processedContent, 3);
+    processedContent = distributeImagesBeforeSections(processedContent, 5);  // Changed from 3 to 5
     
     // Wrap content in HTML container
     processedContent = wrapContentInHtml(processedContent);
@@ -48,7 +48,7 @@ export function processHowToContent(content: string, title: string): string {
   processedContent = formatStepByStepInstructions(processedContent);
   
   // Distribute images evenly before section breaks
-  processedContent = distributeImagesBeforeSections(processedContent, 3);
+  processedContent = distributeImagesBeforeSections(processedContent, 5);  // Changed from 3 to 5
   
   // Wrap content in HTML container
   processedContent = wrapContentInHtml(processedContent);

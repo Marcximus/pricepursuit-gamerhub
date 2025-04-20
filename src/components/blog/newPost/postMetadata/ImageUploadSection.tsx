@@ -20,7 +20,7 @@ export const getMaxAdditionalImages = (category: string | undefined) => {
     case 'Top10': return 10;
     case 'Review': return 3;
     case 'Comparison': return 3;
-    case 'How-To': return 3;
+    case 'How-To': return 5;  // Changed from 3 to 5
     default: return 3;
   }
 };
