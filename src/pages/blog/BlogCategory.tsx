@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import { useBlog } from '@/contexts/blog';
@@ -16,7 +15,6 @@ const BlogCategory = () => {
   
   const posts = category ? getPostsByCategory(category) : [];
   
-  // Format the category name for display
   const getCategoryDisplayName = () => {
     if (!category) return '';
     switch (category) {
@@ -28,7 +26,6 @@ const BlogCategory = () => {
     }
   };
   
-  // Create SEO description based on category
   const getSEODescription = () => {
     if (!category) return '';
     switch (category) {
@@ -68,7 +65,7 @@ const BlogCategory = () => {
           </Link>
           
           <h1 className="text-4xl font-bold text-gray-900 mb-4">{getCategoryDisplayName()}</h1>
-          <p className="text-xl text-gray-600 max-w-3xl leading-relaxed tracking-wide min-h-[3rem]">
+          <p className="text-xl text-gray-600 w-full leading-relaxed tracking-wide min-h-[3rem]">
             {getSEODescription()}
           </p>
         </div>
@@ -117,4 +114,3 @@ const BlogCategory = () => {
 };
 
 export default BlogCategory;
-
