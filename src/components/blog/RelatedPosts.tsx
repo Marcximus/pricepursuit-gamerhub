@@ -21,11 +21,11 @@ export const RelatedPosts = ({ currentPostId, currentCategory }: RelatedPostsPro
     <div className="mt-12">
       <Separator className="my-8" />
       
-      <div className="space-y-8">
+      <div className="space-y-12">
         {randomPosts.length > 0 && (
           <div>
-            <h3 className="text-2xl font-bold mb-4">You Might Also Like</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <h3 className="text-2xl font-bold mb-6 text-gray-800">You Might Also Like</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {randomPosts.map(post => (
                 <RelatedPostCard key={post.id} post={post} />
               ))}
@@ -35,8 +35,8 @@ export const RelatedPosts = ({ currentPostId, currentCategory }: RelatedPostsPro
         
         {latestPosts.length > 0 && (
           <div>
-            <h3 className="text-2xl font-bold mb-4">Latest Posts</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <h3 className="text-2xl font-bold mb-6 text-gray-800">Latest Posts</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {latestPosts.map(post => (
                 <RelatedPostCard key={post.id} post={post} />
               ))}
@@ -50,24 +50,51 @@ export const RelatedPosts = ({ currentPostId, currentCategory }: RelatedPostsPro
 
 const RelatedPostCard = ({ post }: { post: BlogPost }) => {
   return (
-    <Card className="h-full hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <Link to={`/blog/${post.category}/post/${post.slug}`} className="space-y-3 block h-full">
+    <Card className="group h-full overflow-hidden hover:shadow-lg transition-all duration-300 border-2 border-gray-100 hover:border-green-100">
+      <Link 
+        to={`/blog/${post.category}/post/${post.slug}`}
+        className="block h-full"
+      >
+        <div className="aspect-video overflow-hidden bg-gray-100">
           {post.image_url && (
-            <div className="aspect-video overflow-hidden rounded">
-              <img 
-                src={post.image_url} 
-                alt={post.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <img 
+              src={post.image_url} 
+              alt={post.title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
           )}
-          <div>
-            <h4 className="font-semibold line-clamp-2">{post.title}</h4>
-            <p className="text-sm text-gray-500 mt-1 line-clamp-2">{post.excerpt}</p>
+        </div>
+        
+        <CardContent className="p-5">
+          <div className="space-y-3">
+            <h4 className="font-semibold text-lg line-clamp-2 group-hover:text-green-600 transition-colors">
+              {post.title}
+            </h4>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <time dateTime={post.created_at}>
+                {new Date(post.created_at).toLocaleDateString()}
+              </time>
+              <span>·</span>
+              <span>
+                {post.category === 'Top10' ? 'Top 10' : 
+                 post.category === 'How-To' ? 'How-To Guide' : 
+                 post.category}
+              </span>
+            </div>
+            <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+              {post.excerpt}
+            </p>
+            <div className="pt-2">
+              <span className="text-green-600 text-sm font-medium group-hover:text-green-700 transition-colors inline-flex items-center">
+                Read Article
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </span>
+            </div>
           </div>
-        </Link>
-      </CardContent>
+        </CardContent>
+      </Link>
     </Card>
   );
 };
