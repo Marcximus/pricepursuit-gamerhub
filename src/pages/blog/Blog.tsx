@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useBlog } from '@/contexts/blog';
@@ -18,10 +19,10 @@ const Blog = () => {
   }, []);
 
   const categories = [
-    { id: 'Top10', name: 'Top 10 Lists', description: 'Find the best laptops in various categories.' },
-    { id: 'Review', name: 'Laptop Reviews', description: 'In-depth reviews of the latest laptops.' },
-    { id: 'Comparison', name: 'Laptop Comparisons', description: 'Head-to-head comparisons between popular models.' },
-    { id: 'How-To', name: 'How-To Guides', description: 'Helpful guides to get the most out of your laptop.' }
+    { id: 'Top10', name: 'Top 10 Lists', description: 'Find the best laptops in various categories.', emoji: '🏆' },
+    { id: 'Review', name: 'Laptop Reviews', description: 'In-depth reviews of the latest laptops.', emoji: '🔍' },
+    { id: 'Comparison', name: 'Laptop Comparisons', description: 'Head-to-head comparisons between popular models.', emoji: '⚖️' },
+    { id: 'How-To', name: 'How-To Guides', description: 'Helpful guides to get the most out of your laptop.', emoji: '📘' }
   ];
 
   return (
@@ -63,7 +64,8 @@ const Blog = () => {
                 }`} />
                 
                 <CardHeader className="relative z-10 pb-4">
-                  <CardTitle className="text-2xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors">
+                  <CardTitle className="text-2xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors flex items-center gap-3">
+                    <span className="text-3xl">{category.emoji}</span>
                     {category.name}
                   </CardTitle>
                 </CardHeader>
