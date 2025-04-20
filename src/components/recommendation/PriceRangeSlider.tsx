@@ -38,12 +38,12 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
   return (
     <div className="space-y-6">
       <div className="relative pt-2">
-        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-indigo-900/10 to-purple-900/10 rounded-xl -z-10"></div>
+        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-green-900/10 to-emerald-900/10 rounded-xl -z-10"></div>
         
         <div className="mb-8 space-y-3">
           <div className="flex justify-between items-center px-1">
-            <div className="text-xs uppercase tracking-wider text-indigo-500 font-semibold">Min</div>
-            <div className="text-xs uppercase tracking-wider text-indigo-500 font-semibold">Max</div>
+            <div className="text-xs uppercase tracking-wider text-green-500 font-semibold">Min</div>
+            <div className="text-xs uppercase tracking-wider text-green-500 font-semibold">Max</div>
           </div>
           
           <Slider
@@ -59,13 +59,13 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
           />
           
           <div className="flex justify-between items-center">
-            <div className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg text-white text-xs font-medium shadow-md ring-1 ring-white/10">
+            <div className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-green-600 rounded-lg text-white text-xs font-medium shadow-md ring-1 ring-white/10">
               ${minPrice}
             </div>
-            <div className="text-xs font-medium text-indigo-300 uppercase tracking-wider">
+            <div className="text-xs font-medium text-green-300 uppercase tracking-wider">
               Price Range
             </div>
-            <div className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg text-white text-xs font-medium shadow-md ring-1 ring-white/10">
+            <div className="px-3 py-1.5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg text-white text-xs font-medium shadow-md ring-1 ring-white/10">
               ${maxPrice}
             </div>
           </div>
@@ -73,13 +73,13 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
       </div>
       
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-indigo-500/5 blur-xl"></div>
-        <div className="py-3.5 px-5 bg-gradient-to-r from-slate-900/90 to-indigo-900/80 rounded-xl border border-indigo-500/30 flex justify-between items-center shadow-lg backdrop-blur-sm relative z-10">
+        <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 via-emerald-500/5 to-green-500/5 blur-xl"></div>
+        <div className="py-3.5 px-5 bg-gradient-to-r from-slate-900/90 to-green-900/80 rounded-xl border border-green-500/30 flex justify-between items-center shadow-lg backdrop-blur-sm relative z-10">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></div>
-            <div className="text-sm font-medium text-indigo-200">Selected Range</div>
+            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+            <div className="text-sm font-medium text-green-200">Selected Range</div>
           </div>
-          <div className="text-sm font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-white">
+          <div className="text-sm font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-white">
             ${minPrice} - ${maxPrice}
           </div>
         </div>

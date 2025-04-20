@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import RecommendationQuiz from '../components/recommendation/RecommendationQuiz';
@@ -45,9 +44,7 @@ const Recommend = () => {
                     </div>
                     <h1 className="text-3xl font-bold text-center mb-2 text-gray-800">Find Your Perfect Laptop</h1>
                     <p className="text-center text-gray-600 mb-6 max-w-lg mx-auto">Answer a few questions and we'll recommend the best laptops for you</p>
-                  </> : <div className="pb-4">
-                    {/* Empty div to maintain spacing - the ResultsHeader component in RecommendationResults will display the title */}
-                  </div>}
+                  </> : <div className="pb-4" />}
               </div>
             </div>
             <CardContent className="pt-0 px-4 md:px-8 pb-10">

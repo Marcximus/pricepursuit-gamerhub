@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { PriceRangeSlider } from './PriceRangeSlider';
@@ -63,8 +62,8 @@ export const PriceRangeQuestion: React.FC<PriceRangeQuestionProps> = ({
               variant={selectedOptionStr === option ? "default" : "outline"}
               className={`justify-start text-left h-auto py-2.5 px-3.5 transition-all duration-200 hover:shadow-md ${
                 selectedOptionStr === option 
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                  : 'bg-white/80 hover:bg-blue-50 text-gray-700 hover:text-blue-600 border-gray-200'
+                  ? 'bg-green-600 hover:bg-green-700 text-white' 
+                  : 'bg-white/80 hover:bg-green-50 text-gray-700 hover:text-green-600 border-gray-200'
               } rounded-xl`}
               onClick={() => onSelect(option)}
             >
@@ -77,7 +76,7 @@ export const PriceRangeQuestion: React.FC<PriceRangeQuestionProps> = ({
         </div>
         
         {(selectedOptionStr === 'Custom Range' || (typeof selectedOptionStr === 'string' && selectedOptionStr.startsWith('Custom:'))) && (
-          <div className="mt-5 p-4 bg-blue-50/80 rounded-xl border border-blue-100">
+          <div className="mt-5 p-4 bg-green-50/80 rounded-xl border border-green-100">
             <PriceRangeSlider 
               minPrice={customMinPrice} 
               maxPrice={customMaxPrice}
@@ -89,4 +88,3 @@ export const PriceRangeQuestion: React.FC<PriceRangeQuestionProps> = ({
     </>
   );
 };
-
