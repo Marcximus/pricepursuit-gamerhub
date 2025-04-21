@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import RecommendationQuiz from '../components/recommendation/RecommendationQuiz';
@@ -23,7 +24,7 @@ const Recommend = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       <Navigation />
-      <main className="pt-20 pb-20" role="main">
+      <main className="pt-16 pb-20" role="main">
         <section className="container mx-auto px-4 py-4">
           <Card className="bg-transparent shadow-none border-0 relative overflow-hidden rounded-2xl">
             <div className="relative">
