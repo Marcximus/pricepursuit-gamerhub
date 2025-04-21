@@ -83,7 +83,7 @@ const ComparePriceLaptops = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       <Navigation />
-      <main className="pt-16 pb-16" role="main"> {/* Reduced from pt-20 to pt-16 */}
+      <main className="pt-20 pb-16" role="main">
         <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <LaptopLayout
             filters={
