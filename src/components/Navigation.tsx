@@ -34,7 +34,7 @@ const Navigation = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main navigation bar with logo, site name, links, and logout */}
-        <div className="h-20 flex items-center justify-between">
+        <div className="h-16 flex items-center justify-between">
           {/* Left aligned: Logo & Site Name */}
           <div className="flex items-center space-x-2 shrink-0">
             <Link to="/" className="flex items-center space-x-2">
@@ -47,7 +47,7 @@ const Navigation = () => {
           </div>
 
           {/* Center aligned: Navigation Links */}
-          <div className="flex flex-1 justify-center space-x-8">
+          <div className="flex flex-1 justify-center items-center space-x-8 min-w-0">
             <Link
               to="/"
               className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/') && !isActive('/blog') && !isActive('/compare') && !isActive('/recommend') && !isActive('/about') ? 'text-primary font-medium' : ''}`}
@@ -69,7 +69,7 @@ const Navigation = () => {
               <Sparkles className="w-4 h-4" />
               <span>Personal Laptop Finder</span>
             </Link>
-            <Separator orientation="vertical" className="h-10 mx-2" />
+            <Separator orientation="vertical" className="h-8 mx-2" />
             <Link
               to="/blog"
               className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/blog') ? 'text-primary font-medium' : ''}`}
