@@ -60,12 +60,12 @@ const LoadingState: React.FC = () => {
   }, [shuffledTexts]);
   
   useEffect(() => {
-    // 5% slower progress (5% increase from the previous delay which was already 20% slower)
+    // 15% slower progress: 756ms * 1.15 ≈ 869ms
     const timer = setTimeout(() => {
       setProgress(prev => {
-        // More random increments with lower speed (5% slower than before)
+        // More random increments with lower speed (same logic as before)
         const randomFactor = Math.random() * 1.6 + 0.4; // Random factor between 0.4 and 2.0
-        const increment = Math.max(1.6, Math.floor((40 / (prev + 5)) * randomFactor * 0.76)); // Multiply by 0.76 for 5% slower than before (0.8 * 0.95 = 0.76)
+        const increment = Math.max(1.6, Math.floor((40 / (prev + 5)) * randomFactor * 0.76));
         
         // Add occasional jumps for more randomness
         const shouldJump = Math.random() > 0.85;
@@ -73,8 +73,8 @@ const LoadingState: React.FC = () => {
         
         return prev >= 90 ? 90 : Math.min(90, prev + increment + jumpValue);
       });
-    }, 756); // 5% increase from previous delay of 720ms (720 * 1.05 = 756)
-    
+    }, 869); // 15% slower interval
+
     return () => clearTimeout(timer);
   }, [progress]);
   
@@ -100,3 +100,4 @@ const LoadingState: React.FC = () => {
 };
 
 export default LoadingState;
+
