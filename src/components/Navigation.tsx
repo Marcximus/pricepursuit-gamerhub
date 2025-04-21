@@ -33,33 +33,19 @@ const Navigation = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="flex items-center relative">
-              <Laptop className="w-6 h-6 text-gaming-600" />
-              <Crosshair className="w-10 h-10 text-green-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 animate-crosshair-pulse" />
-            </div>
-            <span className="text-xl font-bold text-gaming-800">Laptop Hunter</span>
-          </Link>
-          <div className="flex items-center space-x-4">
-            {user && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-                className="nav-link flex items-center space-x-1"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-      <div className="border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex justify-center items-center py-3 overflow-x-auto hide-scrollbar" aria-label="Secondary navigation">
-            <div className="flex items-center space-x-6">
+        {/* Main navigation bar with logo, site name, links, and logout */}
+        <div className="h-20 flex items-center justify-between">
+          <div className="flex items-center space-x-4 w-full">
+            {/* Logo & Site Name */}
+            <Link to="/" className="flex items-center space-x-2 shrink-0">
+              <div className="flex items-center relative">
+                <Laptop className="w-6 h-6 text-gaming-600" />
+                <Crosshair className="w-10 h-10 text-green-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 animate-crosshair-pulse" />
+              </div>
+              <span className="text-xl font-bold text-gaming-800">Laptop Hunter</span>
+            </Link>
+            {/* Navigation Links */}
+            <div className="flex items-center space-x-6 ml-8 flex-1">
               <Link
                 to="/"
                 className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/') && !isActive('/blog') && !isActive('/compare') && !isActive('/recommend') && !isActive('/about') ? 'text-primary font-medium' : ''}`}
@@ -81,11 +67,7 @@ const Navigation = () => {
                 <Sparkles className="w-4 h-4" />
                 <span>Personal Laptop Finder</span>
               </Link>
-              
-              <div className="mx-2">
-                <Separator orientation="vertical" className="h-10" />
-              </div>
-              
+              <Separator orientation="vertical" className="h-10 mx-2" />
               <Link
                 to="/blog"
                 className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/blog') ? 'text-primary font-medium' : ''}`}
@@ -100,12 +82,22 @@ const Navigation = () => {
                 <User className="w-4 h-4" />
                 <span>About</span>
               </Link>
-              
-              <div className="mx-2">
-                <Separator orientation="vertical" className="h-6" />
-              </div>
             </div>
-          </nav>
+          </div>
+          {/* Logout */}
+          <div className="flex items-center space-x-4 shrink-0">
+            {user && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="nav-link flex items-center space-x-1"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </nav>
@@ -113,4 +105,3 @@ const Navigation = () => {
 };
 
 export default Navigation;
-
