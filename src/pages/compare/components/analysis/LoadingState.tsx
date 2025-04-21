@@ -60,7 +60,7 @@ const LoadingState: React.FC = () => {
   }, [shuffledTexts]);
   
   useEffect(() => {
-    // 15% slower progress: 756ms * 1.15 ≈ 869ms
+    // Changed timeout to 1300ms as requested
     const timer = setTimeout(() => {
       setProgress(prev => {
         // More random increments with lower speed (same logic as before)
@@ -73,7 +73,7 @@ const LoadingState: React.FC = () => {
         
         return prev >= 90 ? 90 : Math.min(90, prev + increment + jumpValue);
       });
-    }, 869); // 15% slower interval
+    }, 1300); // Updated delay to 1300ms
 
     return () => clearTimeout(timer);
   }, [progress]);
