@@ -19,8 +19,30 @@
     <meta name="twitter:image" content="/og-image.png" />
     <link rel="canonical" href="https://yourdomain.com" />
     <link rel="icon" type="image/png" href="/favicon.png" />
+    <!-- Structured Data for SEO (JSON-LD) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Laptop Hunter",
+        "url": "https://yourdomain.com",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://yourdomain.com/?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        },
+        "description": "Find and compare the best laptop deals. Laptop Hunter helps you make informed decisions with detailed comparisons and expert recommendations.",
+        "publisher": {
+          "@type": "Organization",
+          "name": "Laptop Hunter",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "/og-image.png"
+          }
+        }
+      }
+    </script>
   </head>
-
   <body>
     <div id="root"></div>
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
