@@ -1,6 +1,6 @@
 
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Laptop, Crosshair, Settings, LogOut, GitCompare, Sparkles, FileText, User } from "lucide-react";
+import { Laptop, Crosshair, LogOut, GitCompare, Sparkles, FileText, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -42,13 +42,6 @@ const Navigation = () => {
             <span className="text-xl font-bold text-gaming-800">Laptop Hunter</span>
           </Link>
           <div className="flex items-center space-x-4">
-            <Link
-              to="/admin"
-              className={`nav-link flex items-center space-x-1 ${isActive('/admin') ? 'text-primary font-medium' : ''}`}
-            >
-              <Settings className="w-4 h-4" />
-              <span>Admin</span>
-            </Link>
             {user && (
               <Button
                 variant="ghost"
@@ -111,7 +104,6 @@ const Navigation = () => {
               <div className="mx-2">
                 <Separator orientation="vertical" className="h-6" />
               </div>
-              {/* Removed Desktops, Monitors, Keyboards, Mouse, Headsets as requested */}
             </div>
           </nav>
         </div>
