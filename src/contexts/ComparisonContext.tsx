@@ -22,16 +22,24 @@ export function ComparisonProvider({ children }: { children: ReactNode }) {
       laptop = { ...laptop, id: laptop.asin };
     }
     
+    // Check if this laptop is already in the comparison
     if (selectedLaptops.length < 2 && !isSelected(laptop.id)) {
-      setSelectedLaptops([...selectedLaptops, laptop]);
+      console.log(`Adding laptop to comparison: ${laptop.title} (${laptop.id})`);
+      // Use functional update to ensure we're working with the latest state
+      setSelectedLaptops(prevSelected => [...prevSelected, laptop]);
+    } else {
+      console.log(`Laptop already selected or comparison full: ${laptop.title} (${laptop.id})`);
     }
   };
   
   const removeFromComparison = (laptopId: string) => {
-    setSelectedLaptops(selectedLaptops.filter(laptop => laptop.id !== laptopId));
+    setSelectedLaptops(prevSelected => 
+      prevSelected.filter(laptop => laptop.id !== laptopId)
+    );
   };
   
   const clearComparison = () => {
+    console.log("Clearing comparison");
     setSelectedLaptops([]);
   };
   

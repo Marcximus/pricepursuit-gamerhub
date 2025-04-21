@@ -16,7 +16,7 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
   results,
   onReset
 }) => {
-  const { addToComparison, clearComparison } = useComparison();
+  const { addToComparison, clearComparison, selectedLaptops } = useComparison();
   const navigate = useNavigate();
   const canCompare = results.length >= 2 && results[0].product && results[1].product;
   
@@ -79,7 +79,7 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
           created_at: new Date().toISOString()
         };
         
-        // Add to our collection array rather than directly to comparison context
+        // Add to our collection array
         productsToAdd.push(globalProduct);
       }
       
@@ -94,14 +94,21 @@ export const ResultsActionButtons: React.FC<ResultsActionButtonsProps> = ({
       }
       
       // Now add both products to the comparison context
-      productsToAdd.forEach(product => {
-        console.log("Adding laptop to comparison:", product.title);
-        addToComparison(product);
-      });
+      console.log("Adding laptops to comparison...");
       
-      // Now navigate to compare page
-      console.log("Navigating to compare page after adding laptops to comparison");
-      navigate('/compare');
+      // Add first product
+      addToComparison(productsToAdd[0]);
+      
+      // Add second product with a slight delay to ensure state updates properly
+      setTimeout(() => {
+        addToComparison(productsToAdd[1]);
+        
+        // Wait a moment for state to update before navigating
+        setTimeout(() => {
+          console.log("Navigating to compare page with laptops:", selectedLaptops.length + 1);
+          navigate('/compare');
+        }, 100);
+      }, 50);
       
     } catch (error) {
       console.error("Error setting up comparison:", error);

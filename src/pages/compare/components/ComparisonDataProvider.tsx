@@ -52,13 +52,16 @@ const ComparisonDataProvider: React.FC<ComparisonDataProviderProps> = ({ childre
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [selectedLaptops]);
   
-  // This effect automatically triggers the comparison when we have 2 laptops
+  // This effect checks if we have the required laptops after mounting
   useEffect(() => {
     // Log the current state to help with debugging
-    console.log("ComparisonDataProvider - Selected laptops:", selectedLaptops.length);
-    console.log("Has left laptop:", !!laptopLeft?.id);
-    console.log("Has right laptop:", !!laptopRight?.id);
-    
+    console.log("ComparisonDataProvider - Selected laptops count:", selectedLaptops.length);
+    console.log("Has left laptop:", !!laptopLeft?.asin);
+    console.log("Has right laptop:", !!laptopRight?.asin);
+  }, []);
+  
+  // This effect automatically triggers the comparison when we have 2 laptops
+  useEffect(() => {
     // Don't fetch comparison if we don't have 2 laptops
     if (selectedLaptops.length !== 2) {
       console.log("Not enough laptops for comparison:", selectedLaptops.length);
