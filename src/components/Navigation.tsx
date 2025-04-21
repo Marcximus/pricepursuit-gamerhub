@@ -1,5 +1,6 @@
+
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Monitor, Laptop, Computer, Crosshair, Keyboard, Mouse, Headphones, Settings, LogOut, GitCompare, Sparkles, FileText, User } from "lucide-react";
+import { Laptop, Crosshair, Settings, LogOut, GitCompare, Sparkles, FileText, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -106,26 +107,7 @@ const Navigation = () => {
                 <Separator orientation="vertical" className="h-6" />
               </div>
               
-              <Link to="/ComparePrice/Desktops" className="nav-link flex items-center space-x-1">
-                <Computer className="w-4 h-4" />
-                <span>Desktops</span>
-              </Link>
-              <Link to="/ComparePrice/Monitors" className="nav-link flex items-center space-x-1">
-                <Monitor className="w-4 h-4" />
-                <span>Monitors</span>
-              </Link>
-              <Link to="/ComparePrice/Keyboards" className="nav-link flex items-center space-x-1">
-                <Keyboard className="w-4 w-4" />
-                <span>Keyboards</span>
-              </Link>
-              <Link to="/ComparePrice/Mouse" className="nav-link flex items-center space-x-1">
-                <Mouse className="w-4 h-4" />
-                <span>Mouse</span>
-              </Link>
-              <Link to="/ComparePrice/Headsets" className="nav-link flex items-center space-x-1">
-                <Headphones className="w-4 h-4" />
-                <span>Headsets</span>
-              </Link>
+              {/* Removed Desktops, Monitors, Keyboards, Mouse, Headsets as requested */}
             </div>
           </nav>
         </div>
@@ -135,3 +117,4 @@ const Navigation = () => {
 };
 
 export default Navigation;
+
