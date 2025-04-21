@@ -36,6 +36,9 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
     handleReset
   } = useQuizState();
 
+  // Track if we're currently handling a back navigation
+  const [isNavigatingBack, setIsNavigatingBack] = React.useState(false);
+
   useEffect(() => {
     // Notify parent component when results are being shown
     if (onResultsDisplayChange) {
@@ -54,6 +57,12 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
   const handleOptionSelectAndAdvance = (question: keyof typeof answers, value: string) => {
     handleOptionSelect(question, value);
     
+    // Don't auto-advance if we're navigating back
+    if (isNavigatingBack) {
+      setIsNavigatingBack(false);
+      return;
+    }
+    
     // Don't auto-advance on the last question
     if (currentQuestion < totalQuestions - 1) {
       // Special case: For price range, don't auto-advance if selecting "Custom Range"
@@ -66,6 +75,12 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
         handleNext();
       }, 300);
     }
+  };
+
+  // Override the back handler to set the navigating back flag
+  const handleBackWithFlag = () => {
+    setIsNavigatingBack(true);
+    handleBack();
   };
 
   // If completed, show results
@@ -97,7 +112,7 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
                 customMaxPrice={answers.customMaxPrice || 1500}
                 onSelect={(value) => handleOptionSelect('priceRange', value)}
                 onRangeChange={handlePriceRangeChange}
-                autoAdvance={true} // Enable auto-advance for price range
+                autoAdvance={!isNavigatingBack} // Disable auto-advance when navigating back
                 onAdvance={handleNext}
               />
             )}
@@ -159,7 +174,7 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
         totalQuestions={totalQuestions}
         answers={answers}
         isProcessing={isProcessing}
-        onBack={handleBack}
+        onBack={handleBackWithFlag}
         onNext={handleNext}
         onSubmit={handleSubmit}
       />
