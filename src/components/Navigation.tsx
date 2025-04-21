@@ -35,57 +35,58 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main navigation bar with logo, site name, links, and logout */}
         <div className="h-20 flex items-center justify-between">
-          {/* Centered group with logo and navigation links */}
-          <div className="flex items-center justify-center flex-1 space-x-8">
-            {/* Logo & Site Name */}
-            <Link to="/" className="flex items-center space-x-2 shrink-0">
+          {/* Left aligned: Logo & Site Name */}
+          <div className="flex items-center space-x-2 shrink-0">
+            <Link to="/" className="flex items-center space-x-2">
               <div className="flex items-center relative">
                 <Laptop className="w-6 h-6 text-gaming-600" />
                 <Crosshair className="w-10 h-10 text-green-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 animate-crosshair-pulse" />
               </div>
               <span className="text-xl font-bold text-gaming-800">Laptop Hunter</span>
             </Link>
-            {/* Navigation Links */}
-            <div className="flex items-center space-x-6">
-              <Link
-                to="/"
-                className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/') && !isActive('/blog') && !isActive('/compare') && !isActive('/recommend') && !isActive('/about') ? 'text-primary font-medium' : ''}`}
-              >
-                <Laptop className="w-4 h-4" />
-                <span>Laptops</span>
-              </Link>
-              <Link
-                to="/compare"
-                className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/compare') ? 'text-primary font-medium' : ''}`}
-              >
-                <GitCompare className="w-4 h-4" />
-                <span>Compare</span>
-              </Link>
-              <Link
-                to="/recommend"
-                className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/recommend') ? 'text-primary font-medium' : ''}`}
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>Personal Laptop Finder</span>
-              </Link>
-              <Separator orientation="vertical" className="h-10 mx-2" />
-              <Link
-                to="/blog"
-                className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/blog') ? 'text-primary font-medium' : ''}`}
-              >
-                <FileText className="w-4 h-4" />
-                <span>Blog</span>
-              </Link>
-              <Link
-                to="/about"
-                className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/about') ? 'text-primary font-medium' : ''}`}
-              >
-                <User className="w-4 h-4" />
-                <span>About</span>
-              </Link>
-            </div>
           </div>
-          {/* Logout */}
+
+          {/* Center aligned: Navigation Links */}
+          <div className="flex flex-1 justify-center space-x-8">
+            <Link
+              to="/"
+              className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/') && !isActive('/blog') && !isActive('/compare') && !isActive('/recommend') && !isActive('/about') ? 'text-primary font-medium' : ''}`}
+            >
+              <Laptop className="w-4 h-4" />
+              <span>Laptops</span>
+            </Link>
+            <Link
+              to="/compare"
+              className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/compare') ? 'text-primary font-medium' : ''}`}
+            >
+              <GitCompare className="w-4 h-4" />
+              <span>Compare</span>
+            </Link>
+            <Link
+              to="/recommend"
+              className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/recommend') ? 'text-primary font-medium' : ''}`}
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Personal Laptop Finder</span>
+            </Link>
+            <Separator orientation="vertical" className="h-10 mx-2" />
+            <Link
+              to="/blog"
+              className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/blog') ? 'text-primary font-medium' : ''}`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>Blog</span>
+            </Link>
+            <Link
+              to="/about"
+              className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/about') ? 'text-primary font-medium' : ''}`}
+            >
+              <User className="w-4 h-4" />
+              <span>About</span>
+            </Link>
+          </div>
+
+          {/* Right aligned: Logout */}
           <div className="flex items-center space-x-4 shrink-0">
             {user && (
               <Button
