@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ReactNode } from "react";
 type LaptopLayoutProps = {
@@ -12,7 +13,7 @@ export function LaptopLayout({
 }: LaptopLayoutProps) {
   return <div className="flex flex-col lg:flex-row gap-6">
       <div className="lg:w-80 flex-shrink-0">
-        <div className="sticky top-32">
+        <div className="sticky top-20">
           <Card className="shadow-sm border-slate-200 overflow-hidden">
             <CardContent className="p-0">
               {filters}
@@ -22,7 +23,7 @@ export function LaptopLayout({
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="w-full sticky top-32 backdrop-blur-sm z-20 pb-4 transform-gpu bg-transparent">
+        <div className="w-full sticky top-20 backdrop-blur-sm z-20 pb-4 transform-gpu bg-transparent">
           {toolbar}
         </div>
         <div className="relative z-10">
