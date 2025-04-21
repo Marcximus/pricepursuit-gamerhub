@@ -1,12 +1,19 @@
 
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from 'react-helmet-async';
 
 export function NotFoundPage() {
   const navigate = useNavigate();
 
   return (
     <section className="bg-white font-serif min-h-screen flex items-center justify-center">
+      <Helmet>
+        <title>Page Not Found | Laptop Hunter</title>
+        <meta name="description" content="The page you are looking for could not be found. Return to Laptop Hunter to find the best laptop deals and comparisons." />
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
+      
       <div className="container mx-auto">
         <div className="flex justify-center">
           <div className="w-full sm:w-10/12 md:w-8/12 text-center">

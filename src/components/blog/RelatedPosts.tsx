@@ -24,7 +24,7 @@ export const RelatedPosts = ({ currentPostId, currentCategory }: RelatedPostsPro
       <div className="space-y-12">
         {randomPosts.length > 0 && (
           <div>
-            <h3 className="text-2xl font-bold mb-6 text-gray-800">You Might Also Like</h3>
+            <h2 className="text-2xl font-bold mb-6 text-gray-800">You Might Also Like</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {randomPosts.map(post => (
                 <RelatedPostCard key={post.id} post={post} />
@@ -35,7 +35,7 @@ export const RelatedPosts = ({ currentPostId, currentCategory }: RelatedPostsPro
         
         {latestPosts.length > 0 && (
           <div>
-            <h3 className="text-2xl font-bold mb-6 text-gray-800">Latest Posts</h3>
+            <h2 className="text-2xl font-bold mb-6 text-gray-800">Latest Posts</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {latestPosts.map(post => (
                 <RelatedPostCard key={post.id} post={post} />
@@ -54,6 +54,7 @@ const RelatedPostCard = ({ post }: { post: BlogPost }) => {
       <Link 
         to={`/blog/${post.category}/post/${post.slug}`}
         className="block h-full"
+        aria-label={`Read article: ${post.title}`}
       >
         <div className="aspect-video overflow-hidden bg-gray-100">
           {post.image_url && (
@@ -61,6 +62,7 @@ const RelatedPostCard = ({ post }: { post: BlogPost }) => {
               src={post.image_url} 
               alt={post.title}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
             />
           )}
         </div>
