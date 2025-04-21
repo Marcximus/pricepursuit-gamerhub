@@ -100,7 +100,7 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
   return <div className="min-h-screen bg-slate-50">
       <Navigation />
       
-      <main className="pt-32 pb-16">
+      <main className="pt-16 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <ComparisonHeader handleGoBack={handleGoBack} handleClearAndGoBack={handleClearAndGoBack} />
           
@@ -129,3 +129,4 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
 };
 
 export default ComparisonLayout;
+
