@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
@@ -82,7 +83,7 @@ const ComparePriceLaptops = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       <Navigation />
-      <main className="pt-32 pb-16" role="main">
+      <main className="pt-8 pb-16" role="main">
         <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <LaptopLayout
             filters={
