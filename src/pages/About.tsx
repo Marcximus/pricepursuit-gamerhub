@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navigation from '@/components/Navigation';
 import {
@@ -24,8 +23,7 @@ const About = () => {
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
-      
-      <div className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <main className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" role="main">
         <AboutHero />
         <MissionSection />
         <OriginStorySection />
@@ -41,8 +39,7 @@ const About = () => {
         <FAQSection />
         <LegalSection />
         <CtaSection />
-      </div>
-      
+      </main>
       <Footer />
     </div>
   );

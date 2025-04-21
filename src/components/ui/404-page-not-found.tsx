@@ -2,19 +2,16 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from 'react-helmet-async';
-
 export function NotFoundPage() {
   const navigate = useNavigate();
-
   return (
-    <section className="bg-white font-serif min-h-screen flex items-center justify-center">
+    <main className="bg-white font-serif min-h-screen flex items-center justify-center" role="main">
       <Helmet>
         <title>Page Not Found | Laptop Hunter</title>
         <meta name="description" content="The page you are looking for could not be found. Return to Laptop Hunter to find the best laptop deals and comparisons." />
         <meta name="robots" content="noindex, follow" />
       </Helmet>
-      
-      <div className="container mx-auto">
+      <section className="container mx-auto">
         <div className="flex justify-center">
           <div className="w-full sm:w-10/12 md:w-8/12 text-center">
             <div
@@ -26,9 +23,9 @@ export function NotFoundPage() {
               </h1>
             </div>
             <div className="mt-[-50px]">
-              <h3 className="text-2xl text-black sm:text-3xl font-bold mb-4">
+              <h2 className="text-2xl text-black sm:text-3xl font-bold mb-4">
                 Look like you're lost
-              </h3>
+              </h2>
               <p className="mb-6 text-black sm:mb-5">
                 The page you are looking for is not available!
               </p>
@@ -42,7 +39,7 @@ export function NotFoundPage() {
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </main>
   );
 }

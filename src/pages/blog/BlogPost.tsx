@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { useBlog } from '@/contexts/blog';
@@ -83,10 +82,8 @@ const BlogPost = () => {
   return (
     <div className="min-h-screen pb-16">
       <BlogSEO post={post} url={currentUrl} />
-      
       <Navigation />
-      
-      <div className="pt-20 container mx-auto px-4 mt-10">
+      <main className="pt-20 container mx-auto px-4 mt-10" role="main">
         <div className="max-w-3xl mx-auto">
           <article className={category === 'How-To' ? 'how-to-article' : ''}>
             <BlogPostHeader post={post} category={category} />
@@ -96,7 +93,7 @@ const BlogPost = () => {
             <BlogPostFooter postId={post.id} category={category} />
           </article>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

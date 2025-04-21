@@ -20,11 +20,11 @@ const Recommend = () => {
     setIsProcessing(isProcessing);
   };
   
-  return <div className="min-h-screen bg-slate-50">
+  return (
+    <div className="min-h-screen bg-slate-50">
       <Navigation />
-      
-      <main className="pt-20 pb-20">
-        <div className="container mx-auto px-4 py-4">
+      <main className="pt-20 pb-20" role="main">
+        <section className="container mx-auto px-4 py-4">
           <Card className="bg-transparent shadow-none border-0 relative overflow-hidden rounded-2xl">
             <div className="relative">
               <LaptopParticles />
@@ -54,9 +54,10 @@ const Recommend = () => {
               />
             </CardContent>
           </Card>
-        </div>
+        </section>
       </main>
-    </div>;
+    </div>
+  );
 };
 
 export default Recommend;

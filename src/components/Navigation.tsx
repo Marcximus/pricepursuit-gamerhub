@@ -1,4 +1,3 @@
-
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Monitor, Laptop, Computer, Crosshair, Keyboard, Mouse, Headphones, Settings, LogOut, GitCompare, Sparkles, FileText, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,13 +25,12 @@ const Navigation = () => {
     }
   };
 
-  // Function to determine if a link is active
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           <Link to="/" className="flex items-center space-x-2">
@@ -42,7 +40,6 @@ const Navigation = () => {
             </div>
             <span className="text-xl font-bold text-gaming-800">Laptop Hunter</span>
           </Link>
-          
           <div className="flex items-center space-x-4">
             <Link
               to="/admin"
@@ -65,10 +62,9 @@ const Navigation = () => {
           </div>
         </div>
       </div>
-
       <div className="border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center py-3 overflow-x-auto hide-scrollbar">
+          <nav className="flex items-center py-3 overflow-x-auto hide-scrollbar" aria-label="Secondary navigation">
             <div className="flex items-center space-x-4">
               <Link
                 to="/"
@@ -131,7 +127,7 @@ const Navigation = () => {
                 <span>Headsets</span>
               </Link>
             </div>
-          </div>
+          </nav>
         </div>
       </div>
     </nav>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
@@ -83,9 +82,8 @@ const ComparePriceLaptops = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       <Navigation />
-      
-      <main className="pt-32 pb-16">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="pt-32 pb-16" role="main">
+        <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <LaptopLayout
             filters={
               <LaptopFilters
@@ -109,13 +107,10 @@ const ComparePriceLaptops = () => {
                 setFilters={handleFiltersChange}
                 searchTerm={filters.searchQuery}
                 setSearchTerm={(value) => {
-                  // Fix the TypeScript error by ensuring we pass a string value
                   if (typeof value === 'function') {
-                    // If value is a function (setState updater), call it with current searchQuery
                     const newValue = value(filters.searchQuery);
                     handleFiltersChange({...filters, searchQuery: newValue});
                   } else {
-                    // If value is a direct string, use it directly
                     handleFiltersChange({...filters, searchQuery: value});
                   }
                 }}
@@ -138,9 +133,8 @@ const ComparePriceLaptops = () => {
               />
             }
           />
-          
           <CompareFloatingButton />
-        </div>
+        </section>
       </main>
     </div>
   );

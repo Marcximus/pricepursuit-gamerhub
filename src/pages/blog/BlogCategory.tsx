@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import { useBlog } from '@/contexts/blog';
@@ -57,8 +56,8 @@ const BlogCategory = () => {
       
       <Navigation />
       
-      <div className="pt-20 container mx-auto px-4 mt-10">
-        <div className="mb-8">
+      <main className="pt-20 container mx-auto px-4 mt-10" role="main">
+        <header className="mb-8">
           <Link to="/blog">
             <Button variant="ghost" size="sm" className="flex items-center text-gray-600 mb-4">
               <ChevronLeft className="mr-1 h-4 w-4" /> Back to Blog
@@ -69,59 +68,61 @@ const BlogCategory = () => {
           <p className="text-xl text-gray-600 w-full leading-relaxed tracking-wide min-h-[3rem]">
             {getSEODescription()}
           </p>
-        </div>
+        </header>
         
         {posts.length === 0 ? (
-          <div className="text-center py-12">
+          <section className="text-center py-12">
             <p className="text-gray-500 mb-4">No posts in this category yet.</p>
             <p className="text-gray-500">Check back soon for new content!</p>
-          </div>
+          </section>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {posts.map((post) => (
-              <Card key={post.id} className="flex flex-col h-full transform transition-all duration-200 hover:-translate-y-1 hover:shadow-lg border-2">
-                <Link 
-                  to={`/blog/${post.category}/post/${post.slug}`}
-                  className="flex flex-col flex-grow"
-                >
-                  {post.image_url && (
-                    <div className="aspect-video w-full overflow-hidden rounded-t-lg">
-                      <img 
-                        src={post.image_url} 
-                        alt={post.title} 
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  )}
-                  <CardHeader className="flex-grow space-y-3">
-                    <CardTitle className="line-clamp-2 text-xl font-semibold text-gray-800 hover:text-green-600 transition-colors">
-                      {post.title}
-                    </CardTitle>
-                    <div className="text-sm text-gray-500 space-x-2">
-                      <span>{new Date(post.created_at).toLocaleDateString()}</span>
-                      <span>·</span>
-                      <span>{post.category === 'Top10' ? 'Top 10' : post.category === 'How-To' ? 'How-To Guide' : post.category}</span>
-                    </div>
-                    <p className="text-gray-600 line-clamp-3 text-sm leading-relaxed">
-                      {post.excerpt}
-                    </p>
-                  </CardHeader>
-                </Link>
-                <CardFooter className="pt-0">
-                  <Link to={`/blog/${post.category}/post/${post.slug}`} className="w-full">
-                    <Button 
-                      variant="outline" 
-                      className="w-full hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200"
-                    >
-                      Read Article
-                    </Button>
+              <article key={post.id}>
+                <Card className="flex flex-col h-full transform transition-all duration-200 hover:-translate-y-1 hover:shadow-lg border-2">
+                  <Link 
+                    to={`/blog/${post.category}/post/${post.slug}`}
+                    className="flex flex-col flex-grow"
+                  >
+                    {post.image_url && (
+                      <div className="aspect-video w-full overflow-hidden rounded-t-lg">
+                        <img 
+                          src={post.image_url} 
+                          alt={post.title} 
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
+                    <CardHeader className="flex-grow space-y-3">
+                      <CardTitle className="line-clamp-2 text-xl font-semibold text-gray-800 hover:text-green-600 transition-colors">
+                        {post.title}
+                      </CardTitle>
+                      <div className="text-sm text-gray-500 space-x-2">
+                        <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                        <span>·</span>
+                        <span>{post.category === 'Top10' ? 'Top 10' : post.category === 'How-To' ? 'How-To Guide' : post.category}</span>
+                      </div>
+                      <p className="text-gray-600 line-clamp-3 text-sm leading-relaxed">
+                        {post.excerpt}
+                      </p>
+                    </CardHeader>
                   </Link>
-                </CardFooter>
-              </Card>
+                  <CardFooter className="pt-0">
+                    <Link to={`/blog/${post.category}/post/${post.slug}`} className="w-full">
+                      <Button 
+                        variant="outline" 
+                        className="w-full hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200"
+                      >
+                        Read Article
+                      </Button>
+                    </Link>
+                  </CardFooter>
+                </Card>
+              </article>
             ))}
-          </div>
+          </section>
         )}
-      </div>
+      </main>
     </div>
   );
 };
