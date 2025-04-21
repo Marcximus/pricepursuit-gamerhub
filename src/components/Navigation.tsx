@@ -35,7 +35,8 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main navigation bar with logo, site name, links, and logout */}
         <div className="h-20 flex items-center justify-between">
-          <div className="flex items-center space-x-4 w-full">
+          {/* Centered group with logo and navigation links */}
+          <div className="flex items-center justify-center flex-1 space-x-8">
             {/* Logo & Site Name */}
             <Link to="/" className="flex items-center space-x-2 shrink-0">
               <div className="flex items-center relative">
@@ -45,7 +46,7 @@ const Navigation = () => {
               <span className="text-xl font-bold text-gaming-800">Laptop Hunter</span>
             </Link>
             {/* Navigation Links */}
-            <div className="flex items-center space-x-6 ml-8 flex-1">
+            <div className="flex items-center space-x-6">
               <Link
                 to="/"
                 className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/') && !isActive('/blog') && !isActive('/compare') && !isActive('/recommend') && !isActive('/about') ? 'text-primary font-medium' : ''}`}
