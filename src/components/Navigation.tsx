@@ -65,8 +65,8 @@ const Navigation = () => {
       </div>
       <div className="border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center py-3 overflow-x-auto hide-scrollbar" aria-label="Secondary navigation">
-            <div className="flex items-center space-x-4">
+          <nav className="flex justify-center items-center py-3 overflow-x-auto hide-scrollbar" aria-label="Secondary navigation">
+            <div className="flex items-center space-x-6">
               <Link
                 to="/"
                 className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/') && !isActive('/blog') && !isActive('/compare') && !isActive('/recommend') && !isActive('/about') ? 'text-primary font-medium' : ''}`}
@@ -88,6 +88,11 @@ const Navigation = () => {
                 <Sparkles className="w-4 h-4" />
                 <span>Personal Laptop Finder</span>
               </Link>
+              
+              <div className="mx-2">
+                <Separator orientation="vertical" className="h-10" />
+              </div>
+              
               <Link
                 to="/blog"
                 className={`nav-link flex items-center space-x-1 whitespace-nowrap ${isActive('/blog') ? 'text-primary font-medium' : ''}`}
@@ -106,7 +111,6 @@ const Navigation = () => {
               <div className="mx-2">
                 <Separator orientation="vertical" className="h-6" />
               </div>
-              
               {/* Removed Desktops, Monitors, Keyboards, Mouse, Headsets as requested */}
             </div>
           </nav>
