@@ -2,8 +2,11 @@ import React from 'react';
 import { HelpCircle, Laptop, Search, GitCompare, List } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const FAQSection = () => {
+  const isMobile = useIsMobile();
+
   const faqCategories = [{
     icon: <Search className="w-5 h-5 text-blue-500" />,
     name: "Using Our Site",
@@ -91,33 +94,41 @@ const FAQSection = () => {
       answer: "Most laptops remain functionally useful for 3-5 years, though premium models may last longer. Business laptops from Lenovo ThinkPad, Dell Latitude, or HP EliteBook lines are often built for longer lifespans. Gaming laptops may become outdated faster due to increasing game requirements. Battery life typically degrades after 2-3 years regardless of laptop quality."
     }]
   }];
-  return <div className="rounded-xl p-8 mb-16 mt-16 bg-slate-600">
+
+  return (
+    <div className={`rounded-xl p-8 mb-16 mt-16 bg-slate-600 ${isMobile ? 'mx-0' : ''}`}>
       <div className="flex items-center justify-center mb-8">
-        <HelpCircle className="w-8 h-8 text-gaming-600 mr-2" />
-        <h2 className="text-3xl font-bold text-slate-50">Frequently Asked Questions 🤔</h2>
+        <HelpCircle className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'} text-gaming-600 mr-2`} />
+        <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-slate-50`}>Frequently Asked Questions 🤔</h2>
       </div>
       
       <div className="max-w-3xl mx-auto">
-        {faqCategories.map((category, categoryIndex) => <div key={categoryIndex} className="mb-8">
+        {faqCategories.map((category, categoryIndex) => (
+          <div key={categoryIndex} className={`mb-8 ${isMobile ? 'px-0' : ''}`}>
             <div className="flex items-center mb-4">
               {category.icon}
-              <h3 className="text-xl font-semibold ml-2 text-slate-50">{category.name}</h3>
+              <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold ml-2 text-slate-50`}>{category.name}</h3>
             </div>
             <Accordion type="single" collapsible className="w-full">
-              {category.faqs.map((faq, faqIndex) => <AccordionItem key={faqIndex} value={`${categoryIndex}-item-${faqIndex}`}>
-                  <AccordionTrigger className="text-lg font-medium text-slate-50">
+              {category.faqs.map((faq, faqIndex) => (
+                <AccordionItem key={faqIndex} value={`${categoryIndex}-item-${faqIndex}`}>
+                  <AccordionTrigger className={`${isMobile ? 'text-base' : 'text-lg'} font-medium text-slate-50`}>
                     {faq.question}
                   </AccordionTrigger>
                   <AccordionContent className="text-slate-50">
-                    <div dangerouslySetInnerHTML={{
-                __html: faq.answer.replace(/<a href='([^']+)'>(.*?)<\/a>/g, (match, url, text) => `<Link to="${url}" className="text-gaming-600 hover:underline">${text}</Link>`)
-              }} />
+                    <div className={`${isMobile ? 'text-sm' : ''}`} dangerouslySetInnerHTML={{
+                      __html: faq.answer.replace(/<a href='([^']+)'>(.*?)<\/a>/g, (match, url, text) => 
+                        `<Link to="${url}" class="text-gaming-600 hover:underline">${text}</Link>`)
+                    }} />
                   </AccordionContent>
-                </AccordionItem>)}
+                </AccordionItem>
+              ))}
             </Accordion>
-          </div>)}
+          </div>
+        ))}
       </div>
-    </div>;
+    </div>
+  );
 };
 
 export default FAQSection;
