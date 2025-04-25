@@ -42,7 +42,7 @@ export function MobileFilterDrawer({
         <Button 
           variant="outline" 
           size="sm" 
-          className="lg:hidden relative border-slate-200 text-slate-700 h-10 px-4 py-2"
+          className="lg:hidden relative border-slate-200 text-slate-700 h-10 px-4 py-2 touch-manipulation"
         >
           <Filter className="h-4 w-4 mr-2" />
           Filters
@@ -54,7 +54,7 @@ export function MobileFilterDrawer({
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0">
-        <div className="h-full p-6">
+        <div className="h-full p-6 overflow-y-auto">
           <h2 className="text-lg font-semibold mb-6">Filters</h2>
           <LaptopFilters
             filters={filters}

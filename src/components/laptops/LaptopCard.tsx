@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { Product } from "@/types/product";
 import { LaptopImage } from "./components/LaptopImage";
 import { LaptopPrice } from "./components/LaptopPrice";
@@ -14,6 +15,8 @@ type LaptopCardProps = {
 };
 
 export function LaptopCard({ laptop }: LaptopCardProps) {
+  const isMobile = useIsMobile();
+
   // Validate required fields
   if (!laptop || !laptop.id) {
     // If laptop has no ID but has an ASIN, use the ASIN as the ID
@@ -47,33 +50,35 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
   };
 
   return (
-    <Card className="flex p-4 gap-4 hover:shadow-lg transition-shadow">
+    <Card className={`flex ${isMobile ? 'flex-col' : 'flex-row'} p-4 gap-4 hover:shadow-lg transition-shadow`}>
       {/* Left side - Image and Price */}
-      <div className="flex flex-col items-center gap-2 w-40">
+      <div className={`flex ${isMobile ? 'flex-row justify-between' : 'flex-col'} items-center gap-2 ${isMobile ? 'w-full' : 'w-40'}`}>
         <LaptopImage 
           title={laptop.title || 'Laptop'}
           imageUrl={laptop.image_url}
           productUrl={productUrl}
         />
         
-        <LaptopPrice 
-          currentPrice={laptop.current_price}
-          originalPrice={laptop.original_price}
-          productUrl={productUrl}
-        />
-
-        {laptop.rating && laptop.rating > 0 && (
-          <LaptopRating 
-            rating={laptop.rating}
-            totalReviews={laptop.rating_count}
-            reviewsUrl={reviewsUrl}
+        <div className={`flex ${isMobile ? 'flex-col items-end' : 'flex-col items-center'} gap-2`}>
+          <LaptopPrice 
+            currentPrice={laptop.current_price}
+            originalPrice={laptop.original_price}
+            productUrl={productUrl}
           />
-        )}
+
+          {laptop.rating && laptop.rating > 0 && (
+            <LaptopRating 
+              rating={laptop.rating}
+              totalReviews={laptop.rating_count}
+              reviewsUrl={reviewsUrl}
+            />
+          )}
+        </div>
       </div>
 
       {/* Right side - Specs and Reviews */}
       <div className="flex-1">
-        <div className="flex justify-between items-start mb-2">
+        <div className="flex flex-col gap-2">
           <LaptopSpecs 
             title={laptop.title || 'Untitled Laptop'}
             productUrl={productUrl}
@@ -90,10 +95,10 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
             model={laptop.model}
           />
           
-          <div className="ml-2 mt-1 flex flex-col gap-2">
+          <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2 mt-2`}>
             <Button
               onClick={handleCheckItOut}
-              className="bg-green-600 hover:bg-green-700 transform hover:-translate-y-0.5 transition-all"
+              className="bg-green-600 hover:bg-green-700 transform hover:-translate-y-0.5 transition-all w-full sm:w-auto"
             >
               Check it out
               <Zap className="w-4 h-4 ml-2 animate-pulse" />
@@ -103,7 +108,7 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
         </div>
 
         {/* Only show reviews section if we have actual review data */}
-        {hasReviews && (
+        {laptop.review_data?.recent_reviews && laptop.review_data.recent_reviews.length > 0 && (
           <LaptopReviews 
             reviewData={laptop.review_data}
             productUrl={reviewsUrl}

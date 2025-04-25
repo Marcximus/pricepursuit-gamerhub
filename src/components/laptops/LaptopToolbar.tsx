@@ -1,4 +1,3 @@
-
 import React from "react";
 import { LaptopSort } from "./LaptopSort";
 import { LaptopToolbarCounter } from "./components/LaptopToolbarCounter";
@@ -92,7 +91,7 @@ const LaptopToolbar: React.FC<LaptopToolbarProps> = ({
   
   return (
     <div className="flex flex-col gap-4 mb-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <LaptopToolbarCounter
           isLoading={isLoading}
           isRefetching={isRefetching}
@@ -105,7 +104,7 @@ const LaptopToolbar: React.FC<LaptopToolbarProps> = ({
             onResetPriceRange={handleResetPriceRange}
           />
         </LaptopToolbarCounter>
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <MobileFilterDrawer
             open={false} 
             setOpen={() => {}}
@@ -117,9 +116,6 @@ const LaptopToolbar: React.FC<LaptopToolbarProps> = ({
           <LaptopSort onChange={onSortChange} value={sortOption} />
         </div>
       </div>
-      
-      {/* Removing the search bar that was here */}
-      
     </div>
   );
 };
