@@ -1,3 +1,4 @@
+
 import React from "react";
 import Navigation from "@/components/Navigation";
 import { ComparisonHeader, LaptopCard, AnalysisSection, SpecificationsSection } from "./index";
@@ -7,7 +8,7 @@ import type { ComparisonResult } from "../types";
 import type { ComparisonSection } from "../types";
 import EmptyComparisonState from "./EmptyComparisonState";
 import { formatLaptopDisplayTitle } from "../utils/titleFormatter";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ComparisonLayoutProps {
   handleGoBack: () => void;
