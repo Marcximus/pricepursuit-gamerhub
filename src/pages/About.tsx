@@ -27,7 +27,7 @@ const About = () => {
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
-      <main className={`pt-20 ${isMobile ? 'pb-12 px-4' : 'pt-32 pb-16 px-4 sm:px-6 lg:px-8'} max-w-7xl mx-auto`} role="main">
+      <main className={`${isMobile ? 'pt-20 pb-12 px-4' : 'pt-32 pb-16 px-4 sm:px-6 lg:px-8'} max-w-7xl mx-auto`} role="main">
         <AboutHero />
         <MissionSection />
         <OriginStorySection />
