@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { QuizQuestion } from './QuizQuestion';
@@ -9,6 +8,7 @@ import { RecommendationResults } from './RecommendationResults';
 import { useQuizState } from './hooks/useQuizState';
 import { quizQuestions } from './config/quizConfig';
 import { LoadingIndicator } from './LoadingIndicator';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface RecommendationQuizProps {
   onResultsDisplayChange?: (isShowingResults: boolean) => void;
@@ -35,6 +35,8 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
     handleSubmit,
     handleReset
   } = useQuizState();
+
+  const isMobile = useIsMobile();
 
   // Track if we're currently handling a back navigation
   const [isNavigatingBack, setIsNavigatingBack] = React.useState(false);
@@ -89,8 +91,8 @@ const RecommendationQuiz: React.FC<RecommendationQuizProps> = ({
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <Card className="p-6 mb-6 bg-white/90 shadow-sm border-2 border-blue-200 rounded-2xl">
+    <div className={`max-w-2xl mx-auto ${isMobile ? 'px-4' : ''}`}>
+      <Card className={`p-4 md:p-6 mb-6 bg-white/90 shadow-sm border-2 border-blue-200 rounded-xl ${isMobile ? 'mx-0' : ''}`}>
         {isProcessing ? (
           <LoadingIndicator isLoading={isProcessing} />
         ) : (
