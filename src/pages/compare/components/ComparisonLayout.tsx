@@ -1,4 +1,3 @@
-
 import React from "react";
 import Navigation from "@/components/Navigation";
 import { ComparisonHeader, LaptopCard, AnalysisSection, SpecificationsSection } from "./index";
@@ -8,6 +7,7 @@ import type { ComparisonResult } from "../types";
 import type { ComparisonSection } from "../types";
 import EmptyComparisonState from "./EmptyComparisonState";
 import { formatLaptopDisplayTitle } from "../utils/titleFormatter";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface ComparisonLayoutProps {
   handleGoBack: () => void;
@@ -97,6 +97,8 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
   };
 
   const comparisonSections = generateComparisonSections();
+  const isMobile = useIsMobile();
+
   return <div className="min-h-screen bg-slate-50">
       <Navigation />
       
@@ -107,13 +109,27 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
           <h1 className="text-2xl font-bold mb-6">Best Laptop Comparison</h1>
           
           {!hasSelectedLaptops ? <EmptyComparisonState /> : <>
-              <div className="grid grid-cols-2 gap-8 mb-8">
-                <LaptopCard laptop={laptopLeft} isWinner={comparisonResult?.winner === 'left'} formatPrice={formatPrice} />
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4 sm:gap-8 mb-8`}>
+                <LaptopCard 
+                  laptop={laptopLeft} 
+                  isWinner={comparisonResult?.winner === 'left'} 
+                  formatPrice={formatPrice} 
+                />
                 
-                <LaptopCard laptop={laptopRight} isWinner={comparisonResult?.winner === 'right'} formatPrice={formatPrice} />
+                <LaptopCard 
+                  laptop={laptopRight} 
+                  isWinner={comparisonResult?.winner === 'right'} 
+                  formatPrice={formatPrice} 
+                />
               </div>
               
-              <AnalysisSection isLoading={isLoading} error={error} comparisonResult={comparisonResult} laptopLeft={laptopLeft} laptopRight={laptopRight} />
+              <AnalysisSection 
+                isLoading={isLoading} 
+                error={error} 
+                comparisonResult={comparisonResult} 
+                laptopLeft={laptopLeft} 
+                laptopRight={laptopRight} 
+              />
               
               {comparisonResult && laptopLeft && laptopRight && (
                 <SpecificationsSection 
@@ -129,4 +145,3 @@ const ComparisonLayout: React.FC<ComparisonLayoutProps> = ({
 };
 
 export default ComparisonLayout;
-

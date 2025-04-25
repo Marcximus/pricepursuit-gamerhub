@@ -2,7 +2,7 @@
 import React from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ComparisonHeaderProps {
   handleGoBack: () => void;
@@ -13,11 +13,13 @@ const ComparisonHeader: React.FC<ComparisonHeaderProps> = ({
   handleGoBack, 
   handleClearAndGoBack 
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
-    <div className="flex items-center justify-between mb-6">
+    <div className={`flex items-center ${isMobile ? 'flex-col gap-2' : 'justify-between'} mb-6`}>
       <Button 
         variant="outline" 
-        className="flex items-center gap-1" 
+        className="flex items-center gap-1 w-full sm:w-auto" 
         onClick={handleGoBack}
       >
         <ArrowLeft className="w-4 h-4" /> Back to Laptops
@@ -26,6 +28,7 @@ const ComparisonHeader: React.FC<ComparisonHeaderProps> = ({
       <Button 
         variant="ghost" 
         onClick={handleClearAndGoBack}
+        className="w-full sm:w-auto"
       >
         Clear Comparison
       </Button>

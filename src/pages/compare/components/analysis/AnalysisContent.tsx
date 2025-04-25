@@ -1,4 +1,3 @@
-
 import React from "react";
 import WinnerBadge from "./WinnerBadge";
 import AdvantagesList from "./AdvantagesList";
@@ -6,6 +5,7 @@ import ValueForMoney from "./ValueForMoney";
 import Recommendation from "./Recommendation";
 import type { Product } from "@/types/product";
 import type { ComparisonResult } from "../../types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AnalysisContentProps {
   comparisonResult: ComparisonResult;
@@ -18,6 +18,8 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
   laptopLeft,
   laptopRight
 }) => {
+  const isMobile = useIsMobile();
+  
   // Function to render paragraphs with proper spacing
   const renderAnalysisParagraphs = (text: string) => {
     return text.split('\n\n').map((paragraph, index) => (
@@ -29,7 +31,6 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Winner Badge */}
       <div className="flex justify-center mb-6 h-14 items-center">
         <WinnerBadge 
           winner={comparisonResult.winner} 
@@ -38,13 +39,12 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
         />
       </div>
       
-      {/* Analysis Text */}
       <div className="text-base leading-relaxed">
         {renderAnalysisParagraphs(comparisonResult.analysis)}
       </div>
       
-      {/* Advantages - Updated with blue vs yellow theme */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      {/* Adjusted grid for mobile */}
+      <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4 sm:gap-6 mt-6`}>
         <AdvantagesList
           laptopName={`${laptopLeft?.brand} ${laptopLeft?.model}`}
           advantages={comparisonResult.advantages.left}
@@ -58,8 +58,8 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
         />
       </div>
       
-      {/* Value for Money - Updated with blue vs yellow theme */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      {/* Adjusted grid for mobile */}
+      <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4 sm:gap-6 mt-6`}>
         <ValueForMoney
           laptopName={`${laptopLeft?.brand} ${laptopLeft?.model}`}
           valueAssessment={comparisonResult.valueForMoney.left}
@@ -73,7 +73,6 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
         />
       </div>
       
-      {/* Recommendation */}
       <Recommendation recommendation={comparisonResult.recommendation} />
     </div>
   );
