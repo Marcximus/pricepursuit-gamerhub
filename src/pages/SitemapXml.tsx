@@ -37,12 +37,17 @@ export default function SitemapXml() {
       document.body.innerHTML = '';
       document.head.innerHTML = '';
       
-      // Set content type for proper XML rendering
-      document.contentType = 'text/xml';
+      // Set content type using meta tag
+      const meta = document.createElement('meta');
+      meta.httpEquiv = 'Content-Type';
+      meta.content = 'text/xml; charset=utf-8';
+      document.head.appendChild(meta);
       
       // Write the XML directly to the document
+      document.open('text/xml');
       const xmlDeclaration = '<?xml version="1.0" encoding="UTF-8"?>';
       document.write(xmlDeclaration + xmlContent);
+      document.close();
     }
   }, [xmlContent]);
 
