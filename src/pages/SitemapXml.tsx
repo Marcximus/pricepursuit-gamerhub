@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useBlog } from "@/contexts/blog";
 import { Helmet } from "react-helmet-async";
@@ -31,18 +32,27 @@ export default function SitemapXml() {
     setXmlContent(generateSitemapXml(posts));
   }, [posts]);
 
-  // Render the XML directly in the page
+  // Using the document.write method ensures the content is rendered directly as XML
+  useEffect(() => {
+    if (xmlContent && typeof document !== 'undefined') {
+      // Clear the document
+      document.open('text/xml');
+      // Write the XML content
+      document.write(xmlContent);
+      // Close the document to finish writing
+      document.close();
+    }
+  }, [xmlContent]);
+
   return (
     <>
       <Helmet>
         <title>Sitemap</title>
         <meta name="robots" content="index, follow" />
-        <meta httpEquiv="Content-Type" content="application/xml; charset=utf-8" />
+        <meta httpEquiv="Content-Type" content="text/xml; charset=utf-8" />
       </Helmet>
-      <div 
-        dangerouslySetInnerHTML={{ __html: xmlContent }} 
-        style={{ display: 'block', whiteSpace: 'pre', fontFamily: 'monospace' }}
-      />
+      {/* This div will be replaced by the document.write call */}
+      <div style={{ display: 'none' }} />
     </>
   );
 }
