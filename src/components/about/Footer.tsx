@@ -13,6 +13,9 @@ const Footer = () => {
       <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-400 mt-2`}>
         P.S. No laptops were harmed in the making of this website. They were all treated ethically and released back into the wild after data collection. 🌿
       </p>
+      <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-400 mt-2`}>
+        Some links may contain affiliate links from Amazon and other vendors.
+      </p>
     </div>
   );
 };
