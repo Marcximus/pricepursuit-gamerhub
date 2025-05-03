@@ -30,7 +30,11 @@ export default function SitemapXml() {
     setXmlContent(xml);
     
     if (isXmlRoute) {
-      console.log("XML route detected, preparing XML content", { entries: sitemapEntries.length });
+      console.log("XML route detected, preparing XML content", { 
+        entriesCount: sitemapEntries.length,
+        xmlLength: xml.length,
+        xmlContentSample: xml.substring(0, 100) + '...'
+      });
     }
   }, [posts, isXmlRoute]);
 

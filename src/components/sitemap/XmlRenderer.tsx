@@ -7,16 +7,18 @@ interface XmlRendererProps {
 
 export function XmlRenderer({ xmlContent }: XmlRendererProps) {
   useEffect(() => {
-    if (typeof window !== "undefined" && window.location.pathname.endsWith('.xml') && xmlContent) {
+    if (window.location.pathname.endsWith('.xml') && xmlContent) {
       // For debugging
       console.log("XmlRenderer: Rendering XML content", { xmlContent });
       
-      // Prevent normal React rendering and output raw XML
-      document.open('text/xml');
-      document.write(`<?xml version="1.0" encoding="UTF-8"?>\n${xmlContent}`);
-      document.close();
+      // Clear the document completely before writing XML
+      document.documentElement.innerHTML = '';
       
-      // Set content type using meta tag
+      // Create a new XML document with proper content type
+      document.write('<?xml version="1.0" encoding="UTF-8"?>');
+      document.write(xmlContent);
+      
+      // Set content type header using meta tag
       const meta = document.createElement('meta');
       meta.httpEquiv = 'Content-Type';
       meta.content = 'text/xml; charset=utf-8';
