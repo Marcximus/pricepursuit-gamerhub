@@ -65,9 +65,15 @@ export default function SitemapXml() {
 
     // Blog posts (published only)
     (posts ?? []).filter(p => p.published).forEach(post => {
+      const lastModDate = post.updated_at || post.created_at || new Date();
+      // Convert Date object to ISO string format and extract the date part
+      const formattedDate = typeof lastModDate === 'string' 
+        ? lastModDate.slice(0, 10) 
+        : lastModDate.toISOString().slice(0, 10);
+      
       sitemapEntries.push({
         url: `${BASE_URL}/blog/${escapeXML(post.category)}/post/${escapeXML(post.slug)}`,
-        lastmod: (post.updated_at || post.created_at || new Date()).slice(0,10),
+        lastmod: formattedDate,
         changefreq: "weekly",
         priority: "0.6"
       });
@@ -184,10 +190,16 @@ function generateSitemapXml(posts: any[]) {
 
   // Blog posts (published only)
   (posts ?? []).filter(p => p.published).forEach(post => {
+    const lastModDate = post.updated_at || post.created_at || new Date();
+    // Convert Date object to ISO string format and extract the date part
+    const formattedDate = typeof lastModDate === 'string'
+      ? lastModDate.slice(0, 10)
+      : lastModDate.toISOString().slice(0, 10);
+
     urls.push(
       `<url>
         <loc>${BASE_URL}/blog/${escapeXML(post.category)}/post/${escapeXML(post.slug)}</loc>
-        <lastmod>${(post.updated_at || post.created_at || new Date()).slice(0,10)}</lastmod>
+        <lastmod>${formattedDate}</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
       </url>`
