@@ -11,7 +11,8 @@ import {
 } from "@/utils/sitemap";
 import { Helmet } from "react-helmet-async";
 
-const BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://laptophunter.com";
+// Update BASE_URL to use the correct domain
+const BASE_URL = "https://laptophunter.us";
 
 export default function SitemapXml() {
   const { posts } = useBlog();
