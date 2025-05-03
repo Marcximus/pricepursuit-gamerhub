@@ -1,7 +1,6 @@
 
 import { useEffect, useState } from "react";
 import { useBlog } from "@/contexts/blog";
-import { Helmet } from "react-helmet-async";
 
 const BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://laptophunter.com";
 
@@ -34,20 +33,19 @@ export default function SitemapXml() {
 
   useEffect(() => {
     if (xmlContent && typeof document !== 'undefined') {
-      // Set the correct content type
-      const meta = document.createElement('meta');
-      meta.httpEquiv = 'Content-Type';
-      meta.content = 'text/xml; charset=utf-8';
-      document.head.appendChild(meta);
+      // Remove any existing content
+      document.body.innerHTML = '';
+      document.head.innerHTML = '';
       
-      // Clear the document and write XML
-      document.open('text/xml');
-      document.write(xmlContent);
-      document.close();
+      // Set content type for proper XML rendering
+      document.contentType = 'text/xml';
+      
+      // Write the XML directly to the document
+      const xmlDeclaration = '<?xml version="1.0" encoding="UTF-8"?>';
+      document.write(xmlDeclaration + xmlContent);
     }
   }, [xmlContent]);
 
-  // This return won't actually be rendered due to document.write
   return null;
 }
 
@@ -90,7 +88,7 @@ function generateSitemapXml(posts: any[]) {
     );
   });
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  return `
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.join("\n")}
 </urlset>
