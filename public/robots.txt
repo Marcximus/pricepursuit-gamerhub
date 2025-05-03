@@ -1,5 +1,13 @@
 
+# Robots.txt file for LaptopHunter.com
 User-agent: *
 Allow: /
 
+# Disallow admin and login pages
+Disallow: /admin
+Disallow: /login
+Disallow: /blog/admin
+Disallow: /blog/new
+
+# Sitemap location
 Sitemap: https://laptophunter.com/sitemap.xml

@@ -8,8 +8,12 @@ interface XmlRendererProps {
 export function XmlRenderer({ xmlContent }: XmlRendererProps) {
   useEffect(() => {
     if (typeof window !== "undefined" && window.location.pathname.endsWith('.xml') && xmlContent) {
+      // For debugging
+      console.log("XmlRenderer: Rendering XML content", { xmlContent });
+      
       // Clear existing HTML content
-      document.documentElement.innerHTML = '';
+      document.body.innerHTML = '';
+      document.head.innerHTML = '';
       
       // Set content type using meta tag
       const meta = document.createElement('meta');
@@ -24,5 +28,6 @@ export function XmlRenderer({ xmlContent }: XmlRendererProps) {
     }
   }, [xmlContent]);
 
+  // Return null as we're handling the rendering directly
   return null;
 }
