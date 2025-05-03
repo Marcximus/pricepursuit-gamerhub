@@ -32,29 +32,23 @@ export default function SitemapXml() {
     setXmlContent(generateSitemapXml(posts));
   }, [posts]);
 
-  // Using the document.write method ensures the content is rendered directly as XML
   useEffect(() => {
     if (xmlContent && typeof document !== 'undefined') {
-      // Clear the document
+      // Set the correct content type
+      const meta = document.createElement('meta');
+      meta.httpEquiv = 'Content-Type';
+      meta.content = 'text/xml; charset=utf-8';
+      document.head.appendChild(meta);
+      
+      // Clear the document and write XML
       document.open('text/xml');
-      // Write the XML content
       document.write(xmlContent);
-      // Close the document to finish writing
       document.close();
     }
   }, [xmlContent]);
 
-  return (
-    <>
-      <Helmet>
-        <title>Sitemap</title>
-        <meta name="robots" content="index, follow" />
-        <meta httpEquiv="Content-Type" content="text/xml; charset=utf-8" />
-      </Helmet>
-      {/* This div will be replaced by the document.write call */}
-      <div style={{ display: 'none' }} />
-    </>
-  );
+  // This return won't actually be rendered due to document.write
+  return null;
 }
 
 function generateSitemapXml(posts: any[]) {
@@ -95,8 +89,6 @@ function generateSitemapXml(posts: any[]) {
       </url>`
     );
   });
-
-  // You could add more URLs here (e.g. laptops or desktop/monitor etc routes).
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
