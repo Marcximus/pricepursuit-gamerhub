@@ -9,6 +9,7 @@ import LaptopToolbar from "@/components/laptops/LaptopToolbar";
 import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
 import CompareFloatingButton from "@/components/CompareFloatingButton";
+import Footer from "@/components/about/Footer";
 
 const ComparePriceLaptops = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -137,6 +138,7 @@ const ComparePriceLaptops = () => {
           <CompareFloatingButton />
         </section>
       </main>
+      <Footer />
     </div>
   );
 };
