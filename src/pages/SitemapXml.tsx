@@ -16,13 +16,22 @@ export default function SitemapXml() {
   const { posts } = useBlog();
   const [entries, setEntries] = useState<SitemapEntry[]>([]);
   const [xmlContent, setXmlContent] = useState("");
+  const isXmlRoute = typeof window !== "undefined" && window.location.pathname.endsWith('.xml');
   
   useEffect(() => {
     // Generate the sitemap entries
     const sitemapEntries = generateSitemapEntries(posts, BASE_URL);
     setEntries(sitemapEntries);
-    setXmlContent(generateSitemapXml(sitemapEntries));
-  }, [posts]);
+    
+    // Generate the XML content
+    const xml = generateSitemapXml(sitemapEntries);
+    setXmlContent(xml);
+    
+    // If we're on the XML route, set the document title
+    if (isXmlRoute) {
+      document.title = "XML Sitemap";
+    }
+  }, [posts, isXmlRoute]);
 
   const downloadXml = () => {
     const xmlBlob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>${xmlContent}`], {type: 'text/xml'});
@@ -37,7 +46,7 @@ export default function SitemapXml() {
   };
 
   // If the URL is accessed directly as /sitemap.xml, return raw XML
-  if (typeof window !== "undefined" && window.location.pathname.endsWith('.xml')) {
+  if (isXmlRoute) {
     return <XmlRenderer xmlContent={xmlContent} />;
   }
 

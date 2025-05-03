@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "@/pages/Login";
 import Admin from "@/pages/Admin";
@@ -16,7 +15,7 @@ import BlogPost from "./pages/blog/BlogPost";
 import BlogCategory from "./pages/blog/BlogCategory";
 import BlogAdmin from "./pages/blog/BlogAdmin";
 import NewBlogPost from "./pages/blog/NewBlogPost";
-import { BlogProvider } from "./contexts/BlogContext";
+import { BlogProvider } from "@/contexts/BlogContext";
 import { HelmetProvider } from 'react-helmet-async';
 import SitemapXml from "./pages/SitemapXml";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -95,4 +94,3 @@ function App() {
 }
 
 export default App;
-

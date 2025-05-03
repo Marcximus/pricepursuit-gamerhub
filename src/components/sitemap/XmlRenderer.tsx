@@ -8,6 +8,7 @@ interface XmlRendererProps {
 export function XmlRenderer({ xmlContent }: XmlRendererProps) {
   useEffect(() => {
     if (typeof window !== "undefined" && window.location.pathname.endsWith('.xml') && xmlContent) {
+      // Clear existing HTML content
       document.body.innerHTML = '';
       document.head.innerHTML = '';
       
@@ -18,9 +19,8 @@ export function XmlRenderer({ xmlContent }: XmlRendererProps) {
       document.head.appendChild(meta);
       
       // Write the XML directly to the document
-      document.open('text/xml');
-      const xmlDeclaration = '<?xml version="1.0" encoding="UTF-8"?>';
-      document.write(xmlDeclaration + xmlContent);
+      document.write('<?xml version="1.0" encoding="UTF-8"?>');
+      document.write(xmlContent);
       document.close();
     }
   }, [xmlContent]);

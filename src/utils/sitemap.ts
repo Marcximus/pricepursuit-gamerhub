@@ -88,9 +88,7 @@ export function generateSitemapXml(entries: SitemapEntry[]): string {
       </url>`;
   });
 
-  return `
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  return `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.join("\n")}
-</urlset>
-`;
+</urlset>`;
 }
