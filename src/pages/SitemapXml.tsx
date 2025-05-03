@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useBlog } from "@/contexts/blog";
 import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
 
 const BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://laptophunter.com";
 
@@ -25,28 +26,63 @@ const staticRoutes = [
 
 export default function SitemapXml() {
   const { posts } = useBlog();
+  const location = useLocation();
 
   useEffect(() => {
-    // This prevents React from rendering HTML. We respond as plain XML.
-    const xml = generateSitemapXml(posts);
-    const blob = new Blob([xml], { type: "application/xml" });
+    // Set the correct content type for XML
+    const xmlString = generateSitemapXml(posts);
+    
+    // Create a download link for the XML
+    const blob = new Blob([xmlString], { type: "application/xml" });
     const url = URL.createObjectURL(blob);
+    
+    // Create a link element and trigger download
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'sitemap.xml');
+    link.click();
+    
+    // Clean up blob URL
+    setTimeout(() => URL.revokeObjectURL(url), 100);
 
-    window.location.replace(url);
-
-    // Clean up blob URL on unmount
-    return () => URL.revokeObjectURL(url);
+    // For users that don't download the file, display a message after a short delay
+    setTimeout(() => {
+      document.getElementById('sitemap-message')?.classList.remove('hidden');
+    }, 1000);
   }, [posts]);
 
-  // Fallback: Also render XML as text for bots/non-js
   return (
     <>
       <Helmet>
-        <title>Sitemap laptophunter.com</title>
+        <title>Sitemap - LaptopHunter.com</title>
         <meta name="robots" content="noindex, follow" />
         <meta httpEquiv="Content-Type" content="application/xml; charset=utf-8" />
       </Helmet>
-      <pre style={{whiteSpace:"pre-wrap", wordWrap:"break-word"}}>
+      
+      <div className="min-h-screen bg-slate-50 pt-16 flex flex-col items-center justify-center p-4">
+        <h1 className="text-2xl font-bold mb-4">Sitemap Generator</h1>
+        
+        <div id="sitemap-message" className="hidden">
+          <p className="mb-4 text-center">Your sitemap.xml file should be downloading automatically.</p>
+          
+          <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl w-full">
+            <h2 className="text-xl font-semibold mb-3">How to use this sitemap:</h2>
+            <ol className="list-decimal pl-5 space-y-2">
+              <li>Save the downloaded sitemap.xml file</li>
+              <li>Upload it to your web server's root directory</li>
+              <li>Submit the sitemap URL to search engines through their webmaster tools</li>
+            </ol>
+            
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> For proper sitemap functionality in production, we recommend implementing server-side rendering or generating a static sitemap file during your build process.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <pre style={{position: 'absolute', left: '-9999px'}}>
         {generateSitemapXml(posts)}
       </pre>
     </>
