@@ -9,6 +9,7 @@ import {
   generateSitemapEntries, 
   generateSitemapXml 
 } from "@/utils/sitemap";
+import { Helmet } from "react-helmet-async";
 
 const BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://laptophunter.com";
 
@@ -26,15 +27,10 @@ export default function SitemapXml() {
     // Generate the XML content
     const xml = generateSitemapXml(sitemapEntries);
     setXmlContent(xml);
-    
-    // If we're on the XML route, set the document title
-    if (isXmlRoute) {
-      document.title = "XML Sitemap";
-    }
-  }, [posts, isXmlRoute]);
+  }, [posts]);
 
   const downloadXml = () => {
-    const xmlBlob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>${xmlContent}`], {type: 'text/xml'});
+    const xmlBlob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${xmlContent}`], {type: 'text/xml'});
     const url = URL.createObjectURL(xmlBlob);
     const a = document.createElement('a');
     a.href = url;
@@ -47,14 +43,22 @@ export default function SitemapXml() {
 
   // If the URL is accessed directly as /sitemap.xml, return raw XML
   if (isXmlRoute) {
-    return <XmlRenderer xmlContent={xmlContent} />;
+    return (
+      <>
+        <Helmet>
+          <title>XML Sitemap</title>
+          <meta httpEquiv="Content-Type" content="text/xml; charset=utf-8" />
+        </Helmet>
+        <XmlRenderer xmlContent={xmlContent} />
+      </>
+    );
   }
 
   return (
     <div className="container mx-auto py-8">
       <div className="flex flex-col space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-center w-full">XML Sitemap</h1>
+          <h1 className="text-3xl font-bold">XML Sitemap</h1>
           <Button onClick={downloadXml} variant="outline">Download XML</Button>
         </div>
         

@@ -77,18 +77,14 @@ export function generateSitemapEntries(posts: any[], baseUrl: string): SitemapEn
 export function generateSitemapXml(entries: SitemapEntry[]): string {
   const urls: string[] = entries.map(entry => {
     const tags = [
-      `<loc>${entry.url}</loc>`,
-      entry.lastmod ? `<lastmod>${entry.lastmod}</lastmod>` : '',
-      entry.changefreq ? `<changefreq>${entry.changefreq}</changefreq>` : '',
-      entry.priority ? `<priority>${entry.priority}</priority>` : ''
-    ].filter(Boolean).join('\n        ');
+      `    <loc>${entry.url}</loc>`,
+      entry.lastmod ? `    <lastmod>${entry.lastmod}</lastmod>` : '',
+      entry.changefreq ? `    <changefreq>${entry.changefreq}</changefreq>` : '',
+      entry.priority ? `    <priority>${entry.priority}</priority>` : ''
+    ].filter(Boolean).join('\n');
     
-    return `<url>
-        ${tags}
-      </url>`;
+    return `  <url>\n${tags}\n  </url>`;
   });
 
-  return `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.join("\n")}
-</urlset>`;
+  return `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`;
 }
