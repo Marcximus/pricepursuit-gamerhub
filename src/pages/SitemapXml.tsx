@@ -43,6 +43,7 @@ export default function SitemapXml() {
 
   // If the URL is accessed directly as /sitemap.xml, return raw XML
   if (isXmlRoute) {
+    console.log("XML route detected, rendering XML content");
     return (
       <>
         <Helmet>
