@@ -21,6 +21,8 @@ export default function SitemapXml() {
   const isXmlRoute = window.location.pathname.endsWith('.xml');
   
   useEffect(() => {
+    if (!posts) return;
+    
     // Generate the sitemap entries
     const sitemapEntries = generateSitemapEntries(posts, BASE_URL);
     setEntries(sitemapEntries);
@@ -31,9 +33,9 @@ export default function SitemapXml() {
     
     if (isXmlRoute) {
       console.log("XML route detected, preparing XML content", { 
-        entriesCount: sitemapEntries.length,
-        xmlLength: xml.length,
-        xmlContentSample: xml.substring(0, 100) + '...'
+        entriesCount: sitemapEntries?.length || 0,
+        xmlLength: xml?.length || 0,
+        xmlContentSample: xml?.substring(0, 100) + '...' || 'No XML content'
       });
     }
   }, [posts, isXmlRoute]);
@@ -53,15 +55,7 @@ export default function SitemapXml() {
   // If the URL is accessed directly as /sitemap.xml, return raw XML
   if (isXmlRoute) {
     console.log("XML route detected, rendering XML content");
-    return (
-      <>
-        <Helmet>
-          <title>XML Sitemap</title>
-          <meta httpEquiv="Content-Type" content="text/xml; charset=utf-8" />
-        </Helmet>
-        <XmlRenderer xmlContent={xmlContent} />
-      </>
-    );
+    return <XmlRenderer xmlContent={xmlContent} />;
   }
 
   return (

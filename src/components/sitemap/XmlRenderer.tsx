@@ -11,14 +11,16 @@ export function XmlRenderer({ xmlContent }: XmlRendererProps) {
       // For debugging
       console.log("XmlRenderer: Rendering XML content", { xmlContent });
       
-      // Clear the document completely before writing XML
-      document.documentElement.innerHTML = '';
+      // Replace the HTML doctype with XML doctype
+      const xmlDoctype = '<?xml version="1.0" encoding="UTF-8"?>';
       
-      // Create a new XML document with proper content type
-      document.write('<?xml version="1.0" encoding="UTF-8"?>');
+      // Create a completely new document with XML content
+      document.open('text/xml');
+      document.write(xmlDoctype);
       document.write(xmlContent);
+      document.close();
       
-      // Set content type header using meta tag
+      // Set content type header using meta tag for good measure
       const meta = document.createElement('meta');
       meta.httpEquiv = 'Content-Type';
       meta.content = 'text/xml; charset=utf-8';
