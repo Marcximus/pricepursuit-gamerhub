@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "@/pages/Login";
 import Admin from "@/pages/Admin";
@@ -42,6 +43,10 @@ function App() {
                 <Router>
                   <div className="container mx-auto px-4 py-8">
                     <Routes>
+                      {/* Place Sitemap XML route before other routes for priority matching */}
+                      <Route path="/sitemap.xml" element={<SitemapXml />} />
+                      <Route path="/sitemap" element={<SitemapPage />} />
+                      
                       <Route path="/login" element={<Login />} />
                       <Route
                         path="/admin"
@@ -77,10 +82,7 @@ function App() {
                         }
                       />
                       
-                      {/* Sitemap Routes - Ensure these come before the catch-all route */}
-                      <Route path="/sitemap.xml" element={<SitemapXml />} />
-                      <Route path="/sitemap" element={<SitemapPage />} />
-                      
+                      {/* Catch-all route must be last */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>

@@ -8,22 +8,29 @@ interface XmlRendererProps {
 export function XmlRenderer({ xmlContent }: XmlRendererProps) {
   useEffect(() => {
     if (window.location.pathname.endsWith('.xml') && xmlContent) {
-      console.log("XmlRenderer: Rendering XML content", { xmlContent });
+      console.log("XmlRenderer: Setting document content type to XML");
       
-      // Clear the document and set the content type
+      // Create a new document with the proper content type
       document.open('text/xml');
-      document.write('<?xml version="1.0" encoding="UTF-8"?>');
+      
+      // Write the XML declaration and content
+      document.write('<?xml version="1.0" encoding="UTF-8"?>\n');
       document.write(xmlContent);
       document.close();
       
-      // Directly set the Content-Type header via meta tag
+      // Set the content type explicitly
+      document.contentType = 'text/xml';
+      
+      // Also add a meta tag for browsers that support it
       const meta = document.createElement('meta');
       meta.httpEquiv = 'Content-Type';
       meta.content = 'text/xml; charset=utf-8';
       document.head.appendChild(meta);
+      
+      console.log("XmlRenderer: XML content rendered successfully");
     }
   }, [xmlContent]);
 
-  // Return null as we're handling the rendering directly
+  // No visible UI is needed
   return null;
 }
