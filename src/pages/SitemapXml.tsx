@@ -22,16 +22,15 @@ export default function SitemapXml() {
   // Generate sitemap content immediately when posts are available
   useEffect(() => {
     const generateContent = () => {
-      if (!posts || posts.length === 0) {
-        console.log("SitemapXml: No posts available yet");
-        return;
-      }
-      
-      console.log(`SitemapXml: Generating sitemap with ${posts.length} posts`);
-      
       try {
+        console.log("SitemapXml: Generating sitemap entries", { 
+          postsAvailable: Boolean(posts), 
+          postsCount: posts?.length || 0,
+          route: window.location.pathname
+        });
+        
         // Generate the sitemap entries
-        const sitemapEntries = generateSitemapEntries(posts, BASE_URL);
+        const sitemapEntries = generateSitemapEntries(posts || [], BASE_URL);
         setEntries(sitemapEntries);
         
         // Generate the XML content
@@ -48,6 +47,7 @@ export default function SitemapXml() {
       }
     };
     
+    // Always try to generate, even if posts array is empty - we'll at least get static routes
     generateContent();
   }, [posts]);
   
@@ -58,7 +58,8 @@ export default function SitemapXml() {
         hasContent: Boolean(xmlContent),
         contentLength: xmlContent?.length || 0,
         hasPosts: Boolean(posts),
-        postsLength: posts?.length || 0
+        postsLength: posts?.length || 0,
+        url: window.location.href
       });
     }
   }, [isXmlRoute, xmlContent, posts]);
@@ -77,20 +78,12 @@ export default function SitemapXml() {
 
   // If the URL is accessed directly as /sitemap.xml, return XML content
   if (isXmlRoute) {
-    // Force generate content if needed
-    if (!xmlContent && posts && posts.length > 0) {
-      console.log("SitemapXml: Forcing XML content generation");
-      const sitemapEntries = generateSitemapEntries(posts, BASE_URL);
-      const xml = generateSitemapXml(sitemapEntries);
-      
-      // Update state for future renders, but also return immediately
-      setTimeout(() => setXmlContent(xml), 0);
-      
-      // Return the XML renderer with the content even though state isn't updated yet
-      return <XmlRenderer xmlContent={xml} />;
-    }
+    console.log("SitemapXml: Rendering XML view", {
+      hasContent: Boolean(xmlContent),
+      contentLength: xmlContent?.length || 0 
+    });
     
-    console.log("SitemapXml: Rendering XML content", { contentLength: xmlContent?.length || 0 });
+    // We always have at least static routes, so we should have content
     return <XmlRenderer xmlContent={xmlContent} />;
   }
 
