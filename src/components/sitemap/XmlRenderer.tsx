@@ -10,40 +10,36 @@ export function XmlRenderer({ xmlContent }: XmlRendererProps) {
     if (window.location.pathname.endsWith('.xml') && xmlContent) {
       console.log("XmlRenderer: Setting document content type to XML");
       
-      // Create a pre-formatted text display for the XML
-      const displayElement = document.createElement('pre');
-      displayElement.textContent = `<?xml version="1.0" encoding="UTF-8"?>\n${xmlContent}`;
-      displayElement.style.margin = '0';
-      displayElement.style.padding = '20px';
-      displayElement.style.background = 'white';
-      displayElement.style.fontFamily = 'monospace';
-      displayElement.style.whiteSpace = 'pre-wrap';
-      displayElement.style.overflow = 'auto';
+      // Create a blob and download it automatically
+      // This is a workaround since we can't directly set content type in client-side React
+      const blob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${xmlContent}`], {type: 'text/xml'});
+      const url = URL.createObjectURL(blob);
       
-      // Clear the existing body content
+      // Create an iframe to display the XML content
+      const iframe = document.createElement('iframe');
+      iframe.style.width = '100%';
+      iframe.style.height = '100vh';
+      iframe.style.border = 'none';
+      iframe.src = url;
+      
+      // Clear the body and append the iframe
       document.body.innerHTML = '';
       document.body.style.margin = '0';
       document.body.style.padding = '0';
-      document.body.style.background = '#f0f0f0';
+      document.body.appendChild(iframe);
       
-      // Set proper XML content type with meta tag
-      const meta = document.createElement('meta');
-      meta.setAttribute('http-equiv', 'Content-Type');
-      meta.setAttribute('content', 'text/xml; charset=utf-8');
-      document.head.appendChild(meta);
-      
-      // Add content to body
-      document.body.appendChild(displayElement);
-      
-      // Also provide the content as a downloadable link
+      // Add a download button
       const downloadContainer = document.createElement('div');
-      downloadContainer.style.padding = '10px 20px';
+      downloadContainer.style.position = 'fixed';
+      downloadContainer.style.bottom = '20px';
+      downloadContainer.style.right = '20px';
       downloadContainer.style.background = '#f0f0f0';
-      downloadContainer.style.borderTop = '1px solid #ddd';
+      downloadContainer.style.padding = '10px';
+      downloadContainer.style.borderRadius = '4px';
+      downloadContainer.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
       
       const downloadLink = document.createElement('a');
-      const blob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${xmlContent}`], {type: 'text/xml'});
-      downloadLink.href = URL.createObjectURL(blob);
+      downloadLink.href = url;
       downloadLink.download = 'sitemap.xml';
       downloadLink.textContent = 'Download sitemap.xml';
       downloadLink.style.color = '#0066cc';
@@ -54,16 +50,15 @@ export function XmlRenderer({ xmlContent }: XmlRendererProps) {
       downloadContainer.appendChild(downloadLink);
       document.body.appendChild(downloadContainer);
       
-      // Try to set content disposition header through meta tag (this is a best effort)
-      const contentDisposition = document.createElement('meta');
-      contentDisposition.setAttribute('http-equiv', 'Content-Disposition');
-      contentDisposition.setAttribute('content', 'inline; filename=sitemap.xml');
-      document.head.appendChild(contentDisposition);
-      
       console.log("XmlRenderer: XML content rendered successfully");
+      
+      // Clean up when component unmounts
+      return () => {
+        URL.revokeObjectURL(url);
+      };
     }
   }, [xmlContent]);
 
-  // For XML routes, we'll completely replace the document content
+  // For XML routes, we return null so React doesn't render anything
   return null;
 }
