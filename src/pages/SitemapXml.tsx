@@ -9,7 +9,6 @@ import {
   generateSitemapEntries, 
   generateSitemapXml 
 } from "@/utils/sitemap";
-import { Helmet } from "react-helmet-async";
 
 // Update BASE_URL to use the correct domain
 const BASE_URL = "https://laptophunter.us";
@@ -21,22 +20,29 @@ export default function SitemapXml() {
   const isXmlRoute = window.location.pathname.endsWith('.xml');
   
   useEffect(() => {
+    // Wait for posts to load
     if (!posts) return;
     
-    // Generate the sitemap entries
-    const sitemapEntries = generateSitemapEntries(posts, BASE_URL);
-    setEntries(sitemapEntries);
+    console.log("SitemapXml: Posts loaded", { postsCount: posts.length });
     
-    // Generate the XML content
-    const xml = generateSitemapXml(sitemapEntries);
-    setXmlContent(xml);
-    
-    if (isXmlRoute) {
-      console.log("XML route detected, preparing XML content", { 
-        entriesCount: sitemapEntries?.length || 0,
-        xmlLength: xml?.length || 0,
-        xmlContentSample: xml?.substring(0, 100) + '...' || 'No XML content'
-      });
+    try {
+      // Generate the sitemap entries
+      const sitemapEntries = generateSitemapEntries(posts, BASE_URL);
+      setEntries(sitemapEntries);
+      
+      // Generate the XML content
+      const xml = generateSitemapXml(sitemapEntries);
+      setXmlContent(xml);
+      
+      if (isXmlRoute) {
+        console.log("XML route detected, sitemap data prepared", { 
+          entriesCount: sitemapEntries.length,
+          xmlLength: xml.length,
+          xmlContentSample: xml.substring(0, 100) + '...'
+        });
+      }
+    } catch (error) {
+      console.error("Error generating sitemap:", error);
     }
   }, [posts, isXmlRoute]);
 
@@ -54,7 +60,14 @@ export default function SitemapXml() {
 
   // If the URL is accessed directly as /sitemap.xml, return raw XML
   if (isXmlRoute) {
-    console.log("XML route detected, rendering XML content");
+    console.log("XML route detected, rendering XML with XmlRenderer");
+    // Make sure we have content before rendering
+    if (!xmlContent && posts && posts.length > 0) {
+      // Force generate content if not already done
+      const sitemapEntries = generateSitemapEntries(posts, BASE_URL);
+      const xml = generateSitemapXml(sitemapEntries);
+      setXmlContent(xml);
+    }
     return <XmlRenderer xmlContent={xmlContent} />;
   }
 

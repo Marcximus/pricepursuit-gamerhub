@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "@/pages/Login";
 import Admin from "@/pages/Admin";
@@ -78,7 +77,7 @@ function App() {
                         }
                       />
                       
-                      {/* Sitemap Routes */}
+                      {/* Sitemap Routes - Ensure these come before the catch-all route */}
                       <Route path="/sitemap.xml" element={<SitemapXml />} />
                       <Route path="/sitemap" element={<SitemapPage />} />
                       
