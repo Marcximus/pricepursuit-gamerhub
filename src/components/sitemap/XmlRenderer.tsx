@@ -9,26 +9,37 @@ export function XmlRenderer({ xmlContent }: XmlRendererProps) {
   useEffect(() => {
     if (window.location.pathname.endsWith('.xml') && xmlContent) {
       console.log("XmlRenderer: Setting document content type to XML");
+
+      // Replace the entire HTML document with XML content
+      document.documentElement.innerHTML = '';
       
-      // Add a meta tag for content type
+      // Set XML MIME type with a meta tag
       const meta = document.createElement('meta');
-      meta.httpEquiv = 'Content-Type';
-      meta.content = 'text/xml; charset=utf-8';
+      meta.setAttribute('http-equiv', 'Content-Type');
+      meta.setAttribute('content', 'text/xml; charset=utf-8');
       document.head.appendChild(meta);
-      
-      // Clear the document and write XML content
-      document.open('text/xml');
-      document.write('<?xml version="1.0" encoding="UTF-8"?>\n');
-      document.write(xmlContent);
-      document.close();
-      
-      // Add XML styling to make it readable in browser
+
+      // Create a pre element to display the XML content with proper formatting
+      const pre = document.createElement('pre');
+      pre.textContent = `<?xml version="1.0" encoding="UTF-8"?>\n${xmlContent}`;
+      document.body.appendChild(pre);
+
+      // Add styling to make it readable
       const style = document.createElement('style');
       style.textContent = `
-        html {
-          white-space: pre;
+        body { 
+          margin: 0;
+          padding: 20px;
+          background: #f0f0f0;
           font-family: monospace;
-          font-size: 14px;
+        }
+        pre {
+          background: white;
+          padding: 20px;
+          border-radius: 4px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          overflow: auto;
+          white-space: pre-wrap;
         }
       `;
       document.head.appendChild(style);
@@ -37,6 +48,6 @@ export function XmlRenderer({ xmlContent }: XmlRendererProps) {
     }
   }, [xmlContent]);
 
-  // No visible UI is needed
+  // For XML routes, we'll completely replace the document content
   return null;
 }

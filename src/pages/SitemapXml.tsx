@@ -19,50 +19,33 @@ export default function SitemapXml() {
   const [xmlContent, setXmlContent] = useState("");
   const isXmlRoute = window.location.pathname.endsWith('.xml');
   
-  // Generate sitemap content immediately when posts are available
+  // Generate sitemap content immediately on component mount
   useEffect(() => {
-    const generateContent = () => {
-      try {
-        console.log("SitemapXml: Generating sitemap entries", { 
-          postsAvailable: Boolean(posts), 
-          postsCount: posts?.length || 0,
-          route: window.location.pathname
-        });
-        
-        // Generate the sitemap entries
-        const sitemapEntries = generateSitemapEntries(posts || [], BASE_URL);
-        setEntries(sitemapEntries);
-        
-        // Generate the XML content
-        const xml = generateSitemapXml(sitemapEntries);
-        setXmlContent(xml);
-        
-        console.log("SitemapXml: Sitemap generated successfully", { 
-          entriesCount: sitemapEntries.length,
-          xmlLength: xml.length,
-          xmlContentSample: xml.substring(0, 100) + '...'
-        });
-      } catch (error) {
-        console.error("Error generating sitemap:", error);
-      }
-    };
-    
-    // Always try to generate, even if posts array is empty - we'll at least get static routes
-    generateContent();
-  }, [posts]);
-  
-  // Debug effect to log when rendered in XML mode
-  useEffect(() => {
-    if (isXmlRoute) {
-      console.log("SitemapXml: XML route detected", { 
-        hasContent: Boolean(xmlContent),
-        contentLength: xmlContent?.length || 0,
-        hasPosts: Boolean(posts),
-        postsLength: posts?.length || 0,
-        url: window.location.href
+    try {
+      console.log("SitemapXml: Initializing sitemap generator", {
+        route: window.location.pathname,
+        isXmlRoute,
+        postsAvailable: Boolean(posts),
+        postsCount: posts?.length || 0
       });
+      
+      // Generate the sitemap entries (will include static routes even if no posts)
+      const sitemapEntries = generateSitemapEntries(posts || [], BASE_URL);
+      setEntries(sitemapEntries);
+      
+      // Generate the XML content
+      const xml = generateSitemapXml(sitemapEntries);
+      setXmlContent(xml);
+      
+      console.log("SitemapXml: Sitemap generated successfully", { 
+        entriesCount: sitemapEntries.length,
+        xmlLength: xml.length,
+        xmlContentSample: xml.substring(0, 100) + '...'
+      });
+    } catch (error) {
+      console.error("Error generating sitemap:", error);
     }
-  }, [isXmlRoute, xmlContent, posts]);
+  }, [posts, isXmlRoute]);
 
   const downloadXml = () => {
     const xmlBlob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${xmlContent}`], {type: 'text/xml'});
@@ -78,12 +61,12 @@ export default function SitemapXml() {
 
   // If the URL is accessed directly as /sitemap.xml, return XML content
   if (isXmlRoute) {
-    console.log("SitemapXml: Rendering XML view", {
-      hasContent: Boolean(xmlContent),
-      contentLength: xmlContent?.length || 0 
+    console.log("SitemapXml: Rendering in XML mode", {
+      hasXmlContent: Boolean(xmlContent),
+      contentLength: xmlContent?.length || 0,
+      url: window.location.href
     });
     
-    // We always have at least static routes, so we should have content
     return <XmlRenderer xmlContent={xmlContent} />;
   }
 
@@ -93,8 +76,20 @@ export default function SitemapXml() {
       <div className="flex flex-col space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">XML Sitemap</h1>
-          <Button onClick={downloadXml} variant="outline">Download XML</Button>
+          <div className="space-x-4 flex">
+            <Button onClick={downloadXml} variant="outline">Download XML</Button>
+            <Button 
+              variant="default" 
+              onClick={() => window.open(`${BASE_URL}/sitemap.xml`, '_blank')}
+            >
+              View XML
+            </Button>
+          </div>
         </div>
+        
+        <p className="text-muted-foreground">
+          This sitemap contains {entries.length} URLs that are available for crawling by search engines.
+        </p>
         
         <SitemapTable entries={entries} />
       </div>

@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "@/pages/Login";
 import Admin from "@/pages/Admin";
@@ -43,10 +42,11 @@ function App() {
                 <Router>
                   <div className="container mx-auto px-4 py-8">
                     <Routes>
-                      {/* Place Sitemap XML route before other routes for priority matching */}
+                      {/* XML routes must be defined first and need exact path matching */}
                       <Route path="/sitemap.xml" element={<SitemapXml />} />
                       <Route path="/sitemap" element={<SitemapPage />} />
                       
+                      {/* Other routes */}
                       <Route path="/login" element={<Login />} />
                       <Route
                         path="/admin"
