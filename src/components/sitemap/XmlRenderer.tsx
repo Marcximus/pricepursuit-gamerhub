@@ -1,64 +1,80 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface XmlRendererProps {
   xmlContent: string;
 }
 
 export function XmlRenderer({ xmlContent }: XmlRendererProps) {
+  const [xmlUrl, setXmlUrl] = useState<string | null>(null);
+  
   useEffect(() => {
     if (window.location.pathname.endsWith('.xml') && xmlContent) {
-      console.log("XmlRenderer: Setting document content type to XML");
+      console.log("XmlRenderer: Creating XML blob URL");
       
-      // Create a blob and download it automatically
-      // This is a workaround since we can't directly set content type in client-side React
+      // Create a blob with the XML content
       const blob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${xmlContent}`], {type: 'text/xml'});
       const url = URL.createObjectURL(blob);
-      
-      // Create an iframe to display the XML content
-      const iframe = document.createElement('iframe');
-      iframe.style.width = '100%';
-      iframe.style.height = '100vh';
-      iframe.style.border = 'none';
-      iframe.src = url;
-      
-      // Clear the body and append the iframe
-      document.body.innerHTML = '';
-      document.body.style.margin = '0';
-      document.body.style.padding = '0';
-      document.body.appendChild(iframe);
-      
-      // Add a download button
-      const downloadContainer = document.createElement('div');
-      downloadContainer.style.position = 'fixed';
-      downloadContainer.style.bottom = '20px';
-      downloadContainer.style.right = '20px';
-      downloadContainer.style.background = '#f0f0f0';
-      downloadContainer.style.padding = '10px';
-      downloadContainer.style.borderRadius = '4px';
-      downloadContainer.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-      
-      const downloadLink = document.createElement('a');
-      downloadLink.href = url;
-      downloadLink.download = 'sitemap.xml';
-      downloadLink.textContent = 'Download sitemap.xml';
-      downloadLink.style.color = '#0066cc';
-      downloadLink.style.textDecoration = 'none';
-      downloadLink.style.fontFamily = 'system-ui, sans-serif';
-      downloadLink.style.fontWeight = 'bold';
-      
-      downloadContainer.appendChild(downloadLink);
-      document.body.appendChild(downloadContainer);
-      
-      console.log("XmlRenderer: XML content rendered successfully");
+      setXmlUrl(url);
       
       // Clean up when component unmounts
       return () => {
-        URL.revokeObjectURL(url);
+        if (url) URL.revokeObjectURL(url);
       };
     }
   }, [xmlContent]);
 
-  // For XML routes, we return null so React doesn't render anything
+  // If we're on the XML route and have content, render a specialized XML view
+  if (window.location.pathname.endsWith('.xml') && xmlUrl) {
+    return (
+      <div style={{ 
+        position: "fixed", 
+        top: 0, 
+        left: 0, 
+        width: "100%", 
+        height: "100%", 
+        margin: 0,
+        padding: 0,
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column"
+      }}>
+        <iframe 
+          src={xmlUrl}
+          style={{
+            flex: 1,
+            border: "none",
+            width: "100%",
+            height: "100%"
+          }}
+          title="Sitemap XML"
+        />
+        <div style={{
+          position: "fixed",
+          bottom: "20px",
+          right: "20px",
+          background: "#f0f0f0",
+          padding: "10px",
+          borderRadius: "4px",
+          boxShadow: "0 2px 5px rgba(0,0,0,0.2)"
+        }}>
+          <a
+            href={xmlUrl}
+            download="sitemap.xml"
+            style={{
+              color: "#0066cc",
+              textDecoration: "none",
+              fontFamily: "system-ui, sans-serif",
+              fontWeight: "bold"
+            }}
+          >
+            Download sitemap.xml
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  // For non-XML routes or when no content is available yet
   return null;
 }

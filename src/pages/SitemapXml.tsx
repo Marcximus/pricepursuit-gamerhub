@@ -1,14 +1,13 @@
 
 import { useEffect, useState } from "react";
 import { useBlog } from "@/contexts/blog";
-import { Button } from "@/components/ui/button";
-import { SitemapTable } from "@/components/sitemap/SitemapTable";
 import { XmlRenderer } from "@/components/sitemap/XmlRenderer";
 import { 
   SitemapEntry, 
   generateSitemapEntries, 
   generateSitemapXml 
 } from "@/utils/sitemap";
+import { Helmet } from "react-helmet-async";
 
 // Update BASE_URL to use the correct domain
 const BASE_URL = "https://laptophunter.us";
@@ -47,52 +46,19 @@ export default function SitemapXml() {
     }
   }, [posts, isXmlRoute]);
 
-  const downloadXml = () => {
-    const xmlBlob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${xmlContent}`], {type: 'text/xml'});
-    const url = URL.createObjectURL(xmlBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'sitemap.xml';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  // If the URL is accessed directly as /sitemap.xml, return XML content
+  // If this is an XML route request, use XmlRenderer
   if (isXmlRoute) {
-    console.log("SitemapXml: Rendering in XML mode", {
-      hasXmlContent: Boolean(xmlContent),
-      contentLength: xmlContent?.length || 0,
-      url: window.location.href
-    });
-    
-    return <XmlRenderer xmlContent={xmlContent} />;
+    return (
+      <>
+        <Helmet>
+          <title>Sitemap XML</title>
+          <meta http-equiv="Content-Type" content="text/xml; charset=utf-8" />
+        </Helmet>
+        <XmlRenderer xmlContent={xmlContent} />
+      </>
+    );
   }
 
-  // Regular HTML view for /sitemap route
-  return (
-    <div className="container mx-auto py-8">
-      <div className="flex flex-col space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">XML Sitemap</h1>
-          <div className="space-x-4 flex">
-            <Button onClick={downloadXml} variant="outline">Download XML</Button>
-            <Button 
-              variant="default" 
-              onClick={() => window.open(`${BASE_URL}/sitemap.xml`, '_blank')}
-            >
-              View XML
-            </Button>
-          </div>
-        </div>
-        
-        <p className="text-muted-foreground">
-          This sitemap contains {entries.length} URLs that are available for crawling by search engines.
-        </p>
-        
-        <SitemapTable entries={entries} />
-      </div>
-    </div>
-  );
+  // Regular HTML view for non-xml routes
+  return null; // This shouldn't actually be reached since the /sitemap.xml route is handled above
 }
