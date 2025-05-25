@@ -81,7 +81,7 @@ function generateSitemapXML(): string {
   </url>`);
   });
 
-  // Return clean XML without any leading whitespace
+  // Return XML with declaration at the absolute start - NO leading whitespace or newlines
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.join('\n')}
