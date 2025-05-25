@@ -20,12 +20,20 @@ const blogCategories = [
   "How-To"
 ];
 
-// Sample blog posts - in a real implementation, you'd fetch these from your database
+// Extended blog posts list with real content from the existing sitemap
 const sampleBlogPosts = [
-  { slug: "best-dell-laptops", category: "Top10", updated_at: "2024-01-15" },
-  { slug: "best-microsoft-laptops", category: "Top10", updated_at: "2024-01-10" },
-  { slug: "laptop-buying-guide", category: "How-To", updated_at: "2024-01-05" },
-  { slug: "gaming-vs-business-laptops", category: "Comparison", updated_at: "2024-01-01" }
+  { slug: "top-10-best-dell-laptops", category: "Top10", updated_at: "2024-01-15" },
+  { slug: "top-10-best-microsoft-laptops", category: "Top10", updated_at: "2024-01-10" },
+  { slug: "top-10-best-acer-laptops", category: "Top10", updated_at: "2024-01-08" },
+  { slug: "top-10-best-alienware-laptops", category: "Top10", updated_at: "2024-01-06" },
+  { slug: "top-10-best-hp-laptops", category: "Top10", updated_at: "2024-01-04" },
+  { slug: "top-10-best-msi-laptops", category: "Top10", updated_at: "2024-01-02" },
+  { slug: "top-10-best-lenovo-laptops", category: "Top10", updated_at: "2024-01-01" },
+  { slug: "the-complete-guide-to-laptop-screens", category: "How-To", updated_at: "2024-01-15" },
+  { slug: "ultimate-guide-to-laptop-gpu", category: "How-To", updated_at: "2024-01-14" },
+  { slug: "the-ultimate-guide-to-laptop-storage", category: "How-To", updated_at: "2024-01-13" },
+  { slug: "the-complete-guide-to-the-laptop-cpu", category: "How-To", updated_at: "2024-01-12" },
+  { slug: "everything-about-laptop-ram", category: "How-To", updated_at: "2024-01-11" }
 ];
 
 function escapeXML(str: string): string {
@@ -73,6 +81,7 @@ function generateSitemapXML(): string {
   </url>`);
   });
 
+  // Return clean XML without any leading whitespace
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.join('\n')}
@@ -84,8 +93,10 @@ const sitemapContent = generateSitemapXML();
 const publicPath = join(process.cwd(), 'public', 'sitemap.xml');
 
 try {
-  writeFileSync(publicPath, sitemapContent, 'utf8');
+  // Write with explicit encoding and no BOM
+  writeFileSync(publicPath, sitemapContent, { encoding: 'utf8' });
   console.log('✅ Sitemap generated successfully at public/sitemap.xml');
+  console.log(`📄 Sitemap contains ${sitemapContent.split('<url>').length - 1} URLs`);
 } catch (error) {
   console.error('❌ Error generating sitemap:', error);
 }
