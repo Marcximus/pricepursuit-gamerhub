@@ -19,6 +19,7 @@ import NewBlogPost from "./pages/blog/NewBlogPost";
 import { BlogProvider } from "@/contexts/BlogContext";
 import { HelmetProvider } from 'react-helmet-async';
 import SitemapPage from "./pages/Sitemap";
+import SitemapXml from "./pages/SitemapXml";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient({
@@ -43,6 +44,7 @@ function App() {
                   <div className="container mx-auto px-4 py-8">
                     <Routes>
                       <Route path="/sitemap" element={<SitemapPage />} />
+                      <Route path="/sitemap.xml" element={<SitemapXml />} />
                       <Route path="/login" element={<Login />} />
                       <Route
                         path="/admin"
