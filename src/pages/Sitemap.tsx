@@ -30,7 +30,8 @@ export default function SitemapPage() {
   }, [posts]);
 
   const downloadXml = () => {
-    const xmlBlob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${xmlContent}`], {type: 'text/xml'});
+    // Don't add extra XML declaration - the content already has it
+    const xmlBlob = new Blob([xmlContent], {type: 'text/xml'});
     const url = URL.createObjectURL(xmlBlob);
     const a = document.createElement('a');
     a.href = url;

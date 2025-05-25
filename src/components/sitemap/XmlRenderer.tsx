@@ -12,8 +12,8 @@ export function XmlRenderer({ xmlContent }: XmlRendererProps) {
     if (window.location.pathname.endsWith('.xml') && xmlContent) {
       console.log("XmlRenderer: Creating XML blob URL");
       
-      // Create a blob with the XML content
-      const blob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${xmlContent}`], {type: 'text/xml'});
+      // Create a blob with the XML content (don't add extra XML declaration)
+      const blob = new Blob([xmlContent], {type: 'text/xml'});
       const url = URL.createObjectURL(blob);
       setXmlUrl(url);
       
