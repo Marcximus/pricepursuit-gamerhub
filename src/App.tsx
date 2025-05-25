@@ -18,7 +18,6 @@ import BlogAdmin from "./pages/blog/BlogAdmin";
 import NewBlogPost from "./pages/blog/NewBlogPost";
 import { BlogProvider } from "@/contexts/BlogContext";
 import { HelmetProvider } from 'react-helmet-async';
-import SitemapXml from "./pages/SitemapXml";
 import SitemapPage from "./pages/Sitemap";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -41,56 +40,48 @@ function App() {
             <BlogProvider>
               <div className="min-h-screen w-full bg-background">
                 <Router>
-                  <Routes>
-                    {/* XML routes must be defined first with exact path matching */}
-                    <Route path="/sitemap.xml" element={<SitemapXml />} />
-                    
-                    {/* Regular routes wrapped in container */}
-                    <Route path="/*" element={
-                      <div className="container mx-auto px-4 py-8">
-                        <Routes>
-                          <Route path="/sitemap" element={<SitemapPage />} />
-                          <Route path="/login" element={<Login />} />
-                          <Route
-                            path="/admin"
-                            element={
-                              <ProtectedRoute requireAdmin>
-                                <Admin />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route path="/" element={<ComparePriceLaptops />} />
-                          <Route path="/compare" element={<ComparePage />} />
-                          <Route path="/recommend" element={<Recommend />} />
-                          <Route path="/about" element={<About />} />
+                  <div className="container mx-auto px-4 py-8">
+                    <Routes>
+                      <Route path="/sitemap" element={<SitemapPage />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route
+                        path="/admin"
+                        element={
+                          <ProtectedRoute requireAdmin>
+                            <Admin />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route path="/" element={<ComparePriceLaptops />} />
+                      <Route path="/compare" element={<ComparePage />} />
+                      <Route path="/recommend" element={<Recommend />} />
+                      <Route path="/about" element={<About />} />
 
-                          {/* Blog Routes */}
-                          <Route path="/blog" element={<Blog />} />
-                          <Route path="/blog/:category" element={<BlogCategory />} />
-                          <Route path="/blog/:category/post/:slug" element={<BlogPost />} />
-                          <Route
-                            path="/blog/admin"
-                            element={
-                              <ProtectedRoute>
-                                <BlogAdmin />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/blog/new"
-                            element={
-                              <ProtectedRoute>
-                                <NewBlogPost />
-                              </ProtectedRoute>
-                            }
-                          />
-                          
-                          {/* Catch-all route must be last */}
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
-                      </div>
-                    } />
-                  </Routes>
+                      {/* Blog Routes */}
+                      <Route path="/blog" element={<Blog />} />
+                      <Route path="/blog/:category" element={<BlogCategory />} />
+                      <Route path="/blog/:category/post/:slug" element={<BlogPost />} />
+                      <Route
+                        path="/blog/admin"
+                        element={
+                          <ProtectedRoute>
+                            <BlogAdmin />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/blog/new"
+                        element={
+                          <ProtectedRoute>
+                            <NewBlogPost />
+                          </ProtectedRoute>
+                        }
+                      />
+                      
+                      {/* Catch-all route must be last */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </div>
                 </Router>
               </div>
               <Toaster />
