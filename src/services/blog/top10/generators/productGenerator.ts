@@ -16,7 +16,7 @@ export function generateProductHtml(product: any, position: number): string {
   const asin = product.asin || '';
   const title = product.title || 'Unknown Product';
   const image = product.image || product.imageUrl || '';
-  const url = product.url || product.productUrl || `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
+  const url = product.url || product.productUrl || `https://www.amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
   const rating = product.rating || 0;
   const ratingsTotal = product.ratings_total || product.ratings_count || 0;
   const isBestSeller = product.is_best_seller || false;

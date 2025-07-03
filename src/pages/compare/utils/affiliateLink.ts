@@ -4,5 +4,5 @@
  */
 export const getAffiliateUrl = (asin?: string): string => {
   if (!asin) return '#';
-  return `https://amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
+  return `https://www.amazon.com/dp/${asin}?tag=with-laptop-discount-20`;
 };

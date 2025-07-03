@@ -30,7 +30,7 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
 
   // Base product URL with affiliate tag
   const baseProductUrl = laptop.asin 
-    ? `https://amazon.com/dp/${laptop.asin}?tag=with-laptop-discount-20`
+    ? `https://www.amazon.com/dp/${laptop.asin}?tag=with-laptop-discount-20`
     : '';
   
   // URLs for different purposes
