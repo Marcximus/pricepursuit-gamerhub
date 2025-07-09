@@ -30,6 +30,7 @@ export function FilterOptionsList({
                 label={option}
                 checked={selectedOptions.has(option)}
                 onCheckedChange={(checked) => onOptionChange(option, checked)}
+                showBrandLogo={title === "Brand"}
               />
             ))
           ) : (
