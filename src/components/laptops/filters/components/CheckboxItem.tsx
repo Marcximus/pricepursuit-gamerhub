@@ -67,6 +67,13 @@ export function CheckboxItem({
     const fileName = brandFileMap[brandName];
     return fileName ? `https://kkebyebrhdpcwqnxhjcx.supabase.co/storage/v1/object/public/brand_logos/${fileName}` : null;
   };
+
+  // Normalize brand names for display
+  const getDisplayName = (brandName: string) => {
+    if (brandName === 'ACEMAGIC') return 'Acemagic';
+    return brandName;
+  };
+  
   const logoUrl = showBrandLogo ? getBrandImageUrl(label) : null;
   
   return (
@@ -91,7 +98,7 @@ export function CheckboxItem({
             <Image src={logoUrl} alt={label} className="w-full h-full object-contain" width={16} height={16} />
           </div>
         )}
-        {label}
+        {getDisplayName(label)}
       </div>
     </div>
   );
