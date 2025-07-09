@@ -70,27 +70,29 @@ export function CheckboxItem({
   const logoUrl = showBrandLogo ? getBrandImageUrl(label) : null;
   
   return (
-    <div className="flex items-center space-x-2 py-1 px-3 rounded hover:bg-green-50 transition-colors cursor-pointer">
+    <div 
+      className="flex items-center space-x-2 py-1 px-3 rounded hover:bg-green-50 transition-colors cursor-pointer"
+      onClick={() => onCheckedChange(!checked)}
+    >
       <div 
         className={`relative w-4 h-4 rounded-full border-2 transition-all cursor-pointer ${
           checked 
             ? 'bg-green-600 border-green-600' 
             : 'bg-white border-slate-300 hover:border-green-400'
         }`}
-        onClick={() => onCheckedChange(!checked)}
       >
         {checked && (
           <X className="w-2.5 h-2.5 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" strokeWidth={3} />
         )}
       </div>
-      <label htmlFor={id} className="text-sm leading-none cursor-pointer flex-1 text-slate-700 font-medium py-1 flex items-center">
+      <div className="text-sm leading-none cursor-pointer flex-1 text-slate-700 font-medium py-1 flex items-center">
         {showBrandLogo && logoUrl && (
           <div className="w-4 h-4 mr-2 flex-shrink-0 overflow-hidden">
             <Image src={logoUrl} alt={label} className="w-full h-full object-contain" width={16} height={16} />
           </div>
         )}
         {label}
-      </label>
+      </div>
     </div>
   );
 }
