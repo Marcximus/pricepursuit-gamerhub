@@ -47,7 +47,7 @@ export function CheckboxItem({ id, label, checked, onCheckedChange, showBrandLog
         id={id}
         checked={checked}
         onCheckedChange={handleCheckedChange}
-        className="h-4 w-4 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 border-slate-300"
+        className="h-3.5 w-3.5 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 border-slate-300"
       />
       <label
         htmlFor={id}
