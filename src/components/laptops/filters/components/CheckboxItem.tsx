@@ -32,7 +32,13 @@ export function CheckboxItem({ id, label, checked, onCheckedChange, showBrandLog
       'Razer': 'razer.png',
       'LG': 'lg.png',
       'Gigabyte': 'gigabyte.png',
-      'Toshiba': 'toshiba.png'
+      'Toshiba': 'toshiba.png',
+      'Alienware': 'alienware.png',
+      'Acemagic': 'Acemagic.png',
+      'Jumper': 'jumper.png',
+      'Kaigerr': 'Kaigerr.png',
+      'Nimo': 'Nimo.png',
+      'Others': 'Others.png'
     };
     
     const fileName = brandFileMap[brandName];
