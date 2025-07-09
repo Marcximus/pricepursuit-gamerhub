@@ -65,7 +65,11 @@ export function CheckboxItem({
       'Other': 'Other.png'
     };
     const fileName = brandFileMap[brandName];
-    return fileName ? `https://kkebyebrhdpcwqnxhjcx.supabase.co/storage/v1/object/public/brand_logos/${fileName}` : null;
+    if (!fileName) return null;
+    
+    // Add cache-busting for updated logos
+    const cacheParam = brandName === 'ACEMAGIC' || brandName === 'Acemagic' ? '?v=2' : '';
+    return `https://kkebyebrhdpcwqnxhjcx.supabase.co/storage/v1/object/public/brand_logos/${fileName}${cacheParam}`;
   };
 
   // Normalize brand names for display
