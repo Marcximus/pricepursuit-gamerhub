@@ -42,25 +42,25 @@ export function CheckboxItem({ id, label, checked, onCheckedChange, showBrandLog
   const logoUrl = showBrandLogo ? getBrandImageUrl(label) : null;
 
   return (
-    <div className="flex items-center space-x-2 py-1 px-3 rounded hover:bg-green-50 transition-colors cursor-pointer">
+    <div className="flex items-center space-x-2 py-0.5 px-2 rounded hover:bg-green-50 transition-colors cursor-pointer">
       <Checkbox
         id={id}
         checked={checked}
         onCheckedChange={handleCheckedChange}
-        className="h-4 w-4 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 border-slate-300"
+        className="h-3.5 w-3.5 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 border-slate-300"
       />
       <label
         htmlFor={id}
-        className="text-sm leading-none cursor-pointer flex-1 text-slate-700 font-medium py-1 flex items-center"
+        className="text-xs leading-tight cursor-pointer flex-1 text-slate-700 font-medium flex items-center"
       >
         {showBrandLogo && logoUrl && (
-          <div className="w-4 h-4 mr-2 flex-shrink-0 overflow-hidden">
+          <div className="w-3.5 h-3.5 mr-1.5 flex-shrink-0 overflow-hidden">
             <Image 
               src={logoUrl}
               alt={label}
               className="w-full h-full object-contain"
-              width={16}
-              height={16}
+              width={14}
+              height={14}
             />
           </div>
         )}
