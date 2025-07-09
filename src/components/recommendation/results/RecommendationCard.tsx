@@ -25,7 +25,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
   const productData = formatProductData(result, index);
 
   return (
-    <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
+    <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full touch-manipulation">
       <div className="relative">
         <ProductHeader 
           title={productData.title}
@@ -41,15 +41,15 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
         />
       </div>
       
-      <CardContent className="p-6 flex flex-col flex-grow">
-        <div className="h-16">
+      <CardContent className="p-4 lg:p-6 flex flex-col flex-grow">
+        <div className="min-h-[4rem] lg:h-16">
           <ProductTitle 
             title={productData.title}
             url={productData.productUrl}
           />
         </div>
         
-        <div className="h-10">
+        <div className="min-h-[2.5rem] lg:h-10">
           {result.product && (
             <ProductRating 
               rating={productData.rating}
@@ -70,11 +70,11 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
           />
         </div>
         
-        <div className="min-h-32 mb-4">
+        <div className="min-h-[8rem] lg:min-h-32 mb-4">
           <ProductHighlights highlights={productData.highlights} />
         </div>
         
-        <div className="min-h-36 mb-6">
+        <div className="min-h-[9rem] lg:min-h-36 mb-4 lg:mb-6">
           <ProductReason reason={productData.reason} />
         </div>
         

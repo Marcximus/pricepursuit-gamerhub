@@ -90,30 +90,41 @@ const LaptopToolbar: React.FC<LaptopToolbarProps> = ({
   };
   
   return (
-    <div className="flex flex-col gap-4 mb-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <LaptopToolbarCounter
-          isLoading={isLoading}
-          isRefetching={isRefetching}
-          totalLaptops={totalCount}
-        >
-          <ActiveFilterPills 
-            filters={filters}
-            onRemoveFilter={handleRemoveFilter}
-            onClearSearch={handleClearSearch}
-            onResetPriceRange={handleResetPriceRange}
-          />
-        </LaptopToolbarCounter>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <MobileFilterDrawer
-            open={false} 
-            setOpen={() => {}}
-            activeFiltersCount={activeFiltersCount}
-            filters={filters}
-            onFiltersChange={setFilters}
-            filterOptions={filterOptions}
-          />
-          <LaptopSort onChange={onSortChange} value={sortOption} />
+    <div className="flex flex-col gap-3 mb-4">
+      {/* Mobile-optimized layout */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <LaptopToolbarCounter
+            isLoading={isLoading}
+            isRefetching={isRefetching}
+            totalLaptops={totalCount}
+          >
+            <div className="mt-2 max-w-full overflow-x-auto scroll-area">
+              <ActiveFilterPills 
+                filters={filters}
+                onRemoveFilter={handleRemoveFilter}
+                onClearSearch={handleClearSearch}
+                onResetPriceRange={handleResetPriceRange}
+              />
+            </div>
+          </LaptopToolbarCounter>
+        </div>
+        
+        {/* Controls row - optimized for mobile */}
+        <div className="flex items-center justify-between w-full lg:w-auto gap-2">
+          <div className="flex items-center gap-2 flex-1 lg:flex-initial">
+            <MobileFilterDrawer
+              open={false} 
+              setOpen={() => {}}
+              activeFiltersCount={activeFiltersCount}
+              filters={filters}
+              onFiltersChange={setFilters}
+              filterOptions={filterOptions}
+            />
+            <div className="flex-1 lg:flex-initial min-w-[140px]">
+              <LaptopSort onChange={onSortChange} value={sortOption} />
+            </div>
+          </div>
         </div>
       </div>
     </div>

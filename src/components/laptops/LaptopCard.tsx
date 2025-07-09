@@ -50,16 +50,18 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
   };
 
   return (
-    <Card className={`flex ${isMobile ? 'flex-col' : 'flex-row'} p-4 gap-4 hover:shadow-lg transition-shadow`}>
+    <Card className={`flex ${isMobile ? 'flex-col' : 'flex-row'} p-3 lg:p-4 gap-3 lg:gap-4 hover:shadow-lg transition-shadow touch-manipulation`}>
       {/* Left side - Image and Price */}
       <div className={`flex ${isMobile ? 'flex-row justify-between' : 'flex-col'} items-center gap-2 ${isMobile ? 'w-full' : 'w-40'}`}>
-        <LaptopImage 
-          title={laptop.title || 'Laptop'}
-          imageUrl={laptop.image_url}
-          productUrl={productUrl}
-        />
+        <div className={`${isMobile ? 'flex-shrink-0' : ''}`}>
+          <LaptopImage 
+            title={laptop.title || 'Laptop'}
+            imageUrl={laptop.image_url}
+            productUrl={productUrl}
+          />
+        </div>
         
-        <div className={`flex ${isMobile ? 'flex-col items-end' : 'flex-col items-center'} gap-2`}>
+        <div className={`flex ${isMobile ? 'flex-col items-end' : 'flex-col items-center'} gap-2 ${isMobile ? 'flex-shrink-0' : ''}`}>
           <LaptopPrice 
             currentPrice={laptop.current_price}
             originalPrice={laptop.original_price}
@@ -77,8 +79,8 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
       </div>
 
       {/* Right side - Specs and Reviews */}
-      <div className="flex-1">
-        <div className="flex flex-col gap-2">
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-col gap-2 lg:gap-3">
           <LaptopSpecs 
             title={laptop.title || 'Untitled Laptop'}
             productUrl={productUrl}
@@ -95,13 +97,13 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
             model={laptop.model}
           />
           
-          <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2 mt-2`}>
+          <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-row gap-2'} mt-2`}>
             <Button
               onClick={handleCheckItOut}
-              className="bg-green-600 hover:bg-green-700 transform hover:-translate-y-0.5 transition-all w-full sm:w-auto"
+              className="bg-green-600 hover:bg-green-700 transform hover:-translate-y-0.5 transition-all w-full sm:w-auto min-h-[44px] touch-manipulation"
             >
-              Check it out
-              <Zap className="w-4 h-4 ml-2 animate-pulse" />
+              <span className="truncate">Check it out</span>
+              <Zap className="w-4 h-4 ml-2 animate-pulse flex-shrink-0" />
             </Button>
             <LaptopCompareButton laptop={laptop} />
           </div>
@@ -109,10 +111,12 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
 
         {/* Only show reviews section if we have actual review data */}
         {laptop.review_data?.recent_reviews && laptop.review_data.recent_reviews.length > 0 && (
-          <LaptopReviews 
-            reviewData={laptop.review_data}
-            productUrl={reviewsUrl}
-          />
+          <div className="mt-3 lg:mt-4">
+            <LaptopReviews 
+              reviewData={laptop.review_data}
+              productUrl={reviewsUrl}
+            />
+          </div>
         )}
       </div>
     </Card>

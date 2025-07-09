@@ -30,7 +30,7 @@ export const RecommendationResults: React.FC<RecommendationResultsProps> = ({
   });
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto px-4 lg:px-6">
       {/* Add ConfettiEffect when results are displayed */}
       <ConfettiEffect />
       
@@ -40,7 +40,7 @@ export const RecommendationResults: React.FC<RecommendationResultsProps> = ({
         onReset={onReset} 
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-10">
         {sortedResults.map((result, index) => (
           <RecommendationCard 
             key={index} 

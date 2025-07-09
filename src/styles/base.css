@@ -46,6 +46,85 @@
     margin: 0;
     padding: 0;
     min-height: 100vh;
+    /* Optimize for mobile touch */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    /* Improve mobile scrolling */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent zoom on input focus on iOS */
+    font-size: 16px;
+  }
+  
+  /* Allow text selection for content */
+  p, span, div[class*="content"], div[class*="text"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+  
+  /* Optimize input elements for mobile */
+  input, textarea, select {
+    font-size: 16px; /* Prevent zoom on iOS */
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+  
+  /* Better touch targets */
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Optimize scrollable areas */
+  .scroll-area {
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
+  }
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  /* Improve readability on small screens */
+  body {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  /* Better spacing for mobile */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Optimize card layouts */
+  .card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Better button spacing */
+  .btn-group {
+    gap: 0.5rem;
+  }
+  
+  /* Optimize form elements */
+  input, textarea {
+    padding: 12px 16px;
+    border-radius: 8px;
+  }
+  
+  /* Better modal/drawer spacing */
+  .modal-content {
+    padding: 1rem;
+    margin: 1rem;
   }
 }
 

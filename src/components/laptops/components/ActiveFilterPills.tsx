@@ -76,15 +76,17 @@ export function ActiveFilterPills({
   };
 
   return (
-    <div className="flex flex-wrap gap-1 ml-2">
+    <div className="flex flex-wrap gap-1.5 ml-2 pb-1">
       {/* Show price range filter if active */}
       {isPriceRangeActive && onResetPriceRange && (
         <button
           onClick={onResetPriceRange}
-          className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-green-50 hover:bg-green-100 text-green-600 hover:text-green-700 transition-colors"
+          className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-green-50 hover:bg-green-100 text-green-600 hover:text-green-700 transition-colors touch-manipulation min-h-[32px]"
         >
-          Price: {formatPrice(filters.priceRange.min)} - {formatPrice(filters.priceRange.max)}
-          <XCircle className="h-3 w-3 ml-0.5" />
+          <span className="whitespace-nowrap">
+            Price: {formatPrice(filters.priceRange.min)} - {formatPrice(filters.priceRange.max)}
+          </span>
+          <XCircle className="h-3 w-3 ml-0.5 flex-shrink-0" />
         </button>
       )}
       
@@ -92,10 +94,12 @@ export function ActiveFilterPills({
       {hasActiveSearch && (
         <button
           onClick={onClearSearch}
-          className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-green-50 hover:bg-green-100 text-green-600 hover:text-green-700 transition-colors"
+          className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-green-50 hover:bg-green-100 text-green-600 hover:text-green-700 transition-colors touch-manipulation min-h-[32px]"
         >
-          Search: {filters.searchQuery}
-          <XCircle className="h-3 w-3 ml-0.5" />
+          <span className="whitespace-nowrap max-w-[120px] truncate">
+            Search: {filters.searchQuery}
+          </span>
+          <XCircle className="h-3 w-3 ml-0.5 flex-shrink-0" />
         </button>
       )}
       
@@ -104,10 +108,12 @@ export function ActiveFilterPills({
         <button
           key={`toolbar-filter-${type}-${value}-${index}`}
           onClick={() => onRemoveFilter(type, value)}
-          className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-green-50 hover:bg-green-100 text-green-600 hover:text-green-700 transition-colors"
+          className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-green-50 hover:bg-green-100 text-green-600 hover:text-green-700 transition-colors touch-manipulation min-h-[32px]"
         >
-          {value}
-          <XCircle className="h-3 w-3 ml-0.5" />
+          <span className="whitespace-nowrap max-w-[100px] truncate">
+            {value}
+          </span>
+          <XCircle className="h-3 w-3 ml-0.5 flex-shrink-0" />
         </button>
       ))}
     </div>
