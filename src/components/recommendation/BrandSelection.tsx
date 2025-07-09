@@ -47,7 +47,26 @@ export const BrandSelection: React.FC<BrandSelectionProps> = ({
       {/* Brand grid - Two columns */}
       <div className={`grid grid-cols-2 ${isMobile ? 'gap-2' : 'gap-3'}`}>
         {regularBrandOptions.slice(1).map((brand) => {
-          // Using the exact brand position from the screenshot
+          // Map brand names to their actual file names in storage
+          const brandFileMap: { [key: string]: string } = {
+            'Microsoft Surface': 'microsoft',
+            'ASUS': 'asus',
+            'HP': 'hp',
+            'Dell': 'dell',
+            'Lenovo': 'lenovo', 
+            'Apple': 'apple',
+            'MSI': 'msi',
+            'LG': 'lg',
+            'Samsung': 'samsung',
+            'Razer': 'razer',
+            'Acer': 'acer',
+            'Gigabyte': 'gigabyte',
+            'Toshiba': 'toshiba'
+          };
+          
+          const fileName = brandFileMap[brand] || brand.toLowerCase().replace(/ /g, '_');
+          const imageUrl = `https://kkebyebrhdpcwqnxhjcx.supabase.co/storage/v1/object/public/brand_logos/${fileName}.png`;
+          
           return (
             <Button
               key={brand}
@@ -62,7 +81,7 @@ export const BrandSelection: React.FC<BrandSelectionProps> = ({
               <div className="flex items-center min-w-0">
                 <div className="w-5 h-5 mr-2 flex-shrink-0 overflow-hidden">
                   <Image 
-                    src={`https://kkebyebrhdpcwqnxhjcx.supabase.co/storage/v1/object/public/brand_logos/${brand.toLowerCase().replace(/ /g, '_')}.png`} 
+                    src={imageUrl}
                     alt={brand}
                     className="w-full h-full object-contain"
                     width={20}
