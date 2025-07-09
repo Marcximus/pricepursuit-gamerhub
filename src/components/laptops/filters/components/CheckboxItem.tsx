@@ -57,7 +57,8 @@ export function CheckboxItem({ id, label, checked, onCheckedChange, showBrandLog
       'Kaigerr': 'Kaigerr.png',
       'NIMO': 'Nimo.png',
       'Nimo': 'Nimo.png',
-      'Others': 'Others.png'
+      'Others': 'Others.png',
+      'Other': 'Others.png'
     };
     
     const fileName = brandFileMap[brandName];
