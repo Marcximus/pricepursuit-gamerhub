@@ -24,15 +24,15 @@ export const BrandSelection: React.FC<BrandSelectionProps> = ({
         Do you have a preferred brand?
       </h2>
       
-      {/* Top row with No preference */}
-      <div className={`grid grid-cols-1 ${isMobile ? 'gap-2' : 'gap-3'} mb-3`}>
+      {/* Top row with No preference - Centered */}
+      <div className={`flex justify-center ${isMobile ? 'mb-3' : 'mb-4'}`}>
         <Button
           variant={selectedBrand === "No preference" ? "default" : "outline"}
           className={`justify-start text-left h-auto py-2 px-4 transition-all duration-200 hover:shadow-md ${
             selectedBrand === "No preference" 
               ? 'bg-blue-600 hover:bg-blue-700 text-white' 
               : 'bg-white/80 hover:bg-blue-50 text-gray-700 hover:text-blue-600 border-gray-200'
-          } rounded-xl`}
+          } rounded-xl min-w-[200px]`}
           onClick={() => onSelect("No preference")}
         >
           <div className="flex items-center">
