@@ -97,11 +97,16 @@ const RecommendationColumn: React.FC<RecommendationColumnProps> = ({
           href={`https://www.amazon.com/dp/${laptopAsin}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="block hover:opacity-80 transition-opacity"
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-primary">{laptopBrand}</span>
-          </div>
+          <span className="text-xs font-semibold text-primary">{laptopBrand}</span>
+        </a>
+        <a 
+          href={`https://www.amazon.com/dp/${laptopAsin}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:opacity-80 transition-opacity"
+        >
           <h4 className="font-semibold text-sm text-foreground line-clamp-2 leading-tight">
             {laptopTitle}
           </h4>
@@ -110,7 +115,7 @@ const RecommendationColumn: React.FC<RecommendationColumnProps> = ({
           href={`https://www.amazon.com/dp/${laptopAsin}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 hover:opacity-80 transition-opacity w-fit"
+          className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
         >
           <div className="flex">{renderStars(laptopRating)}</div>
           <span className="text-xs text-muted-foreground">
@@ -121,11 +126,9 @@ const RecommendationColumn: React.FC<RecommendationColumnProps> = ({
           href={`https://www.amazon.com/dp/${laptopAsin}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="block hover:opacity-80 transition-opacity w-fit"
+          className="text-xl font-bold text-primary hover:opacity-80 transition-opacity"
         >
-          <p className="text-xl font-bold text-primary">
-            ${laptopPrice.toFixed(2)}
-          </p>
+          ${laptopPrice.toFixed(2)}
         </a>
         
         <div className="mt-auto pt-3 space-y-3">
