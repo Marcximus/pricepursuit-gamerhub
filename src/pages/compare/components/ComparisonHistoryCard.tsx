@@ -91,10 +91,10 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
       
       confetti({
         particleCount: 10,
-        angle: Math.random() * 360,
+        angle: 90,
         spread: 360,
         startVelocity: 5,
-        gravity: 0.8,
+        gravity: 0.2,
         scalar: 0.9,
         drift: 0,
         shapes: ['star'],
