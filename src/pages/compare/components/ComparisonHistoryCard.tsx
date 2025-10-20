@@ -77,35 +77,35 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
               </Badge>
             )}
             
-            <div className="flex items-start gap-4">
-              <div className="flex-1 space-y-2">
+            <div className="flex items-start gap-3">
+              <div className="w-1/3 space-y-1.5">
                 <div>
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{comparison.leftLaptopBrand}</p>
-                  <h3 className="font-semibold text-foreground line-clamp-2 mt-0.5">
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{comparison.leftLaptopBrand}</p>
+                  <h3 className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5">
                     {comparison.leftLaptopModel}
                   </h3>
                 </div>
                 
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{formatPrice(comparison.leftLaptopPrice)}</p>
+                  <p className="text-xl font-bold text-foreground">{formatPrice(comparison.leftLaptopPrice)}</p>
                   {priceDiff.cheaper === 'left' && comparison.winner !== 'tie' && (
-                    <Badge className="mt-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs">
+                    <Badge className="mt-0.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs py-0 px-1.5">
                       {priceDiff.percentage}% cheaper
                     </Badge>
                   )}
                   
                   <Button 
                     asChild
-                    className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white shadow-sm py-1 h-8"
+                    className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white shadow-sm py-0.5 h-7"
                   >
                     <a 
                       href={getAffiliateLink(comparison.leftLaptopAsin)} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1 text-xs"
+                      className="flex items-center justify-center gap-1 text-[10px]"
                     >
                       Check It Out
-                      <Zap className="w-3 h-3 animate-pulse" />
+                      <Zap className="w-2.5 h-2.5 animate-pulse" />
                     </a>
                   </Button>
                 </div>
@@ -114,7 +114,7 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
               <img 
                 src={comparison.leftLaptopImage} 
                 alt={comparison.leftLaptopModel}
-                className="w-44 h-44 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
+                className="w-2/3 h-48 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
               />
             </div>
           </div>
@@ -140,35 +140,35 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
               </Badge>
             )}
             
-            <div className="flex items-start gap-4">
-              <div className="flex-1 space-y-2">
+            <div className="flex items-start gap-3">
+              <div className="w-1/3 space-y-1.5">
                 <div>
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{comparison.rightLaptopBrand}</p>
-                  <h3 className="font-semibold text-foreground line-clamp-2 mt-0.5">
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{comparison.rightLaptopBrand}</p>
+                  <h3 className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5">
                     {comparison.rightLaptopModel}
                   </h3>
                 </div>
                 
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{formatPrice(comparison.rightLaptopPrice)}</p>
+                  <p className="text-xl font-bold text-foreground">{formatPrice(comparison.rightLaptopPrice)}</p>
                   {priceDiff.cheaper === 'right' && comparison.winner !== 'tie' && (
-                    <Badge className="mt-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs">
+                    <Badge className="mt-0.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs py-0 px-1.5">
                       {priceDiff.percentage}% cheaper
                     </Badge>
                   )}
                   
                   <Button 
                     asChild
-                    className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white shadow-sm py-1 h-8"
+                    className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white shadow-sm py-0.5 h-7"
                   >
                     <a 
                       href={getAffiliateLink(comparison.rightLaptopAsin)} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1 text-xs"
+                      className="flex items-center justify-center gap-1 text-[10px]"
                     >
                       Check It Out
-                      <Zap className="w-3 h-3 animate-pulse" />
+                      <Zap className="w-2.5 h-2.5 animate-pulse" />
                     </a>
                   </Button>
                 </div>
@@ -177,7 +177,7 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
               <img 
                 src={comparison.rightLaptopImage} 
                 alt={comparison.rightLaptopModel}
-                className="w-44 h-44 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
+                className="w-2/3 h-48 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
               />
             </div>
           </div>
@@ -186,7 +186,7 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
         {/* Analysis Section */}
         <div className="mt-6 pt-6 border-t border-border space-y-3">
           <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-xl ${iconColors.bg} shadow-sm`}>
+            <div className={`p-2.5 rounded-xl ${iconColors.bg} shadow-sm animate-pulse`}>
               <DifferentiatorIcon className={`h-5 w-5 ${iconColors.icon}`} />
             </div>
             <h4 className="font-semibold text-foreground text-base">{comparison.keyDifferentiator}</h4>
@@ -198,11 +198,11 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
 
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Eye className="h-3 w-3" />
+              <Eye className="h-3 w-3 animate-pulse" />
               <span>{comparison.comparisonCount} comparisons</span>
             </div>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3" />
+              <TrendingUp className="h-3 w-3 animate-pulse" />
               <span>Popular</span>
             </div>
           </div>
