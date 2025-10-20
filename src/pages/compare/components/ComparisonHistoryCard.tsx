@@ -90,12 +90,12 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
       const y = rect.top + rect.height / 2;
       
       confetti({
-        particleCount: 3,
+        particleCount: 10,
         angle: Math.random() * 360,
         spread: 360,
-        startVelocity: 8,
+        startVelocity: 5,
         gravity: 0.8,
-        scalar: 0.5,
+        scalar: 0.9,
         drift: 0,
         shapes: ['star'],
         colors: ['#FFD700', '#FDB931', '#FFED4E', '#FFA500'],
@@ -103,7 +103,7 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
           x: x / window.innerWidth,
           y: y / window.innerHeight,
         },
-        ticks: 60,
+        ticks: 45,
       });
     };
 
