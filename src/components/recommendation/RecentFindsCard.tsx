@@ -78,53 +78,31 @@ const RecommendationColumn: React.FC<RecommendationColumnProps> = ({
         >
           Recommendation {badgeNumber}
         </div>
-        <a 
-          href={`https://www.amazon.com/dp/${laptopAsin}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block aspect-square bg-white rounded-lg p-4 border-2 hover:border-primary/50 transition-colors cursor-pointer"
-        >
+        <div className="aspect-square bg-white rounded-lg p-4 border-2 hover:border-primary/50 transition-colors">
           <img
             src={laptopImage}
             alt={laptopTitle}
             className="w-full h-full object-contain"
           />
-        </a>
+        </div>
       </div>
       
       <div className="flex-1 flex flex-col space-y-2">
-        <a 
-          href={`https://www.amazon.com/dp/${laptopAsin}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="cursor-pointer"
-        >
-          <div className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <span className="text-xs font-semibold text-primary">{laptopBrand}</span>
-          </div>
-          <h4 className="font-semibold text-sm text-foreground line-clamp-2 leading-tight hover:opacity-80 transition-opacity">
-            {laptopTitle}
-          </h4>
-        </a>
-        <a 
-          href={`https://www.amazon.com/dp/${laptopAsin}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity"
-        >
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-primary">{laptopBrand}</span>
+        </div>
+        <h4 className="font-semibold text-sm text-foreground line-clamp-2 leading-tight">
+          {laptopTitle}
+        </h4>
+        <div className="flex items-center gap-1.5">
           <div className="flex">{renderStars(laptopRating)}</div>
           <span className="text-xs text-muted-foreground">
             ({laptopReviews.toLocaleString()})
           </span>
-        </a>
-        <a 
-          href={`https://www.amazon.com/dp/${laptopAsin}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block text-xl font-bold text-primary cursor-pointer hover:opacity-80 transition-opacity"
-        >
+        </div>
+        <p className="text-xl font-bold text-primary">
           ${laptopPrice.toFixed(2)}
-        </a>
+        </p>
         
         <div className="mt-auto pt-3 space-y-3">
           <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-200">
