@@ -89,46 +89,55 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
       const x = rect.left + rect.width / 2;
       const y = rect.top + rect.height / 2;
       
+      // Random particle count for glittering effect
+      const particleCount = Math.floor(Math.random() * 8) + 3; // 3-10 particles
+      
       confetti({
-        particleCount: 10,
+        particleCount,
         angle: 90,
         spread: 360,
-        startVelocity: 5,
-        gravity: 0.2,
-        scalar: 0.9,
-        drift: 0,
+        startVelocity: Math.random() * 4 + 2, // 2-6 for varied speeds
+        gravity: 0.15, // Even lighter for more floating
+        scalar: 0.8 + Math.random() * 0.4, // 0.8-1.2 for size variety
+        drift: (Math.random() - 0.5) * 0.5, // Random drift for fluid motion
         shapes: ['star'],
         colors: ['#FFD700', '#FDB931', '#FFED4E', '#FFA500'],
         origin: {
           x: x / window.innerWidth,
           y: y / window.innerHeight,
         },
-        ticks: 45,
+        ticks: 50,
+        zIndex: 5, // Behind the winner badge (badge is z-10)
       });
     };
 
     const intervals: NodeJS.Timeout[] = [];
+    const timeouts: NodeJS.Timeout[] = [];
+
+    const scheduleRandomEmission = (element: HTMLDivElement) => {
+      const emit = () => {
+        if (element) {
+          emitStars(element);
+        }
+        // Random interval between 200-600ms for glittering effect
+        const nextDelay = Math.random() * 400 + 200;
+        const timeout = setTimeout(emit, nextDelay);
+        timeouts.push(timeout);
+      };
+      emit();
+    };
 
     if (comparison.winner === 'left' && leftBadgeRef.current) {
-      const interval = setInterval(() => {
-        if (leftBadgeRef.current) {
-          emitStars(leftBadgeRef.current);
-        }
-      }, 400);
-      intervals.push(interval);
+      scheduleRandomEmission(leftBadgeRef.current);
     }
 
     if (comparison.winner === 'right' && rightBadgeRef.current) {
-      const interval = setInterval(() => {
-        if (rightBadgeRef.current) {
-          emitStars(rightBadgeRef.current);
-        }
-      }, 400);
-      intervals.push(interval);
+      scheduleRandomEmission(rightBadgeRef.current);
     }
 
     return () => {
       intervals.forEach(interval => clearInterval(interval));
+      timeouts.forEach(timeout => clearTimeout(timeout));
     };
   }, [comparison.winner]);
 
