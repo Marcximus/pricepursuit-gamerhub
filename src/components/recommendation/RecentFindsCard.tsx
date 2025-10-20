@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Star, ExternalLink, Users, Sparkles, DollarSign, Monitor, Cpu, HardDrive, Tag } from 'lucide-react';
+import { Star, Zap, Users, Sparkles, DollarSign, Monitor, Cpu, HardDrive, Tag } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MockRecommendationFind } from './mockRecommendationData';
@@ -70,7 +70,11 @@ const RecommendationColumn: React.FC<RecommendationColumnProps> = ({
       <div className="relative mb-4">
         <div 
           ref={badgeRef}
-          className="mb-3 inline-flex bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg"
+          className={`mb-3 inline-flex text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg relative z-10 ${
+            badgeNumber === 1 
+              ? 'bg-gradient-to-r from-orange-400 via-yellow-500 to-amber-500' 
+              : 'bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600'
+          }`}
         >
           Recommendation {badgeNumber}
         </div>
@@ -114,7 +118,7 @@ const RecommendationColumn: React.FC<RecommendationColumnProps> = ({
             onClick={() => window.open(`https://www.amazon.com/dp/${laptopAsin}`, '_blank')}
           >
             Check It Out
-            <ExternalLink className="w-4 h-4 ml-2" />
+            <Zap className="w-4 h-4 ml-2 animate-pulse" />
           </Button>
         </div>
       </div>
@@ -127,7 +131,7 @@ const RecentFindsCard: React.FC<RecentFindsCardProps> = ({ find }) => {
   const rightBadgeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const emitStars = (element: HTMLDivElement) => {
+    const emitStars = (element: HTMLDivElement, colors: string[]) => {
       const rect = element.getBoundingClientRect();
       const x = rect.left + rect.width / 2;
       const y = rect.top + rect.height / 2;
@@ -143,22 +147,22 @@ const RecentFindsCard: React.FC<RecentFindsCardProps> = ({ find }) => {
         scalar: 0.8 + Math.random() * 0.4,
         drift: (Math.random() - 0.5) * 0.5,
         shapes: ['star'],
-        colors: ['#FFD700', '#FDB931', '#FFED4E', '#FFA500'],
+        colors: colors,
         origin: {
           x: x / window.innerWidth,
           y: y / window.innerHeight,
         },
         ticks: 50,
-        zIndex: 5,
+        zIndex: 1,
       });
     };
 
     const timeouts: NodeJS.Timeout[] = [];
 
-    const scheduleRandomEmission = (element: HTMLDivElement) => {
+    const scheduleRandomEmission = (element: HTMLDivElement, colors: string[]) => {
       const emit = () => {
         if (element) {
-          emitStars(element);
+          emitStars(element, colors);
         }
         const nextDelay = Math.random() * 400 + 200;
         const timeout = setTimeout(emit, nextDelay);
@@ -167,12 +171,14 @@ const RecentFindsCard: React.FC<RecentFindsCardProps> = ({ find }) => {
       emit();
     };
 
+    // Orange/yellow stars for Recommendation 1
     if (leftBadgeRef.current) {
-      scheduleRandomEmission(leftBadgeRef.current);
+      scheduleRandomEmission(leftBadgeRef.current, ['#FFA500', '#FFD700', '#FF8C00', '#FFED4E']);
     }
 
+    // Blue/purple stars for Recommendation 2
     if (rightBadgeRef.current) {
-      scheduleRandomEmission(rightBadgeRef.current);
+      scheduleRandomEmission(rightBadgeRef.current, ['#6366F1', '#8B5CF6', '#A855F7', '#7C3AED']);
     }
 
     return () => {
@@ -192,7 +198,7 @@ const RecentFindsCard: React.FC<RecentFindsCardProps> = ({ find }) => {
                 <Sparkles className="h-5 w-5 text-yellow-500" />
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">AI Match</span>
               </div>
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 bg-clip-text text-transparent">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 bg-clip-text text-transparent">
                 {find.headline}
               </h3>
             </div>
