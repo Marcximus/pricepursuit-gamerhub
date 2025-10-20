@@ -51,13 +51,6 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
     return `$${price.toLocaleString()}`;
   };
 
-  const getWinnerStyle = (side: 'left' | 'right') => {
-    if (comparison.winner === 'tie') return 'border-border';
-    return comparison.winner === side 
-      ? 'bg-gradient-to-br from-emerald-50/50 to-green-50/30 border-l-4 border-emerald-500 shadow-sm' 
-      : 'opacity-60 border-border';
-  };
-
   const getPriceDifference = () => {
     const diff = Math.abs(comparison.leftLaptopPrice - comparison.rightLaptopPrice);
     const cheaper = comparison.leftLaptopPrice < comparison.rightLaptopPrice ? 'left' : 'right';
@@ -74,119 +67,121 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.005] border-border bg-card">
       <CardContent className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-center">
           {/* Left Laptop */}
-          <div className={`space-y-3 p-5 rounded-lg border transition-all duration-300 ${getWinnerStyle('left')}`}>
-            <div className="flex items-center gap-3 mb-2">
+          <div className={`relative transition-all duration-300 ${comparison.winner === 'left' ? '' : comparison.winner === 'tie' ? '' : 'opacity-60'}`}>
+            {comparison.winner === 'left' && (
+              <Badge className="absolute -top-2 -right-2 bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg z-10">
+                <Trophy className="w-3 h-3 mr-1" />
+                Winner
+              </Badge>
+            )}
+            
+            <div className="flex items-start gap-4">
               <img 
                 src={comparison.leftLaptopImage} 
                 alt={comparison.leftLaptopModel}
-                className="w-20 h-20 object-cover rounded-lg border border-border shadow-sm hover:scale-105 transition-transform duration-200"
+                className="w-24 h-24 object-cover rounded-lg border border-border shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
               />
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{comparison.leftLaptopBrand}</p>
-                <h3 className="font-semibold text-foreground line-clamp-2 mt-0.5 text-sm">
-                  {comparison.leftLaptopModel}
-                </h3>
+              
+              <div className="flex-1 space-y-2">
+                <div>
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{comparison.leftLaptopBrand}</p>
+                  <h3 className="font-semibold text-foreground line-clamp-2 mt-0.5">
+                    {comparison.leftLaptopModel}
+                  </h3>
+                </div>
+                
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{formatPrice(comparison.leftLaptopPrice)}</p>
+                  {priceDiff.cheaper === 'left' && comparison.winner !== 'tie' && (
+                    <Badge className="mt-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs">
+                      {priceDiff.percentage}% cheaper
+                    </Badge>
+                  )}
+                </div>
+                
+                <Button 
+                  asChild
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                  size="sm"
+                >
+                  <a 
+                    href={getAffiliateLink(comparison.leftLaptopAsin)} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2"
+                  >
+                    Check It Out
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </Button>
               </div>
             </div>
-            
-            <div className="flex items-baseline justify-between">
-              <div>
-                <p className="text-2xl font-bold text-foreground">{formatPrice(comparison.leftLaptopPrice)}</p>
-                {priceDiff.cheaper === 'left' && comparison.winner !== 'tie' && (
-                  <Badge className="mt-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs">
-                    {priceDiff.percentage}% cheaper
-                  </Badge>
-                )}
-              </div>
-              {comparison.winner === 'left' && (
-                <Badge className="bg-emerald-600 text-white hover:bg-emerald-700 shrink-0 shadow-sm">
-                  <Trophy className="w-3 h-3 mr-1" />
-                  Winner
-                </Badge>
-              )}
-            </div>
-            
-            <Button 
-              asChild
-              className="w-full mt-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
-              size="sm"
-            >
-              <a 
-                href={getAffiliateLink(comparison.leftLaptopAsin)} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2"
-              >
-                Check It Out
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </Button>
           </div>
 
           {/* VS Divider */}
-          <div className="flex flex-col items-center justify-center md:mx-4 my-4 md:my-0">
-            <div className="relative">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border-2 border-primary/30 shadow-sm">
-                <span className="text-sm font-bold text-primary">VS</span>
-              </div>
+          <div className="flex items-center justify-center md:mx-4 my-4 md:my-0">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border-2 border-primary/30 shadow-sm">
+              <span className="text-sm font-bold text-primary">VS</span>
             </div>
           </div>
 
           {/* Right Laptop */}
-          <div className={`space-y-3 p-5 rounded-lg border transition-all duration-300 ${getWinnerStyle('right')}`}>
-            <div className="flex items-center gap-3 mb-2">
+          <div className={`relative transition-all duration-300 ${comparison.winner === 'right' ? '' : comparison.winner === 'tie' ? '' : 'opacity-60'}`}>
+            {comparison.winner === 'right' && (
+              <Badge className="absolute -top-2 -right-2 bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg z-10">
+                <Trophy className="w-3 h-3 mr-1" />
+                Winner
+              </Badge>
+            )}
+            {comparison.winner === 'tie' && (
+              <Badge variant="secondary" className="absolute -top-2 -right-2 shadow-lg z-10 border border-border">
+                Tie
+              </Badge>
+            )}
+            
+            <div className="flex items-start gap-4">
               <img 
                 src={comparison.rightLaptopImage} 
                 alt={comparison.rightLaptopModel}
-                className="w-20 h-20 object-cover rounded-lg border border-border shadow-sm hover:scale-105 transition-transform duration-200"
+                className="w-24 h-24 object-cover rounded-lg border border-border shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
               />
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{comparison.rightLaptopBrand}</p>
-                <h3 className="font-semibold text-foreground line-clamp-2 mt-0.5 text-sm">
-                  {comparison.rightLaptopModel}
-                </h3>
+              
+              <div className="flex-1 space-y-2">
+                <div>
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{comparison.rightLaptopBrand}</p>
+                  <h3 className="font-semibold text-foreground line-clamp-2 mt-0.5">
+                    {comparison.rightLaptopModel}
+                  </h3>
+                </div>
+                
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{formatPrice(comparison.rightLaptopPrice)}</p>
+                  {priceDiff.cheaper === 'right' && comparison.winner !== 'tie' && (
+                    <Badge className="mt-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs">
+                      {priceDiff.percentage}% cheaper
+                    </Badge>
+                  )}
+                </div>
+                
+                <Button 
+                  asChild
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                  size="sm"
+                >
+                  <a 
+                    href={getAffiliateLink(comparison.rightLaptopAsin)} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2"
+                  >
+                    Check It Out
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </Button>
               </div>
             </div>
-            
-            <div className="flex items-baseline justify-between">
-              <div>
-                <p className="text-2xl font-bold text-foreground">{formatPrice(comparison.rightLaptopPrice)}</p>
-                {priceDiff.cheaper === 'right' && comparison.winner !== 'tie' && (
-                  <Badge className="mt-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs">
-                    {priceDiff.percentage}% cheaper
-                  </Badge>
-                )}
-              </div>
-              {comparison.winner === 'right' && (
-                <Badge className="bg-emerald-600 text-white hover:bg-emerald-700 shrink-0 shadow-sm">
-                  <Trophy className="w-3 h-3 mr-1" />
-                  Winner
-                </Badge>
-              )}
-              {comparison.winner === 'tie' && (
-                <Badge variant="secondary" className="shrink-0 shadow-sm border border-border">
-                  Tie
-                </Badge>
-              )}
-            </div>
-            
-            <Button 
-              asChild
-              className="w-full mt-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
-              size="sm"
-            >
-              <a 
-                href={getAffiliateLink(comparison.rightLaptopAsin)} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2"
-              >
-                Check It Out
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </Button>
           </div>
         </div>
 
