@@ -93,23 +93,23 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
                       {priceDiff.percentage}% cheaper
                     </Badge>
                   )}
-                </div>
-                
-                <Button 
-                  asChild
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
-                  size="sm"
-                >
-                  <a 
-                    href={getAffiliateLink(comparison.leftLaptopAsin)} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2"
+                  
+                  <Button 
+                    asChild
+                    className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                    size="sm"
                   >
-                    Check It Out
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </Button>
+                    <a 
+                      href={getAffiliateLink(comparison.leftLaptopAsin)} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 text-sm"
+                    >
+                      Check It Out
+                      <Zap className="w-3.5 h-3.5 animate-pulse" />
+                    </a>
+                  </Button>
+                </div>
               </div>
               
               <img 
@@ -157,23 +157,23 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
                       {priceDiff.percentage}% cheaper
                     </Badge>
                   )}
-                </div>
-                
-                <Button 
-                  asChild
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
-                  size="sm"
-                >
-                  <a 
-                    href={getAffiliateLink(comparison.rightLaptopAsin)} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2"
+                  
+                  <Button 
+                    asChild
+                    className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                    size="sm"
                   >
-                    Check It Out
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </Button>
+                    <a 
+                      href={getAffiliateLink(comparison.rightLaptopAsin)} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 text-sm"
+                    >
+                      Check It Out
+                      <Zap className="w-3.5 h-3.5 animate-pulse" />
+                    </a>
+                  </Button>
+                </div>
               </div>
               
               <img 
