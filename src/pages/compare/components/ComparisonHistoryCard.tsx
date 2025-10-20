@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, DollarSign, Zap, Battery, Feather, TrendingUp, Eye, ExternalLink, Star } from "lucide-react";
 import type { MockComparisonItem } from "../mockComparisonData";
 import { getAffiliateUrl } from "../utils/affiliateUtils";
+import confetti from "canvas-confetti";
 
 interface ComparisonHistoryCardProps {
   comparison: MockComparisonItem;
@@ -64,6 +65,8 @@ const renderStars = (rating: number) => {
 const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ comparison }) => {
   const DifferentiatorIcon = getDifferentiatorIcon(comparison.keyDifferentiator);
   const iconColors = getDifferentiatorIconColor(comparison.keyDifferentiator);
+  const leftBadgeRef = useRef<HTMLDivElement>(null);
+  const rightBadgeRef = useRef<HTMLDivElement>(null);
   
   const formatPrice = (price: number) => {
     return `$${price.toLocaleString()}`;
@@ -80,6 +83,53 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
     return getAffiliateUrl({ asin } as any);
   };
 
+  useEffect(() => {
+    const emitStars = (element: HTMLDivElement) => {
+      const rect = element.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      
+      confetti({
+        particleCount: 2,
+        spread: 60,
+        startVelocity: 15,
+        gravity: 0.5,
+        scalar: 0.6,
+        shapes: ['star'],
+        colors: ['#FFD700', '#FDB931', '#FFED4E'],
+        origin: {
+          x: x / window.innerWidth,
+          y: y / window.innerHeight,
+        },
+        ticks: 100,
+      });
+    };
+
+    const intervals: NodeJS.Timeout[] = [];
+
+    if (comparison.winner === 'left' && leftBadgeRef.current) {
+      const interval = setInterval(() => {
+        if (leftBadgeRef.current) {
+          emitStars(leftBadgeRef.current);
+        }
+      }, 800);
+      intervals.push(interval);
+    }
+
+    if (comparison.winner === 'right' && rightBadgeRef.current) {
+      const interval = setInterval(() => {
+        if (rightBadgeRef.current) {
+          emitStars(rightBadgeRef.current);
+        }
+      }, 800);
+      intervals.push(interval);
+    }
+
+    return () => {
+      intervals.forEach(interval => clearInterval(interval));
+    };
+  }, [comparison.winner]);
+
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.005] border-border bg-card">
       <CardContent className="p-6">
@@ -87,10 +137,13 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
           {/* Left Laptop */}
           <div className={`relative transition-all duration-300 ${comparison.winner === 'left' ? '' : comparison.winner === 'tie' ? '' : 'opacity-60'}`}>
             {comparison.winner === 'left' && (
-              <Badge className="absolute -top-2 -right-2 bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg z-10">
-                <Trophy className="w-3 h-3 mr-1" />
-                Winner
-              </Badge>
+              <div 
+                ref={leftBadgeRef}
+                className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-white px-3 py-1 rounded-full flex items-center gap-1 shadow-lg z-10 animate-pulse"
+              >
+                <Trophy className="w-3 h-3" />
+                <span className="text-sm font-semibold">Winner</span>
+              </div>
             )}
             
             <div className="flex items-stretch gap-3 h-48">
@@ -157,10 +210,13 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
           {/* Right Laptop */}
           <div className={`relative transition-all duration-300 ${comparison.winner === 'right' ? '' : comparison.winner === 'tie' ? '' : 'opacity-60'}`}>
             {comparison.winner === 'right' && (
-              <Badge className="absolute -top-2 -right-2 bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg z-10">
-                <Trophy className="w-3 h-3 mr-1" />
-                Winner
-              </Badge>
+              <div 
+                ref={rightBadgeRef}
+                className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-white px-3 py-1 rounded-full flex items-center gap-1 shadow-lg z-10 animate-pulse"
+              >
+                <Trophy className="w-3 h-3" />
+                <span className="text-sm font-semibold">Winner</span>
+              </div>
             )}
             {comparison.winner === 'tie' && (
               <Badge variant="secondary" className="absolute -top-2 -right-2 shadow-lg z-10 border border-border">
