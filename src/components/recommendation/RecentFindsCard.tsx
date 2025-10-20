@@ -1,7 +1,6 @@
 import React, { useRef, useEffect } from 'react';
-import { Star, ExternalLink, Users, Sparkles } from 'lucide-react';
+import { Star, ExternalLink, Users, Sparkles, DollarSign, Monitor, Cpu, HardDrive, Tag } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MockRecommendationFind } from './mockRecommendationData';
 import confetti from 'canvas-confetti';
@@ -9,6 +8,119 @@ import confetti from 'canvas-confetti';
 interface RecentFindsCardProps {
   find: MockRecommendationFind;
 }
+
+interface PreferenceRowProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}
+
+const PreferenceRow: React.FC<PreferenceRowProps> = ({ icon, label, value }) => {
+  return (
+    <div className="flex items-start gap-3 py-2.5 border-b border-border/50 last:border-0 hover:bg-accent/30 transition-colors rounded px-2">
+      <div className="text-muted-foreground shrink-0 mt-0.5">
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-xs font-medium text-muted-foreground mb-0.5">{label}</div>
+        <div className="text-sm font-medium text-foreground">{value}</div>
+      </div>
+    </div>
+  );
+};
+
+interface RecommendationColumnProps {
+  badgeNumber: number;
+  laptopTitle: string;
+  laptopBrand: string;
+  laptopAsin: string;
+  laptopImage: string;
+  laptopRating: number;
+  laptopReviews: number;
+  laptopPrice: number;
+  matchReason: string;
+  badgeRef: React.RefObject<HTMLDivElement>;
+}
+
+const RecommendationColumn: React.FC<RecommendationColumnProps> = ({
+  badgeNumber,
+  laptopTitle,
+  laptopBrand,
+  laptopAsin,
+  laptopImage,
+  laptopRating,
+  laptopReviews,
+  laptopPrice,
+  matchReason,
+  badgeRef,
+}) => {
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        className={`w-3.5 h-3.5 ${
+          i < Math.floor(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+        }`}
+      />
+    ));
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="relative mb-4">
+        <div 
+          ref={badgeRef}
+          className="mb-3 inline-flex bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg"
+        >
+          Recommendation {badgeNumber}
+        </div>
+        <div className="aspect-square bg-white rounded-lg p-4 border-2 hover:border-primary/50 transition-colors">
+          <img
+            src={laptopImage}
+            alt={laptopTitle}
+            className="w-full h-full object-contain"
+          />
+        </div>
+      </div>
+      
+      <div className="flex-1 flex flex-col space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-primary">{laptopBrand}</span>
+        </div>
+        <h4 className="font-semibold text-sm text-foreground line-clamp-2 leading-tight">
+          {laptopTitle}
+        </h4>
+        <div className="flex items-center gap-1.5">
+          <div className="flex">{renderStars(laptopRating)}</div>
+          <span className="text-xs text-muted-foreground">
+            ({laptopReviews.toLocaleString()})
+          </span>
+        </div>
+        <p className="text-xl font-bold text-primary">
+          ${laptopPrice.toFixed(2)}
+        </p>
+        
+        <div className="mt-auto pt-3 space-y-3">
+          <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-200">
+            <div className="flex items-start gap-2">
+              <Sparkles className="w-4 h-4 text-yellow-600 shrink-0 mt-0.5" />
+              <p className="text-xs text-muted-foreground leading-relaxed">{matchReason}</p>
+            </div>
+          </div>
+          
+          <Button
+            className="w-full bg-green-600 hover:bg-green-700 text-white"
+            size="sm"
+            onClick={() => window.open(`https://www.amazon.com/dp/${laptopAsin}`, '_blank')}
+          >
+            Check It Out
+            <ExternalLink className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const RecentFindsCard: React.FC<RecentFindsCardProps> = ({ find }) => {
   const leftBadgeRef = useRef<HTMLDivElement>(null);
@@ -20,17 +132,16 @@ const RecentFindsCard: React.FC<RecentFindsCardProps> = ({ find }) => {
       const x = rect.left + rect.width / 2;
       const y = rect.top + rect.height / 2;
       
-      // Random particle count for glittering effect
-      const particleCount = Math.floor(Math.random() * 8) + 3; // 3-10 particles
+      const particleCount = Math.floor(Math.random() * 8) + 3;
       
       confetti({
         particleCount,
         angle: 90,
         spread: 360,
-        startVelocity: Math.random() * 4 + 2, // 2-6 for varied speeds
-        gravity: 0.15, // Light for floating effect
-        scalar: 0.8 + Math.random() * 0.4, // 0.8-1.2 for size variety
-        drift: (Math.random() - 0.5) * 0.5, // Random drift for fluid motion
+        startVelocity: Math.random() * 4 + 2,
+        gravity: 0.15,
+        scalar: 0.8 + Math.random() * 0.4,
+        drift: (Math.random() - 0.5) * 0.5,
         shapes: ['star'],
         colors: ['#FFD700', '#FDB931', '#FFED4E', '#FFA500'],
         origin: {
@@ -38,7 +149,7 @@ const RecentFindsCard: React.FC<RecentFindsCardProps> = ({ find }) => {
           y: y / window.innerHeight,
         },
         ticks: 50,
-        zIndex: 5, // Behind the badges (badges are z-10)
+        zIndex: 5,
       });
     };
 
@@ -49,7 +160,6 @@ const RecentFindsCard: React.FC<RecentFindsCardProps> = ({ find }) => {
         if (element) {
           emitStars(element);
         }
-        // Random interval between 200-600ms for glittering effect
         const nextDelay = Math.random() * 400 + 200;
         const timeout = setTimeout(emit, nextDelay);
         timeouts.push(timeout);
@@ -70,139 +180,104 @@ const RecentFindsCard: React.FC<RecentFindsCardProps> = ({ find }) => {
     };
   }, []);
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`w-4 h-4 ${
-          i < Math.floor(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-        }`}
-      />
-    ));
-  };
-
-  const usageColors: Record<string, string> = {
-    Gaming: 'bg-purple-100 text-purple-700 border-purple-300',
-    Business: 'bg-blue-100 text-blue-700 border-blue-300',
-    Student: 'bg-green-100 text-green-700 border-green-300',
-    'Creative Work': 'bg-pink-100 text-pink-700 border-pink-300',
-    'Everyday Use': 'bg-amber-100 text-amber-700 border-amber-300',
-  };
-
   return (
-    <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border-2">
-      <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 p-4 border-b">
-        <div className="flex items-center justify-between">
-          <Badge className={`${usageColors[find.usage] || 'bg-gray-100 text-gray-700'} border`}>
-            {find.usage}
-          </Badge>
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Users className="w-4 h-4" />
-            <span className="font-medium">{find.findCount.toLocaleString()}</span>
-            <span>finds</span>
-          </div>
-        </div>
-      </div>
-
+    <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-2">
       <CardContent className="p-6">
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          {/* Laptop 1 */}
-          <div className="space-y-4">
-            <div className="relative">
-              <div 
-                ref={leftBadgeRef}
-                className="absolute top-2 left-2 z-10 bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg"
-              >
-                Recommendation 1
+        <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+          {/* Left Column - User Preferences (40%) */}
+          <div className="lg:col-span-4 space-y-4">
+            {/* AI-Generated Headline */}
+            <div className="mb-4 pb-4 border-b border-border">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="h-5 w-5 text-yellow-500" />
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">AI Match</span>
               </div>
-              <div className="aspect-square bg-white rounded-lg p-4 border-2 hover:border-primary/50 transition-colors">
-                <img
-                  src={find.laptop1Image}
-                  alt={find.laptop1Title}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-primary">{find.laptop1Brand}</span>
-              </div>
-              <h3 className="font-semibold text-foreground line-clamp-2 leading-tight">
-                {find.laptop1Title}
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 bg-clip-text text-transparent">
+                {find.headline}
               </h3>
-              <div className="flex items-center gap-2">
-                <div className="flex">{renderStars(find.laptop1Rating)}</div>
-                <span className="text-sm text-muted-foreground">
-                  ({find.laptop1Reviews.toLocaleString()})
+            </div>
+            
+            {/* User Preferences */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  User Preferences
                 </span>
               </div>
-              <p className="text-2xl font-bold text-primary">
-                ${find.laptop1Price.toFixed(2)}
-              </p>
-              <Button
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-                onClick={() => window.open(`https://www.amazon.com/dp/${find.laptop1Asin}`, '_blank')}
-              >
-                Check It Out
-                <ExternalLink className="w-4 h-4 ml-2" />
-              </Button>
+              
+              <PreferenceRow 
+                icon={<Tag className="w-4 h-4" />}
+                label="Use"
+                value={find.usage}
+              />
+              <PreferenceRow 
+                icon={<DollarSign className="w-4 h-4" />}
+                label="Price Range"
+                value={find.priceRange}
+              />
+              <PreferenceRow 
+                icon={<Tag className="w-4 h-4" />}
+                label="Preferred Brand"
+                value={find.brand}
+              />
+              <PreferenceRow 
+                icon={<Monitor className="w-4 h-4" />}
+                label="Screen Size"
+                value={find.screenSize}
+              />
+              <PreferenceRow 
+                icon={<Cpu className="w-4 h-4" />}
+                label="Graphics"
+                value={find.graphics}
+              />
+              <PreferenceRow 
+                icon={<HardDrive className="w-4 h-4" />}
+                label="Storage"
+                value={find.storage}
+              />
+            </div>
+            
+            {/* Find Count */}
+            <div className="pt-3 mt-3 border-t border-border">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Users className="w-4 h-4" />
+                <span className="font-medium">{find.findCount.toLocaleString()}</span>
+                <span>people found similar matches</span>
+              </div>
             </div>
           </div>
-
-          {/* Laptop 2 */}
-          <div className="space-y-4">
-            <div className="relative">
-              <div 
-                ref={rightBadgeRef}
-                className="absolute top-2 right-2 z-10 bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg"
-              >
-                Recommendation 2
-              </div>
-              <div className="aspect-square bg-white rounded-lg p-4 border-2 hover:border-primary/50 transition-colors">
-                <img
-                  src={find.laptop2Image}
-                  alt={find.laptop2Title}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-primary">{find.laptop2Brand}</span>
-              </div>
-              <h3 className="font-semibold text-foreground line-clamp-2 leading-tight">
-                {find.laptop2Title}
-              </h3>
-              <div className="flex items-center gap-2">
-                <div className="flex">{renderStars(find.laptop2Rating)}</div>
-                <span className="text-sm text-muted-foreground">
-                  ({find.laptop2Reviews.toLocaleString()})
-                </span>
-              </div>
-              <p className="text-2xl font-bold text-primary">
-                ${find.laptop2Price.toFixed(2)}
-              </p>
-              <Button
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-                onClick={() => window.open(`https://www.amazon.com/dp/${find.laptop2Asin}`, '_blank')}
-              >
-                Check It Out
-                <ExternalLink className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
+          
+          {/* Middle Column - Recommendation 1 (30%) */}
+          <div className="lg:col-span-3">
+            <RecommendationColumn
+              badgeNumber={1}
+              laptopTitle={find.laptop1Title}
+              laptopBrand={find.laptop1Brand}
+              laptopAsin={find.laptop1Asin}
+              laptopImage={find.laptop1Image}
+              laptopRating={find.laptop1Rating}
+              laptopReviews={find.laptop1Reviews}
+              laptopPrice={find.laptop1Price}
+              matchReason={find.matchReason1}
+              badgeRef={leftBadgeRef}
+            />
           </div>
-        </div>
-
-        {/* Match Reason */}
-        <div className="mt-6 p-4 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg border border-yellow-200">
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-yellow-100 rounded-lg shrink-0">
-              <Sparkles className="w-5 h-5 text-yellow-600" />
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-1">Why These Laptops?</h4>
-              <p className="text-sm text-muted-foreground">{find.matchReason}</p>
-            </div>
+          
+          {/* Right Column - Recommendation 2 (30%) */}
+          <div className="lg:col-span-3">
+            <RecommendationColumn
+              badgeNumber={2}
+              laptopTitle={find.laptop2Title}
+              laptopBrand={find.laptop2Brand}
+              laptopAsin={find.laptop2Asin}
+              laptopImage={find.laptop2Image}
+              laptopRating={find.laptop2Rating}
+              laptopReviews={find.laptop2Reviews}
+              laptopPrice={find.laptop2Price}
+              matchReason={find.matchReason2}
+              badgeRef={rightBadgeRef}
+            />
           </div>
         </div>
       </CardContent>
