@@ -50,11 +50,11 @@ const renderStars = (rating: number) => {
   
   for (let i = 0; i < 5; i++) {
     if (i < fullStars) {
-      stars.push(<Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />);
+      stars.push(<Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />);
     } else if (i === fullStars && hasHalfStar) {
-      stars.push(<Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" style={{ clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' }} />);
+      stars.push(<Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" style={{ clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' }} />);
     } else {
-      stars.push(<Star key={i} className="w-4 h-4 text-gray-300" />);
+      stars.push(<Star key={i} className="w-3 h-3 text-gray-300" />);
     }
   }
   
@@ -83,185 +83,167 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.005] border-border bg-card">
       <CardContent className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 md:gap-6">
-          {/* Left Laptop Card */}
-          <div className="relative">
-            <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] h-full">
-              {/* Winner Badge */}
-              {comparison.winner === 'left' && (
-                <div className="absolute top-3 right-3 z-10 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg animate-fade-in">
-                  <Trophy className="w-4 h-4" />
-                  <span className="text-sm font-semibold">Winner</span>
-                </div>
-              )}
-
-              {/* Image Section */}
-              <a 
-                href={getAffiliateLink(comparison.leftLaptopAsin)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full aspect-[4/3] overflow-hidden group"
-              >
-                <img 
-                  src={comparison.leftLaptopImage} 
-                  alt={comparison.leftLaptopModel}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-              </a>
-
-              {/* Info Section */}
-              <div className="p-5 space-y-3">
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
-                    {comparison.leftLaptopBrand}
-                  </p>
-                  <h3 className="text-lg font-bold text-foreground line-clamp-2 mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-center">
+          {/* Left Laptop */}
+          <div className={`relative transition-all duration-300 ${comparison.winner === 'left' ? '' : comparison.winner === 'tie' ? '' : 'opacity-60'}`}>
+            {comparison.winner === 'left' && (
+              <Badge className="absolute -top-2 -right-2 bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg z-10">
+                <Trophy className="w-3 h-3 mr-1" />
+                Winner
+              </Badge>
+            )}
+            
+            <div className="flex items-stretch gap-3 h-48">
+              <div className="w-1/3 flex flex-col justify-end">
+                <a 
+                  href={getAffiliateLink(comparison.leftLaptopAsin)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col space-y-1.5 mb-2 hover:opacity-80 transition-opacity"
+                >
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{comparison.leftLaptopBrand}</p>
+                  <h3 className="text-sm font-semibold text-foreground line-clamp-2">
                     {comparison.leftLaptopModel}
                   </h3>
-                </div>
-                
-                <div className="flex items-center gap-1.5">
-                  <div className="flex items-center">
+                  
+                  <p className="text-xl font-bold text-foreground">{formatPrice(comparison.leftLaptopPrice)}</p>
+                  
+                  <div className="flex items-center gap-1">
                     {renderStars(comparison.leftLaptopRating)}
+                    <span className="text-[10px] text-muted-foreground ml-1">
+                      ({formatReviews(comparison.leftLaptopReviews)})
+                    </span>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    ({formatReviews(comparison.leftLaptopReviews)} reviews)
-                  </span>
-                </div>
+                </a>
                 
-                <p className="text-3xl font-bold text-foreground">
-                  {formatPrice(comparison.leftLaptopPrice)}
-                </p>
-              </div>
-
-              {/* Button Section */}
-              <div className="p-5 pt-0">
                 <Button 
                   asChild
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md hover:shadow-lg h-11 transition-all duration-200"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white shadow-sm py-1.5 h-9"
                 >
                   <a 
                     href={getAffiliateLink(comparison.leftLaptopAsin)} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 text-sm font-semibold"
+                    className="flex items-center justify-center gap-1.5 text-xs font-semibold"
                   >
                     Check It Out
-                    <Zap className="w-4 h-4 animate-pulse" />
+                    <Zap className="w-3.5 h-3.5 animate-pulse" />
                   </a>
                 </Button>
               </div>
-            </Card>
-          </div>
-
-          {/* VS Divider */}
-          <div className="flex items-center justify-center">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border-2 border-primary/30">
-              <span className="text-lg font-bold text-primary">VS</span>
+              
+              <a 
+                href={getAffiliateLink(comparison.leftLaptopAsin)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-2/3 block"
+              >
+                <img 
+                  src={comparison.leftLaptopImage} 
+                  alt={comparison.leftLaptopModel}
+                  className="w-full h-48 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200"
+                />
+              </a>
             </div>
           </div>
 
-          {/* Right Laptop Card */}
-          <div className="relative">
-            <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] h-full">
-              {/* Winner Badge */}
-              {comparison.winner === 'right' && (
-                <div className="absolute top-3 right-3 z-10 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg animate-fade-in">
-                  <Trophy className="w-4 h-4" />
-                  <span className="text-sm font-semibold">Winner</span>
-                </div>
-              )}
-              {comparison.winner === 'tie' && (
-                <div className="absolute top-3 right-3 z-10 bg-gradient-to-r from-sky-100 to-amber-100 text-slate-800 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg animate-fade-in border border-slate-200">
-                  <span className="text-sm font-semibold">Tie</span>
-                </div>
-              )}
+          {/* VS Divider */}
+          <div className="flex items-center justify-center md:mx-4 my-4 md:my-0">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border-2 border-primary/30 shadow-sm">
+              <span className="text-sm font-bold text-primary">VS</span>
+            </div>
+          </div>
 
-              {/* Image Section */}
-              <a 
-                href={getAffiliateLink(comparison.rightLaptopAsin)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full aspect-[4/3] overflow-hidden group"
-              >
-                <img 
-                  src={comparison.rightLaptopImage} 
-                  alt={comparison.rightLaptopModel}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-              </a>
-
-              {/* Info Section */}
-              <div className="p-5 space-y-3">
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
-                    {comparison.rightLaptopBrand}
-                  </p>
-                  <h3 className="text-lg font-bold text-foreground line-clamp-2 mb-2">
+          {/* Right Laptop */}
+          <div className={`relative transition-all duration-300 ${comparison.winner === 'right' ? '' : comparison.winner === 'tie' ? '' : 'opacity-60'}`}>
+            {comparison.winner === 'right' && (
+              <Badge className="absolute -top-2 -right-2 bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg z-10">
+                <Trophy className="w-3 h-3 mr-1" />
+                Winner
+              </Badge>
+            )}
+            {comparison.winner === 'tie' && (
+              <Badge variant="secondary" className="absolute -top-2 -right-2 shadow-lg z-10 border border-border">
+                Tie
+              </Badge>
+            )}
+            
+            <div className="flex items-stretch gap-3 h-48">
+              <div className="w-1/3 flex flex-col justify-end">
+                <a 
+                  href={getAffiliateLink(comparison.rightLaptopAsin)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col space-y-1.5 mb-2 hover:opacity-80 transition-opacity"
+                >
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{comparison.rightLaptopBrand}</p>
+                  <h3 className="text-sm font-semibold text-foreground line-clamp-2">
                     {comparison.rightLaptopModel}
                   </h3>
-                </div>
-                
-                <div className="flex items-center gap-1.5">
-                  <div className="flex items-center">
+                  
+                  <p className="text-xl font-bold text-foreground">{formatPrice(comparison.rightLaptopPrice)}</p>
+                  
+                  <div className="flex items-center gap-1">
                     {renderStars(comparison.rightLaptopRating)}
+                    <span className="text-[10px] text-muted-foreground ml-1">
+                      ({formatReviews(comparison.rightLaptopReviews)})
+                    </span>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    ({formatReviews(comparison.rightLaptopReviews)} reviews)
-                  </span>
-                </div>
+                </a>
                 
-                <p className="text-3xl font-bold text-foreground">
-                  {formatPrice(comparison.rightLaptopPrice)}
-                </p>
-              </div>
-
-              {/* Button Section */}
-              <div className="p-5 pt-0">
                 <Button 
                   asChild
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md hover:shadow-lg h-11 transition-all duration-200"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white shadow-sm py-1.5 h-9"
                 >
                   <a 
                     href={getAffiliateLink(comparison.rightLaptopAsin)} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 text-sm font-semibold"
+                    className="flex items-center justify-center gap-1.5 text-xs font-semibold"
                   >
                     Check It Out
-                    <Zap className="w-4 h-4 animate-pulse" />
+                    <Zap className="w-3.5 h-3.5 animate-pulse" />
                   </a>
                 </Button>
               </div>
-            </Card>
+              
+              <a 
+                href={getAffiliateLink(comparison.rightLaptopAsin)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-2/3 block"
+              >
+                <img 
+                  src={comparison.rightLaptopImage} 
+                  alt={comparison.rightLaptopModel}
+                  className="w-full h-48 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200"
+                />
+              </a>
+            </div>
           </div>
         </div>
 
         {/* Analysis Section */}
-        <div className="mt-8 pt-6 border-t border-border">
-          <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-6 rounded-xl space-y-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-xl ${iconColors.bg} shadow-md animate-pulse`}>
-                <DifferentiatorIcon className={`h-6 w-6 ${iconColors.icon}`} />
-              </div>
-              <h4 className="font-bold text-foreground text-lg">
-                {comparison.keyDifferentiator}
-              </h4>
+        <div className="mt-6 pt-6 border-t border-border space-y-3">
+          <div className="flex items-center gap-3">
+            <div className={`p-2.5 rounded-xl ${iconColors.bg} shadow-sm animate-pulse`}>
+              <DifferentiatorIcon className={`h-5 w-5 ${iconColors.icon}`} />
             </div>
-            
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {comparison.analysisSummary}
-            </p>
+            <h4 className="font-semibold text-foreground text-base">{comparison.keyDifferentiator}</h4>
+          </div>
+          
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {comparison.analysisSummary}
+          </p>
 
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Eye className="h-4 w-4 animate-pulse" />
-                <span>{comparison.comparisonCount} comparisons</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-sm text-primary font-medium">
-                <TrendingUp className="h-4 w-4 animate-pulse" />
-                <span>Trending</span>
-              </div>
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Eye className="h-3 w-3 animate-pulse" />
+              <span>{comparison.comparisonCount} comparisons</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <TrendingUp className="h-3 w-3 animate-pulse" />
+              <span>Popular</span>
             </div>
           </div>
         </div>
