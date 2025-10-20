@@ -197,7 +197,7 @@ const RecentFindsCard: React.FC<RecentFindsCardProps> = ({ find }) => {
             <div className="mb-4 pb-4 border-b border-border">
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="h-5 w-5 text-yellow-500" />
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">AI Match</span>
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Our Recommendation for a</span>
               </div>
               <h3 className="text-2xl font-bold bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 bg-clip-text text-transparent">
                 {find.headline}
