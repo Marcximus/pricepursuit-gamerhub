@@ -133,8 +133,9 @@ const RecentFindsCard: React.FC<RecentFindsCardProps> = ({ find }) => {
   useEffect(() => {
     const emitStars = (element: HTMLDivElement, colors: string[]) => {
       const rect = element.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
+      // Emit from random position within the badge
+      const x = rect.left + Math.random() * rect.width;
+      const y = rect.top + Math.random() * rect.height;
       
       const particleCount = Math.floor(Math.random() * 8) + 3;
       
