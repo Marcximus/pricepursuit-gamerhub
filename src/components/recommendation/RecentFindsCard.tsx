@@ -199,7 +199,7 @@ const RecentFindsCard: React.FC<RecentFindsCardProps> = ({ find }) => {
                 <Sparkles className="h-5 w-5 text-yellow-500" />
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Our Recommendation for a</span>
               </div>
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 bg-clip-text text-transparent">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(34,197,94,0.4)]">
                 {find.headline}
               </h3>
             </div>
