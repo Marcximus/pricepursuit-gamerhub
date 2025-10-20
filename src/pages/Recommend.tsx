@@ -8,6 +8,7 @@ import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import LaptopParticles from '../components/recommendation/LaptopParticles';
 import { useIsMobile } from '@/hooks/use-mobile';
+import RecentFinds from '../components/recommendation/RecentFinds';
 
 const Recommend = () => {
   const navigate = useNavigate();
@@ -69,6 +70,11 @@ const Recommend = () => {
               />
             </CardContent>
           </Card>
+          
+          {/* Show Recent Finds when not in the middle of taking the quiz */}
+          {!isProcessing && (
+            <RecentFinds />
+          )}
         </section>
       </main>
     </div>
