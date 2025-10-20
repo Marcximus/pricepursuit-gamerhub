@@ -3,7 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, DollarSign, Zap, Battery, Feather, TrendingUp, Eye } from "lucide-react";
 import type { MockComparisonItem } from "../mockComparisonData";
-import Image from "@/components/ui/image";
 
 interface ComparisonHistoryCardProps {
   comparison: MockComparisonItem;
@@ -35,14 +34,7 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
       <CardContent className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-center">
           {/* Left Laptop */}
-          <div className={`space-y-3 p-4 rounded-lg border ${getWinnerStyle('left')}`}>
-            <div className="flex items-center justify-center mb-2">
-              <Image 
-                src={comparison.leftLaptopImage} 
-                alt={comparison.leftLaptopModel}
-                className="h-24 w-auto object-contain"
-              />
-            </div>
+          <div className={`space-y-2 p-4 rounded-lg border ${getWinnerStyle('left')}`}>
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground font-medium">{comparison.leftLaptopBrand}</p>
@@ -69,14 +61,7 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
           </div>
 
           {/* Right Laptop */}
-          <div className={`space-y-3 p-4 rounded-lg border ${getWinnerStyle('right')}`}>
-            <div className="flex items-center justify-center mb-2">
-              <Image 
-                src={comparison.rightLaptopImage} 
-                alt={comparison.rightLaptopModel}
-                className="h-24 w-auto object-contain"
-              />
-            </div>
+          <div className={`space-y-2 p-4 rounded-lg border ${getWinnerStyle('right')}`}>
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground font-medium">{comparison.rightLaptopBrand}</p>
