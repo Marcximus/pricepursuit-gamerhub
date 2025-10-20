@@ -90,18 +90,20 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
       const y = rect.top + rect.height / 2;
       
       confetti({
-        particleCount: 2,
-        spread: 60,
-        startVelocity: 15,
-        gravity: 0.5,
-        scalar: 0.6,
+        particleCount: 3,
+        angle: Math.random() * 360,
+        spread: 360,
+        startVelocity: 8,
+        gravity: 0.8,
+        scalar: 0.5,
+        drift: 0,
         shapes: ['star'],
-        colors: ['#FFD700', '#FDB931', '#FFED4E'],
+        colors: ['#FFD700', '#FDB931', '#FFED4E', '#FFA500'],
         origin: {
           x: x / window.innerWidth,
           y: y / window.innerHeight,
         },
-        ticks: 100,
+        ticks: 60,
       });
     };
 
@@ -112,7 +114,7 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
         if (leftBadgeRef.current) {
           emitStars(leftBadgeRef.current);
         }
-      }, 800);
+      }, 400);
       intervals.push(interval);
     }
 
@@ -121,7 +123,7 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
         if (rightBadgeRef.current) {
           emitStars(rightBadgeRef.current);
         }
-      }, 800);
+      }, 400);
       intervals.push(interval);
     }
 
@@ -139,7 +141,7 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
             {comparison.winner === 'left' && (
               <div 
                 ref={leftBadgeRef}
-                className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-white px-3 py-1 rounded-full flex items-center gap-1 shadow-lg z-10 animate-pulse"
+                className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-white px-3 py-1 rounded-full flex items-center gap-1 shadow-lg z-10"
               >
                 <Trophy className="w-3 h-3" />
                 <span className="text-sm font-semibold">Winner</span>
@@ -212,7 +214,7 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
             {comparison.winner === 'right' && (
               <div 
                 ref={rightBadgeRef}
-                className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-white px-3 py-1 rounded-full flex items-center gap-1 shadow-lg z-10 animate-pulse"
+                className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-white px-3 py-1 rounded-full flex items-center gap-1 shadow-lg z-10"
               >
                 <Trophy className="w-3 h-3" />
                 <span className="text-sm font-semibold">Winner</span>
