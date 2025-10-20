@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trophy, DollarSign, Zap, Battery, Feather, TrendingUp, Eye, ExternalLink } from "lucide-react";
+import { Trophy, DollarSign, Zap, Battery, Feather, TrendingUp, Eye, ExternalLink, Star } from "lucide-react";
 import type { MockComparisonItem } from "../mockComparisonData";
 import { getAffiliateUrl } from "../utils/affiliateUtils";
 
@@ -43,6 +43,24 @@ const getDifferentiatorIconColor = (differentiator: string) => {
   };
 };
 
+const renderStars = (rating: number) => {
+  const stars = [];
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  
+  for (let i = 0; i < 5; i++) {
+    if (i < fullStars) {
+      stars.push(<Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />);
+    } else if (i === fullStars && hasHalfStar) {
+      stars.push(<Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" style={{ clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' }} />);
+    } else {
+      stars.push(<Star key={i} className="w-3 h-3 text-gray-300" />);
+    }
+  }
+  
+  return stars;
+};
+
 const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ comparison }) => {
   const DifferentiatorIcon = getDifferentiatorIcon(comparison.keyDifferentiator);
   const iconColors = getDifferentiatorIconColor(comparison.keyDifferentiator);
@@ -51,14 +69,12 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
     return `$${price.toLocaleString()}`;
   };
 
-  const getPriceDifference = () => {
-    const diff = Math.abs(comparison.leftLaptopPrice - comparison.rightLaptopPrice);
-    const cheaper = comparison.leftLaptopPrice < comparison.rightLaptopPrice ? 'left' : 'right';
-    const percentage = ((diff / Math.max(comparison.leftLaptopPrice, comparison.rightLaptopPrice)) * 100).toFixed(0);
-    return { diff, cheaper, percentage };
+  const formatReviews = (reviews: number) => {
+    if (reviews >= 1000) {
+      return `${(reviews / 1000).toFixed(1)}k`;
+    }
+    return reviews.toString();
   };
-
-  const priceDiff = getPriceDifference();
   
   const getAffiliateLink = (asin: string) => {
     return getAffiliateUrl({ asin } as any);
@@ -78,46 +94,56 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
             )}
             
             <div className="flex items-stretch gap-3 h-48">
-              <div className="w-1/3 flex flex-col justify-between">
-                <div>
+              <div className="w-1/3 flex flex-col justify-end">
+                <a 
+                  href={getAffiliateLink(comparison.leftLaptopAsin)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col space-y-1.5 mb-2 hover:opacity-80 transition-opacity"
+                >
                   <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{comparison.leftLaptopBrand}</p>
-                  <h3 className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5">
+                  <h3 className="text-sm font-semibold text-foreground line-clamp-2">
                     {comparison.leftLaptopModel}
                   </h3>
-                </div>
-                
-                <div className="flex flex-col">
-                  <p className="text-xl font-bold text-foreground">{formatPrice(comparison.leftLaptopPrice)}</p>
-                  <div className="h-6 flex items-center">
-                    {priceDiff.cheaper === 'left' && comparison.winner !== 'tie' && (
-                      <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs py-0 px-1.5">
-                        {priceDiff.percentage}% cheaper
-                      </Badge>
-                    )}
-                  </div>
                   
-                  <Button 
-                    asChild
-                    className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white shadow-sm py-0.5 h-7"
+                  <p className="text-xl font-bold text-foreground">{formatPrice(comparison.leftLaptopPrice)}</p>
+                  
+                  <div className="flex items-center gap-1">
+                    {renderStars(comparison.leftLaptopRating)}
+                    <span className="text-[10px] text-muted-foreground ml-1">
+                      ({formatReviews(comparison.leftLaptopReviews)})
+                    </span>
+                  </div>
+                </a>
+                
+                <Button 
+                  asChild
+                  className="w-full bg-green-600 hover:bg-green-700 text-white shadow-sm py-1.5 h-9"
+                >
+                  <a 
+                    href={getAffiliateLink(comparison.leftLaptopAsin)} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1.5 text-xs font-semibold"
                   >
-                    <a 
-                      href={getAffiliateLink(comparison.leftLaptopAsin)} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1 text-[10px]"
-                    >
-                      Check It Out
-                      <Zap className="w-2.5 h-2.5 animate-pulse" />
-                    </a>
-                  </Button>
-                </div>
+                    Check It Out
+                    <Zap className="w-3.5 h-3.5 animate-pulse" />
+                  </a>
+                </Button>
               </div>
               
-              <img 
-                src={comparison.leftLaptopImage} 
-                alt={comparison.leftLaptopModel}
-                className="w-2/3 h-48 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
-              />
+              <a 
+                href={getAffiliateLink(comparison.leftLaptopAsin)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-2/3 block"
+              >
+                <img 
+                  src={comparison.leftLaptopImage} 
+                  alt={comparison.leftLaptopModel}
+                  className="w-full h-48 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200"
+                />
+              </a>
             </div>
           </div>
 
@@ -143,46 +169,56 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
             )}
             
             <div className="flex items-stretch gap-3 h-48">
-              <div className="w-1/3 flex flex-col justify-between">
-                <div>
+              <div className="w-1/3 flex flex-col justify-end">
+                <a 
+                  href={getAffiliateLink(comparison.rightLaptopAsin)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col space-y-1.5 mb-2 hover:opacity-80 transition-opacity"
+                >
                   <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{comparison.rightLaptopBrand}</p>
-                  <h3 className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5">
+                  <h3 className="text-sm font-semibold text-foreground line-clamp-2">
                     {comparison.rightLaptopModel}
                   </h3>
-                </div>
-                
-                <div className="flex flex-col">
-                  <p className="text-xl font-bold text-foreground">{formatPrice(comparison.rightLaptopPrice)}</p>
-                  <div className="h-6 flex items-center">
-                    {priceDiff.cheaper === 'right' && comparison.winner !== 'tie' && (
-                      <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs py-0 px-1.5">
-                        {priceDiff.percentage}% cheaper
-                      </Badge>
-                    )}
-                  </div>
                   
-                  <Button 
-                    asChild
-                    className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white shadow-sm py-0.5 h-7"
+                  <p className="text-xl font-bold text-foreground">{formatPrice(comparison.rightLaptopPrice)}</p>
+                  
+                  <div className="flex items-center gap-1">
+                    {renderStars(comparison.rightLaptopRating)}
+                    <span className="text-[10px] text-muted-foreground ml-1">
+                      ({formatReviews(comparison.rightLaptopReviews)})
+                    </span>
+                  </div>
+                </a>
+                
+                <Button 
+                  asChild
+                  className="w-full bg-green-600 hover:bg-green-700 text-white shadow-sm py-1.5 h-9"
+                >
+                  <a 
+                    href={getAffiliateLink(comparison.rightLaptopAsin)} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1.5 text-xs font-semibold"
                   >
-                    <a 
-                      href={getAffiliateLink(comparison.rightLaptopAsin)} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1 text-[10px]"
-                    >
-                      Check It Out
-                      <Zap className="w-2.5 h-2.5 animate-pulse" />
-                    </a>
-                  </Button>
-                </div>
+                    Check It Out
+                    <Zap className="w-3.5 h-3.5 animate-pulse" />
+                  </a>
+                </Button>
               </div>
               
-              <img 
-                src={comparison.rightLaptopImage} 
-                alt={comparison.rightLaptopModel}
-                className="w-2/3 h-48 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
-              />
+              <a 
+                href={getAffiliateLink(comparison.rightLaptopAsin)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-2/3 block"
+              >
+                <img 
+                  src={comparison.rightLaptopImage} 
+                  alt={comparison.rightLaptopModel}
+                  className="w-full h-48 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200"
+                />
+              </a>
             </div>
           </div>
         </div>

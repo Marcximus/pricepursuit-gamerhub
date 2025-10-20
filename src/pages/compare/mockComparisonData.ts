@@ -10,6 +10,10 @@ export interface MockComparisonItem {
   rightLaptopAsin: string;
   leftLaptopImage: string;
   rightLaptopImage: string;
+  leftLaptopRating: number;
+  leftLaptopReviews: number;
+  rightLaptopRating: number;
+  rightLaptopReviews: number;
   winner: 'left' | 'right' | 'tie';
   keyDifferentiator: string;
   analysisSummary: string;
@@ -32,6 +36,10 @@ export const mockRecentComparisons: MockComparisonItem[] = [
     rightLaptopAsin: 'B0C5YZMQGV',
     leftLaptopImage: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200&h=200&fit=crop',
     rightLaptopImage: 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=200&h=200&fit=crop',
+    leftLaptopRating: 4.8,
+    leftLaptopReviews: 3247,
+    rightLaptopRating: 4.5,
+    rightLaptopReviews: 1856,
     winner: 'left',
     keyDifferentiator: 'Superior Performance & Battery Life',
     analysisSummary: 'The MacBook Pro M3 Max dominates with its impressive single-core and multi-core performance, delivering up to 22 hours of battery life. While the Dell XPS 15 offers great value at $1,299, the MacBook justifies its premium with unmatched efficiency.',
@@ -52,6 +60,10 @@ export const mockRecentComparisons: MockComparisonItem[] = [
     rightLaptopAsin: 'B0C2XQFB1X',
     leftLaptopImage: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=200&h=200&fit=crop',
     rightLaptopImage: 'https://images.unsplash.com/photo-1625948515291-69613efd103f?w=200&h=200&fit=crop',
+    leftLaptopRating: 4.7,
+    leftLaptopReviews: 892,
+    rightLaptopRating: 4.6,
+    rightLaptopReviews: 654,
     winner: 'left',
     keyDifferentiator: 'Better Value for Gamers',
     analysisSummary: 'Both are excellent 14" gaming laptops, but the ASUS ROG Zephyrus G14 wins on value. At $1,599, it offers similar RTX 4060 performance to the $2,399 Razer Blade 14, with better battery life and more ports. The Razer has a slight edge in build quality.',
@@ -72,6 +84,10 @@ export const mockRecentComparisons: MockComparisonItem[] = [
     rightLaptopAsin: 'B0BT91ZLZN',
     leftLaptopImage: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=200&h=200&fit=crop',
     rightLaptopImage: 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=200&h=200&fit=crop',
+    leftLaptopRating: 4.6,
+    leftLaptopReviews: 2341,
+    rightLaptopRating: 4.5,
+    rightLaptopReviews: 987,
     winner: 'tie',
     keyDifferentiator: 'Both Excel at Business Use',
     analysisSummary: 'These business ultrabooks are nearly identical in capabilities. The ThinkPad offers legendary keyboard and durability, while the HP is slightly lighter at 2.2 lbs. Both feature excellent displays, long battery life, and strong security features. Choose based on brand preference.',
@@ -92,6 +108,10 @@ export const mockRecentComparisons: MockComparisonItem[] = [
     rightLaptopAsin: 'B0B3C2R8MP',
     leftLaptopImage: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=200&h=200&fit=crop',
     rightLaptopImage: 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=200&h=200&fit=crop',
+    leftLaptopRating: 4.4,
+    leftLaptopReviews: 1523,
+    rightLaptopRating: 4.9,
+    rightLaptopReviews: 4782,
     winner: 'right',
     keyDifferentiator: 'M2 Chip Outperforms Intel',
     analysisSummary: 'The MacBook Air M2 is the clear winner for most users. Its custom silicon delivers 2x the performance of the Surface Laptop 5\'s 12th gen Intel while maintaining fanless operation. The Surface offers more port variety and touchscreen, but can\'t match the Mac\'s efficiency.',
@@ -112,6 +132,10 @@ export const mockRecentComparisons: MockComparisonItem[] = [
     rightLaptopAsin: 'B0C4VFJ93Q',
     leftLaptopImage: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=200&h=200&fit=crop',
     rightLaptopImage: 'https://images.unsplash.com/photo-1585792180666-f7347c490ee2?w=200&h=200&fit=crop',
+    leftLaptopRating: 4.5,
+    leftLaptopReviews: 567,
+    rightLaptopRating: 4.7,
+    rightLaptopReviews: 1432,
     winner: 'left',
     keyDifferentiator: 'Incredibly Lightweight',
     analysisSummary: 'For portable productivity, the LG Gram 17 wins decisively. At just 2.98 lbs, it\'s nearly half the weight of the 5.34 lb XPS 17 while offering a larger 17" display. The Dell has better performance and build quality, but the Gram\'s portability is unmatched.',
@@ -132,6 +156,10 @@ export const mockRecentComparisons: MockComparisonItem[] = [
     rightLaptopAsin: 'B0CM5JV268',
     leftLaptopImage: 'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=200&h=200&fit=crop',
     rightLaptopImage: 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=200&h=200&fit=crop',
+    leftLaptopRating: 4.3,
+    leftLaptopReviews: 234,
+    rightLaptopRating: 4.8,
+    rightLaptopReviews: 2987,
     winner: 'right',
     keyDifferentiator: 'Better Software Optimization',
     analysisSummary: 'For creative professionals, the MacBook Pro 14" M3 Pro edges ahead despite similar specs. Final Cut Pro and Adobe apps run smoother on Apple Silicon. The MSI offers more RAM upgradability and a larger display, but the MacBook\'s ecosystem integration is superior.',
