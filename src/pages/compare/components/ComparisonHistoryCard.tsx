@@ -77,8 +77,8 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
               </Badge>
             )}
             
-            <div className="flex items-start gap-3">
-              <div className="w-1/3 space-y-1.5">
+            <div className="flex items-stretch gap-3 h-48">
+              <div className="w-1/3 flex flex-col justify-between">
                 <div>
                   <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{comparison.leftLaptopBrand}</p>
                   <h3 className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5">
@@ -86,13 +86,15 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
                   </h3>
                 </div>
                 
-                <div>
+                <div className="flex flex-col">
                   <p className="text-xl font-bold text-foreground">{formatPrice(comparison.leftLaptopPrice)}</p>
-                  {priceDiff.cheaper === 'left' && comparison.winner !== 'tie' && (
-                    <Badge className="mt-0.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs py-0 px-1.5">
-                      {priceDiff.percentage}% cheaper
-                    </Badge>
-                  )}
+                  <div className="h-6 flex items-center">
+                    {priceDiff.cheaper === 'left' && comparison.winner !== 'tie' && (
+                      <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs py-0 px-1.5">
+                        {priceDiff.percentage}% cheaper
+                      </Badge>
+                    )}
+                  </div>
                   
                   <Button 
                     asChild
@@ -140,8 +142,8 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
               </Badge>
             )}
             
-            <div className="flex items-start gap-3">
-              <div className="w-1/3 space-y-1.5">
+            <div className="flex items-stretch gap-3 h-48">
+              <div className="w-1/3 flex flex-col justify-between">
                 <div>
                   <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{comparison.rightLaptopBrand}</p>
                   <h3 className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5">
@@ -149,13 +151,15 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
                   </h3>
                 </div>
                 
-                <div>
+                <div className="flex flex-col">
                   <p className="text-xl font-bold text-foreground">{formatPrice(comparison.rightLaptopPrice)}</p>
-                  {priceDiff.cheaper === 'right' && comparison.winner !== 'tie' && (
-                    <Badge className="mt-0.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs py-0 px-1.5">
-                      {priceDiff.percentage}% cheaper
-                    </Badge>
-                  )}
+                  <div className="h-6 flex items-center">
+                    {priceDiff.cheaper === 'right' && comparison.winner !== 'tie' && (
+                      <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs py-0 px-1.5">
+                        {priceDiff.percentage}% cheaper
+                      </Badge>
+                    )}
+                  </div>
                   
                   <Button 
                     asChild
