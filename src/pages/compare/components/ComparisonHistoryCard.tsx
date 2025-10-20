@@ -96,17 +96,16 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
                   
                   <Button 
                     asChild
-                    className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white shadow-sm"
-                    size="sm"
+                    className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white shadow-sm py-1 h-8"
                   >
                     <a 
                       href={getAffiliateLink(comparison.leftLaptopAsin)} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 text-sm"
+                      className="flex items-center justify-center gap-1 text-xs"
                     >
                       Check It Out
-                      <Zap className="w-3.5 h-3.5 animate-pulse" />
+                      <Zap className="w-3 h-3 animate-pulse" />
                     </a>
                   </Button>
                 </div>
@@ -115,7 +114,7 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
               <img 
                 src={comparison.leftLaptopImage} 
                 alt={comparison.leftLaptopModel}
-                className="w-36 h-36 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
+                className="w-44 h-44 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
               />
             </div>
           </div>
@@ -160,17 +159,16 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
                   
                   <Button 
                     asChild
-                    className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white shadow-sm"
-                    size="sm"
+                    className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white shadow-sm py-1 h-8"
                   >
                     <a 
                       href={getAffiliateLink(comparison.rightLaptopAsin)} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 text-sm"
+                      className="flex items-center justify-center gap-1 text-xs"
                     >
                       Check It Out
-                      <Zap className="w-3.5 h-3.5 animate-pulse" />
+                      <Zap className="w-3 h-3 animate-pulse" />
                     </a>
                   </Button>
                 </div>
@@ -179,7 +177,7 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
               <img 
                 src={comparison.rightLaptopImage} 
                 alt={comparison.rightLaptopModel}
-                className="w-36 h-36 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
+                className="w-44 h-44 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
               />
             </div>
           </div>
