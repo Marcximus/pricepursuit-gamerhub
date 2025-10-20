@@ -78,12 +78,6 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
             )}
             
             <div className="flex items-start gap-4">
-              <img 
-                src={comparison.leftLaptopImage} 
-                alt={comparison.leftLaptopModel}
-                className="w-24 h-24 object-cover rounded-lg border border-border shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
-              />
-              
               <div className="flex-1 space-y-2">
                 <div>
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{comparison.leftLaptopBrand}</p>
@@ -117,6 +111,12 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
                   </a>
                 </Button>
               </div>
+              
+              <img 
+                src={comparison.leftLaptopImage} 
+                alt={comparison.leftLaptopModel}
+                className="w-36 h-36 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
+              />
             </div>
           </div>
 
@@ -142,12 +142,6 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
             )}
             
             <div className="flex items-start gap-4">
-              <img 
-                src={comparison.rightLaptopImage} 
-                alt={comparison.rightLaptopModel}
-                className="w-24 h-24 object-cover rounded-lg border border-border shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
-              />
-              
               <div className="flex-1 space-y-2">
                 <div>
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{comparison.rightLaptopBrand}</p>
@@ -181,6 +175,12 @@ const ComparisonHistoryCard: React.FC<ComparisonHistoryCardProps> = ({ compariso
                   </a>
                 </Button>
               </div>
+              
+              <img 
+                src={comparison.rightLaptopImage} 
+                alt={comparison.rightLaptopModel}
+                className="w-36 h-36 object-cover rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 flex-shrink-0"
+              />
             </div>
           </div>
         </div>
