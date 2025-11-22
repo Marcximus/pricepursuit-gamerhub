@@ -8,7 +8,7 @@ import { LaptopRating } from "./components/LaptopRating";
 import { LaptopSpecs } from "./components/LaptopSpecs";
 import { LaptopReviews } from "./components/LaptopReviews";
 import { LaptopCompareButton } from "./components/LaptopCompareButton";
-import { Zap } from "lucide-react";
+import { Zap, Info } from "lucide-react";
 
 type LaptopCardProps = {
   laptop: Product;
@@ -104,6 +104,14 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
             >
               <span className="truncate">Check it out</span>
               <Zap className="w-4 h-4 ml-2 animate-pulse flex-shrink-0" />
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto min-h-[44px] touch-manipulation"
+              onClick={() => {}}
+            >
+              <Info className="w-4 h-4 mr-2" />
+              <span className="truncate">Details</span>
             </Button>
             <LaptopCompareButton laptop={laptop} />
           </div>
