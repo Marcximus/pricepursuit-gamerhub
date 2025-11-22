@@ -92,16 +92,16 @@ export function LaptopFAQ({ product }: LaptopFAQProps) {
   };
 
   return (
-    <section className="mb-12">
+    <section className="mb-8 lg:mb-10">
       <Helmet>
         <script type="application/ld+json">
           {JSON.stringify(faqSchema)}
         </script>
       </Helmet>
 
-      <h2 className="text-3xl font-bold text-foreground mb-6">Frequently Asked Questions</h2>
+      <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-4 lg:mb-6">Frequently Asked Questions</h2>
       
-      <Accordion type="single" collapsible className="w-full space-y-4">
+      <Accordion type="single" collapsible className="w-full space-y-3">
         {faqs.map((faq, idx) => (
           <AccordionItem
             key={idx}
