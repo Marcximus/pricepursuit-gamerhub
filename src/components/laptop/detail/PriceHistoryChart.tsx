@@ -1,7 +1,8 @@
-import { usePriceHistory } from '@/hooks/usePriceHistory';
+import { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
+import { generateMockPriceHistory } from '@/data/mockPriceHistory';
 import type { Product } from '@/types/product';
 
 interface PriceHistoryChartProps {
@@ -9,32 +10,11 @@ interface PriceHistoryChartProps {
 }
 
 export function PriceHistoryChart({ product }: PriceHistoryChartProps) {
-  const { data: priceHistory, isLoading } = usePriceHistory(product.id);
-
-  if (isLoading) {
-    return (
-      <section className="mb-12">
-        <h2 className="text-3xl font-bold text-foreground mb-6">Price History</h2>
-        <div className="bg-card border border-border rounded-lg p-8 h-80 flex items-center justify-center">
-          <div className="animate-pulse text-muted-foreground">Loading price history...</div>
-        </div>
-      </section>
-    );
-  }
-
-  // If no data, show message
-  if (!priceHistory || priceHistory.length === 0) {
-    return (
-      <section className="mb-12">
-        <h2 className="text-3xl font-bold text-foreground mb-6">Price History</h2>
-        <div className="bg-card border border-border rounded-lg p-8">
-          <p className="text-muted-foreground text-center">
-            Price history data will be available once we track this product over time.
-          </p>
-        </div>
-      </section>
-    );
-  }
+  // Use mock price history data
+  const priceHistory = useMemo(
+    () => generateMockPriceHistory(product.id, product.current_price),
+    [product.id, product.current_price]
+  );
 
   // Calculate stats
   const prices = priceHistory.map(h => h.price);

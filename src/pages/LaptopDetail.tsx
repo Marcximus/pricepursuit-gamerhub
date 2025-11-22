@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useProduct } from '@/hooks/useProduct';
+import { getMockLaptopDetail } from '@/data/mockLaptopDetail';
 import { LaptopDetailSEO } from '@/components/laptop/detail/LaptopDetailSEO';
 import { HeroSection } from '@/components/laptop/detail/HeroSection';
 import { DetailedSpecs } from '@/components/laptop/detail/DetailedSpecs';
@@ -13,20 +13,11 @@ import { LaptopFAQ } from '@/components/laptop/detail/LaptopFAQ';
 export default function LaptopDetail() {
   const { asin } = useParams<{ asin: string }>();
   const navigate = useNavigate();
-  const { data: product, isLoading, error } = useProduct(asin);
+  
+  // Use mock data for now
+  const product = asin ? getMockLaptopDetail(asin) : null;
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-muted-foreground">Loading laptop details...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !product) {
+  if (!product || !asin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
