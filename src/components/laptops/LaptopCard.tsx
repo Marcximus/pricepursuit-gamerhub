@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
 import type { Product } from "@/types/product";
 import { LaptopImage } from "./components/LaptopImage";
 import { LaptopPrice } from "./components/LaptopPrice";
@@ -16,6 +17,7 @@ type LaptopCardProps = {
 
 export function LaptopCard({ laptop }: LaptopCardProps) {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   // Validate required fields
   if (!laptop || !laptop.id) {
@@ -108,7 +110,7 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
             <Button
               variant="outline"
               className="w-full sm:w-auto min-h-[44px] touch-manipulation"
-              onClick={() => {}}
+              onClick={() => navigate(`/laptop/${laptop.asin}`)}
             >
               <span className="truncate">Details</span>
               <Info className="w-4 h-4 ml-2 flex-shrink-0" />
