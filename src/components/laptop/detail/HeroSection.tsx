@@ -40,7 +40,7 @@ export function HeroSection({ product }: HeroSectionProps) {
       {/* Product Info Section */}
       <div className="space-y-6 pt-0">
         {/* Title */}
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
+        <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight line-clamp-2">
           {product.title}
         </h1>
 
