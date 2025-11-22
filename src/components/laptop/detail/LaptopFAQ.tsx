@@ -14,52 +14,53 @@ interface LaptopFAQProps {
 export function LaptopFAQ({ product }: LaptopFAQProps) {
   // Generate FAQs based on product specs
   const faqs = [];
+  const laptopName = `${product.brand} ${product.model || product.title.split(' ').slice(0, 3).join(' ')}`;
 
   // Gaming FAQ if has dedicated graphics
   if (product.graphics && !product.graphics.toLowerCase().includes('integrated')) {
     faqs.push({
-      question: `Can the ${product.brand} ${product.model || 'laptop'} run modern games?`,
-      answer: `Yes, this laptop features ${product.graphics}, which can handle most modern games at medium to high settings. The ${product.processor} paired with ${product.ram} ensures smooth gaming performance.`,
+      question: `Can the ${laptopName} run modern games?`,
+      answer: `Yes, the ${laptopName} features ${product.graphics}, which can handle most modern games at medium to high settings. The ${product.processor} paired with ${product.ram} ensures smooth gaming performance.`,
     });
   }
 
   // Video editing FAQ if has good specs
   if (product.ram && (product.ram.includes('16GB') || product.ram.includes('32GB'))) {
     faqs.push({
-      question: `Is this laptop good for video editing?`,
-      answer: `With ${product.ram} and ${product.processor}, this laptop is well-suited for video editing tasks. The ${product.storage} provides ample space for project files and footage.`,
+      question: `Is the ${laptopName} good for video editing?`,
+      answer: `With ${product.ram} and ${product.processor}, the ${laptopName} is well-suited for video editing tasks. The ${product.storage} provides ample space for project files and footage.`,
     });
   }
 
   // Battery FAQ
   if (product.battery_life) {
     faqs.push({
-      question: `What is the battery life of this laptop?`,
-      answer: `The laptop offers approximately ${product.battery_life} of battery life under typical usage conditions. Actual battery life may vary based on settings and usage patterns.`,
+      question: `What is the battery life of the ${laptopName}?`,
+      answer: `The ${laptopName} offers approximately ${product.battery_life} of battery life under typical usage conditions. Actual battery life may vary based on settings and usage patterns.`,
     });
   }
 
   // Storage FAQ
   if (product.storage) {
     faqs.push({
-      question: `Can I upgrade the storage on this laptop?`,
-      answer: `This laptop comes with ${product.storage}. Many modern laptops support storage upgrades via M.2 slots, but it's best to check the specific model's documentation or consult with the manufacturer for upgrade options.`,
+      question: `Can I upgrade the storage on the ${laptopName}?`,
+      answer: `The ${laptopName} comes with ${product.storage}. Many modern laptops support storage upgrades via M.2 slots, but it's best to check the specific model's documentation or consult with the manufacturer for upgrade options.`,
     });
   }
 
   // Display FAQ
   if (product.screen_resolution) {
     faqs.push({
-      question: `What is the display quality like?`,
-      answer: `The laptop features a ${product.screen_size} display with ${product.screen_resolution} resolution, providing sharp and clear visuals for both work and entertainment.`,
+      question: `What is the display quality like on the ${laptopName}?`,
+      answer: `The ${laptopName} features a ${product.screen_size} display with ${product.screen_resolution} resolution, providing sharp and clear visuals for both work and entertainment.`,
     });
   }
 
   // Weight/Portability FAQ
   if (product.weight) {
     faqs.push({
-      question: `Is this laptop portable?`,
-      answer: `At ${product.weight}, this laptop ${
+      question: `Is the ${laptopName} portable?`,
+      answer: `At ${product.weight}, the ${laptopName} ${
         parseFloat(product.weight) < 4 ? 'is quite portable and easy to carry' : 'is more suited for desk use but still movable when needed'
       }.`,
     });
@@ -92,14 +93,14 @@ export function LaptopFAQ({ product }: LaptopFAQProps) {
   };
 
   return (
-    <section className="mb-12">
+    <section className="mb-16">
       <Helmet>
         <script type="application/ld+json">
           {JSON.stringify(faqSchema)}
         </script>
       </Helmet>
 
-      <h2 className="text-3xl font-bold text-foreground mb-6">Frequently Asked Questions</h2>
+      <h2 className="text-2xl font-bold text-foreground mb-6">Frequently Asked Questions</h2>
       
       <Accordion type="single" collapsible className="w-full space-y-4">
         {faqs.map((faq, idx) => (

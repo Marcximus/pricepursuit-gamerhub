@@ -1,10 +1,5 @@
-import { Cpu, HardDrive, Monitor, Zap, Weight, Battery, Wifi } from 'lucide-react';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Cpu, HardDrive, Monitor, Zap, Weight, Battery } from 'lucide-react';
+import { Card } from "@/components/ui/card";
 import type { Product } from '@/types/product';
 
 interface DetailedSpecsProps {
@@ -40,7 +35,7 @@ export function DetailedSpecs({ product }: DetailedSpecsProps) {
       ],
     },
     {
-      category: 'Physical Characteristics',
+      category: 'Physical',
       icon: Weight,
       items: [
         { label: 'Weight', value: product.weight },
@@ -49,47 +44,44 @@ export function DetailedSpecs({ product }: DetailedSpecsProps) {
     },
   ];
 
-  return (
-    <section className="mb-12">
-      <h2 className="text-3xl font-bold text-foreground mb-6">Technical Specifications</h2>
-      
-      <Accordion type="multiple" className="w-full space-y-4">
-        {specs.map((section, idx) => {
-          const Icon = section.icon;
-          const hasValidItems = section.items.some(item => item.value);
-          
-          if (!hasValidItems) return null;
+  // Flatten all specs into a single array
+  const allSpecs = specs.flatMap(section => 
+    section.items
+      .filter(item => item.value)
+      .map(item => ({
+        ...item,
+        category: section.category,
+        icon: section.icon
+      }))
+  );
 
-          return (
-            <AccordionItem
-              key={idx}
-              value={`item-${idx}`}
-              className="bg-card border border-border rounded-lg overflow-hidden"
-            >
-              <AccordionTrigger className="px-6 py-4 hover:bg-muted/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-primary" />
+  return (
+    <section className="mb-16">
+      <h2 className="text-2xl font-bold text-foreground mb-6">Technical Specifications</h2>
+      
+      <Card className="overflow-hidden">
+        <div className="divide-y divide-border">
+          {allSpecs.map((spec, idx) => {
+            const Icon = spec.icon;
+            return (
+              <div 
+                key={idx} 
+                className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 hover:bg-muted/30 transition-colors"
+              >
+                <div className="flex items-center gap-3 md:col-span-1">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-4 h-4 text-primary" />
                   </div>
-                  <span className="text-lg font-semibold text-foreground">{section.category}</span>
+                  <span className="text-sm font-medium text-muted-foreground">{spec.label}</span>
                 </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-6 pb-4">
-                <div className="space-y-3 pt-2">
-                  {section.items.map((item, itemIdx) => (
-                    item.value && (
-                      <div key={itemIdx} className="flex justify-between items-center py-2 border-b border-border last:border-0">
-                        <span className="text-muted-foreground">{item.label}</span>
-                        <span className="font-medium text-foreground">{item.value}</span>
-                      </div>
-                    )
-                  ))}
+                <div className="md:col-span-2 flex items-center">
+                  <span className="font-semibold text-foreground">{spec.value}</span>
                 </div>
-              </AccordionContent>
-            </AccordionItem>
-          );
-        })}
-      </Accordion>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
     </section>
   );
 }
