@@ -39,15 +39,6 @@ export function HeroSection({ product }: HeroSectionProps) {
 
       {/* Product Info Section */}
       <div className="space-y-6 pt-0">
-        {/* Breadcrumb */}
-        <nav className="text-sm text-muted-foreground">
-          <a href="/" className="hover:text-foreground transition-colors">Home</a>
-          <span className="mx-2">/</span>
-          <a href="/" className="hover:text-foreground transition-colors">Laptops</a>
-          <span className="mx-2">/</span>
-          <span className="text-foreground">{product.brand}</span>
-        </nav>
-
         {/* Title */}
         <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
           {product.title}
