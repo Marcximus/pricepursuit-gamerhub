@@ -21,6 +21,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import SitemapPage from "./pages/Sitemap";
 import SitemapXml from "./pages/SitemapXml";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import LaptopDetail from "./pages/LaptopDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,6 +56,7 @@ function App() {
                         }
                       />
                       <Route path="/" element={<ComparePriceLaptops />} />
+                      <Route path="/laptop/:asin" element={<LaptopDetail />} />
                       <Route path="/compare" element={<ComparePage />} />
                       <Route path="/recommend" element={<Recommend />} />
                       <Route path="/about" element={<About />} />
