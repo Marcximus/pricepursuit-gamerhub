@@ -1,6 +1,4 @@
-
 import { useState, useEffect } from "react";
-import { useLaptops } from "@/hooks/useLaptops";
 import Navigation from "@/components/Navigation";
 import { LaptopFilters, type FilterOptions } from "@/components/laptops/LaptopFilters";
 import type { SortOption } from "@/components/laptops/LaptopSort";
@@ -10,6 +8,7 @@ import { LaptopLayout } from "@/components/laptops/LaptopLayout";
 import { useLaptopFilters } from "@/hooks/useLaptopFilters";
 import CompareFloatingButton from "@/components/CompareFloatingButton";
 import Footer from "@/components/about/Footer";
+import { mockLaptops } from "@/data/mockLaptops";
 
 const ComparePriceLaptops = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,19 +37,15 @@ const ComparePriceLaptops = () => {
     });
   }, [filters]);
 
-  const { 
-    data, 
-    isLoading: isLaptopsLoading, 
-    error: laptopsError,
-    isRefetching,
-    refetch
-  } = useLaptops(currentPage, sortBy, filters);
+  // Using mock data instead of fetching from database
+  const laptops = mockLaptops;
+  const totalCount = mockLaptops.length;
+  const totalPages = 1;
+  const isLaptopsLoading = false;
+  const laptopsError = null;
+  const isRefetching = false;
 
-  const laptops = data?.laptops ?? [];
-  const totalCount = data?.totalCount ?? 0;
-  const totalPages = data?.totalPages ?? 1;
-
-  const filterOptions = useLaptopFilters(data?.allLaptops);
+  const filterOptions = useLaptopFilters(mockLaptops);
 
   const handleSortChange = (newSortBy: SortOption) => {
     setSortBy(newSortBy);
@@ -78,7 +73,7 @@ const ComparePriceLaptops = () => {
   };
 
   const handleRetry = () => {
-    refetch();
+    // Mock data, no retry needed
   };
 
   return (
