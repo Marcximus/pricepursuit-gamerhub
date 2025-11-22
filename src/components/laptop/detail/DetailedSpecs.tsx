@@ -59,27 +59,14 @@ export function DetailedSpecs({ product }: DetailedSpecsProps) {
     <section className="mb-16">
       <h2 className="text-2xl font-bold text-foreground mb-6">Technical Specifications</h2>
       
-      <Card className="overflow-hidden">
-        <div className="divide-y divide-border">
-          {allSpecs.map((spec, idx) => {
-            const Icon = spec.icon;
-            return (
-              <div 
-                key={idx} 
-                className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 hover:bg-muted/30 transition-colors"
-              >
-                <div className="flex items-center gap-3 md:col-span-1">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-4 h-4 text-primary" />
-                  </div>
-                  <span className="text-sm font-medium text-muted-foreground">{spec.label}</span>
-                </div>
-                <div className="md:col-span-2 flex items-center">
-                  <span className="font-semibold text-foreground">{spec.value}</span>
-                </div>
-              </div>
-            );
-          })}
+      <Card className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-3">
+          {allSpecs.map((spec, idx) => (
+            <div key={idx} className="flex justify-between items-center py-2">
+              <span className="text-sm text-muted-foreground">{spec.label}</span>
+              <span className="font-medium text-foreground text-sm">{spec.value}</span>
+            </div>
+          ))}
         </div>
       </Card>
     </section>
