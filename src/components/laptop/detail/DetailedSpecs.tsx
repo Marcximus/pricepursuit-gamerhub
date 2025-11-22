@@ -50,10 +50,10 @@ export function DetailedSpecs({ product }: DetailedSpecsProps) {
   ];
 
   return (
-    <section className="mb-12">
-      <h2 className="text-3xl font-bold text-foreground mb-6">Technical Specifications</h2>
+    <section className="mb-8 lg:mb-10">
+      <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-4 lg:mb-6">Technical Specifications</h2>
       
-      <Accordion type="multiple" className="w-full space-y-4">
+      <Accordion type="multiple" className="w-full space-y-3">
         {specs.map((section, idx) => {
           const Icon = section.icon;
           const hasValidItems = section.items.some(item => item.value);

@@ -38,12 +38,12 @@ export default function LaptopDetail() {
     <>
       <LaptopDetailSEO product={product} />
       
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 lg:px-6">
         {/* Back Button */}
         <Button
           variant="ghost"
           onClick={() => navigate('/')}
-          className="mb-6"
+          className="mb-4 lg:mb-6 -ml-2"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to All Laptops

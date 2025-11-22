@@ -40,8 +40,8 @@ export function ReviewsSection({ product }: ReviewsSectionProps) {
   };
 
   return (
-    <section className="mb-12">
-      <h2 className="text-3xl font-bold text-foreground mb-6">Customer Reviews</h2>
+    <section className="mb-8 lg:mb-10">
+      <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-4 lg:mb-6">Customer Reviews</h2>
 
       <div className="grid md:grid-cols-3 gap-8">
         {/* Rating Overview */}

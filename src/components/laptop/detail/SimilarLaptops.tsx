@@ -21,8 +21,8 @@ export function SimilarLaptops({ product }: SimilarLaptopsProps) {
   }
 
   return (
-    <section className="mb-12">
-      <h2 className="text-3xl font-bold text-foreground mb-6">Similar Laptops You Might Like</h2>
+    <section className="mb-8 lg:mb-10">
+      <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-4 lg:mb-6">Similar Laptops You Might Like</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {similarLaptops.map((laptop) => (
           <LaptopCard key={laptop.id} laptop={laptop} />
