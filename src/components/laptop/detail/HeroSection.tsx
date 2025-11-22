@@ -15,7 +15,7 @@ export function HeroSection({ product }: HeroSectionProps) {
     : 0;
 
   return (
-    <div className="grid md:grid-cols-2 gap-8 mb-12">
+    <div className="grid md:grid-cols-2 gap-8 mb-12 items-start">
       {/* Image Section */}
       <div className="relative">
         <div className="sticky top-8">
@@ -38,7 +38,7 @@ export function HeroSection({ product }: HeroSectionProps) {
       </div>
 
       {/* Product Info Section */}
-      <div className="space-y-6">
+      <div className="space-y-6 pt-0">
         {/* Breadcrumb */}
         <nav className="text-sm text-muted-foreground">
           <a href="/" className="hover:text-foreground transition-colors">Home</a>
