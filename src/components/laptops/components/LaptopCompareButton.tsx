@@ -30,13 +30,13 @@ export function LaptopCompareButton({ laptop }: LaptopCompareButtonProps) {
     >
       {selected ? (
         <>
-          <Check className="w-4 h-4" />
           <span>Selected</span>
+          <Check className="w-4 h-4" />
         </>
       ) : (
         <>
-          <GitCompare className="w-4 h-4" />
           <span>Compare</span>
+          <GitCompare className="w-4 h-4" />
         </>
       )}
     </Button>

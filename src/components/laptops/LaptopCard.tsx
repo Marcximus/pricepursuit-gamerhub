@@ -110,8 +110,8 @@ export function LaptopCard({ laptop }: LaptopCardProps) {
               className="w-full sm:w-auto min-h-[44px] touch-manipulation"
               onClick={() => {}}
             >
-              <Info className="w-4 h-4 mr-2" />
               <span className="truncate">Details</span>
+              <Info className="w-4 h-4 ml-2 flex-shrink-0" />
             </Button>
             <LaptopCompareButton laptop={laptop} />
           </div>
