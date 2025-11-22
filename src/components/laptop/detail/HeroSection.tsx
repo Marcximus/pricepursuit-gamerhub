@@ -134,7 +134,7 @@ export function HeroSection({ product }: HeroSectionProps) {
             target="_blank"
             rel="noopener noreferrer sponsored"
           >
-            View on Amazon
+            Check It Out
             <ExternalLink className="w-5 h-5 ml-2" />
           </a>
         </Button>
