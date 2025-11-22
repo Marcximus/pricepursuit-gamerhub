@@ -60,9 +60,9 @@ export function DetailedSpecs({ product }: DetailedSpecsProps) {
       <h2 className="text-2xl font-bold text-foreground mb-6">Technical Specifications</h2>
       
       <Card className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-0">
           {allSpecs.map((spec, idx) => (
-            <div key={idx} className="flex justify-between items-center py-2">
+            <div key={idx} className="flex justify-between items-center py-1.5">
               <span className="text-sm text-muted-foreground">{spec.label}</span>
               <span className="font-medium text-foreground text-sm">{spec.value}</span>
             </div>
